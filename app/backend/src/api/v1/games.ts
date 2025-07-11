@@ -178,6 +178,25 @@ router.post('/', optionalAuth, validateRequestBody(CreateGameRequestSchema), asy
 
         logger.info('GamesAPI created gameInstance debug', { gameInstanceSettings: gameInstance.settings });
 
+        // Clean up any stale Redis data for this access code before initializing fresh state
+        const accessCode = gameInstance.accessCode;
+        const redisPatterns = [
+            `mathquest:game:*${accessCode}*`,           // Game state and participants
+            `mathquest:timer:${accessCode}:*`,          // Timer states for all questions
+            `mathquest:projection:display:${accessCode}`, // Projection display state (stats/trophy toggles)
+            `mathquest:explanation_sent:${accessCode}:*`, // Explanation tracking
+            `mathquest:lobby:${accessCode}`,            // Lobby state
+            `leaderboard:snapshot:${accessCode}`,       // Leaderboard snapshots
+            `*${accessCode}*`                           // Catch any remaining keys with accessCode
+        ];
+        for (const pattern of redisPatterns) {
+            const keys = await redisClient.keys(pattern);
+            if (keys.length > 0) {
+                logger.info({ pattern, keys, accessCode }, 'Cleaning stale Redis keys before game initialization');
+                await redisClient.del(...keys);
+            }
+        }
+
         // Initialize game state in Redis immediately after game instance creation
         await initializeGameState(gameInstance.id);
 
@@ -760,13 +779,18 @@ router.delete('/:id', teacherAuth, async (req: Request, res: Response): Promise<
 
         // Delete all Redis keys related to this game instance
         const redisPatterns = [
-            `mathquest:game:*${accessCode}*`,
-            `mathquest:explanation_sent:${accessCode}:*`,
-            `mathquest:lobby:${accessCode}`
+            `mathquest:game:*${accessCode}*`,           // Game state and participants
+            `mathquest:timer:${accessCode}:*`,          // Timer states for all questions
+            `mathquest:projection:display:${accessCode}`, // Projection display state (stats/trophy toggles)
+            `mathquest:explanation_sent:${accessCode}:*`, // Explanation tracking
+            `mathquest:lobby:${accessCode}`,            // Lobby state
+            `leaderboard:snapshot:${accessCode}`,       // Leaderboard snapshots
+            `*${accessCode}*`                           // Catch any remaining keys with accessCode
         ];
         for (const pattern of redisPatterns) {
             const keys = await redisClient.keys(pattern);
             if (keys.length > 0) {
+                logger.info({ pattern, keys, accessCode }, 'Deleting Redis keys for game deletion');
                 await redisClient.del(...keys);
             }
         }

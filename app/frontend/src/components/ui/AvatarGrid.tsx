@@ -31,14 +31,14 @@ const ANIMAL_AVATARS = [
 
 export default function AvatarGrid({ selectedAvatar, onAvatarSelect, className = "" }: AvatarGridProps) {
     return (
-        <div className={`flex flex-wrap justify-center gap-4 max-h-80 overflow-y-auto p-3 ${className}`}>
+        <div className={`flex flex-wrap justify-center gap-2 sm:gap-4 max-h-80 overflow-y-auto p-2 sm:p-3 ${className}`}>
             {ANIMAL_AVATARS.map((avatar) => (
                 <button
                     key={avatar}
                     type="button"
                     onClick={() => onAvatarSelect(avatar)}
                     className={`
-                        avatar-option w-16 h-16 text-5xl rounded-lg border-2 transition-all duration-200
+                        avatar-option w-14 h-14 sm:w-16 sm:h-16 text-4xl sm:text-5xl rounded-lg border-2 transition-all duration-200
                         emoji-avatar flex items-center justify-center flex-shrink-0
                         ${selectedAvatar === avatar
                             ? 'border-blue-500 bg-blue-50 scale-110 shadow-md'

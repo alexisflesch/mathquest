@@ -320,7 +320,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 correctAnswersData: null
             });
             const projectionStateAfter = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
-            logger.info({ accessCode: gameInstance.accessCode, projectionStateAfter }, '[TROPHY_DEBUG] Projection display state after reset on setQuestion');
+            logger.info({ accessCode: gameInstance.accessCode, projectionStateAfter }, '[PROJECTION_RESET] Projection display state after reset on setQuestion');
 
             // Notify dashboard about question change (canonical payload)
             const dashboardRoom = `dashboard_${gameId}`;

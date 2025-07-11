@@ -157,81 +157,73 @@ function ProfilePageInner() {
     const availableTabs = getAvailableTabs();
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[color:var(--background)]">
-            <div className="main-content w-full flex flex-col items-center justify-center">
-                <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-8 p-0">
-                    <div className="flex flex-col gap-6 p-8">
-                        <div className="flex flex-col items-center gap-2 mb-2">
-                            <h1 className="card-title text-3xl mb-4 text-base-content">
-                                {getPageTitle()}
-                            </h1>
+        <div className="main-content">
+            <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-8">
+                <div className="card-body items-center gap-6">
+                    <div className="flex flex-col items-center gap-2 mb-2">
+                        <h1 className="card-title text-3xl mb-4 text-base-content">
+                            {getPageTitle()}
+                        </h1>
 
-                            {userProfile.username && userProfile.avatar && (
-                                <div className="flex flex-col items-center gap-2 mb-4">
-                                    <div className="text-6xl emoji-avatar">{userProfile.avatar}</div>
-                                    <p className="text-xl font-semibold text-base-content">{userProfile.username}</p>
-                                    {userProfile.email && (
-                                        <p className="text-sm text-[color:var(--muted-foreground)]">{userProfile.email}</p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Tabs */}
-                        {availableTabs.length > 1 && (
-                            <div className="bg-[color:var(--muted)] p-1 rounded-lg flex space-x-1 mb-4">
-                                {availableTabs.map((tab) => {
-                                    const Icon = tab.icon;
-                                    return (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === tab.id
-                                                ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm'
-                                                : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'
-                                                }`}
-                                        >
-                                            <Icon className="w-4 h-4" />
-                                            {tab.label}
-                                        </button>
-                                    );
-                                })}
+                        {userProfile.username && userProfile.avatar && (
+                            <div className="flex flex-col items-center gap-2 mb-4">
+                                <div className="text-6xl emoji-avatar">{userProfile.avatar}</div>
+                                <p className="text-xl font-semibold text-base-content">{userProfile.username}</p>
+                                {userProfile.email && (
+                                    <p className="text-sm text-[color:var(--muted-foreground)]">{userProfile.email}</p>
+                                )}
                             </div>
                         )}
-
-                        {/* Tab Content */}
-                        {activeTab === 'profile' && (
-                            <ProfileForm
-                                initialUsername={userProfile.username || ''}
-                                initialAvatar={userProfile.avatar || ''}
-                                onSave={handleProfileUpdate}
-                                isLoading={isLoading}
-                            />
-                        )}
-
-                        {activeTab === 'upgrade' && userState === 'guest' && (
-                            <AccountUpgradeForm
-                                guestUsername={userProfile.username || ''}
-                                guestAvatar={userProfile.avatar || ''}
-                                onUpgrade={handleAccountUpgrade}
-                                isLoading={isLoading}
-                            />
-                        )}
-
-                        {activeTab === 'teacher' && (userState === 'student' || userState === 'guest') && (
-                            <TeacherUpgradeForm
-                                onUpgrade={handleTeacherUpgrade}
-                                isLoading={isLoading}
-                                isGuest={userState === 'guest'}
-                            />
-                        )}
-
-                        <div className="flex items-center justify-center mt-6">
-                            <Link href="/" className="text-sm text-[color:var(--primary)] hover:underline flex items-center gap-1">
-                                <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
-                            </Link>
-                        </div>
                     </div>
+
+                    {/* Tabs */}
+                    {availableTabs.length > 1 && (
+                        <div className="bg-[color:var(--muted)] p-1 rounded-lg flex space-x-1 mb-4">
+                            {availableTabs.map((tab) => {
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === tab.id
+                                            ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm'
+                                            : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'
+                                            }`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Tab Content */}
+                    {activeTab === 'profile' && (
+                        <ProfileForm
+                            initialUsername={userProfile.username || ''}
+                            initialAvatar={userProfile.avatar || ''}
+                            onSave={handleProfileUpdate}
+                            isLoading={isLoading}
+                        />
+                    )}
+
+                    {activeTab === 'upgrade' && userState === 'guest' && (
+                        <AccountUpgradeForm
+                            guestUsername={userProfile.username || ''}
+                            guestAvatar={userProfile.avatar || ''}
+                            onUpgrade={handleAccountUpgrade}
+                            isLoading={isLoading}
+                        />
+                    )}
+
+                    {activeTab === 'teacher' && (userState === 'student' || userState === 'guest') && (
+                        <TeacherUpgradeForm
+                            onUpgrade={handleTeacherUpgrade}
+                            isLoading={isLoading}
+                            isGuest={userState === 'guest'}
+                        />
+                    )}
                 </div>
             </div>
 

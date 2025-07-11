@@ -642,7 +642,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                                Activité <span className="text-lg sm:text-xl font-semibold text-foreground align-middle">{quizName || '...'}</span>
+                                <span className="text-lg sm:text-xl font-semibold text-foreground align-middle">{quizName || '...'}</span>
                                 {gameInstanceName && (
                                     <span className="ml-2 text-base font-normal text-muted-foreground">— <span className="italic">{gameInstanceName}</span></span>
                                 )}

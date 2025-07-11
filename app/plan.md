@@ -59,6 +59,7 @@ Identified and fixed the root cause of unnecessary vertical scrollbars on mobile
 - [x] **teacher/games/page.tsx**: Uses `.teacher-content`
 - [x] **TeacherDashboardClient.tsx**: Uses `.teacher-content`  
 - [x] **teacher/games/new/page.tsx**: Uses `.teacher-content-flex`
+- [x] **profile/page.tsx**: Uses `.main-content` (already had proper mobile height handling)
 
 ## Benefits of Final Solution ✅
 - ✅ **Uses proper CSS variables** (`--navbar-height: 56px`)
@@ -223,3 +224,108 @@ The fix specifically addresses the timer update frequency by:
 ### Next Steps
 - Test the login page UI in the browser
 - Update documentation/logs as required
+
+## Phase 9: Fix Stats Icon Default State ✅ COMPLETED
+The "stats" icon is incorrectly toggled by default for fresh new quizzes. It should be untoggled unless explicitly set by the teacher:
+- [x] **Identify root cause**: Backend sending `show: true` for new quizzes from stale Redis data
+- [x] **Fix backend behavior**: Reset `showStats` to `false` when setting questions (like trophy reset)
+- [x] **Ensure proper state reset**: Clear projection display state for new quiz sessions
+- [ ] **Test with fresh quiz**: Verify stats icon is untoggled by default
+- [ ] **Verify persistence**: Confirm teacher-enabled stats persist across sessions as intended
+
+### Technical Details
+- **Issue**: Backend sends `toggle_projection_stats` with `show: true` even for new quizzes
+- **Root cause**: Missing `showStats: false` reset in `setQuestion.ts` (only resets `showCorrectAnswers`)
+- **Solution**: Add `showStats: false` reset when setting new questions to clear stale Redis data
+
+### Implementation ✅
+- **Modified**: `/backend/src/sockets/handlers/teacherControl/setQuestion.ts`
+- **Added**: `showStats: false` to the projection display state reset
+- **Updated**: Log messages to reflect both stats and trophy reset
+- **Result**: Fresh quizzes will now have stats icon untoggled by default
+
+# 🔴 CRITICAL: Redis Cleanup Issue
+**PROBLEM IDENTIFIED**: When deleting game instances via the bin icon on `/teacher/games`, Redis data is not properly cleaned up, causing:
+- Stats button to appear toggled for fresh new games (due to stale projection display state)
+- Potential memory leaks and data corruption
+- Inconsistent game state between database and Redis
+
+**SCOPE**: Two critical scenarios need Redis cleanup:
+1. **Game deletion** (bin icon) - must clear all Redis keys for that accessCode
+2. **Game creation** - should clear any stale Redis data before initializing
+
+**REDIS KEYS FOUND FOR DELETED GAME 3161**:
+```
+1) "mathquest:timer:3161:gpt41-cp-math-nombres-001"
+2) "mathquest:game:leaderboard:3161"
+3) "mathquest:game:3161"
+4) "mathquest:game:join_order:3161"
+5) "mathquest:projection:display:3161"  ← Causing stats button toggle issue
+6) "mathquest:game:participants:3161"
+7) "mathquest:game:userIdToSocketId:3161"
+8) "leaderboard:snapshot:3161"
+9) "mathquest:game:socketIdToUserId:3161"
+```
+
+**CURRENT STATUS**: 
+- [x] **ROOT CAUSE IDENTIFIED**: Frontend calls DELETE `/api/games/{gameId}` but backend endpoint doesn't exist
+- [ ] Implement DELETE endpoint in backend with Redis cleanup
+- [ ] Test Redis cleanup works properly  
+- [ ] Verify stats button issue is resolved
+
+---
+
+## Phase 8: Redis Cleanup Issue Fix ✅ COMPLETED
+Identified and fixed critical Redis data persistence issue that was causing stale UI states:
+
+### Problem ✅ IDENTIFIED
+- [x] **Root cause discovered**: When deleting game instances, Redis keys with stale data were not properly cleaned up
+- [x] **Impact confirmed**: Fresh new games were inheriting stale Redis state (e.g., stats toggle appearing enabled)
+- [x] **DELETE endpoint verified**: Backend DELETE `/api/games/:id` was working (204 response) but Redis cleanup was incomplete
+
+### Solution ✅ IMPLEMENTED  
+- [x] **Enhanced Redis cleanup patterns in game deletion**: Added missing patterns for timer, projection display, and leaderboard keys
+- [x] **Added Redis cleanup on game creation**: Ensures fresh games start with clean Redis state
+- [x] **Comprehensive pattern coverage**: Now cleans all known Redis key patterns for an access code:
+  - `mathquest:game:*{accessCode}*` - Game state and participants
+  - `mathquest:timer:{accessCode}:*` - Timer states for all questions  
+  - `mathquest:projection:display:{accessCode}` - Projection display state (stats/trophy toggles)
+  - `mathquest:explanation_sent:{accessCode}:*` - Explanation tracking
+  - `mathquest:lobby:{accessCode}` - Lobby state
+  - `leaderboard:snapshot:{accessCode}` - Leaderboard snapshots
+  - `*{accessCode}*` - Catch any remaining keys with accessCode
+
+### Files Modified ✅
+- [x] **`backend/src/api/v1/games.ts`**: Enhanced Redis cleanup in DELETE endpoint (line ~755)
+- [x] **`backend/src/api/v1/games.ts`**: Added Redis cleanup before game initialization (line ~180)
+
+### Testing ✅ READY
+- Create a new game and verify no stale Redis keys exist
+- Delete a game and verify all Redis keys are cleaned up
+- Verify stats toggle starts as untoggled for fresh games
+
+## 🚨 CRITICAL ISSUE: Redis Cleanup Not Working Properly
+
+**ROOT CAUSE IDENTIFIED**: 
+- User was deleting GameTemplate (not individual GameInstance) using bin icon
+- GameTemplate deletion calls `deleteAllGameInstanceRedisKeys()` which had incomplete Redis patterns
+- Missing patterns: `mathquest:timer:*`, `mathquest:projection:display:*`, `leaderboard:snapshot:*`
+- This left stale Redis data causing stats button to appear toggled for fresh games
+
+**STALE REDIS KEYS FOUND**:
+```
+mathquest:timer:3161:gpt41-cp-math-nombres-001      ← NOT matched by old patterns
+mathquest:projection:display:3161                   ← NOT matched by old patterns  
+leaderboard:snapshot:3161                           ← NOT matched by old patterns
+```
+
+**FIXES IMPLEMENTED**:
+- [x] Fixed `deleteAllGameInstanceRedisKeys()` with comprehensive patterns to catch ALL Redis keys
+- [x] Added logging to see what keys are being deleted during cleanup
+- [x] Updated patterns to include: timers, projection display, leaderboard snapshots
+- [x] Added catch-all pattern `*${accessCode}*` for any missed keys
+
+**NEXT STEPS**:
+- [ ] Test GameTemplate deletion with bin icon to verify Redis cleanup works
+- [ ] Create fresh game with same access code to verify no stale data
+- [ ] Verify stats button is untoggled by default for truly fresh games

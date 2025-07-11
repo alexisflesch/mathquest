@@ -324,11 +324,6 @@ function LoginPageInner() {
                             </div>
                         </div>
                     )}
-                    <div className="flex items-center justify-center mt-2">
-                        <Link href="/" className="text-sm text-[color:var(--primary)] hover:underline flex items-center gap-1">
-                            <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
-                        </Link>
-                    </div>
                 </div>
             </div>
         </div>

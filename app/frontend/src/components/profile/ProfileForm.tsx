@@ -59,13 +59,15 @@ export default function ProfileForm({
                 />
             </div>
 
-            <button
-                type="submit"
-                disabled={isLoading || !hasChanges || !selectedAvatar || !username.trim()}
-                className="btn btn-primary btn-lg w-full"
-            >
-                {isLoading ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
-            </button>
+            <div className="flex justify-end">
+                <button
+                    type="submit"
+                    disabled={isLoading || !hasChanges || !selectedAvatar || !username.trim()}
+                    className="btn btn-primary btn-lg"
+                >
+                    {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+                </button>
+            </div>
         </form>
     );
 }
