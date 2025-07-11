@@ -323,12 +323,17 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 leaderboardLength: payload.leaderboard?.length || 0,
                 topPlayers: payload.leaderboard?.slice(0, 3).map((p) => ({ username: p.username, score: p.score })) || []
             });
-            const processedLeaderboard = payload.leaderboard.map((entry) => ({
-                userId: entry.userId,
-                username: entry.username || 'Unknown Player',
-                avatarEmoji: entry.avatarEmoji,
-                score: entry.score || 0
-            }));
+            const processedLeaderboard = payload.leaderboard.map((entry) => {
+                console.log('[SCORE DEBUG] Raw entry.score:', entry.score, 'Type:', typeof entry.score);
+                const processedScore = entry.score ?? 0;
+                console.log('[SCORE DEBUG] Processed score:', processedScore, 'Type:', typeof processedScore);
+                return {
+                    userId: entry.userId,
+                    username: entry.username || 'Unknown Player',
+                    avatarEmoji: entry.avatarEmoji,
+                    score: processedScore // Use nullish coalescing to preserve small decimal scores
+                };
+            });
 
 
             // Log both arrays for debugging
@@ -414,7 +419,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                         userId: entry.userId,
                         username: entry.username || 'Unknown Player',
                         avatarEmoji: entry.avatarEmoji,
-                        score: entry.score || 0
+                        score: entry.score ?? 0 // Use nullish coalescing to preserve small decimal scores
                     }));
 
                     // Only update if data is different (initial state comparison)

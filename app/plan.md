@@ -329,3 +329,35 @@ leaderboard:snapshot:3161                           ← NOT matched by old patte
 - [ ] Test GameTemplate deletion with bin icon to verify Redis cleanup works
 - [ ] Create fresh game with same access code to verify no stale data
 - [ ] Verify stats button is untoggled by default for truly fresh games
+
+## Phase 9: Mobile Button Alignment Fix - Clôturer Button ✅ COMPLETED
+
+### Issue Identified ✅
+- "Clôturer" button in teacher dashboard was full-width on mobile instead of being right-aligned
+- Button used `w-full` class making it span the entire width 
+- Should match desktop version which is right-aligned and normal-sized
+
+### Fix Applied ✅
+- [x] **Removed `w-full` class** from mobile "Clôturer" button
+- [x] **Added `flex justify-end`** to button container for right alignment
+- [x] **Maintained button styling** but removed full-width behavior
+
+**File Modified**: `frontend/src/components/TeacherDashboardClient.tsx`
+- Container: Added `flex justify-end` classes to `<div className="sm:hidden mt-4">`
+- Button: Removed `w-full` class from mobile button
+
+**Result**: Mobile "Clôturer" button is now right-aligned and normally sized, matching the modernization pattern established in other areas of the app.
+
+## 🚨 OUTSTANDING: Leaderboard Score Precision Issue
+
+**ISSUE**: Projection leaderboard loses exact ranking order due to score rounding
+- Before: `{score:0.01, score:0.009, score:0.008}` (correct order)  
+- After: `{score:0, score:0, score:0}` (order lost due to rounding)
+
+**INVESTIGATION STARTED**:
+- [x] Added debug logging to `useProjectionQuizSocket.ts` to track score processing
+- [x] Changed `||` to `??` for score fallback (though this may not be the root cause)
+- [ ] Need to identify where/why scores are being rounded to integers
+- [ ] Must preserve decimal precision to maintain correct leaderboard ordering
+
+**TEMPORARY DEBUG CODE**: Added console.log statements to track score values through processing pipeline.

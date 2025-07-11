@@ -672,9 +672,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                         </div>
                     </div>
                     {/* Mobile end quiz button */}
-                    <div className="sm:hidden mt-4">
+                    <div className="sm:hidden mt-4 flex justify-end">
                         <button
-                            className="btn btn-secondary w-full flex items-center justify-center gap-2"
+                            className="btn btn-secondary flex items-center justify-center gap-2"
                             onClick={handleEndQuiz}
                             disabled={isDisabled}
                         >
