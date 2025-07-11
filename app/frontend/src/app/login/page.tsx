@@ -124,210 +124,210 @@ function LoginPageInner() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[color:var(--background)]">
-            <div className="main-content w-full flex flex-col items-center justify-center">
-                <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-4 mx-4 sm:my-8 sm:mx-8">
-                    <div className="card-body items-center gap-6">
-                        <div className="flex flex-col items-center gap-2 mb-2">
-                            {/* Title removed as upgrade functionality moved to profile page */}
+        <div className="main-content">
+            <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-6">
+                <div className="card-body items-center gap-6">
+                    <div className="flex flex-col items-center gap-2 mb-2">
+                        {/* Title removed as upgrade functionality moved to profile page */}
+                    </div>
+                    {/* AuthModeToggle for guest/account selection */}
+                    <div className="bg-[color:var(--muted)] p-1 rounded-lg flex space-x-1 mb-2">
+                        <button
+                            onClick={() => setSimpleMode('guest')}
+                            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${simpleMode === 'guest' ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm' : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'}`}
+                        >
+                            <Gamepad className="w-4 h-4" /> Invité
+                        </button>
+                        <button
+                            onClick={() => setSimpleMode('account')}
+                            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${simpleMode === 'account' ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm' : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'}`}
+                        >
+                            <Lock className="w-4 h-4" /> Compte
+                        </button>
+                    </div>
+                    {error && (
+                        <div className="mb-4 p-3 bg-[color:var(--destructive-bg)] border border-[color:var(--destructive-border)] rounded-md">
+                            <p className="text-[color:var(--destructive)] text-sm">{error}</p>
                         </div>
-                        {/* AuthModeToggle for guest/account selection */}
-                        <div className="bg-[color:var(--muted)] p-1 rounded-lg flex space-x-1 mb-2">
-                            <button
-                                onClick={() => setSimpleMode('guest')}
-                                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${simpleMode === 'guest' ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm' : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'}`}
-                            >
-                                <Gamepad className="w-4 h-4" /> Invité
-                            </button>
-                            <button
-                                onClick={() => setSimpleMode('account')}
-                                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${simpleMode === 'account' ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm' : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'}`}
-                            >
-                                <Lock className="w-4 h-4" /> Compte
-                            </button>
+                    )}
+                    {/* Render content based on simpleMode */}
+                    {simpleMode === 'guest' ? (
+                        <div>
+                            <div className="mt-4 mb-6">
+                                <p className="text-base text-muted mb-2 w-full">
+                                    {gameCode
+                                        ? `Choisissez un pseudo et un avatar pour rejoindre la partie ${gameCode}`
+                                        : 'Commencez rapidement avec un pseudo et un avatar. Vous pourrez créer un compte plus tard pour sauvegarder vos progrès.'
+                                    }
+                                </p>
+                            </div>
+                            <GuestForm
+                                onSubmit={handleGuestSubmit}
+                                isLoading={isLoading}
+                            />
                         </div>
-                        {error && (
-                            <div className="mb-4 p-3 bg-[color:var(--destructive-bg)] border border-[color:var(--destructive-border)] rounded-md">
-                                <p className="text-[color:var(--destructive)] text-sm">{error}</p>
-                            </div>
-                        )}
-                        {/* Render content based on simpleMode */}
-                        {simpleMode === 'guest' ? (
-                            <div>
-                                <div className="text-center mb-6">
-                                    <p className="text-base text-muted mb-2 max-w-md">
-                                        {gameCode
-                                            ? `Choisissez un pseudo et un avatar pour rejoindre la partie ${gameCode}`
-                                            : 'Commencez rapidement avec un pseudo et un avatar. Vous pourrez créer un compte plus tard pour sauvegarder vos progrès.'
-                                        }
-                                    </p>
-                                </div>
-                                <GuestForm
-                                    onSubmit={handleGuestSubmit}
-                                    isLoading={isLoading}
-                                />
-                            </div>
-                        ) : (
-                            <div>
-                                <div className="text-center mb-6">
-                                    <h2 className="text-2xl font-semibold text-base-content mb-2">
-                                        {studentAuthMode === 'login' ? 'Connexion' : 'Créer un compte'}
-                                    </h2>
-                                    {/* <p className="text-base text-muted mt-2 max-w-md mx-auto">
+                    ) : (
+                        <div>
+                            <div className="text-center mb-6 mt-4">
+                                <h2 className="text-2xl font-semibold text-base-content mb-2">
+                                    {studentAuthMode === 'login' ? 'Connexion' : 'Créer un compte'}
+                                </h2>
+                                {/* <p className="text-base text-muted mt-2 max-w-md mx-auto">
                                         {studentAuthMode === 'login'
                                             ? 'Connectez-vous à votre compte pour accéder à toutes les fonctionnalités'
                                             : 'Créez votre compte pour sauvegarder vos progrès et créer des tournois'}
                                     </p> */}
+                            </div>
+                            <form onSubmit={e => {
+                                e.preventDefault();
+                                const form = e.currentTarget;
+                                handleAccountAuth({
+                                    email: form.email.value,
+                                    password: form.password.value,
+                                    confirmPassword: form.confirmPassword?.value,
+                                    username: form.username?.value,
+                                    avatar: selectedAvatar
+                                });
+                            }} className="space-y-4">
+                                {/* Only one set of fields, in correct order */}
+                                <div>
+                                    <label htmlFor="email" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
+                                        <Mail className="inline w-4 h-4 mr-2" />
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        className="input input-bordered input-lg w-full"
+                                        autoComplete="username"
+                                        required
+                                    />
                                 </div>
-                                <form onSubmit={e => {
-                                    e.preventDefault();
-                                    const form = e.currentTarget;
-                                    handleAccountAuth({
-                                        email: form.email.value,
-                                        password: form.password.value,
-                                        confirmPassword: form.confirmPassword?.value,
-                                        username: form.username?.value,
-                                        avatar: selectedAvatar
-                                    });
-                                }} className="space-y-4">
-                                    {/* Only one set of fields, in correct order */}
+                                <div>
+                                    <label htmlFor="password" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
+                                        <Lock className="inline w-4 h-4 mr-2" />
+                                        Mot de passe
+                                    </label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        minLength={6}
+                                        className="input input-bordered input-lg w-full"
+                                        autoComplete={studentAuthMode === 'login' ? 'current-password' : 'new-password'}
+                                        required
+                                    />
+                                    {studentAuthMode === 'signup' && (
+                                        <p className="text-xs text-[color:var(--muted-foreground)] mt-1">Minimum 6 caractères</p>
+                                    )}
+                                </div>
+                                {studentAuthMode === 'signup' && (
                                     <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                                            <Mail className="inline w-4 h-4 mr-2" />
-                                            Email
-                                        </label>
-                                        <input
-                                            type="email"
-                                            id="email"
-                                            name="email"
-                                            className="input input-bordered input-lg w-full"
-                                            autoComplete="username"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="password" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
+                                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
                                             <Lock className="inline w-4 h-4 mr-2" />
-                                            Mot de passe
+                                            Confirmer le mot de passe
                                         </label>
                                         <input
                                             type="password"
-                                            id="password"
-                                            name="password"
+                                            id="confirmPassword"
+                                            name="confirmPassword"
                                             minLength={6}
                                             className="input input-bordered input-lg w-full"
-                                            autoComplete={studentAuthMode === 'login' ? 'current-password' : 'new-password'}
+                                            autoComplete="new-password"
                                             required
                                         />
-                                        {studentAuthMode === 'signup' && (
-                                            <p className="text-xs text-[color:var(--muted-foreground)] mt-1">Minimum 6 caractères</p>
-                                        )}
                                     </div>
-                                    {studentAuthMode === 'signup' && (
-                                        <div>
-                                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                                                <Lock className="inline w-4 h-4 mr-2" />
-                                                Confirmer le mot de passe
-                                            </label>
-                                            <input
-                                                type="password"
-                                                id="confirmPassword"
-                                                name="confirmPassword"
-                                                minLength={6}
-                                                className="input input-bordered input-lg w-full"
-                                                autoComplete="new-password"
-                                                required
-                                            />
-                                        </div>
-                                    )}
-                                    {studentAuthMode === 'signup' && (
-                                        <div>
-                                            <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                                                <User className="inline w-4 h-4 mr-2" />
-                                                Pseudo
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id="username"
-                                                name="username"
-                                                maxLength={20}
-                                                className="input input-bordered input-lg w-full"
-                                                required
-                                            />
-                                        </div>
-                                    )}
-                                    {studentAuthMode === 'signup' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-[color:var(--foreground)] mb-2">
-                                                Avatar
-                                            </label>
-                                            <AvatarGrid
-                                                selectedAvatar={selectedAvatar}
-                                                onAvatarSelect={setSelectedAvatar}
-                                            />
-                                        </div>
-                                    )}
-                                    {studentAuthMode === 'signup' && (
-                                        <div className="flex items-center mt-2">
-                                            <input
-                                                type="checkbox"
-                                                id="isTeacherSignup"
-                                                checked={isTeacherSignup}
-                                                onChange={e => setIsTeacherSignup(e.target.checked)}
-                                                className="mr-2 accent-[color:var(--primary)]"
-                                            />
-                                            <label htmlFor="isTeacherSignup" className="text-sm text-[color:var(--foreground)] select-none cursor-pointer">
-                                                Compte enseignant
-                                            </label>
-                                        </div>
-                                    )}
-                                    {studentAuthMode === 'signup' && isTeacherSignup && (
-                                        <div>
-                                            <label htmlFor="adminPassword" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                                                <Shield className="inline w-4 h-4 mr-2" />
-                                                Mot de passe administrateur
-                                            </label>
-                                            <input
-                                                type="password"
-                                                id="adminPassword"
-                                                name="adminPassword"
-                                                value={adminPassword}
-                                                onChange={e => setAdminPassword(e.target.value)}
-                                                className="input input-bordered input-lg w-full"
-                                                required={isTeacherSignup}
-                                            />
-                                        </div>
-                                    )}
+                                )}
+                                {studentAuthMode === 'signup' && (
+                                    <div>
+                                        <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
+                                            <User className="inline w-4 h-4 mr-2" />
+                                            Pseudo
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="username"
+                                            name="username"
+                                            maxLength={20}
+                                            className="input input-bordered input-lg w-full"
+                                            required
+                                        />
+                                    </div>
+                                )}
+                                {studentAuthMode === 'signup' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-[color:var(--foreground)] mb-2">
+                                            Avatar
+                                        </label>
+                                        <AvatarGrid
+                                            selectedAvatar={selectedAvatar}
+                                            onAvatarSelect={setSelectedAvatar}
+                                        />
+                                    </div>
+                                )}
+                                {studentAuthMode === 'signup' && (
+                                    <div className="flex items-center mt-2">
+                                        <input
+                                            type="checkbox"
+                                            id="isTeacherSignup"
+                                            checked={isTeacherSignup}
+                                            onChange={e => setIsTeacherSignup(e.target.checked)}
+                                            className="mr-2 accent-[color:var(--primary)]"
+                                        />
+                                        <label htmlFor="isTeacherSignup" className="text-sm text-[color:var(--foreground)] select-none cursor-pointer">
+                                            Compte enseignant
+                                        </label>
+                                    </div>
+                                )}
+                                {studentAuthMode === 'signup' && isTeacherSignup && (
+                                    <div>
+                                        <label htmlFor="adminPassword" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
+                                            <Shield className="inline w-4 h-4 mr-2" />
+                                            Mot de passe administrateur
+                                        </label>
+                                        <input
+                                            type="password"
+                                            id="adminPassword"
+                                            name="adminPassword"
+                                            value={adminPassword}
+                                            onChange={e => setAdminPassword(e.target.value)}
+                                            className="input input-bordered input-lg w-full"
+                                            required={isTeacherSignup}
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex justify-end">
                                     <button
                                         type="submit"
                                         disabled={isLoading || (studentAuthMode === 'signup' && !selectedAvatar)}
-                                        className="btn btn-primary btn-lg w-full"
+                                        className="btn btn-primary btn-lg"
                                     >
                                         {isLoading
                                             ? (studentAuthMode === 'login' ? 'Connexion...' : 'Création...')
                                             : (studentAuthMode === 'login' ? 'Se connecter' : 'Créer le compte')
                                         }
                                     </button>
-                                </form>
-                                <div className="mt-6 text-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStudentAuthMode(studentAuthMode === 'login' ? 'signup' : 'login')}
-                                        className="text-[color:var(--primary)] hover:text-[color:var(--primary-hover)] text-sm font-medium"
-                                    >
-                                        {studentAuthMode === 'login'
-                                            ? "Pas encore de compte ? Créer un compte"
-                                            : "Déjà un compte ? Se connecter"
-                                        }
-                                    </button>
                                 </div>
+                            </form>
+                            <div className="mt-6 text-center">
+                                <button
+                                    type="button"
+                                    onClick={() => setStudentAuthMode(studentAuthMode === 'login' ? 'signup' : 'login')}
+                                    className="text-[color:var(--primary)] hover:text-[color:var(--primary-hover)] text-sm font-medium"
+                                >
+                                    {studentAuthMode === 'login'
+                                        ? "Pas encore de compte ? Créer un compte"
+                                        : "Déjà un compte ? Se connecter"
+                                    }
+                                </button>
                             </div>
-                        )}
-                        <div className="flex items-center justify-center mt-2">
-                            <Link href="/" className="text-sm text-[color:var(--primary)] hover:underline flex items-center gap-1">
-                                <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
-                            </Link>
                         </div>
+                    )}
+                    <div className="flex items-center justify-center mt-2">
+                        <Link href="/" className="text-sm text-[color:var(--primary)] hover:underline flex items-center gap-1">
+                            <ArrowLeft className="w-4 h-4" /> Retour à l'accueil
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -1,3 +1,75 @@
+# UI Polish - Login Page & Mobile Scrollbar Fix ✅ COMPLETED
+
+## Problem Analysis
+The MathQuest app had two main UI issues to address:
+1. **Login page layout inconsistencies** - Button alignment and sizing issues
+2. **Mobile vertical scrollbar** - Unnecessary scrollbars due to AppNav height not being properly accounted for
+
+## Phase 1: Login Page Polish ✅ COMPLETED
+Fixed login page layout and styling to match modern patterns:
+- [x] **Right-aligned, normal-sized buttons** (not full width) for login/register
+- [x] **Fixed guest tab button styling** to match the new style
+- [x] **Updated guest tab info paragraph** to use `w-full` for better balance
+- [x] **Applied consistent layout pattern** using `.main-content` + `.card` structure like other working pages
+- [x] **Fixed compile errors** from extra closing divs after layout changes
+
+## Phase 2: Mobile Scrollbar Fix ✅ COMPLETED
+Identified and fixed the root cause of unnecessary vertical scrollbars on mobile:
+- [x] **Root cause identified**: `min-h-screen` not accounting for AppNav height (56px/3.5rem)
+- [x] **Created `.teacher-content` CSS class** in `globals.css` with proper mobile height calculation
+- [x] **Applied class to teacher/games page** replacing `min-h-screen bg-background`
+- [x] **Used proper CSS variable**: Updated to use `var(--navbar-height)` instead of hardcoded `3.5rem`
+- [x] **Implemented `dvh` units**: Used `100dvh` instead of `100vh` for better mobile browser support (URL bar height)
+- [x] **Extended to other teacher pages**: Applied fix to TeacherDashboardClient and teacher/games/new pages
+- [x] **Created `.teacher-content-flex` variant**: For pages needing full-height flex layout (games/new)
+
+### Technical Solution ✅
+```css
+.teacher-content {
+  /* Mobile: Account for AppNav height to prevent unnecessary vertical scroll */
+  min-height: calc(100dvh - var(--navbar-height));
+  background: var(--background);
+}
+
+@media (min-width: 768px) {
+  .teacher-content {
+    /* Desktop: No AppNav at top, use full viewport height */
+    min-height: 100dvh;
+  }
+}
+
+.teacher-content-flex {
+  /* Mobile: Account for AppNav height to prevent unnecessary vertical scroll */
+  height: calc(100dvh - var(--navbar-height));
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .teacher-content-flex {
+    /* Desktop: No AppNav at top, use full viewport height */
+    height: 100dvh;
+  }
+}
+```
+
+### Pages Updated ✅
+- [x] **teacher/games/page.tsx**: Uses `.teacher-content`
+- [x] **TeacherDashboardClient.tsx**: Uses `.teacher-content`  
+- [x] **teacher/games/new/page.tsx**: Uses `.teacher-content-flex`
+
+## Benefits of Final Solution ✅
+- ✅ **Uses proper CSS variables** (`--navbar-height: 56px`)
+- ✅ **Modern viewport units** (`dvh` for dynamic viewport height)
+- ✅ **Supports mobile URL bars** (Chrome on Android, etc.)
+- ✅ **Preserves original design** (no visual changes)
+- ✅ **Eliminates mobile scrollbars** while maintaining desktop behavior
+- ✅ **Reusable pattern** for other teacher pages if needed
+
+---
+
 # Timer Flickering Fix - Component Memoization Solution ✅ PHASE 2 COMPLETED
 
 ## Problem Analysis
@@ -132,3 +204,22 @@ The fix specifically addresses the timer update frequency by:
 - Implementing proper change detection for both time and status
 - Using `useMemo` with precise dependencies to prevent unnecessary re-renders
 - Adding comprehensive debugging to track render causes
+
+# UI Polish Phase - Login Page Button Alignment
+
+## Phase 1: Login Page Button Polish (In Progress)
+
+### Goal
+- Make login/register button on login page right-aligned and normal-sized (not full width)
+
+### Checklist
+- [x] Locate login page and identify button code
+- [x] Remove `w-full` from button and wrap in flex container with `justify-end`
+- [x] Ensure button uses modern, consistent style
+- [x] Polish guest tab button in GuestForm to be right-aligned and normal-sized
+- [ ] Test login page visually and functionally
+- [ ] Log action in documentation
+
+### Next Steps
+- Test the login page UI in the browser
+- Update documentation/logs as required

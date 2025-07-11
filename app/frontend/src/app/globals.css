@@ -961,6 +961,40 @@ textarea:focus {
   justify-content: center;
 }
 
+/*
+  Teacher content: Full-width layout for teacher pages that need more space.
+  Fixes mobile horizontal scroll by ensuring proper overflow handling
+  while preserving the original wide layout design.
+*/
+.teacher-content {
+  /* Mobile: Account for AppNav height to prevent unnecessary vertical scroll */
+  min-height: calc(100dvh - var(--navbar-height));
+  background: var(--background);
+}
+
+@media (min-width: 768px) {
+  .teacher-content {
+    /* Desktop: No AppNav at top, use full viewport height */
+    min-height: 100dvh;
+  }
+}
+
+.teacher-content-flex {
+  /* Mobile: Account for AppNav height to prevent unnecessary vertical scroll */
+  height: calc(100dvh - var(--navbar-height));
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .teacher-content-flex {
+    /* Desktop: No AppNav at top, use full viewport height */
+    height: 100dvh;
+  }
+}
+
 .tqcard-content {
   width: 100%;
   display: flex;

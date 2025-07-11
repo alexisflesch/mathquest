@@ -82,7 +82,7 @@ export default function Home() {
           {/* Header with logo */}
           <div className="flex items-center justify-center gap-4 mb-4">
             <Image src="/favicon.svg" alt="MathQuest logo" width={64} height={64} priority />
-            <h1 className="text-3xl text-center font-bold text-base-content">Zornigma</h1>
+            <h1 className="text-3xl text-center font-bold text-base-content">Mathquest</h1>
           </div>
 
           {/* Subtitle */}

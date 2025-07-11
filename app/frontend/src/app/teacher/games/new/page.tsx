@@ -464,7 +464,7 @@ export default function CreateActivityPage() {
     // }, [filters.levels, filters.disciplines, filters.themes, filters.authors]); // Only depend on the actual filter arrays
 
     return (
-        <div className="h-screen bg-background flex flex-col overflow-hidden">
+        <div className="teacher-content-flex">
             {/* Header */}
             <div className="bg-background border-b border-[color:var(--border)] px-4 sm:px-6 lg:px-8 flex-shrink-0">
                 <div className="max-w-7xl mx-auto py-4 sm:py-6">

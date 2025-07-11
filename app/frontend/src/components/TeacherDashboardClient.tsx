@@ -635,7 +635,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Add a projection page URL for the current code
     const projectionUrl = `/teacher/projection/${code}`;
     return (
-        <div className="min-h-screen bg-background">
+        <div className="teacher-content">
             {/* Header */}
             <div className="bg-background border-b border-[color:var(--border)] px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto py-4 sm:py-6">
@@ -738,23 +738,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                     aria-pressed={showTrophy}
                                     title="Afficher/Masquer le classement final et les bonnes réponses"
                                 >
-                                    <motion.div
-                                        animate={{
-                                            scale: [1, 1.15, 1],
-                                            rotate: [0, -8, 8, -8, 0],
-                                            y: [0, -3, 3, -3, 0]
-                                        }}
-                                        transition={{
-                                            duration: 1,
-                                            ease: "easeInOut",
-                                            repeat: Infinity,
-                                            repeatDelay: 2.5
-                                        }}
-                                    >
-                                        <Trophy className="w-6 h-6 transition-all duration-200"
-                                            strokeWidth={2}
-                                        />
-                                    </motion.div>
+                                    <Trophy className="w-6 h-6 transition-all duration-200"
+                                        strokeWidth={2}
+                                    />
                                 </button>
                                 {loading && <InfinitySpin size={32} />}
                             </div>
