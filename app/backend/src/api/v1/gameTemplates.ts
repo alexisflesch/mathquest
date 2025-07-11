@@ -11,11 +11,13 @@ import type {
 import type {
     GameTemplateCreationRequest,
     GameTemplateUpdateRequest,
+    RenameGameTemplateRequest,
     ErrorResponse
 } from '@shared/types/api/requests';
 import {
     CreateGameTemplateRequestSchema,
-    UpdateGameTemplateRequestSchema
+    UpdateGameTemplateRequestSchema,
+    RenameGameTemplateRequestSchema
 } from '@shared/types/api/schemas';
 
 const logger = createLogger('GameTemplatesAPI');
@@ -312,6 +314,74 @@ router.put('/:id', validateRequestBody(UpdateGameTemplateRequestSchema), async (
             res.status(404).json({ error: error.message });
         } else {
             res.status(500).json({ error: 'An error occurred while updating the game template' });
+        }
+    }
+});
+
+/**
+ * Rename a game template
+ * PATCH /api/v1/game-templates/:id/name
+ * Requires teacher authentication
+ */
+router.patch('/:id/name', validateRequestBody(RenameGameTemplateRequestSchema), async (req: Request<{ id: string }, GameTemplateResponse | ErrorResponse, RenameGameTemplateRequest>, res: Response<GameTemplateResponse | ErrorResponse>): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+
+        // Extract user ID from either req.user (from middleware) or x-user-id header (from frontend API route)
+        const userId = req.user?.userId || req.headers['x-user-id'] as string;
+        const userRole = req.user?.role || req.headers['x-user-role'] as string;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Authentification requise' });
+            return;
+        }
+
+        // Verify user is a teacher
+        if (userRole !== 'TEACHER') {
+            res.status(403).json({ error: 'Accès enseignant requis' });
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({ error: 'ID du modèle requis' });
+            return;
+        }
+
+        logger.info({ templateId: id, userId, newName: name }, 'Renaming game template');
+
+        // First check if the template exists and user has permission
+        const existingTemplate = await getGameTemplateService().getgameTemplateById(id, false);
+
+        if (!existingTemplate) {
+            res.status(404).json({ error: 'Modèle d\'activité non trouvé' });
+            return;
+        }
+
+        // Check if the user is the creator of this template
+        if (existingTemplate.creatorId !== userId) {
+            res.status(403).json({ error: 'Vous n\'avez pas la permission de renommer ce modèle d\'activité' });
+            return;
+        }
+
+        // Update only the name using the existing update service
+        const updatedTemplate = await getGameTemplateService().updategameTemplate(userId, {
+            id,
+            name
+        });
+
+        res.status(200).json({ gameTemplate: updatedTemplate });
+    } catch (error: any) {
+        logger.error({
+            error: error.message,
+            templateId: req.params.id,
+            userId: req.user?.userId || req.headers['x-user-id']
+        }, 'Error renaming game template');
+
+        if (error.message.includes('not found or you don\'t have permission')) {
+            res.status(404).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Une erreur s\'est produite lors du renommage du modèle d\'activité' });
         }
     }
 });

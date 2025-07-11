@@ -72,12 +72,7 @@ export type {
     TournamentCodeResponse,
     TournamentVerificationResponse,
     SuccessResponse,
-    UniversalLoginResponse,
-    // Practice API responses
-    CreatePracticeSessionApiResponse,
-    GetPracticeSessionApiResponse,
-    GetPracticeSessionsApiResponse,
-    GetPracticeQuestionsApiResponse
+    UniversalLoginResponse
 } from './api/schemas';
 
 // Re-export Question type from the correct location

@@ -116,6 +116,14 @@ export const UpdateGameTemplateRequestSchema = z.object({
     questionUids: z.array(z.string()).optional() // Temporarily allow any string format
 });
 
+export const RenameGameTemplateRequestSchema = z.object({
+    name: z.string().min(1, 'Le nom du modèle est requis').max(100, 'Le nom du modèle est trop long')
+});
+
+export const RenameGameInstanceRequestSchema = z.object({
+    name: z.string().min(1, 'Le nom de la session est requis').max(100, 'Le nom de la session est trop long')
+});
+
 // --- Question API Request Schemas ---
 
 export const CreateQuestionRequestSchema = z.object({
@@ -739,7 +747,10 @@ export type CreatePracticeSessionApiRequest = z.infer<typeof CreatePracticeSessi
 export type GetPracticeSessionsApiRequest = z.infer<typeof GetPracticeSessionsApiRequestSchema>;
 export type UpdatePracticeSessionApiRequest = z.infer<typeof UpdatePracticeSessionApiRequestSchema>;
 export type GetPracticeQuestionsApiRequest = z.infer<typeof GetPracticeQuestionsApiRequestSchema>;
-export type CreatePracticeSessionApiResponse = z.infer<typeof CreatePracticeSessionApiResponseSchema>;
 export type GetPracticeSessionApiResponse = z.infer<typeof GetPracticeSessionApiResponseSchema>;
 export type GetPracticeSessionsApiResponse = z.infer<typeof GetPracticeSessionsApiResponseSchema>;
 export type GetPracticeQuestionsApiResponse = z.infer<typeof GetPracticeQuestionsApiResponseSchema>;
+export type CreatePracticeSessionApiResponse = z.infer<typeof CreatePracticeSessionApiResponseSchema>;
+
+export type RenameGameTemplateRequest = z.infer<typeof RenameGameTemplateRequestSchema>;
+export type RenameGameInstanceRequest = z.infer<typeof RenameGameInstanceRequestSchema>;

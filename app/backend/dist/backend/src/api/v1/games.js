@@ -290,7 +290,7 @@ router.post('/:accessCode/join', (0, validation_1.validateRequestBody)(schemas_1
         // Map the gameInstance to include required fields
         const gameInstance = {
             ...joinResult.gameInstance,
-            accessCode, // Add the access code from the parameter
+            accessCode: accessCode, // Use the access code from the route parameter
             createdAt: new Date(), // Add missing createdAt field
             gameTemplateId: 'unknown', // Add missing gameTemplateId field
             gameTemplate: {
@@ -639,6 +639,43 @@ router.put('/instance/:id', auth_1.teacherAuth, async (req, res) => {
     catch (error) {
         logger.error({ error }, 'Error updating game instance');
         res.status(500).json({ error: 'An error occurred while updating the game instance' });
+    }
+});
+/**
+ * Rename a game instance
+ * PATCH /api/v1/games/instance/:id/name
+ * Requires teacher authentication
+ */
+router.patch('/instance/:id/name', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schemas_1.RenameGameInstanceRequestSchema), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        const user = req.user;
+        if (!id) {
+            res.status(400).json({ error: 'Game ID is required' });
+            return;
+        }
+        // Check if the game exists and the user is the creator
+        const existingGame = await getGameInstanceService().getGameInstanceById(id);
+        if (!existingGame) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        const isCreator = user && user.userId && existingGame.initiatorUserId === user.userId;
+        if (!isCreator) {
+            res.status(403).json({ error: 'You do not have permission to rename this game' });
+            return;
+        }
+        logger.info({ gameId: id, userId: user.userId, newName: name }, 'Renaming game instance');
+        // Update only the name
+        const updatedGame = await getGameInstanceService().updateGameInstance(id, {
+            name
+        });
+        res.status(200).json({ gameInstance: updatedGame });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error renaming game instance');
+        res.status(500).json({ error: 'An error occurred while renaming the game instance' });
     }
 });
 /**

@@ -5,6 +5,77 @@ The MathQuest app had two main UI issues to address:
 1. **Login page layout inconsistencies** - Button alignment and sizing issues
 2. **Mobile vertical scrollbar** - Unnecessary scrollbars due to AppNav height not being properly accounted for
 
+---
+
+# NEW PHASE: Inline Name Editing for GameTemplates & GameInstances 🚧 IN PROGRESS
+
+## Problem Analysis
+On the teacher games page (`/teacher/games`), both GameTemplates and GameInstances display names that should be editable inline for better UX.
+
+## Requirements
+- [x] **Add pencil icon** (lucide-react) next to template/instance names
+- [x] **Click to edit functionality** - Replace text with input field
+- [x] **OK/Cancel buttons** - Check and X icons (lucide-react)
+- [x] **Backend API endpoint** - Rename templates with userId validation
+- [x] **Frontend validation** - Update UI on success, show snackbar on error
+- [x] **GameTemplate rename API** - Create dedicated endpoint 
+- [x] **GameInstance rename API** - Use existing `PUT /api/v1/games/instance/:id` endpoint
+- [x] **Frontend API routes** - Fixed authentication token extraction
+- [x] **TypeScript fixes** - Fixed Next.js App Router params Promise type
+- [x] **InlineEdit component** - Created reusable inline editing component
+- [x] **UI improvements** - Removed theme list, commented out disabled buttons
+- [x] **French error messages** - Updated all API responses to French
+- [x] **Testing** - Verified functionality works end-to-end
+- [x] **Documentation** - Updated plan.md with all changes
+
+## Phase Complete: Inline Name Editing ✅ COMPLETED
+
+### **Summary of Changes:**
+
+#### **Backend API Endpoints:**
+- `PATCH /api/v1/game-templates/:id/name` - Rename game templates
+- `PATCH /api/v1/games/instance/:id/name` - Rename game instances
+- All error messages converted to French
+
+#### **Frontend Components:**
+- Created `InlineEdit` component with pencil icon
+- Integrated inline editing for template and instance names
+- Removed theme list display for cleaner UI
+- Commented out disabled edit/duplicate buttons
+
+#### **Shared Types:**
+- Added `RenameGameTemplateRequestSchema` and `RenameGameInstanceRequestSchema`
+- French validation error messages
+
+#### **Frontend API Routes:**
+- `/api/game-templates/[templateId]/name` - Template rename proxy
+- `/api/games/instance/[instanceId]/name` - Instance rename proxy
+- Proper authentication with `teacherToken`/`authToken` cookies
+- French error messages throughout
+
+### **Features Working:**
+✅ Hover over names shows pencil icon  
+✅ Click to edit with input field  
+✅ Enter to save, Escape to cancel  
+✅ Success/error feedback in French  
+✅ UI updates immediately on success  
+✅ Proper authentication and permissions  
+✅ Clean UI without theme clutter
+
+## API Endpoints Analysis
+- **GameInstance**: New `PATCH /api/v1/games/instance/:id/name` endpoint created
+- **GameTemplate**: New `PATCH /api/v1/game-templates/:id/name` endpoint created
+
+## Implementation Status
+- ✅ **Backend APIs**: Created PATCH endpoints for both templates and instances
+- ✅ **Frontend API Routes**: Created with proper authentication token extraction
+- ✅ **InlineEdit Component**: Reusable component with pencil icon, input field, OK/Cancel buttons
+- ✅ **UI Integration**: Added to both template and instance name displays
+- ✅ **Authentication Fix**: Fixed token extraction to match working DELETE endpoint pattern
+- 🚧 **Testing**: Ready for testing the rename functionality
+
+---
+
 ## Phase 1: Login Page Polish ✅ COMPLETED
 Fixed login page layout and styling to match modern patterns:
 - [x] **Right-aligned, normal-sized buttons** (not full width) for login/register

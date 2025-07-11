@@ -9,6 +9,7 @@ import Snackbar from '@/components/Snackbar';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import InfoModal from '@/components/SharedModal';
 import InfinitySpin from '@/components/InfinitySpin';
+import InlineEdit from '@/components/ui/InlineEdit';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import StartActivityModal from '@/components/StartActivityModal';
 
@@ -59,12 +60,14 @@ interface ActivityCardProps {
     onDuplicate: (templateId: string) => void;
     onDelete: (templateId: string) => void;
     onDeleteInstance: (instanceId: string, instanceName: string) => void;
+    onRenameTemplate: (templateId: string, newName: string) => Promise<void>;
+    onRenameInstance: (instanceId: string, newName: string) => Promise<void>;
     formatDate: (dateString: string, opts?: { dateOnly?: boolean }) => string;
     gameInstances: GameInstance[];
     onFetchGameInstances: (templateId: string) => Promise<void>;
 }
 
-function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplicate, onDelete, onDeleteInstance, formatDate, gameInstances, onFetchGameInstances }: ActivityCardProps) {
+function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplicate, onDelete, onDeleteInstance, onRenameTemplate, onRenameInstance, formatDate, gameInstances, onFetchGameInstances }: ActivityCardProps) {
     const [startModal, setStartModal] = useState<{
         isOpen: boolean;
         templateId: string | null;
@@ -130,7 +133,12 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                     <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-1 flex-wrap">
-                                <h3 className="text-lg font-semibold text-[color:var(--foreground)] truncate">{template.name}</h3>
+                                <InlineEdit
+                                    value={template.name}
+                                    onSave={(newName) => onRenameTemplate(template.id, newName)}
+                                    className="text-lg font-semibold text-[color:var(--foreground)]"
+                                    placeholder="Template name..."
+                                />
                                 {template.defaultMode && (
                                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getModeColor(template.defaultMode)}`}>
                                         {getModeIcon(template.defaultMode)}
@@ -140,12 +148,7 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                                     template.defaultMode}
                                     </span>
                                 )}
-                                {template.themes && template.themes.length > 0 && (
-                                    <span className="text-xs text-[color:var(--muted-foreground)]">
-                                        {template.themes.slice(0, 2).join(', ')}
-                                        {template.themes.length > 2 && ` +${template.themes.length - 2}`}
-                                    </span>
-                                )}
+                                {/* Themes removed for cleaner UI */}
                             </div>
 
                             <div className="text-sm text-[color:var(--muted-foreground)]">
@@ -173,6 +176,8 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                             >
                                 <Rocket size={16} className="transition-colors group-hover:stroke-white" />
                             </button>
+                            {/* Temporarily disabled - Under construction */}
+                            {/* 
                             <span title="🛠️ En chantier !">
                                 <button
                                     disabled
@@ -189,6 +194,7 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                     <Copy size={16} />
                                 </button>
                             </span>
+                            */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -303,10 +309,30 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                                                     )}
                                                                 </span>
                                                                 <div>
-                                                                    <div className="text-sm font-medium text-[color:var(--foreground)]">
-                                                                        {instance.playMode === 'quiz' ? 'Quiz' :
-                                                                            instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'}
-                                                                        {instance.name ? ` - ${instance.name}` : ''}
+                                                                    <div className="text-sm font-medium text-[color:var(--foreground)] flex items-center gap-2">
+                                                                        <span>
+                                                                            {instance.playMode === 'quiz' ? 'Quiz' :
+                                                                                instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'}
+                                                                        </span>
+                                                                        {instance.name && (
+                                                                            <>
+                                                                                <span>-</span>
+                                                                                <InlineEdit
+                                                                                    value={instance.name}
+                                                                                    onSave={(newName) => onRenameInstance(instance.id, newName)}
+                                                                                    className="text-sm font-medium"
+                                                                                    placeholder="Game name..."
+                                                                                />
+                                                                            </>
+                                                                        )}
+                                                                        {!instance.name && (
+                                                                            <InlineEdit
+                                                                                value=""
+                                                                                onSave={(newName) => onRenameInstance(instance.id, newName)}
+                                                                                className="text-sm font-medium text-[color:var(--muted-foreground)]"
+                                                                                placeholder="Add name..."
+                                                                            />
+                                                                        )}
                                                                     </div>
                                                                     <div className="text-xs text-[color:var(--muted-foreground)]">
                                                                         {subtext}
@@ -486,7 +512,90 @@ export default function TeacherGamesPage() {
             hour: '2-digit',
             minute: '2-digit'
         });
-    }, []); const fetchGameInstances = useCallback(async (templateId: string) => {
+    }, []);
+    const renameTemplate = useCallback(async (templateId: string, newName: string) => {
+        try {
+            const response = await fetch(
+                `/api/game-templates/${templateId}/name`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: newName })
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to rename template');
+            }
+
+            // Update the local state
+            setGames(prevGames =>
+                prevGames.map(game =>
+                    game.id === templateId
+                        ? { ...game, name: newName }
+                        : game
+                )
+            );
+
+            setSnackbar({ open: true, message: 'Nom de l\'activité modifié', defaultMode: 'success' });
+        } catch (error) {
+            console.error('Error renaming template:', error);
+            setSnackbar({
+                open: true,
+                message: (error as Error).message || 'Failed to rename template',
+                defaultMode: 'error'
+            });
+            throw error;
+        }
+    }, []);
+
+    const renameInstance = useCallback(async (instanceId: string, newName: string) => {
+        try {
+            const response = await fetch(
+                `/api/games/instance/${instanceId}/name`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: newName })
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to rename instance');
+            }
+
+            // Update the local state
+            setGameInstances(prevInstances => {
+                const newInstances = { ...prevInstances };
+                Object.keys(newInstances).forEach(templateId => {
+                    newInstances[templateId] = newInstances[templateId].map(instance =>
+                        instance.id === instanceId
+                            ? { ...instance, name: newName }
+                            : instance
+                    );
+                });
+                return newInstances;
+            });
+
+            setSnackbar({ open: true, message: 'Nom de la session modifié', defaultMode: 'success' });
+        } catch (error) {
+            console.error('Error renaming instance:', error);
+            setSnackbar({
+                open: true,
+                message: (error as Error).message || 'Failed to rename game',
+                defaultMode: 'error'
+            });
+            throw error;
+        }
+    }, []);
+
+    const fetchGameInstances = useCallback(async (templateId: string) => {
         try {
             const response = await makeApiRequest<{ gameInstances: GameInstance[] }>(
                 // Modernization: Use canonical Next.js API route
@@ -770,6 +879,8 @@ export default function TeacherGamesPage() {
                                 onDuplicate={duplicateTemplate}
                                 onDelete={deleteTemplate}
                                 onDeleteInstance={handleDeleteInstance}
+                                onRenameTemplate={renameTemplate}
+                                onRenameInstance={renameInstance}
                                 formatDate={formatDate}
                                 gameInstances={gameInstances[template.id] || []}
                                 onFetchGameInstances={fetchGameInstances}
