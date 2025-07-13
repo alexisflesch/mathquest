@@ -4,35 +4,29 @@ title: Utilisation de l'application
 
 # Utilisation de l'application
 
-> Cette page présente les principales fonctionnalités de MathQuest.
+> Découvrez les principales fonctionnalités de MathQuest et comment prendre en main l'application en quelques minutes.
 
 ## Fonctionnalités principales
 
-MathQuest propose trois modes de jeu principaux :
+MathQuest propose trois modes de jeu principaux :
 
-- **Quiz (mode enseignant)** : Quiz en temps réel piloté par l'enseignant. L'enseignant contrôle l'enchaînement des questions, le timer, et la diffusion des réponses/corrections. Les élèves répondent en direct, sans feedback automatique (feedback oral ou à la fin).
-- **Tournoi (mode compétition)** : Tournoi synchrone ou différé. Tous les participants reçoivent les questions en même temps (synchrone) ou peuvent rejouer la partie en différé (asynchrone). Le backend gère le timer, la progression, le classement et la diffusion des bonnes réponses et des feedbacks (si présents) à la fin de chaque question.
-- **Entraînement (mode libre)** : Mode individuel, sans timer. L'utilisateur choisit d'enchaîner les questions à son rythme, reçoit un feedback immédiat après chaque réponse, et peut recommencer autant de fois qu'il le souhaite. Aucun score n'est enregistré.
+- **Quiz (mode enseignant)** : Animez un quiz en temps réel avec vos élèves. Vous contrôlez l’enchaînement des questions, le timer, et la diffusion des réponses ou corrections. Les élèves répondent en direct, et vous choisissez quand donner le feedback (oralement ou à la fin).
+- **Tournoi (mode compétition)** : Organisez un tournoi synchrone (tout le monde joue en même temps) ou différé (chacun peut rejouer la partie à son rythme). Le système gère le timer, la progression, le classement et affiche les bonnes réponses et feedbacks à la fin de chaque question.
+- **Entraînement (mode libre)** : Entraînez-vous en solo, sans timer ni pression. Vous enchaînez les questions à votre rythme, recevez un feedback immédiat après chaque réponse, et pouvez recommencer autant de fois que vous le souhaitez. Aucun score n’est enregistré.
 
 ## Prise en main rapide
 
 1. **Connexion à l'application**
-   - Choisissez votre profil (élève, enseignant, invité) à la connexion. En mode invité, pas besoin de créer un compte: choisissez simplement un pseudo et un avatar et vous êtes prêt à jouer. Vos résultats ne seront pas sauvegardés mais vous pourrez mettre à jour votre profil plus tard si vous le souhaitez.
-   - Si vous êtes enseignant, vous pouvez créer un compte vous permettant de gérer vos activités: regroupez des questions et créez des quiz pour une utilisation en classe, ou des tournois voire des sessions d'entraînement pour vos élèves.
+   - Choisissez votre profil (élève, enseignant ou invité) à la connexion. En mode invité, pas besoin de créer un compte : choisissez simplement un pseudo et un avatar, et vous êtes prêt à jouer. Vos résultats ne seront pas sauvegardés, mais vous pourrez créer un compte plus tard si besoin.
+   - Si vous êtes enseignant, créez un compte pour gérer vos activités : regroupez des questions, créez des quiz, des tournois ou des sessions d’entraînement pour vos élèves.
 
 2. **Déroulement selon le mode**
-   - **Quiz** : L'enseignant crée ou sélectionne un quiz, invite les élèves à rejoindre, puis contrôle le déroulement.
-   - **Tournoi** : Un utilisateur (élève ou enseignant) lance un tournoi (synchrone ou différé), les participants rejoignent via un code, le backend gère la progression.
-   - **Entraînement** : L'utilisateur démarre une session d'entraînement libre, répond à des questions à son rythme, et obtient un feedback immédiat.
+   - **Quiz** : Créez ou sélectionnez un quiz, invitez vos élèves à rejoindre, puis pilotez le déroulement de la session.
+   - **Tournoi** : Lancez un tournoi (synchrone ou différé), partagez le code d’accès, et laissez le système gérer la progression et le classement.
+   - **Entraînement** : Démarrez une session d’entraînement libre, répondez à des questions à votre rythme, et obtenez un feedback immédiat.
 
 ## Guides détaillés
 
-- <RouterLink to="/utilisation/quiz/">📊 Mode Quiz (enseignant)</RouterLink>
-- <RouterLink to="/utilisation/tournoi/">🏆 Mode Tournoi</RouterLink>
-- <RouterLink to="/utilisation/entrainement/">🎯 Mode Entraînement</RouterLink>
-
-## Architecture de l'application (aperçu)
-
-- **Frontend** : Application React/Next.js (interface utilisateur, navigation, gestion d'état, communication temps réel via Socket.IO).
-- **Backend** : API Node.js/Express (gestion des utilisateurs, parties, questions, statistiques, WebSocket).
-- **Base de données** : PostgreSQL, schéma géré par Prisma.
+- [📊 Mode Quiz (enseignant)](./quiz.md)
+- [🏆 Mode Tournoi](./tournoi.md)
+- [🎯 Mode Entraînement](./entrainement.md)

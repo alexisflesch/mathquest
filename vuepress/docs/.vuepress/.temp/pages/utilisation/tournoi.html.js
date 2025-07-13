@@ -1,3 +1,3 @@
 import comp from "/home/aflesch/mathquest/vuepress/docs/.vuepress/.temp/pages/utilisation/tournoi.html.vue"
-const data = JSON.parse("{\"path\":\"/utilisation/tournoi.html\",\"title\":\"Mode Tournoi\",\"lang\":\"fr-FR\",\"frontmatter\":{\"title\":\"Mode Tournoi\"},\"git\":{},\"filePathRelative\":\"utilisation/tournoi.md\"}")
+const data = JSON.parse("{\"path\":\"/utilisation/tournoi.html\",\"title\":\"Mode Tournoi\",\"lang\":\"fr-FR\",\"frontmatter\":{\"title\":\"Mode Tournoi\"},\"git\":{\"updatedTime\":1752247215000,\"contributors\":[{\"name\":\"alexisflesch\",\"username\":\"alexisflesch\",\"email\":\"alexis.flesch@gmail.com\",\"commits\":1,\"url\":\"https://github.com/alexisflesch\"}],\"changelog\":[{\"hash\":\"6dfdf8b7d47485189ff21546f29982dd9bab55c5\",\"time\":1752247215000,\"email\":\"alexis.flesch@gmail.com\",\"author\":\"alexisflesch\",\"message\":\"doc à jour\"}]},\"filePathRelative\":\"utilisation/tournoi.md\"}")
 export { comp, data }

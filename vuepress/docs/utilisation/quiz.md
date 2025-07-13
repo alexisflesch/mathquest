@@ -4,11 +4,11 @@ title: Mode Quiz (enseignant)
 
 # Mode Quiz (enseignant)
 
-Le mode Quiz permet à l'enseignant de piloter entièrement une session de questions en temps réel avec ses élèves.
+Le mode Quiz vous permet de piloter entièrement une session de questions en temps réel avec vos élèves.
 
 ## 1. Sélection et création de quiz
 
-L'enseignant commence par créer ou sélectionner une activité dans la section dédiée de l'interface. Il pourra alors créer au choix, à partir de cette activité, un quiz, un tournoi ou une session d'entraînement. Il pourra ensuite communiquer le code d'accès aux élèves pour qu'ils rejoignent la session.
+Commencez par créer ou sélectionner une activité dans la section dédiée de l’interface. À partir de cette activité, vous pouvez générer un quiz, un tournoi ou une session d’entraînement. Une fois le quiz prêt, communiquez le code d’accès à vos élèves pour qu’ils rejoignent la session.
 
 <div class="screenshot-container">
   <img src="/screenshots/activites-light.png" alt="Interface de sélection de quiz - thème clair" class="theme-screenshot screenshot-light">
@@ -18,7 +18,7 @@ L'enseignant commence par créer ou sélectionner une activité dans la section 
 
 ## 2. Vue vidéoprojecteur
 
-Une fois le quiz sélectionné, l'enseignant affiche sur vidéoprojecteur une page dédiée avec QR code et lien pour rejoindre le quiz. Cette page se rafraîchit automatiquement pour afficher :
+Une fois le quiz sélectionné, affichez sur vidéoprojecteur la page dédiée avec QR code et lien pour rejoindre le quiz. Cette page se rafraîchit automatiquement pour afficher :
 - Les questions en cours
 - Le chronomètre
 - Les statistiques de réponses (affichage optionnel)
@@ -32,13 +32,13 @@ Une fois le quiz sélectionné, l'enseignant affiche sur vidéoprojecteur une pa
 
 **💡 Fonctionnalités de la vue projection :**
 - **Mise en page** : Redimensionnez et réorganisez les éléments à votre convenance. Avant le début du quiz, tous les éléments affichent des QR codes pour vos élèves.
-- **Affichage/masquage des statistiques** : L'enseignant peut choisir d'afficher ou non les stats de réponses en temps réel
-- **QR code dynamique** : Permet aux élèves de rejoindre facilement avec leur téléphone
-- **Mise à jour automatique** : La page se synchronise automatiquement avec le dashboard enseignant
+- **Affichage/masquage des statistiques** : Choisissez d’afficher ou non les stats de réponses en temps réel.
+- **QR code dynamique** : Permettez à vos élèves de rejoindre facilement avec leur téléphone.
+- **Mise à jour automatique** : La page se synchronise automatiquement avec votre dashboard enseignant.
 
 ## 3. Dashboard de contrôle
 
-L'enseignant dispose d'un tableau de bord complet pour contrôler la session. Il peut utiliser son ordinateur ou son téléphone portable pour un contrôle total.
+Vous disposez d’un tableau de bord complet pour contrôler la session. Utilisez votre ordinateur ou votre téléphone portable pour un contrôle total.
 
 <div class="screenshots-grid">
   <div class="screenshot-container">
@@ -57,16 +57,16 @@ L'enseignant dispose d'un tableau de bord complet pour contrôler la session. Il
 </div>
 
 **🎛️ Fonctionnalités du dashboard :**
-- **Contrôle total du timer** : Démarrer, arrêter, modifier le temps restant
-- **Navigation entre questions** : Passer à la question suivante/précédente à tout moment
-- **Statistiques en temps réel** : Voir les réponses données
-- **Gestion des corrections** : Décider quand afficher les bonnes réponses et calculer les scores
-- **Flexibilité mobile** : Contrôler la session depuis son téléphone pour circuler dans la classe
+- **Contrôle total du timer** : Démarrez, arrêtez, modifiez le temps restant.
+- **Navigation entre questions** : Passez à la question suivante/précédente à tout moment.
+- **Statistiques en temps réel** : Visualisez les réponses données.
+- **Gestion des corrections** : Décidez quand afficher les bonnes réponses et calculer les scores.
+- **Flexibilité mobile** : Contrôlez la session depuis votre téléphone pour circuler dans la classe.
 
 ## 4. Expérience élève
 
-- Les élèves rejoignent via un code ou un lien (QR code)
-- Ils répondent en temps réel aux questions affichées
-- **Pas de feedback immédiat** : Les élèves ne voient pas si leur réponse est correcte
-- L'enseignant décide quand révéler les bonnes réponses et afficher les scores
-- Le feedback est donné oralement par l'enseignant à la fin des questions (pas de feedback sur les téléphones, cette fonctionnalitée est réservée aux modes Tournoi et Entraînement)
+- Les élèves rejoignent via un code ou un lien (QR code).
+- Ils répondent en temps réel aux questions affichées.
+- **Pas de feedback immédiat** : Les élèves ne voient pas si leur réponse est correcte.
+- Vous décidez quand révéler les bonnes réponses et afficher les scores.
+- Le feedback est donné oralement à la fin des questions (pas de feedback sur les téléphones, cette fonctionnalité est réservée aux modes Tournoi et Entraînement).
