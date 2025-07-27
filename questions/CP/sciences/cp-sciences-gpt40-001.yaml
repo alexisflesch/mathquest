@@ -1,0 +1,191 @@
+- uid: "gpt4o-cp-sciences-vivant-001"
+  title: "Animaux et leurs caractéristiques"
+  text: "Quel animal vit dans l'eau douce et capture des insectes ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Le vivant"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Tigre"
+    - "Éléphant"
+    - "Grenouille"
+    - "Chat"
+  correctAnswers: [false, false, true, false]
+  tags: ["animaux et leurs caractéristiques"]
+  timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-sciences-vivant-002"
+  title: "Plantes et besoins vitaux"
+  text: "Que faut-il à une plante pour pousser ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Le vivant"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Lumière du soleil"
+    - "Jouer de la musique"
+    - "Donner des jouets"
+    - "Parler avec elle"
+  correctAnswers: [true, false, false, false]
+  tags: ["plantes et besoins vitaux"]
+  timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-sciences-espace-002"
+  title: "Se repérer dans l'espace"
+  text: "Quel objet utilise-t-on pour observer les étoiles ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["L'espace"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Des lunettes de soleil"
+    - "Un télescope"
+    - "Une lampe de poche"
+    - "Une boussole"
+  correctAnswers: [false, true, false, false]
+  tags: ["se repérer dans l'espace familier"]
+  timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-sciences-objets-006"
+  title: "Observer un mécanisme"
+  text: "Quel élément transmet le mouvement entre le pédalier et la roue d'un vélo ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Les objets techniques"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Guidon"
+    - "Selle"
+    - "Phare"
+    - "Chaîne"
+  correctAnswers: [false, false, false, true]
+  tags: ["observer un mécanisme"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-sciences-espace-005"
+  title: "Planètes"
+  text: "Autour de quel astre tourne la Terre ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["L'espace"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "La lune"
+    - "Mars"
+    - "Le soleil"
+    - "L'étoile Polaire"
+  correctAnswers: [false, false, true, false]
+  tags: ["se repérer dans l'espace familier"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-sciences-objets-007"
+  title: "Moyens de transport"
+  text: "Quel moyen de transport se déplace sur des rails ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Les objets techniques"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Avion"
+    - "Train"
+    - "Bateau"
+    - "Vélo"
+  correctAnswers: [false, true, false, false]
+  tags: ["utilisation d'objets simples"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-sciences-temps-004"
+  title: "Les saisons"
+  text: "Quelle saison arrive après l'hiver ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Le temps"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Automne"
+    - "Printemps"
+    - "Été"
+    - "Hiver"
+  correctAnswers: [false, true, false, false]
+  tags: ["jours, mois, saisons"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-sciences-temps-005"
+  title: "Les jours de la semaine"
+  text: "Quel jour vient après lundi ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Le temps"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Samedi"
+    - "Dimanche"
+    - "Mardi"
+    - "Jeudi"
+  correctAnswers: [false, false, true, false]
+  tags: ["repères temporels"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-sciences-vivant-003"
+  title: "Animaux"
+  text: "Quel animal vit dans l'eau et a des écailles ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Le vivant"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Le chien"
+    - "Le poisson"
+    - "L'oiseau"
+    - "La grenouille"
+  correctAnswers: [false, true, false, false]
+  tags: ["animaux et leurs caractéristiques"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-sciences-vivant-004"
+  title: "Animaux"
+  text: "Quel animal est connu pour sa capacité à changer de couleur ?"
+  questionType: "single_choice"
+  discipline: "Questionner le monde"
+  themes: ["Le vivant"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Tigre"
+    - "Cameleon"
+    - "Éléphant"
+    - "Aigle"
+  correctAnswers: [false, true, false, false]
+  tags: ["animaux et leurs caractéristiques"]
+  timeLimit: 30

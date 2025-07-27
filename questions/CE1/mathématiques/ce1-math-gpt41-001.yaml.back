@@ -53,7 +53,7 @@
   author: "gpt-4.1"
   discipline: "Mathématiques"
   title: "Les livres d’Emma"
-  text: "Emma a 9 livres. Elle en lit 4 et en rend 3 à la bibliothèque. Combien lui en reste-t-il ?"
+  text: "Emma a 9 livres. Elle en lit 4 et en rend 3 autres à la bibliothèque. Combien lui en reste-t-il à lire ?"
   questionType: "numeric"
   themes: ["Calcul"]
   tags: ["calcul mental", "problèmes"]

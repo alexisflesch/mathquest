@@ -1,0 +1,131 @@
+- uid: "gpt4o-cp-arts-couleurs-001"
+  title: "Arts plastiques"
+  text: "Que se passe-t-il si tu mélanges du bleu et du jaune ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Arts plastiques"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Rouge"
+    - "Vert"
+    - "Orange"
+    - "Violet"
+  correctAnswers: [false, true, false, false]
+  tags: ["dessiner, colorier, peindre"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-arts-couleurs-003"
+  title: "Arts plastiques"
+  text: "Que se passe-t-il si tu mélanges du rouge et du bleu ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Arts plastiques"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Vert"
+    - "Violet"
+    - "Orange"
+    - "Rose"
+  correctAnswers: [false, true, false, false]
+  tags: ["dessiner, colorier, peindre"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-arts-couleurs-004"
+  title: "Arts plastiques"
+  text: "En mélangeant du jaune et du rouge, quelle couleur obtiens-tu ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Arts plastiques"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Orange"
+    - "Vert"
+    - "Bleu"
+    - "Rose"
+  correctAnswers: [true, false, false, false]
+  tags: ["dessiner, colorier, peindre"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-arts-musicale-002"
+  title: "Éducation musicale"
+  text: "Lequel de ces objets n'est pas un instrument de musique ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Éducation musicale"]
+  difficulty: 2
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "La trompette"
+    - "Le triangle"
+    - "Le violon"
+    - "L'harmonica"
+    - "Le soufflet"
+  correctAnswers: [false, false, false, false, true]
+  tags: ["écoute musicale"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-arts-musicale-002"
+  title: "Éducation musicale"
+  text: "Lequel de ces instruments de musique est un instrument à vent ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Éducation musicale"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "La guitare"
+    - "La trompette"
+    - "Le piano"
+    - "Le violon"
+  correctAnswers: [false, true, false, false]
+  tags: ["écoute musicale"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-arts-musicale-003"
+  title: "Comptines musicales"
+  text: "Dans la comptine 'Une souris verte', où va la souris ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Éducation musicale"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Dans la rivière"
+    - "Dans le jardin"
+    - "Dans un chapeau"
+    - "Dans un bateau"
+  correctAnswers: [true, false, false, false]
+  tags: ["chant et expression vocale"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-arts-musicale-005"
+  title: "Comptines musicales"
+  text: "Dans la chanson 'Vive le Vent', quelle saison est célébrée ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Éducation musicale"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "L'été"
+    - "L'hiver"
+    - "Le printemps"
+    - "L'automne"
+  correctAnswers: [false, true, false, false]
+  tags: ["chant et expression vocale"]
+  timeLimit: 30
