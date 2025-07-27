@@ -3,7 +3,7 @@
 
 - uid: "aflesch-mt3-001"
   author: "aflesch"
-  gradeLevel: "L1"
+  gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Intégrales généralisées"]
   title: "Convergence intégrale"
@@ -22,7 +22,7 @@
 
 - uid: "aflesch-mt3-002"
   author: "aflesch"
-  gradeLevel: "L1"
+  gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Intégrales généralisées"]
   title: "Théorème de comparaison"
@@ -45,7 +45,7 @@
 
 - uid: "aflesch-mt3-003"
   author: "aflesch"
-  gradeLevel: "L1"
+  gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Intégrales généralisées"]
   title: "Intégrales de référence"
@@ -65,7 +65,7 @@
 
 - uid: "aflesch-mt3-004"
   author: "aflesch"
-  gradeLevel: "L1"
+  gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Intégrales généralisées"]
   title: "Intégrales de Riemann"
@@ -86,7 +86,7 @@
 
 - uid: "aflesch-mt3-005"
   author: "aflesch"
-  gradeLevel: "L1"
+  gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Intégrales généralisées"]
   title: "Critère de Riemann"
@@ -104,7 +104,7 @@
 
 - uid: "aflesch-mt3-006"
   author: "aflesch"
-  gradeLevel: "L1"
+  gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Intégrales généralisées"]
   title: "Condition de convergence"
