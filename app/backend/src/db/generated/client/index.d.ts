@@ -1716,11 +1716,11 @@ export namespace Prisma {
     username: string | null
     email: string | null
     passwordHash: string | null
-    avatarEmoji: string | null
     createdAt: Date | null
     role: $Enums.UserRole | null
     resetToken: string | null
     resetTokenExpiresAt: Date | null
+    avatarEmoji: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -1728,11 +1728,11 @@ export namespace Prisma {
     username: string | null
     email: string | null
     passwordHash: string | null
-    avatarEmoji: string | null
     createdAt: Date | null
     role: $Enums.UserRole | null
     resetToken: string | null
     resetTokenExpiresAt: Date | null
+    avatarEmoji: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -1740,11 +1740,11 @@ export namespace Prisma {
     username: number
     email: number
     passwordHash: number
-    avatarEmoji: number
     createdAt: number
     role: number
     resetToken: number
     resetTokenExpiresAt: number
+    avatarEmoji: number
     _all: number
   }
 
@@ -1754,11 +1754,11 @@ export namespace Prisma {
     username?: true
     email?: true
     passwordHash?: true
-    avatarEmoji?: true
     createdAt?: true
     role?: true
     resetToken?: true
     resetTokenExpiresAt?: true
+    avatarEmoji?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -1766,11 +1766,11 @@ export namespace Prisma {
     username?: true
     email?: true
     passwordHash?: true
-    avatarEmoji?: true
     createdAt?: true
     role?: true
     resetToken?: true
     resetTokenExpiresAt?: true
+    avatarEmoji?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -1778,11 +1778,11 @@ export namespace Prisma {
     username?: true
     email?: true
     passwordHash?: true
-    avatarEmoji?: true
     createdAt?: true
     role?: true
     resetToken?: true
     resetTokenExpiresAt?: true
+    avatarEmoji?: true
     _all?: true
   }
 
@@ -1863,11 +1863,11 @@ export namespace Prisma {
     username: string
     email: string | null
     passwordHash: string | null
-    avatarEmoji: string | null
     createdAt: Date
     role: $Enums.UserRole
     resetToken: string | null
     resetTokenExpiresAt: Date | null
+    avatarEmoji: string | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -1892,11 +1892,11 @@ export namespace Prisma {
     username?: boolean
     email?: boolean
     passwordHash?: boolean
-    avatarEmoji?: boolean
     createdAt?: boolean
     role?: boolean
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
+    avatarEmoji?: boolean
     studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
     teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
     initiatedGameInstances?: boolean | User$initiatedGameInstancesArgs<ExtArgs>
@@ -1910,11 +1910,11 @@ export namespace Prisma {
     username?: boolean
     email?: boolean
     passwordHash?: boolean
-    avatarEmoji?: boolean
     createdAt?: boolean
     role?: boolean
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
+    avatarEmoji?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1922,11 +1922,11 @@ export namespace Prisma {
     username?: boolean
     email?: boolean
     passwordHash?: boolean
-    avatarEmoji?: boolean
     createdAt?: boolean
     role?: boolean
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
+    avatarEmoji?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -1934,14 +1934,14 @@ export namespace Prisma {
     username?: boolean
     email?: boolean
     passwordHash?: boolean
-    avatarEmoji?: boolean
     createdAt?: boolean
     role?: boolean
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
+    avatarEmoji?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "avatarEmoji" | "createdAt" | "role" | "resetToken" | "resetTokenExpiresAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "createdAt" | "role" | "resetToken" | "resetTokenExpiresAt" | "avatarEmoji", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
     teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
@@ -1967,11 +1967,11 @@ export namespace Prisma {
       username: string
       email: string | null
       passwordHash: string | null
-      avatarEmoji: string | null
       createdAt: Date
       role: $Enums.UserRole
       resetToken: string | null
       resetTokenExpiresAt: Date | null
+      avatarEmoji: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -2404,11 +2404,11 @@ export namespace Prisma {
     readonly username: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
     readonly passwordHash: FieldRef<"User", 'String'>
-    readonly avatarEmoji: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly role: FieldRef<"User", 'UserRole'>
     readonly resetToken: FieldRef<"User", 'String'>
     readonly resetTokenExpiresAt: FieldRef<"User", 'DateTime'>
+    readonly avatarEmoji: FieldRef<"User", 'String'>
   }
     
 
@@ -8511,7 +8511,6 @@ export namespace Prisma {
     endedAt: Date | null
     differedAvailableFrom: Date | null
     differedAvailableTo: Date | null
-    isDiffered: boolean | null
     gameTemplateId: string | null
     initiatorUserId: string | null
   }
@@ -8528,7 +8527,6 @@ export namespace Prisma {
     endedAt: Date | null
     differedAvailableFrom: Date | null
     differedAvailableTo: Date | null
-    isDiffered: boolean | null
     gameTemplateId: string | null
     initiatorUserId: string | null
   }
@@ -8547,7 +8545,6 @@ export namespace Prisma {
     endedAt: number
     differedAvailableFrom: number
     differedAvailableTo: number
-    isDiffered: number
     gameTemplateId: number
     initiatorUserId: number
     _all: number
@@ -8574,7 +8571,6 @@ export namespace Prisma {
     endedAt?: true
     differedAvailableFrom?: true
     differedAvailableTo?: true
-    isDiffered?: true
     gameTemplateId?: true
     initiatorUserId?: true
   }
@@ -8591,7 +8587,6 @@ export namespace Prisma {
     endedAt?: true
     differedAvailableFrom?: true
     differedAvailableTo?: true
-    isDiffered?: true
     gameTemplateId?: true
     initiatorUserId?: true
   }
@@ -8610,7 +8605,6 @@ export namespace Prisma {
     endedAt?: true
     differedAvailableFrom?: true
     differedAvailableTo?: true
-    isDiffered?: true
     gameTemplateId?: true
     initiatorUserId?: true
     _all?: true
@@ -8716,7 +8710,6 @@ export namespace Prisma {
     endedAt: Date | null
     differedAvailableFrom: Date | null
     differedAvailableTo: Date | null
-    isDiffered: boolean
     gameTemplateId: string
     initiatorUserId: string | null
     _count: GameInstanceCountAggregateOutputType | null
@@ -8754,7 +8747,6 @@ export namespace Prisma {
     endedAt?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
-    isDiffered?: boolean
     gameTemplateId?: boolean
     initiatorUserId?: boolean
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
@@ -8777,7 +8769,6 @@ export namespace Prisma {
     endedAt?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
-    isDiffered?: boolean
     gameTemplateId?: boolean
     initiatorUserId?: boolean
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
@@ -8798,7 +8789,6 @@ export namespace Prisma {
     endedAt?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
-    isDiffered?: boolean
     gameTemplateId?: boolean
     initiatorUserId?: boolean
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
@@ -8819,12 +8809,11 @@ export namespace Prisma {
     endedAt?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
-    isDiffered?: boolean
     gameTemplateId?: boolean
     initiatorUserId?: boolean
   }
 
-  export type GameInstanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "accessCode" | "status" | "playMode" | "leaderboard" | "currentQuestionIndex" | "settings" | "createdAt" | "startedAt" | "endedAt" | "differedAvailableFrom" | "differedAvailableTo" | "isDiffered" | "gameTemplateId" | "initiatorUserId", ExtArgs["result"]["gameInstance"]>
+  export type GameInstanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "accessCode" | "status" | "playMode" | "leaderboard" | "currentQuestionIndex" | "settings" | "createdAt" | "startedAt" | "endedAt" | "differedAvailableFrom" | "differedAvailableTo" | "gameTemplateId" | "initiatorUserId", ExtArgs["result"]["gameInstance"]>
   export type GameInstanceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
@@ -8861,7 +8850,6 @@ export namespace Prisma {
       endedAt: Date | null
       differedAvailableFrom: Date | null
       differedAvailableTo: Date | null
-      isDiffered: boolean
       gameTemplateId: string
       initiatorUserId: string | null
     }, ExtArgs["result"]["gameInstance"]>
@@ -9303,7 +9291,6 @@ export namespace Prisma {
     readonly endedAt: FieldRef<"GameInstance", 'DateTime'>
     readonly differedAvailableFrom: FieldRef<"GameInstance", 'DateTime'>
     readonly differedAvailableTo: FieldRef<"GameInstance", 'DateTime'>
-    readonly isDiffered: FieldRef<"GameInstance", 'Boolean'>
     readonly gameTemplateId: FieldRef<"GameInstance", 'String'>
     readonly initiatorUserId: FieldRef<"GameInstance", 'String'>
   }
@@ -10955,11 +10942,11 @@ export namespace Prisma {
     username: 'username',
     email: 'email',
     passwordHash: 'passwordHash',
-    avatarEmoji: 'avatarEmoji',
     createdAt: 'createdAt',
     role: 'role',
     resetToken: 'resetToken',
-    resetTokenExpiresAt: 'resetTokenExpiresAt'
+    resetTokenExpiresAt: 'resetTokenExpiresAt',
+    avatarEmoji: 'avatarEmoji'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -11044,7 +11031,6 @@ export namespace Prisma {
     endedAt: 'endedAt',
     differedAvailableFrom: 'differedAvailableFrom',
     differedAvailableTo: 'differedAvailableTo',
-    isDiffered: 'isDiffered',
     gameTemplateId: 'gameTemplateId',
     initiatorUserId: 'initiatorUserId'
   };
@@ -11251,11 +11237,11 @@ export namespace Prisma {
     username?: StringFilter<"User"> | string
     email?: StringNullableFilter<"User"> | string | null
     passwordHash?: StringNullableFilter<"User"> | string | null
-    avatarEmoji?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    avatarEmoji?: StringNullableFilter<"User"> | string | null
     studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
     teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
@@ -11268,11 +11254,11 @@ export namespace Prisma {
     username?: SortOrder
     email?: SortOrderInput | SortOrder
     passwordHash?: SortOrderInput | SortOrder
-    avatarEmoji?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     role?: SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiresAt?: SortOrderInput | SortOrder
+    avatarEmoji?: SortOrderInput | SortOrder
     studentProfile?: StudentProfileOrderByWithRelationInput
     teacherProfile?: TeacherProfileOrderByWithRelationInput
     initiatedGameInstances?: GameInstanceOrderByRelationAggregateInput
@@ -11288,11 +11274,11 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     username?: StringFilter<"User"> | string
     passwordHash?: StringNullableFilter<"User"> | string | null
-    avatarEmoji?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    avatarEmoji?: StringNullableFilter<"User"> | string | null
     studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
     teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
@@ -11305,11 +11291,11 @@ export namespace Prisma {
     username?: SortOrder
     email?: SortOrderInput | SortOrder
     passwordHash?: SortOrderInput | SortOrder
-    avatarEmoji?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     role?: SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiresAt?: SortOrderInput | SortOrder
+    avatarEmoji?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -11323,11 +11309,11 @@ export namespace Prisma {
     username?: StringWithAggregatesFilter<"User"> | string
     email?: StringNullableWithAggregatesFilter<"User"> | string | null
     passwordHash?: StringNullableWithAggregatesFilter<"User"> | string | null
-    avatarEmoji?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     role?: EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
     resetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    avatarEmoji?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
   export type TeacherProfileWhereInput = {
@@ -11687,7 +11673,6 @@ export namespace Prisma {
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolFilter<"GameInstance"> | boolean
     gameTemplateId?: StringFilter<"GameInstance"> | string
     initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
@@ -11709,7 +11694,6 @@ export namespace Prisma {
     endedAt?: SortOrderInput | SortOrder
     differedAvailableFrom?: SortOrderInput | SortOrder
     differedAvailableTo?: SortOrderInput | SortOrder
-    isDiffered?: SortOrder
     gameTemplateId?: SortOrder
     initiatorUserId?: SortOrderInput | SortOrder
     gameTemplate?: GameTemplateOrderByWithRelationInput
@@ -11734,7 +11718,6 @@ export namespace Prisma {
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolFilter<"GameInstance"> | boolean
     gameTemplateId?: StringFilter<"GameInstance"> | string
     initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
@@ -11756,7 +11739,6 @@ export namespace Prisma {
     endedAt?: SortOrderInput | SortOrder
     differedAvailableFrom?: SortOrderInput | SortOrder
     differedAvailableTo?: SortOrderInput | SortOrder
-    isDiffered?: SortOrder
     gameTemplateId?: SortOrder
     initiatorUserId?: SortOrderInput | SortOrder
     _count?: GameInstanceCountOrderByAggregateInput
@@ -11783,7 +11765,6 @@ export namespace Prisma {
     endedAt?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
     differedAvailableFrom?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolWithAggregatesFilter<"GameInstance"> | boolean
     gameTemplateId?: StringWithAggregatesFilter<"GameInstance"> | string
     initiatorUserId?: StringNullableWithAggregatesFilter<"GameInstance"> | string | null
   }
@@ -11879,11 +11860,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -11896,11 +11877,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -11913,11 +11894,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -11930,11 +11911,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -11947,11 +11928,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -11959,11 +11940,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -11971,11 +11952,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TeacherProfileCreateInput = {
@@ -12350,7 +12331,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
     initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
@@ -12370,7 +12350,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplateId: string
     initiatorUserId?: string | null
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
@@ -12390,7 +12369,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
     initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
     participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
@@ -12410,7 +12388,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplateId?: StringFieldUpdateOperationsInput | string
     initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
@@ -12430,7 +12407,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplateId: string
     initiatorUserId?: string | null
   }
@@ -12449,7 +12425,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type GameInstanceUncheckedUpdateManyInput = {
@@ -12466,7 +12441,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplateId?: StringFieldUpdateOperationsInput | string
     initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -12669,11 +12643,11 @@ export namespace Prisma {
     username?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
-    avatarEmoji?: SortOrder
     createdAt?: SortOrder
     role?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
+    avatarEmoji?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -12681,11 +12655,11 @@ export namespace Prisma {
     username?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
-    avatarEmoji?: SortOrder
     createdAt?: SortOrder
     role?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
+    avatarEmoji?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -12693,11 +12667,11 @@ export namespace Prisma {
     username?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
-    avatarEmoji?: SortOrder
     createdAt?: SortOrder
     role?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
+    avatarEmoji?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -13099,11 +13073,6 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
@@ -13123,7 +13092,6 @@ export namespace Prisma {
     endedAt?: SortOrder
     differedAvailableFrom?: SortOrder
     differedAvailableTo?: SortOrder
-    isDiffered?: SortOrder
     gameTemplateId?: SortOrder
     initiatorUserId?: SortOrder
   }
@@ -13144,7 +13112,6 @@ export namespace Prisma {
     endedAt?: SortOrder
     differedAvailableFrom?: SortOrder
     differedAvailableTo?: SortOrder
-    isDiffered?: SortOrder
     gameTemplateId?: SortOrder
     initiatorUserId?: SortOrder
   }
@@ -13161,7 +13128,6 @@ export namespace Prisma {
     endedAt?: SortOrder
     differedAvailableFrom?: SortOrder
     differedAvailableTo?: SortOrder
-    isDiffered?: SortOrder
     gameTemplateId?: SortOrder
     initiatorUserId?: SortOrder
   }
@@ -13204,14 +13170,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedJsonNullableFilter<$PrismaModel>
     _max?: NestedJsonNullableFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type EnumParticipantStatusFilter<$PrismaModel = never> = {
@@ -13797,10 +13755,6 @@ export namespace Prisma {
     set?: $Enums.PlayMode
   }
 
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
-  }
-
   export type GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput = {
     create?: XOR<GameTemplateCreateWithoutGameInstancesInput, GameTemplateUncheckedCreateWithoutGameInstancesInput>
     connectOrCreate?: GameTemplateCreateOrConnectWithoutGameInstancesInput
@@ -14121,11 +14075,6 @@ export namespace Prisma {
     not?: NestedEnumPlayModeFilter<$PrismaModel> | $Enums.PlayMode
   }
 
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type NestedEnumPlayModeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.PlayMode | EnumPlayModeFieldRefInput<$PrismaModel>
     in?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel>
@@ -14157,14 +14106,6 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedEnumParticipantStatusFilter<$PrismaModel = never> = {
@@ -14224,7 +14165,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
   }
@@ -14243,7 +14183,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplateId: string
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
   }
@@ -14401,7 +14340,6 @@ export namespace Prisma {
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolFilter<"GameInstance"> | boolean
     gameTemplateId?: StringFilter<"GameInstance"> | string
     initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
   }
@@ -14475,11 +14413,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -14491,11 +14429,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -14523,11 +14461,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -14539,11 +14477,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -14555,11 +14493,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -14571,11 +14509,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -14603,11 +14541,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -14619,11 +14557,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -14692,7 +14630,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
   }
@@ -14711,7 +14648,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     initiatorUserId?: string | null
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
   }
@@ -14731,11 +14667,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -14747,11 +14683,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -14817,11 +14753,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -14833,11 +14769,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -15070,11 +15006,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -15086,11 +15022,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -15191,11 +15127,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -15207,11 +15143,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -15248,7 +15184,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
     initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
   }
@@ -15267,7 +15202,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplateId: string
     initiatorUserId?: string | null
   }
@@ -15282,11 +15216,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -15298,11 +15232,11 @@ export namespace Prisma {
     username: string
     email?: string | null
     passwordHash?: string | null
-    avatarEmoji?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
+    avatarEmoji?: string | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -15339,7 +15273,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
     initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
   }
@@ -15358,7 +15291,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplateId?: StringFieldUpdateOperationsInput | string
     initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -15379,11 +15311,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -15395,11 +15327,11 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -15420,7 +15352,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     gameTemplateId: string
   }
 
@@ -15462,7 +15393,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
     participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
   }
@@ -15481,7 +15411,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplateId?: StringFieldUpdateOperationsInput | string
     participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
   }
@@ -15500,7 +15429,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplateId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -15618,7 +15546,6 @@ export namespace Prisma {
     endedAt?: Date | string | null
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
-    isDiffered?: boolean
     initiatorUserId?: string | null
   }
 
@@ -15642,7 +15569,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
     participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
   }
@@ -15661,7 +15587,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
   }
@@ -15680,7 +15605,6 @@ export namespace Prisma {
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 

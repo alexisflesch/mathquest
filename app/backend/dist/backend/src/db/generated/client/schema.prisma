@@ -13,11 +13,11 @@ model User {
   username               String
   email                  String?           @unique
   passwordHash           String?
-  avatarEmoji            String?
   createdAt              DateTime          @default(now())
   role                   UserRole
   resetToken             String?           @map("reset_token")
   resetTokenExpiresAt    DateTime?         @map("reset_token_expires_at")
+  avatarEmoji            String?
   studentProfile         StudentProfile?
   teacherProfile         TeacherProfile?
   initiatedGameInstances GameInstance[]    @relation("InitiatedGameInstancesByUser")
@@ -105,7 +105,6 @@ model GameInstance {
   endedAt               DateTime?         @map("ended_at")
   differedAvailableFrom DateTime?         @map("differed_available_from")
   differedAvailableTo   DateTime?         @map("differed_available_to")
-  isDiffered            Boolean           @default(false) @map("is_differed")
   gameTemplateId        String            @map("game_template_id")
   initiatorUserId       String?           @map("initiator_user_id")
   gameTemplate          GameTemplate      @relation(fields: [gameTemplateId], references: [id])

@@ -45,7 +45,6 @@ export interface JoinGamePayload {
     userId: string;
     username: string;
     avatarEmoji?: string;
-    isDiffered?: boolean; // For joining a differed mode game
 }
 
 // ===== LEGACY EVENT PAYLOADS (DEPRECATED) =====
@@ -98,7 +97,6 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData; // Detailed information about the participant who joined
     gameStatus: 'pending' | 'active' | 'completed' | 'archived'; // Current status of the game
-    isDiffered: boolean;
     differedAvailableFrom?: string; // ISO string
     differedAvailableTo?: string;   // ISO string
     // Potentially include initial game state info here if needed immediately on join

@@ -11,7 +11,9 @@ disciplines:
         tags:
           - "additions posées"
           - "soustractions posées"
-          - "tables de multiplication (x2, x5, x10)"
+          - "tables de multiplication"
+          - "calcul mental"
+          - "problèmes"
       - nom: "Géométrie"
         tags:
           - "reconnaître et nommer les figures simples"

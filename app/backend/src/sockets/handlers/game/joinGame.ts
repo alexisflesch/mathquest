@@ -78,7 +78,7 @@ export function joinGameHandler(
             const gameJoinedPayload: GameJoinedPayload = {
                 accessCode: 'PRACTICE',
                 gameStatus: 'active', // Practice mode is immediately active
-                isDiffered: false, // Practice mode is not deferred
+                // Practice mode is not deferred - always fresh session
                 participant: {
                     id: userId,
                     userId: userId, // Same as id for practice mode
@@ -99,7 +99,6 @@ export function joinGameHandler(
                 where: { accessCode },
                 select: {
                     id: true,
-                    isDiffered: true,
                     differedAvailableFrom: true,
                     differedAvailableTo: true,
                     status: true,
@@ -117,7 +116,11 @@ export function joinGameHandler(
             const now = new Date();
             const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
             const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
-            if (gameInstance.isDiffered) {
+
+            // FIXED: A game is deferred when status is 'completed' and available for replay
+            const isDeferred = gameInstance.status === 'completed';
+
+            if (isDeferred) {
                 const inDifferedWindow = (!from || now >= from) && (!to || now <= to);
                 logger.debug({ inDifferedWindow, from, to, now }, 'Checking differed window');
                 if (!inDifferedWindow) {
@@ -173,7 +176,9 @@ export function joinGameHandler(
             const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
 
             // UX ENHANCEMENT: Assign join-order bonus for early joiners (only if not already assigned in lobby)
-            const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
+            // Skip join order bonus for deferred mode (when completed tournaments are accessed individually)
+            const isCurrentlyDeferred = gameInstance.status === 'completed';
+            const joinOrderBonus = isCurrentlyDeferred ? 0 : await assignJoinOrderBonus(accessCode, userId);
 
             // 🐛 BUG FIX: Preserve existing Redis score when user rejoins/reloads
             // During live gameplay, scores are stored in Redis, not database. 
@@ -225,8 +230,8 @@ export function joinGameHandler(
                 socketId: socket.id // Track current socket ID
             };
 
-            // For live games (not differed), assign join-order bonus for better projection UX
-            if (!gameInstance.isDiffered && (gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament')) {
+            // For live games (not deferred), assign join-order bonus for better projection UX
+            if (!isDeferred && (gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament')) {
                 const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
                 if (joinOrderBonus > 0) {
                     participantDataForRedis.score = (participantDataForRedis.score || 0) + joinOrderBonus;
@@ -298,7 +303,7 @@ export function joinGameHandler(
                     online: true,
                 },
                 gameStatus: gameInstance.status as GameJoinedPayload['gameStatus'],
-                isDiffered: gameInstance.isDiffered,
+                // Include deferred status based on game completion and availability
                 differedAvailableFrom: gameInstance.differedAvailableFrom?.toISOString(),
                 differedAvailableTo: gameInstance.differedAvailableTo?.toISOString(),
             };
@@ -311,21 +316,36 @@ export function joinGameHandler(
                 // Only send leaderboard if game has started (status: 'active' or 'completed')
                 // Skip if game is still pending (no participants have scores yet)
                 if (gameInstance.status === 'active' || gameInstance.status === 'completed') {
-                    // Use snapshot-based emission for consistency
-                    await emitLeaderboardFromSnapshot(
-                        io,
-                        accessCode,
-                        [socket.id], // Emit only to this specific socket
-                        'join_game_initial_load'
-                    );
 
-                    logger.info({
-                        accessCode,
-                        userId,
-                        gameStatus: gameInstance.status,
-                        trigger: 'join_game_initial_load',
-                        dataSource: 'leaderboard_snapshot'
-                    }, '[JOIN-LEADERBOARD] Emitted initial leaderboard state to new joiner from snapshot');
+                    // DEFERRED SESSION FIX: Send empty leaderboard for deferred sessions to avoid stale data contamination
+                    if (isDeferred) {
+                        // For deferred sessions, send empty leaderboard on join
+                        // Individual player progress will be sent after each question
+                        socket.emit('leaderboard_update', { leaderboard: [] });
+
+                        logger.info({
+                            accessCode,
+                            userId,
+                            gameStatus: gameInstance.status,
+                            trigger: 'join_game_deferred_empty_leaderboard'
+                        }, '[JOIN-LEADERBOARD] Sent empty leaderboard for deferred session - avoiding stale data');
+                    } else {
+                        // Use snapshot-based emission for live sessions
+                        await emitLeaderboardFromSnapshot(
+                            io,
+                            accessCode,
+                            [socket.id], // Emit only to this specific socket
+                            'join_game_initial_load'
+                        );
+
+                        logger.info({
+                            accessCode,
+                            userId,
+                            gameStatus: gameInstance.status,
+                            trigger: 'join_game_initial_load',
+                            dataSource: 'leaderboard_snapshot'
+                        }, '[JOIN-LEADERBOARD] Emitted initial leaderboard state to new joiner from snapshot');
+                    }
                 } else {
                     logger.debug({
                         accessCode,
@@ -342,7 +362,7 @@ export function joinGameHandler(
             }
 
             // Use modular scoreService for best score update if needed (for deferred)
-            if (gameInstance.isDiffered) {
+            if (isDeferred) {
                 await DifferedScoreService.updateBestScoreInRedis({
                     gameInstanceId: gameInstance.id,
                     userId,
@@ -351,7 +371,7 @@ export function joinGameHandler(
             }
 
             // Canonical: On join, emit either current question (if active) or participants_list (if pending)
-            if (!gameInstance.isDiffered && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
+            if (!isDeferred && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
                 if (gameInstance.status === 'active') {
                     logger.info({ accessCode, userId, playMode: gameInstance.playMode }, 'Live game is active, sending current state to late joiner');
                     try {
@@ -427,7 +447,7 @@ export function joinGameHandler(
                 }
             }
 
-            if (!gameInstance.isDiffered && socket.data.currentGameRoom) {
+            if (!isDeferred && socket.data.currentGameRoom) {
                 const playerJoinedPayload = {
                     participant: {
                         id: joinResult.participant.id,
@@ -497,8 +517,8 @@ export function joinGameHandler(
 
 
             // --- MODERNIZATION: Emit correct_answers to student if trophy is active ---
-            // Only for live games (not differed), after join is complete
-            if (!gameInstance.isDiffered) {
+            // Only for live games (not deferred), after join is complete
+            if (!isDeferred) {
                 const displayState = await gameStateService.getProjectionDisplayState(accessCode);
                 if (displayState?.showCorrectAnswers && displayState.correctAnswersData) {
                     // Use canonical event and payload (match showCorrectAnswersHandler)
@@ -533,7 +553,7 @@ export function joinGameHandler(
                     userId: p.userId,
                     username: p.user?.username || 'Unknown',
                     avatar: p.user?.avatarEmoji || '�',
-                    score: gameInstance.isDiffered ? (p.deferredScore ?? 0) : (p.liveScore ?? 0),
+                    score: isDeferred ? (p.deferredScore ?? 0) : (p.liveScore ?? 0),
                     avatarEmoji: p.user?.avatarEmoji || '🐼',
                     joinedAt: p.joinedAt ? (typeof p.joinedAt === 'string' ? p.joinedAt : p.joinedAt.toISOString()) : new Date().toISOString(),
                     online: true,

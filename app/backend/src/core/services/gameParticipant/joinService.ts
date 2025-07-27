@@ -38,7 +38,6 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                 name: true,
                 status: true,
                 playMode: true,
-                isDiffered: true,
                 differedAvailableFrom: true,
                 differedAvailableTo: true,
                 gameTemplate: { select: { name: true } }
@@ -49,8 +48,11 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
             return { success: false, error: 'Game not found' };
         }
 
+        // FIXED: A game is deferred when status is 'completed' and available for replay
+        const isDeferred = gameInstance.status === 'completed';
+
         // Check deferred mode availability
-        if (gameInstance.isDiffered) {
+        if (isDeferred) {
             const now = new Date();
             const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
             const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
@@ -60,7 +62,6 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
 
         // Determine participant status based on game state
         const participantStatus = gameInstance.status === 'pending' ? ParticipantStatus.PENDING : ParticipantStatus.ACTIVE;
-        const isDeferred = gameInstance.status === 'completed';
 
         // Upsert user
         await prisma.user.upsert({
@@ -166,6 +167,15 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
 
         // --- JOIN BONUS SNAPSHOT LOGIC ---
         // Only apply join bonus for live/pending participants (not deferred reconnections)
+        logger.info({
+            userId,
+            accessCode,
+            isDeferred,
+            participantStatus: participant.status,
+            joinBonusCondition: !isDeferred && participant.status === ParticipantStatus.PENDING,
+            gameInstanceStatus: gameInstance.status
+        }, '[DEBUG] Join bonus condition check');
+
         if (!isDeferred && participant.status === ParticipantStatus.PENDING) {
             const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
             if (joinOrderBonus > 0) {

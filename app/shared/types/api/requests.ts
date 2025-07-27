@@ -80,7 +80,6 @@ export interface GameCreationRequest {
     gameTemplateId: string;
     playMode: PlayMode | string; // Allow both for flexibility during migration
     settings?: any;
-    isDiffered?: boolean;
     differedAvailableFrom?: string;
     differedAvailableTo?: string;
     // Additional fields used in the backend

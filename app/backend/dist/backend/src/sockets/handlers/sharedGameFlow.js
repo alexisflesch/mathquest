@@ -43,6 +43,7 @@ exports.runGameFlow = runGameFlow;
 const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const redisCleanup_1 = require("@/utils/redisCleanup");
 const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
 const prisma_1 = require("@/db/prisma");
@@ -50,6 +51,7 @@ const emitQuestionHandler_1 = require("./game/emitQuestionHandler");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const sharedLeaderboard_1 = require("./sharedLeaderboard");
 const leaderboardSnapshotService_1 = require("@/core/services/gameParticipant/leaderboardSnapshotService");
+const gameTimings_1 = require("@shared/constants/gameTimings");
 const logger = (0, logger_1.default)('SharedGameFlow');
 // Track running game flows to prevent duplicates
 const runningGameFlows = new Set();
@@ -244,12 +246,10 @@ async function runGameFlow(io, accessCode, questions, options) {
             // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
             // If batch scoring is needed, refactor to use canonical logic per participant/answer.
             // Two separate timing concerns:
-            // 1. Delay between correct answers and feedback event (fixed 1.5s for tournaments)
-            const correctAnswersToFeedbackDelay = options.playMode === 'tournament' ? 1.5 : 1;
+            // 1. Delay between correct answers and feedback event (1.5s for all modes)
+            const correctAnswersToFeedbackDelay = (0, gameTimings_1.getCorrectAnswersDisplayTime)(options.playMode);
             // 2. Feedback display duration (from question or default to 5s)
-            const feedbackDisplayDuration = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
-                ? questions[i].feedbackWaitTime
-                : 5; // Default to 5 seconds when feedbackWaitTime is null
+            const feedbackDisplayDuration = (0, gameTimings_1.getFeedbackDisplayTime)(questions[i].feedbackWaitTime);
             // Wait for the delay between correct answers and feedback
             await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
             // Only emit feedback event if there's an explanation to show
@@ -291,27 +291,7 @@ async function runGameFlow(io, accessCode, questions, options) {
             logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');
             // Clear Redis game data after persisting scores to database
             // This ensures clean state and prevents old scores from contaminating future sessions
-            const gameDataKeys = [
-                `mathquest:game:participants:${accessCode}`,
-                `mathquest:game:leaderboard:${accessCode}`,
-                `mathquest:game:answers:${accessCode}:*`,
-                `mathquest:game:join_order:${accessCode}`,
-                `mathquest:game:userIdToSocketId:${accessCode}`,
-                `mathquest:game:socketIdToUserId:${accessCode}`
-            ];
-            for (const key of gameDataKeys) {
-                if (key.includes('*')) {
-                    // Handle wildcard keys
-                    const keys = await redis_1.redisClient.keys(key);
-                    if (keys.length > 0) {
-                        await redis_1.redisClient.del(...keys);
-                    }
-                }
-                else {
-                    await redis_1.redisClient.del(key);
-                }
-            }
-            logger.info({ accessCode, clearedKeys: gameDataKeys }, '[REDIS-CLEANUP] Cleared Redis game data at game end after persisting scores');
+            await (0, redisCleanup_1.cleanupGameRedisKeys)(accessCode, 'sharedGameFlow');
         }
         catch (error) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');

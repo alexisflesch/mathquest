@@ -57,7 +57,6 @@ export declare const GameInstanceBaseSchema: z.ZodObject<{
     endedAt: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
     differedAvailableFrom: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
     differedAvailableTo: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
-    isDiffered: z.ZodBoolean;
     gameTemplateId: z.ZodString;
     initiatorUserId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     initiatorUser: z.ZodOptional<z.ZodAny>;
@@ -68,7 +67,6 @@ export declare const GameInstanceBaseSchema: z.ZodObject<{
     createdAt: Date;
     accessCode: string;
     playMode: "quiz" | "tournament" | "practice" | "class";
-    isDiffered: boolean;
     gameTemplateId: string;
     leaderboard?: any;
     currentQuestionIndex?: number | null | undefined;
@@ -86,7 +84,6 @@ export declare const GameInstanceBaseSchema: z.ZodObject<{
     createdAt: Date;
     accessCode: string;
     playMode: "quiz" | "tournament" | "practice" | "class";
-    isDiffered: boolean;
     gameTemplateId: string;
     leaderboard?: any;
     currentQuestionIndex?: number | null | undefined;
@@ -180,7 +177,6 @@ export declare const GameInstanceCreationDataSchema: z.ZodObject<{
     gameTemplateId: z.ZodString;
     initiatorUserId: z.ZodOptional<z.ZodString>;
     settings: z.ZodOptional<z.ZodAny>;
-    isDiffered: z.ZodOptional<z.ZodBoolean>;
     differedAvailableFrom: z.ZodOptional<z.ZodDate>;
     differedAvailableTo: z.ZodOptional<z.ZodDate>;
 }, "strip", z.ZodTypeAny, {
@@ -192,7 +188,6 @@ export declare const GameInstanceCreationDataSchema: z.ZodObject<{
     settings?: any;
     differedAvailableFrom?: Date | undefined;
     differedAvailableTo?: Date | undefined;
-    isDiffered?: boolean | undefined;
     initiatorUserId?: string | undefined;
 }, {
     name: string;
@@ -203,7 +198,6 @@ export declare const GameInstanceCreationDataSchema: z.ZodObject<{
     settings?: any;
     differedAvailableFrom?: Date | undefined;
     differedAvailableTo?: Date | undefined;
-    isDiffered?: boolean | undefined;
     initiatorUserId?: string | undefined;
 }>;
 export declare const GameInstanceUpdateDataSchema: z.ZodObject<{

@@ -56,7 +56,6 @@ exports.joinGamePayloadSchema = zod_1.z.object({
     userId: zod_1.z.string().min(1, { message: "Player ID cannot be empty." }),
     username: zod_1.z.string().min(1, { message: "Username cannot be empty." }),
     avatarEmoji: zod_1.z.string().optional(),
-    isDiffered: zod_1.z.boolean().optional(),
 });
 // Leave game payload schema for unified flow
 exports.leaveGamePayloadSchema = zod_1.z.object({
@@ -177,7 +176,6 @@ exports.gameJoinedPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),
     participant: exports.participantDataSchema,
     gameStatus: zod_1.z.enum(['pending', 'active', 'completed', 'archived']),
-    isDiffered: zod_1.z.boolean(),
     differedAvailableFrom: zod_1.z.string().datetime({ message: "Invalid datetime string for differedAvailableFrom. Must be an ISO string." }).optional(),
     differedAvailableTo: zod_1.z.string().datetime({ message: "Invalid datetime string for differedAvailableTo. Must be an ISO string." }).optional(),
 });

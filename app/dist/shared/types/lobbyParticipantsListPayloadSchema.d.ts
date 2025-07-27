@@ -4,83 +4,83 @@ export declare const lobbyParticipantsListPayloadSchema: z.ZodObject<{
         id: z.ZodString;
         userId: z.ZodString;
         username: z.ZodString;
-        avatarEmoji: z.ZodString;
+        avatarEmoji: z.ZodOptional<z.ZodString>;
         score: z.ZodNumber;
+        status: z.ZodOptional<z.ZodEnum<["PENDING", "ACTIVE", "COMPLETED", "LEFT"]>>;
         online: z.ZodOptional<z.ZodBoolean>;
-        joinedAt: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
+        joinedAt: z.ZodOptional<z.ZodUnion<[z.ZodNumber, z.ZodString]>>;
         socketId: z.ZodOptional<z.ZodString>;
-        isDeferred: z.ZodOptional<z.ZodBoolean>;
-        cookieId: z.ZodOptional<z.ZodString>;
+        attemptCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
-        userId: string;
-        avatarEmoji: string;
         id: string;
+        userId: string;
+        username: string;
         score: number;
-        cookieId?: string | undefined;
-        isDeferred?: boolean | undefined;
+        status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
+        joinedAt?: string | number | undefined;
+        avatarEmoji?: string | undefined;
         socketId?: string | undefined;
         online?: boolean | undefined;
-        joinedAt?: string | number | undefined;
+        attemptCount?: number | undefined;
     }, {
-        username: string;
-        userId: string;
-        avatarEmoji: string;
         id: string;
+        userId: string;
+        username: string;
         score: number;
-        cookieId?: string | undefined;
-        isDeferred?: boolean | undefined;
+        status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
+        joinedAt?: string | number | undefined;
+        avatarEmoji?: string | undefined;
         socketId?: string | undefined;
         online?: boolean | undefined;
-        joinedAt?: string | number | undefined;
+        attemptCount?: number | undefined;
     }>, "many">;
     creator: z.ZodObject<{
         userId: z.ZodString;
         username: z.ZodString;
         avatarEmoji: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         avatarEmoji: string;
     }, {
-        username: string;
         userId: string;
+        username: string;
         avatarEmoji: string;
     }>;
 }, "strip", z.ZodTypeAny, {
     creator: {
-        username: string;
         userId: string;
+        username: string;
         avatarEmoji: string;
     };
     participants: {
-        username: string;
-        userId: string;
-        avatarEmoji: string;
         id: string;
+        userId: string;
+        username: string;
         score: number;
-        cookieId?: string | undefined;
-        isDeferred?: boolean | undefined;
+        status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
+        joinedAt?: string | number | undefined;
+        avatarEmoji?: string | undefined;
         socketId?: string | undefined;
         online?: boolean | undefined;
-        joinedAt?: string | number | undefined;
+        attemptCount?: number | undefined;
     }[];
 }, {
     creator: {
-        username: string;
         userId: string;
+        username: string;
         avatarEmoji: string;
     };
     participants: {
-        username: string;
-        userId: string;
-        avatarEmoji: string;
         id: string;
+        userId: string;
+        username: string;
         score: number;
-        cookieId?: string | undefined;
-        isDeferred?: boolean | undefined;
+        status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
+        joinedAt?: string | number | undefined;
+        avatarEmoji?: string | undefined;
         socketId?: string | undefined;
         online?: boolean | undefined;
-        joinedAt?: string | number | undefined;
+        attemptCount?: number | undefined;
     }[];
 }>;

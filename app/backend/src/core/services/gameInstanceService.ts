@@ -299,12 +299,11 @@ export class GameInstanceService {
     }
 
     /**
-     * Update differed mode and window for a game instance
+     * Update deferred mode window for a game instance
      */
-    async updateDifferedMode(gameId: string, opts: { isDiffered: boolean, differedAvailableFrom?: Date, differedAvailableTo?: Date }) {
+    async updateDeferredMode(gameId: string, opts: { differedAvailableFrom?: Date, differedAvailableTo?: Date }) {
         try {
             const updates: Record<string, any> = {
-                isDiffered: opts.isDiffered,
                 differedAvailableFrom: opts.differedAvailableFrom,
                 differedAvailableTo: opts.differedAvailableTo
             };

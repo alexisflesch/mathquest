@@ -652,18 +652,18 @@ router.patch('/instance/:id/name', auth_1.teacherAuth, (0, validation_1.validate
         const { name } = req.body;
         const user = req.user;
         if (!id) {
-            res.status(400).json({ error: 'Game ID is required' });
+            res.status(400).json({ error: 'ID de la session requis' });
             return;
         }
         // Check if the game exists and the user is the creator
         const existingGame = await getGameInstanceService().getGameInstanceById(id);
         if (!existingGame) {
-            res.status(404).json({ error: 'Game not found' });
+            res.status(404).json({ error: 'Session non trouvée' });
             return;
         }
         const isCreator = user && user.userId && existingGame.initiatorUserId === user.userId;
         if (!isCreator) {
-            res.status(403).json({ error: 'You do not have permission to rename this game' });
+            res.status(403).json({ error: 'Vous n\'avez pas la permission de renommer cette session' });
             return;
         }
         logger.info({ gameId: id, userId: user.userId, newName: name }, 'Renaming game instance');
@@ -675,7 +675,7 @@ router.patch('/instance/:id/name', auth_1.teacherAuth, (0, validation_1.validate
     }
     catch (error) {
         logger.error({ error }, 'Error renaming game instance');
-        res.status(500).json({ error: 'An error occurred while renaming the game instance' });
+        res.status(500).json({ error: 'Une erreur s\'est produite lors du renommage de la session' });
     }
 });
 /**
@@ -787,8 +787,8 @@ router.get('/:code/can-play-differed', async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        // Check if the game is configured for differed play
-        if (!gameInstance.isDiffered || !gameInstance.differedAvailableTo) {
+        // Check if the game is configured for differed play (completed tournaments with differed availability)
+        if (gameInstance.status !== 'completed' || !gameInstance.differedAvailableTo) {
             res.json({ canPlay: false });
             return;
         }

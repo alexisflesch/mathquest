@@ -19,8 +19,8 @@ export declare const LeaderboardEntrySchema: z.ZodObject<{
     score: number;
     avatarEmoji?: string | undefined;
     rank?: number | undefined;
-    participationType?: ParticipationType | undefined;
     attemptCount?: number | undefined;
+    participationType?: ParticipationType | undefined;
     participationId?: string | undefined;
 }, {
     userId: string;
@@ -28,8 +28,8 @@ export declare const LeaderboardEntrySchema: z.ZodObject<{
     score: number;
     avatarEmoji?: string | undefined;
     rank?: number | undefined;
-    participationType?: ParticipationType | undefined;
     attemptCount?: number | undefined;
+    participationType?: ParticipationType | undefined;
     participationId?: string | undefined;
 }>;
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;

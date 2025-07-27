@@ -7,10 +7,39 @@ exports.endGameHandler = endGameHandler;
 const prisma_1 = require("@/db/prisma");
 const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const logger_1 = __importDefault(require("@/utils/logger"));
+const redisCleanup_1 = require("@/utils/redisCleanup");
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const deferredTournamentFlow_1 = require("../deferredTournamentFlow");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('EndGameHandler');
+/**
+ * Comprehensive Redis cleanup for both live games and deferred sessions
+ * @param accessCode - Game access code
+ * @param gameId - Game instance ID
+ * @param io - Socket.IO server instance
+ */
+async function cleanupRedisGameData(accessCode, gameId, io) {
+    try {
+        // Use shared utility for comprehensive cleanup
+        await (0, redisCleanup_1.cleanupGameRedisKeys)(accessCode, 'endGame');
+        // Additional cleanup specific to endGame (if needed)
+        // Clean up any deferred session specific keys
+        (0, deferredTournamentFlow_1.cleanupDeferredSessionsForGame)(accessCode);
+        logger.info({
+            accessCode,
+            gameId
+        }, '[REDIS-CLEANUP] Completed comprehensive Redis cleanup for game end');
+    }
+    catch (error) {
+        logger.error({
+            accessCode,
+            gameId,
+            error: error instanceof Error ? error.message : String(error)
+        }, '[REDIS-CLEANUP] Error during Redis cleanup');
+        // Don't throw - cleanup errors shouldn't prevent game ending
+    }
+}
 function endGameHandler(io, socket) {
     return async (payload, callback) => {
         // Runtime validation with Zod
@@ -130,6 +159,10 @@ function endGameHandler(io, socket) {
                 dbStatus: updatedGameInstance?.status,
                 redisStatus: updatedState?.gameState?.status
             }, '[DIAGNOSTIC] Post-endGame status sync check');
+            // Clean up all Redis data for this game (live and deferred sessions)
+            await cleanupRedisGameData(accessCode, gameId, io);
+            // Clean up in-memory deferred session tracking
+            (0, deferredTournamentFlow_1.cleanupDeferredSessionsForGame)(accessCode);
             const endedAt = Date.now();
             // Broadcast to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;

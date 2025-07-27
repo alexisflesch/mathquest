@@ -43,8 +43,8 @@ function requestNextQuestionHandler(io, socket) {
                 where: { accessCode },
                 select: {
                     id: true,
+                    status: true,
                     playMode: true,
-                    isDiffered: true,
                     gameTemplateId: true
                 }
             });

@@ -70,12 +70,17 @@ export default function StudentJoinPage() {
             const status = game.status;
             const accessCode = game.accessCode || code;
 
-            if (game.isDiffered) {
-                setModal({
-                    type: 'differed',
-                    message: "Ce tournoi est terminé. Vous pouvez le jouer en différé si vous le souhaitez."
-                });
-                return;
+            // A game is deferred when it's completed but still available for replay
+            if (game.status === 'completed' && game.differedAvailableTo) {
+                const now = new Date();
+                const availableUntil = new Date(game.differedAvailableTo);
+                if (availableUntil > now) {
+                    setModal({
+                        type: 'differed',
+                        message: "Ce tournoi est terminé. Vous pouvez le jouer en différé si vous le souhaitez."
+                    });
+                    return;
+                }
             }
             if (status === 'pending' || status === 'active') {
                 router.push(`/live/${accessCode}`);

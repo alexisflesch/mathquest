@@ -89,12 +89,14 @@ export declare const PROJECTOR_EVENTS: {
 };
 export declare const GAME_EVENTS: {
     JOIN_GAME: string;
+    LEAVE_GAME: string;
     GAME_ANSWER: string;
     REQUEST_PARTICIPANTS: string;
     REQUEST_NEXT_QUESTION: string;
     START_GAME: string;
     GAME_JOINED: string;
     PLAYER_JOINED_GAME: string;
+    PLAYER_LEFT_GAME: string;
     GAME_PARTICIPANTS: string;
     GAME_QUESTION: string;
     ANSWER_RECEIVED: string;
@@ -155,12 +157,14 @@ export declare const SOCKET_EVENTS: {
     };
     GAME: {
         JOIN_GAME: string;
+        LEAVE_GAME: string;
         GAME_ANSWER: string;
         REQUEST_PARTICIPANTS: string;
         REQUEST_NEXT_QUESTION: string;
         START_GAME: string;
         GAME_JOINED: string;
         PLAYER_JOINED_GAME: string;
+        PLAYER_LEFT_GAME: string;
         GAME_PARTICIPANTS: string;
         GAME_QUESTION: string;
         ANSWER_RECEIVED: string;

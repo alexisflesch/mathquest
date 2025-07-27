@@ -2,14 +2,47 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/services/gameStateService';
 import createLogger from '@/utils/logger';
+import { cleanupGameRedisKeys } from '@/utils/redisCleanup';
 import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import { endGamePayloadSchema } from '@shared/types/socketEvents.zod';
+import { redisClient } from '@/config/redis';
+import { cleanupDeferredSessionsForGame } from '../deferredTournamentFlow';
 
 import { EndGamePayload } from './types';
 
 // Create a handler-specific logger
 const logger = createLogger('EndGameHandler');
+
+/**
+ * Comprehensive Redis cleanup for both live games and deferred sessions
+ * @param accessCode - Game access code
+ * @param gameId - Game instance ID
+ * @param io - Socket.IO server instance
+ */
+async function cleanupRedisGameData(accessCode: string, gameId: string, io: SocketIOServer): Promise<void> {
+    try {
+        // Use shared utility for comprehensive cleanup
+        await cleanupGameRedisKeys(accessCode, 'endGame');
+
+        // Additional cleanup specific to endGame (if needed)
+        // Clean up any deferred session specific keys
+        cleanupDeferredSessionsForGame(accessCode);
+
+        logger.info({
+            accessCode,
+            gameId
+        }, '[REDIS-CLEANUP] Completed comprehensive Redis cleanup for game end');
+
+    } catch (error) {
+        logger.error({
+            accessCode,
+            gameId,
+            error: error instanceof Error ? error.message : String(error)
+        }, '[REDIS-CLEANUP] Error during Redis cleanup');
+        // Don't throw - cleanup errors shouldn't prevent game ending
+    }
+}
 
 export function endGameHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: EndGamePayload, callback?: (data: any) => void) => {
@@ -146,6 +179,12 @@ export function endGameHandler(io: SocketIOServer, socket: Socket) {
                 dbStatus: updatedGameInstance?.status,
                 redisStatus: updatedState?.gameState?.status
             }, '[DIAGNOSTIC] Post-endGame status sync check');
+
+            // Clean up all Redis data for this game (live and deferred sessions)
+            await cleanupRedisGameData(accessCode, gameId, io);
+
+            // Clean up in-memory deferred session tracking
+            cleanupDeferredSessionsForGame(accessCode);
 
             const endedAt = Date.now();
 

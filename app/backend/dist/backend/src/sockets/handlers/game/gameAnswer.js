@@ -102,7 +102,7 @@ function gameAnswerHandler(io, socket, context) {
             // See diagnostic logs and loader structure. All property accesses must use gameState.gameState.<field>.
             // Validate game state
             // Modernized: Allow answer submission in deferred mode if status is 'active' or 'completed' and within deferred window
-            const isDeferred = gameInstance && gameInstance.isDiffered;
+            const isDeferred = gameInstance && gameInstance.status === 'completed';
             console.log(isDeferred, 'isDeferred value in gameAnswerHandler');
             const now = Date.now();
             const withinDeferredWindow = isDeferred && gameInstance.differedAvailableTo && now < new Date(gameInstance.differedAvailableTo).getTime();
@@ -195,7 +195,7 @@ function gameAnswerHandler(io, socket, context) {
             }, isDeferred // PATCH: propagate deferred mode)
             );
             scoringPerformed = true;
-            scoringMode = (gameInstance.status === 'completed' || gameInstance.isDiffered) ? 'DEFERRED' : gameInstance.playMode;
+            scoringMode = (gameInstance.status === 'completed') ? 'DEFERRED' : gameInstance.playMode;
             scoringResult = submissionResult;
             logger.info({
                 accessCode,
@@ -205,7 +205,7 @@ function gameAnswerHandler(io, socket, context) {
                 scoringPerformed,
                 submissionResult,
                 attemptCount: participant?.nbAttempts,
-                answerKeyUsed: (gameInstance.status === 'completed' || gameInstance.isDiffered)
+                answerKeyUsed: (gameInstance.status === 'completed')
                     ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.nbAttempts}`
                     : `mathquest:game:answers:${accessCode}:${questionUid}`
             }, '[DIAGNOSTIC] Scoring service called in gameAnswerHandler (with answer key and attempt)');
@@ -238,7 +238,7 @@ function gameAnswerHandler(io, socket, context) {
                     answerChanged: scoreResult.answerChanged,
                     message: scoreResult.message,
                     attemptCount: participant?.nbAttempts,
-                    answerKeyUsed: (gameInstance.status === 'completed' || gameInstance.isDiffered)
+                    answerKeyUsed: (gameInstance.status === 'completed')
                         ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.nbAttempts}`
                         : `mathquest:game:answers:${accessCode}:${questionUid}`
                 }, '[DIAGNOSTIC] Answer processed with scoring result and answer key');
@@ -339,7 +339,7 @@ function gameAnswerHandler(io, socket, context) {
             // Use shared leaderboard calculation
             const leaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
             logger.debug({ leaderboard }, 'Leaderboard data');
-            if (gameInstance.isDiffered) {
+            if (isDeferred) {
                 // --- Practice and Deferred Mode Feedback Logic ---
                 if (gameInstance.playMode === 'practice') {
                     // Practice mode: send correctAnswers and feedback immediately
@@ -355,7 +355,7 @@ function gameAnswerHandler(io, socket, context) {
                     // Instead, the client will request the next question after showing feedback
                     logger.info({ accessCode, userId, questionUid }, 'Waiting for client to request next question via request_next_question event');
                 }
-                else if (gameInstance.isDiffered || gameInstance.playMode === 'tournament') {
+                else if (isDeferred || gameInstance.playMode === 'tournament') {
                     // Tournament (live or deferred): DO NOT send explanation/correctAnswers here
                     // Feedback/explanation is sent at the end of the timer in the tournament flow
                     logger.info({ accessCode, userId, questionUid }, 'Tournament mode: answer_received emitted without explanation/correctAnswers');

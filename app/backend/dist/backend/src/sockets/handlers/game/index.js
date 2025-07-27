@@ -117,7 +117,7 @@ function registerGameHandlers(io, socket) {
         let isDeferred = false;
         let contextGameInstance = gameInstance;
         if (gameInstance.playMode === 'tournament' && gameInstance.status === 'completed' && deferredWindowOpen) {
-            contextGameInstance = { ...gameInstance, isDiffered: true };
+            // For deferred tournaments, we use the same gameInstance but track isDeferred separately
             isDeferred = true;
         }
         // Always use per-user session key and timer for deferred

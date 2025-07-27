@@ -160,5 +160,5 @@
     - "Rectangle"
     - "Carré"
     - "Triangle"
-  correctAnswers: [false, false, true, false]
+  correctAnswers: [false, false, false, true]
   author: "gpt-4.1"

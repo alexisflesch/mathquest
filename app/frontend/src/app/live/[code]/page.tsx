@@ -357,15 +357,6 @@ export default function LiveGamePage() {
     const router = useRouter();
     const { userState, userProfile, isLoading } = useAuth();
 
-    // Detect differed mode from URL (must be before useStudentGameSocket)
-    const [isDiffered, setIsDiffered] = useState(false);
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            setIsDiffered(params.get('differed') === '1');
-        }
-    }, []);
-
     // Get user data from AuthProvider
     const userId = userProfile.userId || userProfile.cookieId || `temp_${Date.now()}`;
     const username: string | null = userProfile.username ?? null;
@@ -386,7 +377,6 @@ export default function LiveGamePage() {
         userId,
         username,
         avatarEmoji,
-        isDiffered,
         onAnswerReceived: () => {
             setSnackbarType("success");
             setSnackbarMessage("Réponse enregistrée");

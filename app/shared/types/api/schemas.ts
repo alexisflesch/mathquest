@@ -71,7 +71,6 @@ export const CreateGameRequestSchema = z.object({
     gameTemplateId: z.string().uuid('Invalid game template ID').optional(),
     playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
     settings: z.record(z.any()).optional(),
-    isDiffered: z.boolean().optional(),
     differedAvailableFrom: z.string().datetime().optional(),
     differedAvailableTo: z.string().datetime().optional(),
     // Additional fields for student tournaments

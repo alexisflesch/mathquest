@@ -60,7 +60,6 @@ exports.CreateGameRequestSchema = zod_1.z.object({
     gameTemplateId: zod_1.z.string().uuid('Invalid game template ID').optional(),
     playMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']),
     settings: zod_1.z.record(zod_1.z.any()).optional(),
-    isDiffered: zod_1.z.boolean().optional(),
     differedAvailableFrom: zod_1.z.string().datetime().optional(),
     differedAvailableTo: zod_1.z.string().datetime().optional(),
     // Additional fields for student tournaments
@@ -100,10 +99,10 @@ exports.UpdateGameTemplateRequestSchema = zod_1.z.object({
     questionUids: zod_1.z.array(zod_1.z.string()).optional() // Temporarily allow any string format
 });
 exports.RenameGameTemplateRequestSchema = zod_1.z.object({
-    name: zod_1.z.string().min(1, 'Template name is required').max(100, 'Template name too long')
+    name: zod_1.z.string().min(1, 'Le nom du modèle est requis').max(100, 'Le nom du modèle est trop long')
 });
 exports.RenameGameInstanceRequestSchema = zod_1.z.object({
-    name: zod_1.z.string().min(1, 'Instance name is required').max(100, 'Instance name too long')
+    name: zod_1.z.string().min(1, 'Le nom de la session est requis').max(100, 'Le nom de la session est trop long')
 });
 // --- Question API Request Schemas ---
 exports.CreateQuestionRequestSchema = zod_1.z.object({

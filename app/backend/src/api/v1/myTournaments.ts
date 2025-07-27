@@ -49,7 +49,6 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                         createdAt: true,
                         startedAt: true,
                         endedAt: true,
-                        isDiffered: true,
                         differedAvailableFrom: true,
                         differedAvailableTo: true,
                         initiatorUser: {
@@ -83,8 +82,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                     } else if (game.status === 'active') {
                         // Check if it's still available in deferred mode
                         const now = new Date();
-                        const isStillAvailable = game.isDiffered &&
-                            game.differedAvailableTo &&
+                        const isStillAvailable = game.differedAvailableTo &&
                             new Date(game.differedAvailableTo) > now;
 
                         if (isStillAvailable) {
@@ -144,7 +142,6 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                             createdAt: true,
                             startedAt: true,
                             endedAt: true,
-                            isDiffered: true,
                             differedAvailableFrom: true,
                             differedAvailableTo: true,
                             initiatorUser: {
@@ -200,8 +197,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                         } else if (game.status === 'active') {
                             // Check if it's still available in deferred mode
                             const now = new Date();
-                            const isStillAvailable = game.isDiffered &&
-                                game.differedAvailableTo &&
+                            const isStillAvailable = game.differedAvailableTo &&
                                 new Date(game.differedAvailableTo) > now;
 
                             if (isStillAvailable) {

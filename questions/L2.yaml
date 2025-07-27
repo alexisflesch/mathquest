@@ -1,0 +1,9 @@
+niveau: "L2"
+disciplines:
+  - nom: "Mathématiques"
+    themes:
+      - nom: "Intégrales généralisées"
+        tags:
+          - "convergence"
+          - "divergence"
+          - "absolue convergence"

@@ -19,10 +19,15 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isValidQuestionType = exports.TIMEOUT_CONSTANTS = exports.QUESTION_TYPES = void 0;
+exports.getFeedbackDisplayTime = exports.getCorrectAnswersDisplayTime = exports.GAME_TIMING = exports.isValidQuestionType = exports.TIMEOUT_CONSTANTS = exports.QUESTION_TYPES = void 0;
 __exportStar(require("./questionTypes"), exports);
+__exportStar(require("./gameTimings"), exports);
 // Re-export commonly used constants for convenience
 var questionTypes_1 = require("./questionTypes");
 Object.defineProperty(exports, "QUESTION_TYPES", { enumerable: true, get: function () { return questionTypes_1.QUESTION_TYPES; } });
 Object.defineProperty(exports, "TIMEOUT_CONSTANTS", { enumerable: true, get: function () { return questionTypes_1.TIMEOUT_CONSTANTS; } });
 Object.defineProperty(exports, "isValidQuestionType", { enumerable: true, get: function () { return questionTypes_1.isValidQuestionType; } });
+var gameTimings_1 = require("./gameTimings");
+Object.defineProperty(exports, "GAME_TIMING", { enumerable: true, get: function () { return gameTimings_1.GAME_TIMING; } });
+Object.defineProperty(exports, "getCorrectAnswersDisplayTime", { enumerable: true, get: function () { return gameTimings_1.getCorrectAnswersDisplayTime; } });
+Object.defineProperty(exports, "getFeedbackDisplayTime", { enumerable: true, get: function () { return gameTimings_1.getFeedbackDisplayTime; } });

@@ -116,7 +116,6 @@ describe('Self-Paced (Practice) Mode', () => {
             data: {
                 accessCode: 'PRACTICE1',
                 playMode: 'practice',
-                isDiffered: true,
                 initiatorUserId: playerId,
                 gameTemplateId: templateId, // changed from templateId
                 name: 'Practice Game', // required field

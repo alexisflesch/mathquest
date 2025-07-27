@@ -30,8 +30,8 @@ export function emitQuestionHandler(
             where: { accessCode },
             select: {
                 id: true,
+                status: true,
                 playMode: true,
-                isDiffered: true,
                 gameTemplateId: true
             }
         });
@@ -72,25 +72,29 @@ export function emitQuestionHandler(
         // Modern timer logic
         const canonicalTimerService = new CanonicalTimerService(redisClient);
         let timerPayload = null;
+        // Determine if this is a deferred (completed) tournament
+        const isDeferred = gameInstance.status === 'completed';
+
         logger.info({
             accessCode,
             userId,
             questionUid: targetQuestion.uid,
             playMode: gameInstance.playMode,
-            isDiffered: gameInstance.isDiffered
+            isDeferred: isDeferred
         }, '[TIMER_DEBUG] About to start timer in emitQuestionHandler');
+
         // Always reset and start timer for all modes except practice
-        if ((gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament') && !gameInstance.isDiffered) {
+        if ((gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament') && !isDeferred) {
             // Global timer for quiz and live tournament
-            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
-            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
-            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
+            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred);
+            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred);
+            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred);
             logger.info({
                 accessCode,
                 userId,
                 questionUid: targetQuestion.uid,
                 playMode: gameInstance.playMode,
-                isDiffered: gameInstance.isDiffered,
+                isDeferred: isDeferred,
                 elapsed
             }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler');
             timerPayload = {
@@ -101,19 +105,19 @@ export function emitQuestionHandler(
                 timestamp: Date.now() - elapsed,
                 localTimeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed
             };
-        } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
-            // Per-user session timer for differed tournaments
-            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
-            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
-            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
+        } else if (gameInstance.playMode === 'tournament' && isDeferred) {
+            // Per-user session timer for deferred tournaments
+            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred, userId);
+            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred, userId);
+            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred, userId);
             logger.info({
                 accessCode,
                 userId,
                 questionUid: targetQuestion.uid,
                 playMode: gameInstance.playMode,
-                isDiffered: gameInstance.isDiffered,
+                isDeferred: isDeferred,
                 elapsed
-            }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler (differed)');
+            }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler (deferred)');
             timerPayload = {
                 status: 'play',
                 timeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed,

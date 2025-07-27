@@ -36,7 +36,6 @@ exports.GameInstanceBaseSchema = zod_1.z.object({
     endedAt: zod_1.z.coerce.date().nullable().optional(),
     differedAvailableFrom: zod_1.z.coerce.date().nullable().optional(),
     differedAvailableTo: zod_1.z.coerce.date().nullable().optional(),
-    isDiffered: zod_1.z.boolean(),
     gameTemplateId: zod_1.z.string(),
     initiatorUserId: zod_1.z.string().nullable().optional(),
     // Relations
@@ -86,7 +85,6 @@ exports.GameInstanceCreationDataSchema = zod_1.z.object({
     gameTemplateId: zod_1.z.string(),
     initiatorUserId: zod_1.z.string().optional(),
     settings: zod_1.z.any().optional(),
-    isDiffered: zod_1.z.boolean().optional(),
     differedAvailableFrom: zod_1.z.coerce.date().optional(),
     differedAvailableTo: zod_1.z.coerce.date().optional()
 });

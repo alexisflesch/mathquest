@@ -7,12 +7,25 @@ import type { LiveQuestionPayload } from './quiz/liveQuestion';
 import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload, JoinDashboardPayload } from './socket/dashboardPayloads';
 import type { PracticeClientToServerEvents, PracticeServerToClientEvents } from './practice/events';
 type LeaderboardEntryData = LeaderboardEntry;
+/**
+ * Unified payload for joining a game (replaces separate lobby and game join events)
+ * Used for both lobby and live game joining in the new unified flow
+ */
 export interface JoinGamePayload {
     accessCode: string;
     userId: string;
     username: string;
     avatarEmoji?: string;
-    isDiffered?: boolean;
+}
+/**
+ * @deprecated Use JoinGamePayload instead
+ * Payload for joining a game lobby
+ */
+export interface JoinLobbyPayload {
+    accessCode: string;
+    userId: string;
+    username: string;
+    avatarEmoji?: string;
 }
 export type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload } from './core';
 export type { LeaderboardEntry as LeaderboardEntryData } from './core';
@@ -37,7 +50,6 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData;
     gameStatus: 'pending' | 'active' | 'completed' | 'archived';
-    isDiffered: boolean;
     differedAvailableFrom?: string;
     differedAvailableTo?: string;
 }
@@ -77,15 +89,7 @@ export interface QuestionData {
     explanation?: string;
 }
 /**
- * Payload for joining a game lobby
- */
-export interface JoinLobbyPayload {
-    accessCode: string;
-    userId: string;
-    username: string;
-    avatarEmoji?: string;
-}
-/**
+ * @deprecated Use JoinGamePayload instead
  * Payload for leaving a game lobby
  */
 export interface LeaveLobbyPayload {
@@ -93,6 +97,7 @@ export interface LeaveLobbyPayload {
     userId?: string;
 }
 /**
+ * @deprecated Use JoinGamePayload instead
  * Payload for requesting participants list
  */
 export interface GetParticipantsPayload {

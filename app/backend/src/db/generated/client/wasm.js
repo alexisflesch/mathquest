@@ -125,11 +125,11 @@ exports.Prisma.UserScalarFieldEnum = {
   username: 'username',
   email: 'email',
   passwordHash: 'passwordHash',
-  avatarEmoji: 'avatarEmoji',
   createdAt: 'createdAt',
   role: 'role',
   resetToken: 'resetToken',
-  resetTokenExpiresAt: 'resetTokenExpiresAt'
+  resetTokenExpiresAt: 'resetTokenExpiresAt',
+  avatarEmoji: 'avatarEmoji'
 };
 
 exports.Prisma.TeacherProfileScalarFieldEnum = {
@@ -196,7 +196,6 @@ exports.Prisma.GameInstanceScalarFieldEnum = {
   endedAt: 'endedAt',
   differedAvailableFrom: 'differedAvailableFrom',
   differedAvailableTo: 'differedAvailableTo',
-  isDiffered: 'isDiffered',
   gameTemplateId: 'gameTemplateId',
   initiatorUserId: 'initiatorUserId'
 };

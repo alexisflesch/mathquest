@@ -6,6 +6,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
+import { cleanupGameRedisKeys } from '@/utils/redisCleanup';
 import gameStateService from '@/core/services/gameStateService';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { prisma } from '@/db/prisma';
@@ -16,6 +17,7 @@ import { computeTimerTimes } from '@/core/services/timerHelpers';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { calculateLeaderboard, persistLeaderboardToGameInstance } from './sharedLeaderboard';
 import { syncSnapshotWithLiveData, emitLeaderboardFromSnapshot } from '@/core/services/gameParticipant/leaderboardSnapshotService';
+import { getCorrectAnswersDisplayTime, getFeedbackDisplayTime } from '@shared/constants/gameTimings';
 
 const logger = createLogger('SharedGameFlow');
 
@@ -249,13 +251,11 @@ export async function runGameFlow(
             // If batch scoring is needed, refactor to use canonical logic per participant/answer.
 
             // Two separate timing concerns:
-            // 1. Delay between correct answers and feedback event (fixed 1.5s for tournaments)
-            const correctAnswersToFeedbackDelay = options.playMode === 'tournament' ? 1.5 : 1;
+            // 1. Delay between correct answers and feedback event (1.5s for all modes)
+            const correctAnswersToFeedbackDelay = getCorrectAnswersDisplayTime(options.playMode);
 
             // 2. Feedback display duration (from question or default to 5s)
-            const feedbackDisplayDuration = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
-                ? questions[i].feedbackWaitTime
-                : 5; // Default to 5 seconds when feedbackWaitTime is null
+            const feedbackDisplayDuration = getFeedbackDisplayTime(questions[i].feedbackWaitTime);
 
             // Wait for the delay between correct answers and feedback
             await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
@@ -304,28 +304,7 @@ export async function runGameFlow(
 
             // Clear Redis game data after persisting scores to database
             // This ensures clean state and prevents old scores from contaminating future sessions
-            const gameDataKeys = [
-                `mathquest:game:participants:${accessCode}`,
-                `mathquest:game:leaderboard:${accessCode}`,
-                `mathquest:game:answers:${accessCode}:*`,
-                `mathquest:game:join_order:${accessCode}`,
-                `mathquest:game:userIdToSocketId:${accessCode}`,
-                `mathquest:game:socketIdToUserId:${accessCode}`
-            ];
-
-            for (const key of gameDataKeys) {
-                if (key.includes('*')) {
-                    // Handle wildcard keys
-                    const keys = await redisClient.keys(key);
-                    if (keys.length > 0) {
-                        await redisClient.del(...keys);
-                    }
-                } else {
-                    await redisClient.del(key);
-                }
-            }
-
-            logger.info({ accessCode, clearedKeys: gameDataKeys }, '[REDIS-CLEANUP] Cleared Redis game data at game end after persisting scores');
+            await cleanupGameRedisKeys(accessCode, 'sharedGameFlow');
         } catch (error) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');
         }

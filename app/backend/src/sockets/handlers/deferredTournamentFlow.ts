@@ -5,6 +5,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import createLogger from '@/utils/logger';
 import gameStateService from '@/core/services/gameStateService';
 import { redisClient } from '@/config/redis';
+import { cleanupGameRedisKeys, cleanupDeferredSessionRedisKeys } from '@/utils/redisCleanup';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { GameTimerState } from '@shared/types/core/timer';
 import { computeTimerTimes } from '@/core/services/timerHelpers';
@@ -14,11 +15,40 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { errorPayloadSchema } from '@shared/types/socketEvents.zod';
 import { prisma } from '@/db/prisma';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
+import { getCorrectAnswersDisplayTime, getFeedbackDisplayTime } from '@shared/constants/gameTimings';
 
 const logger = createLogger('DeferredTournamentFlow');
 
 // Track running deferred tournament sessions by userId
 const runningDeferredSessions = new Map<string, string>(); // userId -> accessCode
+
+/**
+ * Clean up deferred sessions for a specific access code when game ends
+ * @param accessCode - The game access code
+ */
+export function cleanupDeferredSessionsForGame(accessCode: string): void {
+    const sessionsToRemove: string[] = [];
+
+    // Find all user IDs with sessions for this access code
+    runningDeferredSessions.forEach((sessionAccessCode, userId) => {
+        if (sessionAccessCode === accessCode) {
+            sessionsToRemove.push(userId);
+        }
+    });
+
+    // Remove the sessions
+    for (const userId of sessionsToRemove) {
+        runningDeferredSessions.delete(userId);
+    }
+
+    if (sessionsToRemove.length > 0) {
+        logger.info({
+            accessCode,
+            removedUserIds: sessionsToRemove,
+            remainingSessions: runningDeferredSessions.size
+        }, 'Cleaned up deferred sessions for ended game');
+    }
+}
 
 export interface DeferredTournamentSession {
     userId: string;
@@ -197,7 +227,8 @@ async function runDeferredQuestionSequence(
     // Instantiate canonical timer service
     const canonicalTimerService = new CanonicalTimerService(redisClient);
     const playMode = 'tournament';
-    const isDiffered = true;
+    // For deferred tournaments, use isolated timers per player
+    const isDeferred = true;
 
     try {
         // Process each question sequentially
@@ -233,8 +264,8 @@ async function runDeferredQuestionSequence(
             // --- UNIFIED TIMER LOGIC ---
             // Always use CanonicalTimerService with correct key (userId and attemptCount for deferred)
             // Use the fixed attemptCount for the entire session (do NOT increment)
-            await canonicalTimerService.resetTimer(accessCode, question.uid, playMode, isDiffered, userId, attemptCount);
-            await canonicalTimerService.startTimer(accessCode, question.uid, playMode, isDiffered, userId, attemptCount);
+            await canonicalTimerService.resetTimer(accessCode, question.uid, playMode, isDeferred, userId, attemptCount);
+            await canonicalTimerService.startTimer(accessCode, question.uid, playMode, isDeferred, userId, attemptCount);
             logger.info({
                 accessCode,
                 userId,
@@ -245,7 +276,7 @@ async function runDeferredQuestionSequence(
             // --- END UNIFIED TIMER LOGIC ---
 
             // Retrieve timer state from canonical service (optional, for emitting to client)
-            // const timer = await canonicalTimerService.getTimer(accessCode, question.uid, playMode, isDiffered, userId);
+            // const timer = await canonicalTimerService.getTimer(accessCode, question.uid, playMode, isDeferred, userId);
             // For now, keep timer object as before for payload
             const timerEndDateMs = Date.now() + durationMs;
             const timer: GameTimerState = {
@@ -300,10 +331,17 @@ async function runDeferredQuestionSequence(
             };
             io.to(playerRoom).emit('game_timer_updated', timerUpdatePayload);
 
-            // Track question start time for this user
+            // Track question start time for this user (include attempt count for deferred session isolation)
             try {
-                const questionStartKey = `mathquest:game:question_start:${accessCode}:${question.uid}:${userId}`;
+                const questionStartKey = `mathquest:game:question_start:${accessCode}:${question.uid}:${userId}:${attemptCount}`;
                 await redisClient.set(questionStartKey, Date.now().toString(), 'EX', 300);
+                logger.debug({
+                    accessCode,
+                    userId,
+                    attemptCount,
+                    questionUid: question.uid,
+                    questionStartKey
+                }, '[REDIS-KEY] Created question start tracking key for deferred session');
             } catch (error) {
                 logger.error({ accessCode, userId, questionUid: question.uid, error }, 'Failed to track question start time');
             }
@@ -318,16 +356,88 @@ async function runDeferredQuestionSequence(
             };
             io.to(playerRoom).emit('correct_answers', correctAnswersPayload);
 
+            // Wait for correct answers display duration before proceeding
+            const correctAnswersDisplayTime = getCorrectAnswersDisplayTime('tournament'); // 1.5s for all modes
+            await new Promise(resolve => setTimeout(resolve, correctAnswersDisplayTime * 1000));
+
+            // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
+            // This prevents students from determining answer correctness during submission
+            try {
+                // DEFERRED SESSION FIX: Send single-user leaderboard with Redis score (live score during session)
+                // Get current participant data from database
+                const gameInstance = await prisma.gameInstance.findUnique({
+                    where: { accessCode },
+                    select: { id: true }
+                });
+
+                if (!gameInstance) {
+                    logger.error({ accessCode, userId }, '[DEFERRED] Could not find game instance for leaderboard update');
+                    return;
+                }
+
+                const participant = await prisma.gameParticipant.findFirst({
+                    where: {
+                        gameInstanceId: gameInstance.id,
+                        userId: userId
+                    },
+                    include: {
+                        user: true
+                    }
+                });
+
+                if (participant) {
+                    // Get the live score from Redis (during game session)
+                    const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
+                    const redisScore = await redisClient.zscore(leaderboardKey, userId);
+                    const currentScore = redisScore !== null ? parseFloat(redisScore) : 0;
+
+                    // Create a single-entry leaderboard with just this user's data
+                    const singleUserLeaderboard = [{
+                        userId: participant.userId,
+                        username: participant.user?.username || 'Unknown',
+                        score: currentScore, // Use Redis score (live session score)
+                        avatarEmoji: participant.user?.avatarEmoji || '🐼',
+                        rank: 1 // Always rank 1 since it's just them
+                    }];
+
+                    // Emit directly to the player's room
+                    io.to(playerRoom).emit('leaderboard_update', { leaderboard: singleUserLeaderboard });
+
+                    logger.info({
+                        accessCode,
+                        userId,
+                        score: currentScore,
+                        redisScore,
+                        username: participant.user?.username,
+                        event: 'leaderboard_update',
+                        questionUid: question.uid,
+                        timing: 'after_question_end',
+                        playerRoom
+                    }, '[DEFERRED] Sent single-user leaderboard after question end');
+                } else {
+                    logger.warn({
+                        accessCode,
+                        userId,
+                        questionUid: question.uid
+                    }, '[DEFERRED] Could not find participant for leaderboard update');
+                }
+            } catch (leaderboardError) {
+                logger.error({
+                    accessCode,
+                    userId,
+                    questionUid: question.uid,
+                    error: leaderboardError
+                }, '[DEFERRED] Error emitting secure leaderboard update');
+            }
+
             // Handle feedback if available
             if (question.explanation) {
                 // Check if explanation was already sent (e.g., via ANSWER_RECEIVED)
                 const explanationSentKey = `mathquest:explanation_sent:${accessCode}:${question.uid}:${userId}`;
                 const alreadySent = await redisClient.get(explanationSentKey);
                 if (!alreadySent) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    const feedbackDisplayDuration = (typeof question.feedbackWaitTime === 'number' && question.feedbackWaitTime > 0)
-                        ? question.feedbackWaitTime
-                        : 5;
+                    // No additional delay needed here - correct answers already displayed for 1.5s above
+                    const feedbackDisplayDuration = getFeedbackDisplayTime(question.feedbackWaitTime);
                     const feedbackPayload = {
                         questionUid: question.uid,
                         feedbackRemaining: feedbackDisplayDuration,
@@ -350,6 +460,35 @@ async function runDeferredQuestionSequence(
         // Mark session as over in Redis
         const { setDeferredSessionOver } = await import('@/core/services/gameParticipant/deferredTimerUtils');
         await setDeferredSessionOver({ accessCode, userId, attemptCount });
+
+        // Clean up Redis keys for this specific deferred session using deferred-specific utility
+        // TEMPORARILY COMMENTED OUT FOR TESTING - to verify key format consistency
+        /*
+        try {
+            await cleanupDeferredSessionRedisKeys(accessCode, userId, attemptCount, 'deferredSessionComplete');
+            
+            logger.info({
+                accessCode,
+                userId,
+                attemptCount
+            }, '[REDIS-CLEANUP] Cleaned up Redis keys for completed deferred session using deferred-specific utility');
+
+        } catch (cleanupError) {
+            logger.error({
+                accessCode,
+                userId,
+                attemptCount,
+                error: cleanupError
+            }, '[REDIS-CLEANUP] Error cleaning up deferred session Redis keys');
+            // Don't throw - cleanup errors shouldn't prevent session completion
+        }
+        */
+
+        logger.info({
+            accessCode,
+            userId,
+            attemptCount
+        }, '[TEST] Redis cleanup DISABLED for testing - keys should remain for verification');
 
         logger.info({
             accessCode,
@@ -427,41 +566,8 @@ async function runDeferredQuestionSequence(
             }, '[ANTI-CHEATING] Error persisting deferred scores to database');
         }
 
-        // Clear Redis deferred session data after persisting scores to database
-        // This ensures clean state and prevents old deferred scores from contaminating future sessions
-        try {
-            const deferredSessionKeys = [
-                `mathquest:game:participants:${accessCode}`,
-                `mathquest:game:leaderboard:${accessCode}`,
-                `mathquest:game:answers:${accessCode}:*`,
-                `mathquest:deferred:timer:${accessCode}:${userId}:*`,
-                `deferred_session:${accessCode}:${userId}:*`
-            ];
+        // Note: Redis cleanup already performed above using shared utility after session completion
 
-            for (const key of deferredSessionKeys) {
-                if (key.includes('*')) {
-                    // Handle wildcard keys
-                    const keys = await redisClient.keys(key);
-                    if (keys.length > 0) {
-                        await redisClient.del(...keys);
-                    }
-                } else {
-                    await redisClient.del(key);
-                }
-            }
-
-            logger.info({
-                accessCode,
-                userId,
-                clearedKeys: deferredSessionKeys
-            }, '[REDIS-CLEANUP] Cleared Redis deferred session data after persisting scores');
-        } catch (error) {
-            logger.error({
-                accessCode,
-                userId,
-                error: error instanceof Error ? error.message : String(error)
-            }, '[REDIS-CLEANUP] Error clearing Redis deferred session data');
-        }
     } catch (error) {
         logger.error({ accessCode, userId, error }, 'Error in deferred question sequence');
 

@@ -887,8 +887,8 @@ router.get('/:code/can-play-differed', async (req: Request, res: Response) => {
             return;
         }
 
-        // Check if the game is configured for differed play
-        if (!gameInstance.isDiffered || !gameInstance.differedAvailableTo) {
+        // Check if the game is configured for differed play (completed tournaments with differed availability)
+        if (gameInstance.status !== 'completed' || !gameInstance.differedAvailableTo) {
             res.json({ canPlay: false });
             return;
         }

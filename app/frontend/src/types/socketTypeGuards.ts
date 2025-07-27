@@ -91,8 +91,7 @@ export function isGameJoinedPayload(data: unknown): data is GameJoinedPayload {
     return (
         typeof g.accessCode === 'string' &&
         isParticipantData(g.participant) &&
-        typeof g.gameStatus === 'string' &&
-        typeof g.isDiffered === 'boolean'
+        typeof g.gameStatus === 'string'
     );
 }
 

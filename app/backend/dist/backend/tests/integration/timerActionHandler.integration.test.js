@@ -198,7 +198,6 @@ const mockGameInstance = {
     id: 'game-1',
     accessCode: 'CODE1',
     playMode: 'quiz',
-    isDiffered: false,
     status: 'active', // Set to 'active' for timer tests
     gameTemplate: { creatorId: 'teacher-1' },
     initiatorUserId: 'teacher-1'

@@ -47,7 +47,6 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                         createdAt: true,
                         startedAt: true,
                         endedAt: true,
-                        isDiffered: true,
                         differedAvailableFrom: true,
                         differedAvailableTo: true,
                         initiatorUser: {
@@ -80,8 +79,7 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                     else if (game.status === 'active') {
                         // Check if it's still available in deferred mode
                         const now = new Date();
-                        const isStillAvailable = game.isDiffered &&
-                            game.differedAvailableTo &&
+                        const isStillAvailable = game.differedAvailableTo &&
                             new Date(game.differedAvailableTo) > now;
                         if (isStillAvailable) {
                             active.push(tournament);
@@ -141,7 +139,6 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                             createdAt: true,
                             startedAt: true,
                             endedAt: true,
-                            isDiffered: true,
                             differedAvailableFrom: true,
                             differedAvailableTo: true,
                             initiatorUser: {
@@ -193,8 +190,7 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                         else if (game.status === 'active') {
                             // Check if it's still available in deferred mode
                             const now = new Date();
-                            const isStillAvailable = game.isDiffered &&
-                                game.differedAvailableTo &&
+                            const isStillAvailable = game.differedAvailableTo &&
                                 new Date(game.differedAvailableTo) > now;
                             if (isStillAvailable) {
                                 active.push(tournament);

@@ -36,7 +36,6 @@ export const GameInstanceBaseSchema = z.object({
     endedAt: z.coerce.date().nullable().optional(),
     differedAvailableFrom: z.coerce.date().nullable().optional(),
     differedAvailableTo: z.coerce.date().nullable().optional(),
-    isDiffered: z.boolean(),
     gameTemplateId: z.string(),
     initiatorUserId: z.string().nullable().optional(),
     // Relations
@@ -92,7 +91,6 @@ export const GameInstanceCreationDataSchema = z.object({
     gameTemplateId: z.string(),
     initiatorUserId: z.string().optional(),
     settings: z.any().optional(),
-    isDiffered: z.boolean().optional(),
     differedAvailableFrom: z.coerce.date().optional(),
     differedAvailableTo: z.coerce.date().optional()
 });

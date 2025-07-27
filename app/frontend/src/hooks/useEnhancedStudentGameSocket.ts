@@ -56,7 +56,6 @@ export interface EnhancedStudentGameSocketProps {
     userId: string | null;
     username: string | null;
     avatarEmoji?: string | null;
-    isDiffered?: boolean;
     enableValidation?: boolean; // New: option to enable/disable validation
     strictValidation?: boolean; // New: strict mode for validation
 }
@@ -78,7 +77,6 @@ export function useEnhancedStudentGameSocket({
     userId,
     username,
     avatarEmoji,
-    isDiffered = false,
     enableValidation = true,
     strictValidation = false
 }: EnhancedStudentGameSocketProps): EnhancedStudentGameSocketHook {
@@ -181,7 +179,7 @@ export function useEnhancedStudentGameSocket({
             setConnected(false);
             setConnecting(false);
         };
-    }, [accessCode, userId, username, avatarEmoji, isDiffered, enableValidation, strictValidation]);
+    }, [accessCode, userId, username, avatarEmoji, enableValidation, strictValidation]);
 
     // Setup event handlers with validation
     const setupValidatedEventHandlers = (middleware: SocketValidationMiddleware) => {
@@ -280,8 +278,7 @@ export function useEnhancedStudentGameSocket({
             accessCode,
             userId,
             username,
-            avatarEmoji: avatarEmoji || '🐼',
-            isDiffered
+            avatarEmoji: avatarEmoji || '🐼'
         };
 
         if (validationMiddleware) {
@@ -292,8 +289,8 @@ export function useEnhancedStudentGameSocket({
             socket.emit(SOCKET_EVENTS.GAME.JOIN_GAME, payload);
         }
 
-        logger.info(`Enhanced joining game ${accessCode}`, { userId, username, isDiffered });
-    }, [socket, validationMiddleware, accessCode, userId, username, avatarEmoji, isDiffered]);
+        logger.info(`Enhanced joining game ${accessCode}`, { userId, username });
+    }, [socket, validationMiddleware, accessCode, userId, username, avatarEmoji]);
 
     const submitAnswer = useCallback((answer: string | number | string[] | number[]) => {
         if (!socket || !accessCode || !userId || !gameState.currentQuestion) {

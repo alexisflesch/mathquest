@@ -127,7 +127,6 @@ export interface StudentGameSocketHookProps {
     userId: string | null;
     username: string | null;
     avatarEmoji?: string | null;
-    isDiffered?: boolean;
     onAnswerReceived?: () => void; // Callback when answer is received
 }
 
@@ -152,7 +151,6 @@ export function useStudentGameSocket({
     userId,
     username,
     avatarEmoji,
-    isDiffered = false,
     onAnswerReceived
 }: StudentGameSocketHookProps): StudentGameSocketHook {
 
@@ -173,7 +171,7 @@ export function useStudentGameSocket({
         feedbackRemaining: null,
         correctAnswers: null,
         leaderboard: [],
-        gameMode: isDiffered ? 'practice' : 'tournament',
+        gameMode: 'tournament', // Default to tournament mode
         linkedQuizId: null,
         lastAnswerFeedback: null
     });
@@ -229,7 +227,6 @@ export function useStudentGameSocket({
         logger.info(`Initializing student socket connection for game: ${accessCode}`, {
             userId,
             username,
-            isDiffered,
             url: SOCKET_CONFIG.url
         });
 
@@ -284,7 +281,7 @@ export function useStudentGameSocket({
             setConnected(false);
             setConnecting(false);
         };
-    }, [accessCode, userId, username, avatarEmoji, isDiffered]);
+    }, [accessCode, userId, username, avatarEmoji]);
 
     // --- Game Event Handlers ---
     useEffect(() => {
@@ -465,9 +462,9 @@ export function useStudentGameSocket({
             return;
         }
 
-        logger.info(`Joining game ${accessCode}`, { userId, username, isDiffered });
+        logger.info(`Joining game ${accessCode}`, { userId, username });
 
-        const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼', isDiffered };
+        const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼' };
 
         // Validate payload before emitting
         try {
@@ -476,7 +473,7 @@ export function useStudentGameSocket({
         } catch (error) {
             logger.error('Invalid join_game payload:', error);
         }
-    }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
+    }, [socket, accessCode, userId, username, avatarEmoji]);
 
     const submitAnswer = useCallback((questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
         if (!socket || !accessCode || !userId) {
