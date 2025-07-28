@@ -353,7 +353,7 @@
     - "7 heures est après 5 heures"
     - "2 heures est après 6 heures"
     - "8 heures est avant 9 heures"
-  correctAnswers: [false, true, false, false]
+  correctAnswers: [false, true, false, true]
 
 - uid: "aflesch-cp-math-heures-004"
   author: "aflesch"
