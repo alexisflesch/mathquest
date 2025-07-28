@@ -163,12 +163,20 @@ def import_questions():
                                     invalid_time_limit = True
                             except Exception:
                                 invalid_time_limit = True
+
+                        # --- Ignore numeric questions, show warning ---
+                        if q.get("questionType") == "numeric":
+                            msg = f"Question de type 'numeric' ignorée (uid={q.get('uid')}) dans {yaml_path} : non supportée pour le moment."
+                            print_colored('WARNING', msg)
+                            all_warnings.append(msg)
+                            total_warnings += 1
+                            continue
+
                         # --- Validation stricte nomenclature ---
                         # 1. Discipline
                         discipline = q.get('discipline')
                         if discipline not in disciplines_dict:
                             msg = f"Discipline '{discipline}' inconnue pour la question (uid={q.get('uid')}) dans {yaml_path}"
-                            # logging.error(msg)
                             print_colored('ERROR', msg)
                             all_errors.append(msg)
                             total_errors += 1
@@ -180,7 +188,6 @@ def import_questions():
                         for theme in themes:
                             if discipline in disciplines_dict and theme not in disciplines_dict[discipline]:
                                 msg = f"Thème '{theme}' inconnu pour la discipline '{discipline}' (uid={q.get('uid')}) dans {yaml_path}"
-                                # logging.error(msg)
                                 print_colored('ERROR', msg)
                                 all_errors.append(msg)
                                 total_errors += 1
@@ -194,21 +201,18 @@ def import_questions():
                                 for tag in tags:
                                     if tag not in known_tags:
                                         msg = f"Tag '{tag}' inconnu pour le thème '{theme}' de la discipline '{discipline}' (uid={q.get('uid')}) dans {yaml_path}"
-                                        # logging.error(msg)
                                         print_colored('ERROR', msg)
                                         all_errors.append(msg)
                                         total_errors += 1
                                         return
                         if missing or invalid_time_limit:
                             msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants ou timeLimit invalide : {missing if missing else ''}{' (timeLimit must be a positive integer)' if invalid_time_limit else ''}"
-                            # logging.error(msg)
                             print_colored('ERROR', msg)
                             all_errors.append(msg)
                             total_errors += 1
                             return
                         if not q.get("title"):
                             msg = f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}"
-                            # logging.warning(msg)
                             print_colored('WARNING', msg)
                             all_warnings.append(msg)
                             total_warnings += 1

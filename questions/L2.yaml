@@ -5,5 +5,20 @@ disciplines:
       - nom: "Intégrales généralisées"
         tags:
           - "convergence"
-          - "divergence"
           - "absolue convergence"
+      - nom: "Déterminant"
+        tags:
+          - "endomorphisme"
+          - "règles de calcul"
+      - nom: "Séries numériques"
+        tags:
+          - "critère de Riemann"
+          - "critère de comparaison"
+          - "critère d'équivalence"
+          - "critère spécial des séries alternées (CSSA)"
+          - "comparaison série/intégrale"
+          - "convergence"
+          - "absolue convergence"
+          - "calcul de somme"
+          - "série géométrique"
+          - "série exponentielle"

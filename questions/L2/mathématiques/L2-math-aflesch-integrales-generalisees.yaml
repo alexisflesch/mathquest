@@ -2,7 +2,7 @@
 # Thème : intégrales généralisées
 # Auteur : Alexis Flesch
 
-- uid: "aflesch-mt3-001"
+- uid: "aflesch-mt3-integrales-generalisees-001"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
@@ -21,7 +21,7 @@
   correctAnswers: [true, false, true]
 
 
-- uid: "aflesch-mt3-002"
+- uid: "aflesch-mt3-integrales-generalisees-002"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
@@ -44,7 +44,7 @@
   feedbackWaitTime: 5
 
 
-- uid: "aflesch-mt3-003"
+- uid: "aflesch-mt3-integrales-generalisees-003"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
@@ -64,7 +64,7 @@
 
 
 
-- uid: "aflesch-mt3-004"
+- uid: "aflesch-mt3-integrales-generalisees-004"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
@@ -85,7 +85,7 @@
   correctAnswers: [false, false, true, false, false, false]
 
 
-- uid: "aflesch-mt3-005"
+- uid: "aflesch-mt3-integrales-generalisees-005"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
@@ -103,7 +103,7 @@
     - Faux
   correctAnswers: [false, true]
 
-- uid: "aflesch-mt3-006"
+- uid: "aflesch-mt3-integrales-generalisees-006"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"

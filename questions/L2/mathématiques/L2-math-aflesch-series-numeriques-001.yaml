@@ -1,0 +1,128 @@
+# Questions de mathématiques niveau L2 pour MathQuest
+# Thème : intégrales généralisées
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt3-series-numeriques-001"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Séries numériques"]
+  tags: ["convergence", "absolue convergence"]
+  title: "Série simple"
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    La série \(\displaystyle\sum_n \frac{n^2+2n}{n!-\mathrm{e}^n}\) est
+  answerOptions:
+    - Convergente
+    - Divergente
+    - Absolument convergente
+  correctAnswers: [true, false, true]
+
+
+- uid: "aflesch-mt3-series-numeriques-002"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Séries numériques"]
+  tags: ["convergence", "critère d'équivalence"]
+  title: "Série téléscopique"
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    La série \(\displaystyle \sum \left(\dfrac{1}{n}-\dfrac{1}{n+1}\right)...\)
+  answerOptions:
+    - diverge car \(\displaystyle \sum \dfrac{1}{n}\) diverge et que \(\displaystyle \sum \dfrac{1}{n+1}\) diverge.
+    - diverge car \(\dfrac{1}{n}-\dfrac{1}{n+1}\leqslant \dfrac{1}{n}\) et que \(\displaystyle \sum \dfrac{1}{n}\) est une série à termes positifs divergente.
+    - converge car \(\dfrac{1}{n}-\dfrac{1}{n+1}\sim \dfrac{1}{n^2}\) et que \( \displaystyle \sum \dfrac{1}{n^2}\) est une série à termes positifs convergente.
+    - converge car \(\displaystyle \sum_{n=1}^{\infty}\dfrac{1}{n}-\dfrac{1}{n+1}=\sum_{n=1}^{\infty}\dfrac{1}{n}-\sum_{n=1}^{\infty}\dfrac{1}{n+1}=1\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, true, false, false]
+
+
+
+- uid: "aflesch-mt3-series-numeriques-003"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Séries numériques"]
+  tags: ["séries de Riemann"]
+  title: "Condition suffisante série de Riemann"
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+      La série \(\displaystyle\sum_n \frac{1}{n^\alpha}\) est convergente si:
+  answerOptions:
+    - \(\alpha > 2\)
+    - \(\alpha \leqslant -1\)
+    - \(\alpha \geqslant 1\)
+    - \(\alpha < 1\)
+    - \(\alpha >1\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [true, false, false, false, true, false]
+
+
+
+- uid: "aflesch-mt3-series-numeriques-004"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Séries numériques"]
+  title: "Conditions nécessaires de convergence"
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+        Si \(\displaystyle\sum_n u_n\) converge alors:
+  answerOptions:
+    - \(u_n\leqslant 1/n\) au voisinage de \(+\infty\)
+    - \(u_n\rightarrow 0\)
+    - \(\exists \alpha>1,\, n^\alpha u_n\rightarrow 0\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, true, false]
+
+
+- uid: "aflesch-mt3-series-numeriques-005"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Séries numériques"]
+  title: "Conditions de convergence"
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+      Soit \(\left( u_n \right)_n\) une suite réelle. Quelles affirmations sont correctes?
+  answerOptions:
+    - \(\sum_n u_n\) converge ssi \(u_n\to 0\)
+    - si \(\sum_n u_n\) converge alors \(u_n<1/n\) au voisinage de l'infini
+    - si \(u_n<1/n\) alors \(\sum_n u_n\) converge
+    - Aucune des affirmations ci-desesus n'est vraie
+  correctAnswers: [false, false, false, true]
+
+
+
+- uid: "aflesch-mt3-series-numeriques-006"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Séries numériques"]
+  tags: ["séries géométrique", "calcul de somme"]
+  title: "Série géométrique dérivée"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+        La somme de la série \(\displaystyle\sum_n n2^{-n}\) est:
+  answerOptions:
+    - \(0\)
+    - \(1\)
+    - \(2\)
+    - \(3\)
+    - \(4\)
+    - Elle est divergente
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, true, false, false, false, false]
