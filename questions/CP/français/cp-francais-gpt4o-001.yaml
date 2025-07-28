@@ -180,3 +180,40 @@
   correctAnswers: [true, false, false, false]
   tags: ["correspondances graphème-phonème"]
   timeLimit: 30
+
+
+- uid: "aflesch-cp-francais-lecture-006"
+  author: "aflesch"
+  discipline: "Français"
+  title: "Mots qui riment"
+  text: "Quel mot rime avec 'poisson' ? Sélectionne la bonne réponse."
+  questionType: "multiple_choice"
+  themes: ["Lecture"]
+  tags: ["reconnaître les sons"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "chat"
+    - "maison"
+    - "chien"
+    - "loup"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-francais-lecture-007"
+  author: "aflesch"
+  discipline: "Français"
+  title: "Mots qui riment"
+  text: "Quel mot rime avec 'ballon' ? Sélectionne la bonne réponse."
+  questionType: "multiple_choice"
+  themes: ["Lecture"]
+  tags: ["reconnaître les sons"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "table"
+    - "sac"
+    - "camion"
+    - "livre"
+  correctAnswers: [false, false, true, false]
