@@ -1033,10 +1033,13 @@ textarea:focus {
   color: var (--foreground);
 }
 
-.tqcard-answer-unselected:hover {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--navbar);
+
+@media (hover: hover) and (pointer: fine) {
+  .tqcard-answer-unselected:hover {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--navbar);
+  }
 }
 
 .step-label-xs {
