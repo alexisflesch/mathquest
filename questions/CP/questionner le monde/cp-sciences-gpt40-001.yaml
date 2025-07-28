@@ -164,10 +164,10 @@
   author: "gpt4o"
   answerOptions:
     - "Le chien"
-    - "Le poisson"
-    - "L'oiseau"
     - "La grenouille"
-  correctAnswers: [false, true, false, false]
+    - "L'oiseau"
+    - "Le poisson"
+  correctAnswers: [false, false, false, true]
   tags: ["animaux et leurs caractéristiques"]
   timeLimit: 30
 
