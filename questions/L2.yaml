@@ -12,9 +12,9 @@ disciplines:
           - "règles de calcul"
       - nom: "Séries numériques"
         tags:
-          - "critère de Riemann"
-          - "critère de comparaison"
-          - "critère d'équivalence"
+          - "Riemann"
+          - "comparaison"
+          - "équivalence"
           - "critère spécial des séries alternées (CSSA)"
           - "comparaison série/intégrale"
           - "convergence"

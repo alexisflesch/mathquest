@@ -26,7 +26,7 @@
   gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Séries numériques"]
-  tags: ["convergence", "critère d'équivalence"]
+  tags: ["convergence", "équivalence"]
   title: "Série téléscopique"
   questionType: "multiple_choice"
   timeLimit: 30
@@ -48,7 +48,7 @@
   gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Séries numériques"]
-  tags: ["séries de Riemann"]
+  tags: ["Riemann"]
   title: "Condition suffisante série de Riemann"
   questionType: "multiple_choice"
   timeLimit: 30
@@ -110,7 +110,7 @@
   gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Séries numériques"]
-  tags: ["séries géométrique", "calcul de somme"]
+  tags: ["série géométrique", "calcul de somme"]
   title: "Série géométrique dérivée"
   questionType: "single_choice"
   timeLimit: 30
