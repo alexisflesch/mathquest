@@ -4,6 +4,6 @@ Ce répertoire contient des scripts utiles pour l'écriture des questions, la mi
 
 ## Scripts disponibles
 
-- `import_questions.py` : Script pour importer des questions dans la base de données.
-- `yaml2latex.py` : Convertit des fichiers YAML en fichiers LaTeX et pdf.
-- `deploy-doc.sh` : Déploie la documentation vuepress sur github pages.
+- `import_questions.py` : Script pour importer des questions dans la base de données : pensez à renommer et mettre à jour le fichier `example.env` avec vos informations de connexion.
+- `yaml2latex.py` : Convertit des fichiers YAML en fichiers LaTeX et pdf (utile pour les profs de maths, nécessite d'avoir LaTeX installé).
+- `deploy-doc.sh` : Déploie la documentation vuepress sur github pages (et récupère la nomenclature des questions).
