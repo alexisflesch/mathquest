@@ -56,6 +56,7 @@ def latex_header(title, subtitle):
 \geometry{{margin=2cm}}
 \usepackage{{enumitem}}
 \usepackage{{pifont}}
+\usepackage{{color,xcolor}}
 \usepackage{{amsmath, amssymb}}
 % Environnements personnalisés
 \newenvironment{{choix_simple}}{{\begin{{quote}}}}{{\end{{quote}}}}
@@ -70,7 +71,12 @@ def latex_header(title, subtitle):
 \newcommand{{\champDifficulte}}[1]{{\textbf{{Difficulté}} : #1}}
 \newcommand{{\champNiveau}}[1]{{\textbf{{Niveau:}} #1}}
 \newcommand{{\champUID}}[1]{{\textbf{{UID:}} #1}}
-\newcommand{{\checkmark}}{{\ding{{51}}}}
+\definecolor{{darkgreen}}{{RGB}}{{0,120,0}}
+\definecolor{{myblue}}{{RGB}}{{0,70,200}}
+\renewcommand{{\checkmark}}{{\textcolor{{darkgreen}}{{\ding{{51}}}}}}
+\newcommand{{\cross}}{{\textcolor{{red}}{{\ding{{55}}}}}}
+% Ligne séparatrice personnalisée : boxée et colorée
+\newcommand{{\questionsep}}[1]{{\vspace{{0.5em}}\noindent\\[0.1em]\noindent\fcolorbox{{myblue}}{{white}}{{\textcolor{{myblue}}{{\textbf{{#1}}}}}}\hrulefill\noindent}}
 \title{{{}}}
 \author{{}}
 \date{{}}
@@ -85,7 +91,7 @@ def latex_question(q):
 
     env = get_env_type(q)
     uid = sanitize_latex(q.get('uid', ''))
-    title = sanitize_latex(q.get('title', ''))
+    title = sanitize_latex_smart(q.get('title', ''))
     auteur = sanitize_latex(q.get('author', ''))
     discipline = sanitize_latex(q.get('discipline', ''))
     themes = q.get('themes', [])
@@ -93,6 +99,7 @@ def latex_question(q):
     temps = sanitize_latex(q.get('time', ''))
     difficulte = sanitize_latex(q.get('difficulty', ''))
     niveau = sanitize_latex(q.get('level', ''))
+
     # Utilise le champ 'text' comme énoncé, en n'échappant pas les blocs math
     statement = sanitize_latex_smart(q.get('text', q.get('statement', '')))
     feedback = sanitize_latex(q.get('feedback', ''))
@@ -160,11 +167,17 @@ def latex_question(q):
         fb_latex = f"\\textit{{Temps}} : {temps} s"
 
     # Construction finale :
-    # - \hline entre chaque exercice
+    # - séparateur personnalisé entre chaque exercice
     # - saut de ligne avant le texte
     # - pas de saut entre texte et réponses
     # - puces remplacées par checkmark/croix
-    separator = "\\hline\\vspace{1em}\n"
+    env_label = {
+        'choix_simple': 'choix_simple',
+        'choix_multiple': 'choix_multiple',
+        'numeric': 'numeric',
+    }.get(env, env)
+    env_label_escaped = sanitize_latex(env_label)
+    separator = f"\\questionsep{{{env_label_escaped}}}\n"
 
     # Réponses avec checkmark/croix pour choix
     if env in ['choix_simple', 'choix_multiple']:
@@ -177,7 +190,7 @@ def latex_question(q):
                 correct = False
                 if isinstance(corrects, list) and i < len(corrects):
                     correct = bool(corrects[i])
-                symbol = "\\checkmark\," if correct else "\\ding{55}\,"
+                symbol = "\\checkmark\," if correct else "\\cross\,"
                 opts_latex += f"{symbol} {txt}\\\\\n"
         else:
             opts_latex = "\\textit{Aucune réponse}"
