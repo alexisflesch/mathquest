@@ -7,9 +7,10 @@ title: Contribuer à la base commune de questions
 Vous souhaitez enrichir la base de questions partagée de MathQuest (hébergée sur GitHub) ? Voici comment proposer vos propres questions et les rendre accessibles à tous.
 
 👉 **Voir la base de questions sur GitHub :**
+
 [https://github.com/alexisflesch/mathquest/tree/main/questions](https://github.com/alexisflesch/mathquest/tree/main/questions)
 
-La structure des dossiers est organisée par **Niveau** (`6e`, `5e`, ...), puis **Discipline**, puis éventuellement **thème** ou **auteur**.
+La structure des dossiers est organisée par **Niveau** (`CP`, `CE1`, ...), puis **Discipline**, puis éventuellement **thème** ou **auteur**.
 
 
 ## 1. Préparer vos fichiers YAML
@@ -38,7 +39,12 @@ Deux possibilités :
 ## 4. Vérifier la validité
 
 - Relisez soigneusement chaque question avant de proposer une contribution.
-- Utilisez le script d'import local pour vérifier que vos fichiers sont valides et importables (voir la doc principale).
+- Utilisez le script d'import local pour vérifier que vos fichiers sont valides et importables (dans `scripts/import_questions.py`).
+- Utilisez éventuellement `scripts/yaml2latex.py` pour générer un PDF de vos questions et vérifier leur rendu. Vous pouvez appeler le script avec des arguments optionnels pour ne pas tout recompiler :
+  ```bash
+  python scripts/yaml2latex.py L2 mathématiques
+  ```
+- Assurez-vous que vos fichiers YAML sont bien formatés :
 - Corrigez toute erreur de format ou de validation.
 
 
