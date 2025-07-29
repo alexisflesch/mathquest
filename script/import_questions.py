@@ -66,12 +66,14 @@ def clear_db():
     logging.info('Tables game_participants, game_instances, and game_templates cleared.')
 
 def import_questions():
+
     def print_colored(level, msg):
         prefix = f"[{level}] "
         if level == 'INFO':
             print(color_text(prefix + msg, Colors.OKGREEN))
         elif level == 'WARNING':
-            print(color_text(prefix + msg, Colors.WARNING))
+            if verbose:
+                print(color_text(prefix + msg, Colors.WARNING))
         elif level == 'ERROR':
             print(color_text(prefix + msg, Colors.FAIL))
         else:
@@ -86,6 +88,10 @@ def import_questions():
     all_errors = []
     all_warnings = []
     all_questions = []
+    # For summary: count per discipline/theme
+    from collections import defaultdict
+    questions_per_folder = defaultdict(int)
+    global verbose
     # --- NOUVELLE LOGIQUE ---
     import glob
     questions_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../questions'))
@@ -167,7 +173,8 @@ def import_questions():
                         # --- Ignore numeric questions, show warning ---
                         if q.get("questionType") == "numeric":
                             msg = f"Question de type 'numeric' ignorée (uid={q.get('uid')}) dans {yaml_path} : non supportée pour le moment."
-                            print_colored('WARNING', msg)
+                            if verbose:
+                                print_colored('WARNING', msg)
                             all_warnings.append(msg)
                             total_warnings += 1
                             continue
@@ -213,9 +220,15 @@ def import_questions():
                             return
                         if not q.get("title"):
                             msg = f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}"
-                            print_colored('WARNING', msg)
+                            if verbose:
+                                print_colored('WARNING', msg)
                             all_warnings.append(msg)
                             total_warnings += 1
+                        # Determine discipline/theme folder for summary
+                        rel_path = os.path.relpath(yaml_path, questions_dir)
+                        # Remove filename, keep folder path (discipline/theme)
+                        folder = os.path.dirname(rel_path)
+                        questions_per_folder[folder] += 1
                         all_questions.append((q, yaml_path))
 
     if total_errors > 0:
@@ -292,14 +305,41 @@ def import_questions():
 
     # --- PRETTY SUMMARY ---
     print("\n" + "="*50)
-    print(color_text("\U0001F4DA Import Summary", Colors.HEADER))
+    print(color_text("\U0001F4DA Résumé de l'import", Colors.HEADER))
     print("="*50)
-    print(f"{color_text('Total questions uploaded:', Colors.OKGREEN)} {color_text(str(total_uploaded), Colors.OKGREEN if total_uploaded > 0 else Colors.WARNING)}")
+    print(f"{color_text('Nombre de questions dans la base :', Colors.OKGREEN)} {color_text(str(total_uploaded), Colors.OKGREEN if total_uploaded > 0 else Colors.WARNING)}")
+    # Per-folder summary
+    print(color_text("\nDétail par niveau :", Colors.OKBLUE))
+    if questions_per_folder:
+        # Group by top-level directory (discipline)
+        from collections import defaultdict
+        grouped = defaultdict(list)
+        for folder, count in questions_per_folder.items():
+            # folder: e.g. CP/anglais
+            parts = folder.split(os.sep)
+            if len(parts) >= 2:
+                top = parts[0]
+                sub = os.sep.join(parts[1:])
+            else:
+                top = parts[0]
+                sub = ''
+            grouped[top].append((sub, count))
+        for top in sorted(grouped):
+            print(color_text(f"-------- {top} -----------", Colors.HEADER))
+            for sub, count in sorted(grouped[top]):
+                # Only print sub if not empty
+                if sub:
+                    print(f"{color_text(sub + ':', Colors.OKCYAN)} {color_text(str(count), Colors.OKGREEN if count > 0 else Colors.WARNING)}")
+                else:
+                    print(f"{color_text(str(count), Colors.OKGREEN if count > 0 else Colors.WARNING)}")
+            print()
+    else:
+        print(color_text("  (No questions uploaded)", Colors.WARNING))
     warn_str = color_text(f"{total_warnings} \U000026A0\ufe0f", Colors.WARNING) if total_warnings > 0 else color_text("0", Colors.OKGREEN)
     err_str = color_text(f"{total_errors} \U0000274C", Colors.FAIL) if total_errors > 0 else color_text("0", Colors.OKGREEN)
     print(f"{color_text('Warnings:', Colors.WARNING)} {warn_str}")
     print(f"{color_text('Errors:', Colors.FAIL)} {err_str}")
-    if total_warnings > 0:
+    if verbose and total_warnings > 0:
         print(color_text("\nWarnings:", Colors.WARNING))
         for warn in all_warnings:
             print(color_text(f"  - {warn}", Colors.WARNING))
@@ -312,7 +352,11 @@ def import_questions():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import questions or clear database tables.')
     parser.add_argument('--clear-db', action='store_true', help='Clear game-related tables')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Show warnings during import')
     args = parser.parse_args()
+
+    global verbose
+    verbose = args.verbose
 
     if args.clear_db:
         clear_db()
