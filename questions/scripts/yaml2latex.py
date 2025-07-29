@@ -169,7 +169,6 @@ def latex_question(q):
     # Construction finale :
     # - séparateur personnalisé entre chaque exercice
     # - saut de ligne avant le texte
-    # - pas de saut entre texte et réponses
     # - puces remplacées par checkmark/croix
     env_label = {
         'choix_simple': 'choix_simple',
@@ -207,7 +206,7 @@ def latex_question(q):
         f"\\begin{{{env}}}\n"
         f"{header_line}\\\\\n"
         f"{meta_line}\\\\\n"
-        f"\\\\ \n{statement_line}\\\\\n"
+        f"\\\\ \n \\medskip\n{statement_line}\\\\\n"
         f"{opts_latex}\n"
         f"{fb_latex}\n"
         f"\\end{{{env}}}\n"

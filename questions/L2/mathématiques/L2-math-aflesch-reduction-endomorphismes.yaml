@@ -119,3 +119,47 @@
     - Si \(0\) est valeur propre de \(A\) alors \(A\) n'est pas inversible
     - Il n'y a aucun lien etre ces notions
   correctAnswers: [false, true, true, false]
+
+
+
+- uid: "aflesch-mt3-reduction-endomorphismes-007"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Réduction d'endomorphismes"]
+  tags: ["matrice diagonalisable", "valeurs propres"]
+  title: "Quelques propriétés"
+  questionType: "multiple_choice"
+  timeLimit: 120
+  difficulty: 3
+  text: |
+    Soient \(A\) une matrice de taille \(n\times n\) (\(n\geqslant 2\)), \(\lambda\) une valeur propre de \(A\) et \(m\) son ordre de multiplicité. Que peut-on dire?
+  answerOptions:
+    - Si \(m=1\) alors \(E_\lambda\) est une droite vectorielle
+    - \(\mathrm{dim}(E_\lambda)=m\)
+    - La matrice \(A-\lambda I\) est de rang \(n-m\)
+    - Si \(E_\lambda\) est de dimension \(1\) alors \(m=1\)
+    - Toutes les affirmations ci-dessus sont fausses
+  correctAnswers: [true, false, false, false, false]
+
+
+
+- uid: "aflesch-mt3-reduction-endomorphismes-008"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Réduction d'endomorphismes"]
+  tags: ["valeurs propres", "polynôme caractéristique"]
+  title: "Polynôme caractéristique d'endomorphisme"
+  questionType: "multiple_choice"
+  timeLimit: 120
+  difficulty: 3
+  text: |
+    Soit \(f\) un endomorphisme en dimension finie \(n\) et soit \(\chi_f\) son polynôme caractéristique. Que peut-on dire?
+  answerOptions:
+    - Si \(f\) est diagonalisable alors toutes les racines de \(\chi_f\) sont simples
+    - \(\chi_f(f)=0\)
+    - \(\mathrm{deg}(\chi_f)=n\)
+    - Si \(P\) est un polynôme tel que \(P(f)=0\) alors \(P=\chi_f\)
+    - Si \(\lambda\) est une racine de \(\chi_f\) alors \(\mathrm{Ker}(f-\lambda \mathrm{id)}\) est de dimension \(1\).
+  correctAnswers: [false, true, true, false, false]
