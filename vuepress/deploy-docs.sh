@@ -4,6 +4,9 @@
 
 set -e
 
+# Génération des fichiers JSON nécessaires
+python3 /home/aflesch/mathquest/scripts/generate_json.py
+
 BUILD_DIR="$(cd "$(dirname "$0")" && pwd)/docs/.vuepress/dist"
 REPO_URL="https://github.com/alexisflesch/mathquest.git"
 BRANCH="gh-pages"
