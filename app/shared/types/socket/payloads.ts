@@ -132,3 +132,6 @@ export type {
     ShowCorrectAnswersPayload,
     ToggleProjectionStatsPayload
 } from './dashboardPayloads';
+
+// [MODERNIZATION] Canonical type import for projection_show_stats event
+export type { ProjectionShowStatsPayload } from './projectionShowStats';

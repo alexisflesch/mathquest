@@ -43,6 +43,10 @@ class UserService {
                 userData.studentProfile = { create: { cookieId } };
             if (password)
                 userData.passwordHash = await bcrypt_1.default.hash(password, SALT_ROUNDS);
+            // Always create a TeacherProfile for TEACHER role
+            if (role === 'TEACHER') {
+                userData.teacherProfile = { create: {} };
+            }
             // Create the user in the database
             const user = await prisma_1.prisma.user.create({
                 data: userData,

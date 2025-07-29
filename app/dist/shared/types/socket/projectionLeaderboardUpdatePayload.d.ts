@@ -19,8 +19,8 @@ export declare const ProjectionLeaderboardUpdatePayloadSchema: z.ZodObject<{
         score: number;
         avatarEmoji?: string | undefined;
         rank?: number | undefined;
-        participationType?: import("..").ParticipationType | undefined;
         attemptCount?: number | undefined;
+        participationType?: import("..").ParticipationType | undefined;
         participationId?: string | undefined;
     }, {
         userId: string;
@@ -28,8 +28,8 @@ export declare const ProjectionLeaderboardUpdatePayloadSchema: z.ZodObject<{
         score: number;
         avatarEmoji?: string | undefined;
         rank?: number | undefined;
-        participationType?: import("..").ParticipationType | undefined;
         attemptCount?: number | undefined;
+        participationType?: import("..").ParticipationType | undefined;
         participationId?: string | undefined;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
@@ -39,8 +39,8 @@ export declare const ProjectionLeaderboardUpdatePayloadSchema: z.ZodObject<{
         score: number;
         avatarEmoji?: string | undefined;
         rank?: number | undefined;
-        participationType?: import("..").ParticipationType | undefined;
         attemptCount?: number | undefined;
+        participationType?: import("..").ParticipationType | undefined;
         participationId?: string | undefined;
     }[];
 }, {
@@ -50,8 +50,8 @@ export declare const ProjectionLeaderboardUpdatePayloadSchema: z.ZodObject<{
         score: number;
         avatarEmoji?: string | undefined;
         rank?: number | undefined;
-        participationType?: import("..").ParticipationType | undefined;
         attemptCount?: number | undefined;
+        participationType?: import("..").ParticipationType | undefined;
         participationId?: string | undefined;
     }[];
 }>;

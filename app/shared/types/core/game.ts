@@ -35,7 +35,6 @@ export interface GameInstance {
     endedAt?: Date | null; // Allow null for Prisma compatibility
     differedAvailableFrom?: Date | null; // Allow null for Prisma compatibility
     differedAvailableTo?: Date | null; // Allow null for Prisma compatibility
-    isDiffered: boolean;
     gameTemplateId: string;
     initiatorUserId?: string | null; // Allow null for Prisma compatibility
     // Relations
@@ -84,7 +83,6 @@ export interface GameInstanceCreationData {
     gameTemplateId: string;
     initiatorUserId?: string;
     settings?: any;
-    isDiffered?: boolean;
     differedAvailableFrom?: Date;
     differedAvailableTo?: Date;
 }

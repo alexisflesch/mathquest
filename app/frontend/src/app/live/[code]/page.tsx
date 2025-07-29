@@ -17,7 +17,7 @@
  */
 
 "use client";
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from '@/components/AuthProvider';
 import Snackbar from '@/components/Snackbar';
@@ -25,54 +25,410 @@ import { createLogger } from '@/clientLogger';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
 import QuestionCard from '@/components/QuestionCard';
-import type { TournamentQuestion } from '@shared/types';
+import LeaderboardModal from '@/components/LeaderboardModal';
+import type { QuestionData } from '@shared/types/socketEvents';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
 import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
-import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
+import { Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { LeaderboardEntry } from '@shared/types/core/leaderboardEntry.zod';
+import type { GameParticipant } from '@shared/types/core/participant';
+import type { LobbyParticipantListPayload, LobbyParticipant } from '@shared/types/lobbyParticipantListPayload';
+import LobbyLayout from '@/components/LobbyLayout';
 
 // Create a logger for this component
 const logger = createLogger('LiveGamePage');
 
+// Stable empty objects to prevent unnecessary re-renders
+const EMPTY_LEADERBOARD: any[] = [];
+
+// Memoized Timer Display Component
+const TimerDisplay = React.memo(({
+    gameMode,
+    timerState,
+    isMobile
+}: {
+    gameMode: string;
+    timerState: any;
+    isMobile: boolean;
+}) => {
+    // Re-render logging for TimerDisplay
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [TIMER-RERENDER] TimerDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+
+    if (gameMode === 'practice') return null;
+
+    const timerSeconds = timerState?.timeLeftMs ? Math.floor(timerState.timeLeftMs / 1000) : null;
+    return <TournamentTimer timerS={timerSeconds} isMobile={isMobile} />;
+});
+TimerDisplay.displayName = 'TimerDisplay';
+
+// Memoized Leaderboard FAB Component (Mobile: right side, Desktop: top left)
+const LeaderboardFAB = React.memo(({
+    isMobile,
+    userId,
+    leaderboardLength,
+    userRank,
+    onOpen
+}: {
+    isMobile: boolean;
+    userId: string | null;
+    leaderboardLength: number;
+    userRank: number | null;
+    onOpen: () => void;
+}) => {
+    // Re-render logging for LeaderboardFAB
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [FAB-RERENDER] LeaderboardFAB re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+
+    if (!userId || leaderboardLength === 0 || !userRank) {
+        return null;
+    }
+
+    // Mobile positioning (right side, fixed to viewport)
+    const mobileClasses = "fixed right-4 z-[150] flex items-center space-x-2 px-3 py-2 bg-transparent text-[var(--success)] rounded-full hover:bg-white/10 transition-all duration-200";
+    const mobileStyle = {
+        zIndex: 150,
+        top: 'calc(var(--navbar-height) / 2)',
+        transform: 'translateY(-50%)'
+    };
+
+    // Desktop positioning (relative to main-content, absolute inside)
+    const desktopClasses = "absolute left-4 top-4 z-[150] flex items-center space-x-2 px-4 py-2 bg-[var(--navbar)] backdrop-blur-sm text-[var(--success)] rounded-full transition-all duration-200 shadow-lg";
+    const desktopStyle = {
+        zIndex: 150,
+    };
+
+    return (
+        <button
+            onClick={onOpen}
+            className={isMobile ? mobileClasses : desktopClasses}
+            style={isMobile ? mobileStyle : desktopStyle}
+            aria-label="Voir le classement complet"
+        >
+            <motion.div
+                animate={{
+                    scale: [1, 1.2, 1],
+                    rotate: [0, -5, 5, -5, 0],
+                    x: [0, -2, 2, -2, 0]
+                }}
+                transition={{
+                    duration: 0.8,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                    repeatDelay: 2
+                }}
+            >
+                <Trophy className="w-5 h-5" />
+            </motion.div>
+            <span className="text-sm font-medium">
+                #{userRank}
+            </span>
+        </button>
+    );
+});
+LeaderboardFAB.displayName = 'LeaderboardFAB';
+
+// Memoized Question Display Component
+const QuestionDisplay = React.memo(({
+    currentQuestion,
+    questionIndex,
+    totalQuestions,
+    isMultipleChoice,
+    selectedAnswer,
+    setSelectedAnswer,
+    selectedAnswers,
+    setSelectedAnswers,
+    handleSingleChoice,
+    handleSubmitMultiple,
+    answered,
+    isQuizMode,
+    correctAnswers,
+    readonly,
+    gameStatus,
+    connecting,
+    connected,
+    currentQuestionUid
+}: {
+    currentQuestion: QuestionDataForStudent | null;
+    questionIndex: number;
+    totalQuestions: number;
+    isMultipleChoice: boolean;
+    selectedAnswer: number | null;
+    setSelectedAnswer: (answer: number | null) => void;
+    selectedAnswers: number[];
+    setSelectedAnswers: (cb: (prev: number[]) => number[]) => void;
+    handleSingleChoice: (idx: number) => void;
+    handleSubmitMultiple: () => void;
+    answered: boolean;
+    isQuizMode: boolean;
+    correctAnswers: boolean[] | undefined;
+    readonly: boolean;
+    gameStatus: string;
+    connecting: boolean;
+    connected: boolean;
+    currentQuestionUid: string | undefined;
+}) => {
+    // Re-render logging for QuestionDisplay
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [QUESTION-RERENDER] QuestionDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+
+    if (currentQuestion) {
+        return (
+            <QuestionCard
+                key={currentQuestionUid}
+                currentQuestion={currentQuestion}
+                questionIndex={questionIndex}
+                totalQuestions={totalQuestions}
+                isMultipleChoice={isMultipleChoice}
+                selectedAnswer={selectedAnswer}
+                setSelectedAnswer={setSelectedAnswer}
+                selectedAnswers={selectedAnswers}
+                setSelectedAnswers={setSelectedAnswers}
+                handleSingleChoice={handleSingleChoice}
+                handleSubmitMultiple={handleSubmitMultiple}
+                answered={answered}
+                isQuizMode={isQuizMode}
+                correctAnswers={correctAnswers}
+                readonly={readonly}
+            />
+        );
+    }
+
+    return (
+        <div className="text-center text-lg text-gray-500 p-8">
+            {gameStatus === 'completed' ? (
+                <>
+                    <div className="text-2xl mb-4">🎉 Jeu terminé !</div>
+                    <div>Redirection vers le classement...</div>
+                </>
+            ) : connecting ? 'Connexion...' :
+                !connected ? 'Connexion en cours...' :
+                    'En attente de la prochaine question...'
+            }
+        </div>
+    );
+});
+QuestionDisplay.displayName = 'QuestionDisplay';
+
+// Memoized Practice Mode Progression Component
+const PracticeModeProgression = React.memo(({
+    gameMode,
+    answered,
+    showFeedbackOverlay,
+    questionIndex,
+    totalQuestions,
+    handleRequestNextQuestion,
+    hasExplanation,
+    onReopenFeedback,
+    currentQuestion
+}: {
+    gameMode: string;
+    answered: boolean;
+    showFeedbackOverlay: boolean;
+    questionIndex: number;
+    totalQuestions: number;
+    handleRequestNextQuestion: () => void;
+    hasExplanation: boolean;
+    onReopenFeedback: () => void;
+    currentQuestion: any;
+}) => {
+    // Re-render logging for PracticeModeProgression
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [PRACTICE-RERENDER] PracticeModeProgression re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+
+    if (gameMode !== 'practice' || !answered || showFeedbackOverlay) {
+        return null;
+    }
+
+    return (
+        <div className="p-4 text-center">
+            <div className="space-y-2">
+                <div className="text-sm text-gray-600">
+                    Question {questionIndex + 1} sur {totalQuestions} terminée
+                </div>
+                {questionIndex < totalQuestions - 1 ? (
+                    <button
+                        className="btn btn-primary btn-lg"
+                        onClick={handleRequestNextQuestion}
+                        disabled={!currentQuestion}
+                    >
+                        Question suivante →
+                    </button>
+                ) : (
+                    <button
+                        className="btn btn-success btn-lg"
+                        onClick={handleRequestNextQuestion}
+                        disabled={!currentQuestion}
+                    >
+                        Terminer l'entraînement ✓
+                    </button>
+                )}
+
+                {/* Show explanation again if available */}
+                {hasExplanation && (
+                    <button
+                        className="btn btn-outline btn-sm"
+                        onClick={onReopenFeedback}
+                    >
+                        Revoir l'explication
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+});
+PracticeModeProgression.displayName = 'PracticeModeProgression';
+
+// Modern unified participant payload
+interface UnifiedParticipantListPayload {
+    participants: GameParticipant[];
+    creator: GameParticipant;
+}
+
+// Unified participant state for lobby display
+interface LobbyUIState {
+    participants: GameParticipant[];
+    creator: GameParticipant | null;
+    countdown: number | null;
+}
+
+
 export default function LiveGamePage() {
+
+    // Re-render logging for performance monitoring
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [LIVE-RERENDER] Component re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+
     const { code } = useParams();
     const router = useRouter();
     const { userState, userProfile, isLoading } = useAuth();
 
-    // Detect differed mode from URL
-    const [isDiffered, setIsDiffered] = useState(false);
+    // Get user data from AuthProvider
+    const userId = userProfile.userId || userProfile.cookieId || `temp_${Date.now()}`;
+    const username: string | null = userProfile.username ?? null;
+    const avatarEmoji = userProfile.avatar;
+
+    // Enhanced socket hook integration
+    const {
+        socket,
+        gameState,
+        connected,
+        connecting,
+        error: socketError,
+        joinGame,
+        submitAnswer,
+        requestNextQuestion
+    } = useStudentGameSocket({
+        accessCode: typeof code === 'string' ? code : null,
+        userId,
+        username,
+        avatarEmoji,
+        onAnswerReceived: () => {
+            setSnackbarType("success");
+            setSnackbarMessage("Réponse enregistrée");
+            setSnackbarOpen(true);
+        }
+    });
+
+    // Unified participant state for lobby display
+    const [lobbyState, setLobbyState] = useState<LobbyUIState>({
+        participants: [],
+        creator: null,
+        countdown: null
+    });
+
+    // Listen for unified participant events
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            setIsDiffered(params.get('differed') === '1');
-        }
-    }, []);
+        if (!socket) return;
 
-    // Authentication guard - redirect if user is not properly authenticated
-    useEffect(() => {
-        if (isLoading) {
-            // Still checking authentication, wait
-            return;
-        }
+        const handleParticipantsList = (payload: UnifiedParticipantListPayload) => {
+            logger.info('[LOBBY] Received unified participants_list', payload);
+            setLobbyState(prev => ({
+                ...prev,
+                participants: payload.participants,
+                creator: payload.creator
+            }));
+        };
 
-        if (userState === 'anonymous') {
-            logger.warn('User is anonymous, redirecting to home page');
-            router.push('/');
-            return;
-        }
+        const handleCountdownTick = (payload: { countdown: number }) => {
+            logger.info('[LOBBY] Received countdown_tick', payload);
+            setLobbyState(prev => ({ ...prev, countdown: payload.countdown }));
+        };
 
-        if (!userProfile.username || !userProfile.avatar) {
-            logger.warn('User profile incomplete, redirecting to home page', { userProfile });
-            router.push('/');
-            return;
-        }
+        const handleCountdownComplete = () => {
+            logger.info('[LOBBY] Received countdown_complete');
+            setLobbyState(prev => ({ ...prev, countdown: 0 }));
+        };
 
-        logger.info('User authentication verified for live game', { userState, userProfile });
-    }, [isLoading, userState, userProfile, router]);
+        // Use the existing socket event constant
+        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+        // These events are not in the typed interface yet, so use any
+        (socket as any).on('countdown_tick', handleCountdownTick);
+        (socket as any).on('countdown_complete', handleCountdownComplete);
+
+        return () => {
+            socket.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+            (socket as any).off('countdown_tick', handleCountdownTick);
+            (socket as any).off('countdown_complete', handleCountdownComplete);
+        };
+    }, [socket]);
+
+    // Show lobby UI when game status is pending (unified participant model)
+    const showLobby = gameState.gameStatus === 'pending' && gameState.connectedToRoom;
 
     // Show loading while authentication is being checked
     if (isLoading) {
@@ -91,34 +447,6 @@ export default function LiveGamePage() {
         return null;
     }
 
-    // Get user data from AuthProvider
-    const userId = userProfile.userId || userProfile.cookieId || `temp_${Date.now()}`;
-    const username = userProfile.username;
-    const avatarEmoji = userProfile.avatar;
-
-    // Enhanced socket hook integration
-    const {
-        socket,
-        gameState,
-        connected,
-        connecting,
-        error: socketError,
-        joinGame,
-        submitAnswer,
-        requestNextQuestion
-    } = useStudentGameSocket({
-        accessCode: typeof code === 'string' ? code : null,
-        userId,
-        username,
-        avatarEmoji,
-        isDiffered,
-        onAnswerReceived: () => {
-            setSnackbarType("success");
-            setSnackbarMessage("Réponse enregistrée");
-            setSnackbarOpen(true);
-        }
-    });
-
     // Modern timer hook integration (canonical per-question)
     const timer = useSimpleTimer({
         accessCode: typeof code === 'string' ? code : '',
@@ -129,6 +457,7 @@ export default function LiveGamePage() {
     const currentQuestionUid = gameState.currentQuestion?.uid;
     const timerState = currentQuestionUid ? timer.getTimerState(currentQuestionUid) : undefined;
 
+
     // Local UI state
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
@@ -137,11 +466,56 @@ export default function LiveGamePage() {
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
     const [isMobile, setIsMobile] = useState(false);
     const [lastErrorTimestamp, setLastErrorTimestamp] = useState<number>(0);
+    const [startClicked, setStartClicked] = useState(false);
 
     // Feedback system state
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
     const [feedbackText, setFeedbackText] = useState<string>("");
     const [feedbackDuration, setFeedbackDuration] = useState<number>(0);
+
+    // Leaderboard modal state
+    const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+
+    // Use stable leaderboard reference to prevent unnecessary re-renders
+    const stableLeaderboard = useMemo(() => {
+        return gameState.leaderboard.length > 0 ? gameState.leaderboard : EMPTY_LEADERBOARD;
+    }, [gameState.leaderboard]);
+    // Calculate user's score and rank from leaderboard
+    const userLeaderboardData = useMemo(() => {
+        logger.info('🏆 [USER-LEADERBOARD] Calculating user leaderboard data', {
+            userId,
+            leaderboardLength: stableLeaderboard.length,
+            leaderboard: stableLeaderboard
+        });
+
+        if (!userId || !stableLeaderboard.length) {
+            logger.info('🏆 [USER-LEADERBOARD] No userId or empty leaderboard, returning defaults', {
+                userId,
+                leaderboardLength: stableLeaderboard.length
+            });
+            return { score: 0, rank: null, totalPlayers: 0 };
+        }
+
+        // Sort leaderboard by score and find user's position
+        const sortedLeaderboard = [...stableLeaderboard].sort((a: any, b: any) => b.score - a.score);
+        const userEntry = sortedLeaderboard.find((entry: any) => entry.userId === userId);
+        const userRank = userEntry ? sortedLeaderboard.findIndex((entry: any) => entry.userId === userId) + 1 : null;
+
+        const result = {
+            score: userEntry?.score || 0,
+            rank: userRank,
+            totalPlayers: sortedLeaderboard.length
+        };
+
+        logger.info('🏆 [USER-LEADERBOARD] Calculated user leaderboard data', {
+            userId,
+            userEntry,
+            result,
+            sortedLeaderboard: sortedLeaderboard.map(entry => ({ userId: entry.userId, score: entry.score }))
+        });
+
+        return result;
+    }, [userId, stableLeaderboard]);
 
     // Handle responsive design
     useEffect(() => {
@@ -155,13 +529,22 @@ export default function LiveGamePage() {
     // The frontend should NOT make autonomous decisions about redirecting
     // It should wait for backend signals via socket events like 'tournament_finished_redirect'
 
-    // Automatically join the game when user data is ready
+    // Join the game ONLY when socket is connected and user data is ready
+    const hasJoinedRef = useRef(false);
     useEffect(() => {
-        if (userId && username && typeof code === 'string' && !connected && !connecting) {
-            logger.info('Joining game with enhanced socket hook');
+        if (userId && username && typeof code === 'string' && connected && !hasJoinedRef.current) {
+            logger.info('Joining game with enhanced socket hook (on socket connect)');
             joinGame();
+            hasJoinedRef.current = true;
         }
-    }, [userId, username, code, connected, connecting, joinGame]);
+        // Reset join flag if code or user changes (e.g., navigating to a new game)
+        // This ensures joinGame is called again if the user switches games or logs in/out
+        // (code/userId/username are all dependencies)
+        // Reset if disconnected
+        if (!connected) {
+            hasJoinedRef.current = false;
+        }
+    }, [userId, username, code, connected, joinGame]);
 
     // Handle game end - Wait for backend signaling, do NOT redirect automatically
     // The backend should emit 'tournament_finished_redirect' or similar event
@@ -258,6 +641,12 @@ export default function LiveGamePage() {
     useEffect(() => {
         // Only reset when we actually move to a different question
         if (currentQuestionUid && currentQuestionUid !== previousQuestionUid.current) {
+            // Debug logger for question UID changes
+            console.log('[MATHQUEST_QUESTION_UID_CHANGE]', {
+                prev: previousQuestionUid.current,
+                next: currentQuestionUid,
+                timestamp: Date.now(),
+            });
             setSelectedAnswer(null);
             setSelectedAnswers([]);
             // Only hide error snackbar if it's not a timer-related error
@@ -287,11 +676,11 @@ export default function LiveGamePage() {
 
     // Helper: is multiple choice
     const isMultipleChoice = useMemo(() => {
-        return gameState.currentQuestion?.questionType === "choix_multiple";
+        return gameState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
     }, [gameState.currentQuestion?.questionType]);
 
     // Handle single choice answer submission
-    const handleSingleChoice = (idx: number) => {
+    const handleSingleChoice = useCallback((idx: number) => {
         if (gameState.gameStatus !== 'active') return;
 
         setSelectedAnswer(idx === selectedAnswer ? null : idx);
@@ -307,10 +696,10 @@ export default function LiveGamePage() {
         });
 
         submitAnswer(gameState.currentQuestion.uid, idx, clientTimestamp);
-    };
+    }, [gameState.gameStatus, gameState.currentQuestion, selectedAnswer, gameMode, submitAnswer]);
 
     // Handle multiple choice answer submission
-    const handleSubmitMultiple = () => {
+    const handleSubmitMultiple = useCallback(() => {
         if (gameState.gameStatus !== 'active' || selectedAnswers.length === 0) {
             if (selectedAnswers.length === 0) {
                 setSnackbarMessage("Veuillez sélectionner au moins une réponse.");
@@ -331,15 +720,39 @@ export default function LiveGamePage() {
         });
 
         submitAnswer(gameState.currentQuestion.uid, selectedAnswers, clientTimestamp);
-    };
+    }, [gameState.gameStatus, gameState.currentQuestion, selectedAnswers, gameMode, submitAnswer]);
 
     // Handle next question request (for practice mode)
-    const handleRequestNextQuestion = () => {
+    const handleRequestNextQuestion = useCallback(() => {
         if (gameMode === 'practice' && gameState.currentQuestion) {
             logger.debug('Requesting next question in practice mode');
             requestNextQuestion(gameState.currentQuestion.uid);
         }
-    };
+    }, [gameMode, gameState.currentQuestion, requestNextQuestion]);
+
+    // Memoized modal handlers
+    const handleLeaderboardOpen = useCallback(() => {
+        logger.info('🏆 [FAB] Mobile leaderboard FAB clicked', {
+            userId,
+            leaderboardLength: stableLeaderboard.length,
+            userRank: userLeaderboardData.rank,
+            userScore: userLeaderboardData.score
+        });
+        setShowLeaderboardModal(true);
+    }, [userId, stableLeaderboard.length, userLeaderboardData.rank, userLeaderboardData.score]);
+
+    const handleLeaderboardClose = useCallback(() => {
+        logger.info('🏆 [MODAL] Leaderboard modal closed');
+        setShowLeaderboardModal(false);
+    }, []);
+
+    const handleFeedbackClose = useCallback(() => {
+        setShowFeedbackOverlay(false);
+    }, []);
+
+    const handleFeedbackReopen = useCallback(() => {
+        setShowFeedbackOverlay(true);
+    }, []);
 
     // Debug timer value (development only)
     useEffect(() => {
@@ -352,34 +765,37 @@ export default function LiveGamePage() {
         }
     }, [timerState, gameMode]);
 
-    // Convert enhanced socket hook state to legacy QuestionCard format
-    const currentQuestion: TournamentQuestion | null = useMemo(() => {
+    // Debug FAB visibility conditions
+    useEffect(() => {
+        const mobileFabShouldShow = isMobile && userId && stableLeaderboard.length > 0 && userLeaderboardData.rank;
+        const desktopFabShouldShow = !isMobile && userId && stableLeaderboard.length > 0 && userLeaderboardData.rank;
+        logger.info('🏆 [FAB-DEBUG] FAB visibility check', {
+            isMobile,
+            userId: !!userId,
+            leaderboardLength: stableLeaderboard.length,
+            userRank: userLeaderboardData.rank,
+            mobileFabShouldShow,
+            desktopFabShouldShow,
+            timestamp: Date.now()
+        });
+    }, [isMobile, userId, stableLeaderboard.length, userLeaderboardData.rank]);
+
+    // Use canonical QuestionDataForStudent for students (never includes correctAnswers)
+    const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
         if (!gameState.currentQuestion) return null;
-
-        // Convert StudentGameQuestion to the format expected by TournamentQuestionCard
-        const convertedQuestion: FilteredQuestion = {
-            uid: gameState.currentQuestion.uid,
-            text: gameState.currentQuestion.text,
-            questionType: gameState.currentQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_EN,
-            answerOptions: gameState.currentQuestion.answerOptions || []
-        };
-
-        return {
-            code: typeof code === 'string' ? code : '',
-            question: convertedQuestion,
-            remainingTime: timerState?.timeLeftMs ? Math.ceil(timerState.timeLeftMs / 1000) : undefined,
-            questionIndex: gameState.questionIndex,
-            totalQuestions: gameState.totalQuestions,
-            questionState: gameState.gameStatus === 'paused' ? 'paused' :
-                gameState.gameStatus === 'active' ? 'active' : 'stopped',
-            tournoiState: 'running'
-        };
-    }, [gameState, code, timer]);    // Determine if component should be readonly (showing answers)
+        return gameState.currentQuestion as QuestionDataForStudent;
+    }, [gameState.currentQuestion]);
     const isReadonly = useMemo(() => {
         return gameState.phase === 'show_answers' ||
             gameState.gameStatus === 'completed' ||
             (gameState.answered && gameMode === 'practice');
     }, [gameState.phase, gameState.gameStatus, gameState.answered, gameMode]);
+
+    // Transform correctAnswers from number[] to boolean[] for QuestionCard
+    const correctAnswersBoolean = useMemo(() => {
+        // gameState.correctAnswers is already boolean[] from the socket hook
+        return gameState.phase === 'show_answers' && gameState.correctAnswers ? gameState.correctAnswers : undefined;
+    }, [gameState.phase, gameState.correctAnswers]);
 
     // Auto-hide snackbar after 2 seconds
     useEffect(() => {
@@ -398,6 +814,58 @@ export default function LiveGamePage() {
         return () => { }; // Return empty cleanup function when snackbar is not open
     }, [snackbarOpen]); // Only depend on snackbarOpen
 
+    // Show lobby UI if game is pending and user is connected
+    if (showLobby) {
+        logger.info('[LOBBY] Rendering lobby with unified participant model', {
+            gameStatus: gameState.gameStatus,
+            participantCount: lobbyState.participants.length,
+            creator: lobbyState.creator?.username
+        });
+
+        // Determine if current user is the creator
+        const isCreator = lobbyState.creator && lobbyState.creator.userId === userId;
+
+        // Render the start button only for the creator
+        const startButton = isCreator && !startClicked ? (
+            <button
+                className="btn btn-primary btn-lg w-full mt-4"
+                onClick={() => {
+                    if (socket) {
+                        socket.emit('start_tournament', { accessCode: typeof code === 'string' ? code : String(code) });
+                        setStartClicked(true);
+                    }
+                }}
+            >
+                Démarrer le tournoi
+            </button>
+        ) : null;
+
+        return (
+            <LobbyLayout
+                creator={lobbyState.creator ? (
+                    <>
+                        <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--secondary)" }}>
+                            {lobbyState.creator.avatarEmoji}
+                        </div>
+                        <span className="font-bold text-lg truncate">{lobbyState.creator.username}</span>
+                    </>
+                ) : <span>Chargement...</span>}
+                code={<span className="text-lg font-mono font-bold tracking-widest bg-base-200 rounded px-2 py-0.5 mt-1">{code}</span>}
+                shareButton={null}
+                participantsHeader={<div className="font-semibold text-lg">Participants connectés</div>}
+                participantsList={lobbyState.participants.map((p, i) => (
+                    <div key={p.userId ? `${p.userId}-${i}` : i} className="flex flex-col items-center">
+                        <div className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--primary)" }}>{p.avatarEmoji}</div>
+                        <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
+                    </div>
+                ))}
+                startButton={startButton}
+                countdown={lobbyState.countdown !== null ? <div className="text-5xl font-extrabold text-primary mt-2 text-right w-full">{lobbyState.countdown}</div> : null}
+            />
+        );
+    }
+
+    // Otherwise, show the live game UI
     return (
         <div className="main-content">
             {/* Enhanced Feedback Overlay */}
@@ -406,7 +874,7 @@ export default function LiveGamePage() {
                     <AnswerFeedbackOverlay
                         explanation={feedbackText}
                         duration={feedbackDuration}
-                        onClose={() => setShowFeedbackOverlay(false)}
+                        onClose={handleFeedbackClose}
                         isCorrect={gameState.lastAnswerFeedback?.correct}
                         correctAnswers={gameState.correctAnswers || undefined}
                         answerOptions={gameState.currentQuestion?.answerOptions}
@@ -419,81 +887,44 @@ export default function LiveGamePage() {
 
             {/* Main Question Card */}
             <div className={`card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6 relative${showFeedbackOverlay ? " blur-sm" : ""}`}>
-                {/* Show timer only for tournament/quiz modes */}
-                {gameMode !== 'practice' && (
-                    <TournamentTimer timerS={timerState?.timeLeftMs ? Math.ceil(timerState.timeLeftMs / 1000) : null} isMobile={isMobile} />
-                )}
+                {/* Memoized Timer Display */}
+                <TimerDisplay gameMode={gameMode} timerState={timerState} isMobile={isMobile} />
 
                 <MathJaxWrapper>
-                    {currentQuestion ? (
-                        <QuestionCard
-                            currentQuestion={currentQuestion}
-                            questionIndex={gameState.questionIndex}
-                            totalQuestions={gameState.totalQuestions}
-                            isMultipleChoice={isMultipleChoice}
-                            selectedAnswer={selectedAnswer}
-                            setSelectedAnswer={setSelectedAnswer}
-                            selectedAnswers={selectedAnswers}
-                            setSelectedAnswers={setSelectedAnswers}
-                            handleSingleChoice={handleSingleChoice}
-                            handleSubmitMultiple={handleSubmitMultiple}
-                            answered={gameState.answered}
-                            isQuizMode={gameMode === 'quiz'}
-                            correctAnswers={gameState.correctAnswers || []}
-                            readonly={isReadonly}
-                        />
-                    ) : (
-                        <div className="text-center text-lg text-gray-500 p-8">
-                            {gameState.gameStatus === 'completed' ?
-                                <>
-                                    <div className="text-2xl mb-4">🎉 Jeu terminé !</div>
-                                    <div>Redirection vers le classement...</div>
-                                </> :
-                                connecting ? 'Connexion...' :
-                                    !connected ? 'Connexion en cours...' :
-                                        'En attente de la prochaine question...'
-                            }
-                        </div>
-                    )}
+                    <QuestionDisplay
+                        currentQuestion={currentQuestion}
+                        questionIndex={gameState.questionIndex}
+                        totalQuestions={gameState.totalQuestions}
+                        isMultipleChoice={isMultipleChoice}
+                        selectedAnswer={selectedAnswer}
+                        setSelectedAnswer={setSelectedAnswer}
+                        selectedAnswers={selectedAnswers}
+                        setSelectedAnswers={setSelectedAnswers}
+                        handleSingleChoice={handleSingleChoice}
+                        handleSubmitMultiple={handleSubmitMultiple}
+                        answered={gameState.answered}
+                        isQuizMode={gameMode === 'quiz'}
+                        correctAnswers={correctAnswersBoolean}
+                        readonly={isReadonly}
+                        gameStatus={gameState.gameStatus}
+                        connecting={connecting}
+                        connected={connected}
+                        currentQuestionUid={currentQuestionUid}
+                    />
                 </MathJaxWrapper>
 
                 {/* Enhanced practice mode progression */}
-                {gameMode === 'practice' && gameState.answered && !showFeedbackOverlay && (
-                    <div className="p-4 text-center">
-                        <div className="space-y-2">
-                            <div className="text-sm text-gray-600">
-                                Question {gameState.questionIndex + 1} sur {gameState.totalQuestions} terminée
-                            </div>
-                            {gameState.questionIndex < gameState.totalQuestions - 1 ? (
-                                <button
-                                    className="btn btn-primary btn-lg"
-                                    onClick={handleRequestNextQuestion}
-                                    disabled={!gameState.currentQuestion}
-                                >
-                                    Question suivante →
-                                </button>
-                            ) : (
-                                <button
-                                    className="btn btn-success btn-lg"
-                                    onClick={handleRequestNextQuestion}
-                                    disabled={!gameState.currentQuestion}
-                                >
-                                    Terminer l'entraînement ✓
-                                </button>
-                            )}
-
-                            {/* Show explanation again if available */}
-                            {gameState.lastAnswerFeedback?.explanation && (
-                                <button
-                                    className="btn btn-outline btn-sm"
-                                    onClick={() => setShowFeedbackOverlay(true)}
-                                >
-                                    Revoir l'explication
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
+                <PracticeModeProgression
+                    gameMode={gameMode}
+                    answered={gameState.answered}
+                    showFeedbackOverlay={showFeedbackOverlay}
+                    questionIndex={gameState.questionIndex}
+                    totalQuestions={gameState.totalQuestions}
+                    handleRequestNextQuestion={handleRequestNextQuestion}
+                    hasExplanation={!!gameState.lastAnswerFeedback?.explanation}
+                    onReopenFeedback={handleFeedbackReopen}
+                    currentQuestion={gameState.currentQuestion}
+                />
             </div>
 
             {/* Snackbar for notifications */}
@@ -510,12 +941,29 @@ export default function LiveGamePage() {
                 <AnswerFeedbackOverlay
                     explanation={feedbackText}
                     duration={feedbackDuration}
-                    onClose={() => setShowFeedbackOverlay(false)}
+                    onClose={handleFeedbackClose}
                     isCorrect={gameState.lastAnswerFeedback?.correct}
                     allowManualClose={gameMode === 'practice'}
                     mode={gameMode}
                 />
             )}
+
+            {/* Leaderboard FAB (Mobile: right side, Desktop: top left) */}
+            <LeaderboardFAB
+                isMobile={isMobile}
+                userId={userId}
+                leaderboardLength={stableLeaderboard.length}
+                userRank={userLeaderboardData.rank}
+                onOpen={handleLeaderboardOpen}
+            />
+
+            {/* Leaderboard Modal */}
+            <LeaderboardModal
+                isOpen={showLeaderboardModal}
+                onClose={handleLeaderboardClose}
+                leaderboard={stableLeaderboard}
+                currentUserId={userId}
+            />
         </div>
     );
 }

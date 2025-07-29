@@ -25,6 +25,7 @@ import { Share2 } from "lucide-react";
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import type { LobbyParticipantListPayload, LobbyParticipant } from '@shared/types/lobbyParticipantListPayload';
 import { GameState } from '@shared/types/core/game';
 import { makeApiRequest } from '@/config/api';
 import { getSocketAuth } from '@/utils';
@@ -46,12 +47,32 @@ export default function LobbyPage() {
     const { code } = useParams();
     const router = useRouter();
     const { isTeacher, isStudent, isLoading, userProfile, userState } = useAuth();
-    const [isCreator, setIsCreator] = useState(true); // TODO: Replace with real logic
+    const [isCreator, setIsCreator] = useState(false); // Will be set based on canonical creator
     const [countdown, setCountdown] = useState<number | null>(null);
     const socketRef = useRef<Socket | null>(null);
-    const [participants, setParticipants] = useState<{ id: string; username: string; avatarEmoji: string }[]>([]);
-    const [creator, setCreator] = useState<{ id: string | null; username: string; avatar: string } | null>(null);
+    const [participants, setParticipants] = useState<LobbyParticipant[]>([]);
+    const [creator, setCreator] = useState<LobbyParticipant | null>(null);
     const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);
+
+    // Canonical: Fetch playMode after mount to determine if this is a quiz-linked tournament
+    useEffect(() => {
+        async function fetchPlayMode() {
+            try {
+                // Use canonical shared type for response
+                const res = await makeApiRequest<{ gameInstance?: { playMode?: string; linkedQuizId?: string } }>(`games/${code}`);
+                const playMode = res.gameInstance?.playMode;
+                const linkedQuizId = res.gameInstance?.linkedQuizId;
+                // Canonical: quiz-linked if playMode is 'quiz' or linkedQuizId is present
+                const quizLinked = playMode === 'quiz' || !!linkedQuizId;
+                setIsQuizLinked(quizLinked);
+                logger.info('[LOBBY] playMode/linkedQuizId fetched', { playMode, linkedQuizId, quizLinked });
+            } catch (err) {
+                logger.error('[LOBBY] Failed to fetch playMode for lobby', err);
+                setIsQuizLinked(false); // Fallback: treat as classic tournament
+            }
+        }
+        fetchPlayMode();
+    }, [code]);
 
     // Authentication guard - redirect if user is not properly authenticated
     useEffect(() => {
@@ -149,109 +170,26 @@ export default function LobbyPage() {
         return null;
     }, [userState, userProfile]);
 
-    // Fetch tournament and creator info (only once when component mounts)
+    // Remove fetchCreator logic: creator is now always set from participant_list event
+
+    // Determine if the current user is the creator (from canonical participant_list payload)
     useEffect(() => {
-        let mounted = true; // Prevent state updates if component unmounts
-
-        async function fetchCreator() {
-            try {
-                const status = await makeApiRequest<TournamentStatusResponse>(`games/${code}/state`);
-                if (!mounted) return; // Component unmounted, don't update state
-
-                if (status.statut === 'terminé') {
-                    router.replace(`/leaderboard/${code}`);
-                    return;
-                }
-                if (status.statut === 'en cours') {
-                    router.replace(`/live/${code}`);
-                    return;
-                }
-
-                // Get the game instance details instead of tournament
-                const gameInstance = await makeApiRequest<{
-                    gameInstance: {
-                        id: string;
-                        accessCode: string;
-                        status?: string;
-                        initiatorUserId?: string;
-                        name: string;
-                    }
-                }>(`games/${code}`);
-
-                if (!mounted) return; // Component unmounted, don't update state
-
-                logger.debug("Game instance fetched", {
-                    id: gameInstance.gameInstance.id,
-                    accessCode: gameInstance.gameInstance.accessCode,
-                    status: gameInstance.gameInstance.status
-                });
-
-                // If the game is already started, redirect to game page
-                if (gameInstance.gameInstance.status && gameInstance.gameInstance.status !== 'pending') {
-                    router.replace(`/live/${code}`);
-                    return;
-                }
-
-                let creatorData = null;
-                if (gameInstance.gameInstance.initiatorUserId) {
-                    // Fetch user info from the users API
-                    logger.debug("Fetching game creator", { id: gameInstance.gameInstance.initiatorUserId });
-                    try {
-                        const userResponse = await makeApiRequest<{
-                            id: string;
-                            username: string;
-                            email: string;
-                            role: string;
-                            avatarEmoji: string;
-                            createdAt: string;
-                            updatedAt: string;
-                        }>(`users/${gameInstance.gameInstance.initiatorUserId}`, {
-                            method: 'GET'
-                        });
-
-                        if (!mounted) return; // Component unmounted, don't update state
-
-                        if (userResponse) {
-                            creatorData = {
-                                id: userResponse.id,
-                                username: userResponse.username,
-                                avatar: userResponse.avatarEmoji
-                            };
-                        } else {
-                            logger.warn("Creator user data not found");
-                            creatorData = { id: gameInstance.gameInstance.initiatorUserId, username: "Unknown", avatar: "🐱" };
-                        }
-                    } catch (error) {
-                        logger.error("Error fetching game creator:", error);
-                        creatorData = { id: gameInstance.gameInstance.initiatorUserId, username: "Unknown", avatar: "🐱" };
-                    }
-                } else {
-                    // No creator found
-                    logger.warn("No creator found in game instance");
-                    creatorData = { id: null, username: "Unknown", avatar: "🐱" };
-                }
-
-                if (mounted && creatorData) setCreator(creatorData);
-            } catch (error) {
-                logger.error("Error fetching tournament info:", error);
-            }
+        if (!creator) {
+            logger.warn('[LOBBY] No creator in state after participant_list event');
+            setIsCreator(false);
+            return;
         }
-
-        fetchCreator();
-
-        return () => {
-            mounted = false; // Cleanup flag
-        };
-    }, [code, router]);
-
-    // Determine if the current user is the creator
-    useEffect(() => {
-        if (!creator) return;
         const identity = getCurrentIdentity();
+        logger.info('[LOBBY] Checking isCreator', {
+            identity,
+            creator,
+            identityUserId: identity?.userId,
+            creatorUserId: creator?.userId,
+        });
         setIsCreator(
             !!identity &&
-            !!creator.id &&
-            identity.userId === creator.id
+            !!creator?.userId &&
+            identity.userId === creator.userId
         );
     }, [creator, getCurrentIdentity]);
 
@@ -339,29 +277,12 @@ export default function LobbyPage() {
         // Request the current participants list
         socket.emit(SOCKET_EVENTS.LOBBY.GET_PARTICIPANTS, { accessCode: code });
 
-        // Listen for the full participants list
-        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST, (data) => {
-            if (Array.isArray(data)) {
-                setParticipants(data);
-                setIsQuizLinked(false); // fallback for old format
-            } else {
-                setParticipants(data.participants || []);
-                setIsQuizLinked(data.isQuizLinked === undefined ? false : !!data.isQuizLinked);
-            }
-        });
 
-        // Listen for participant join/leave events
-        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANT_JOINED, (participant) => {
-            setParticipants((prev) => {
-                if (prev.some((p) => p.id === participant.id)) return prev;
-                return [...prev, participant];
-            });
-            logger.debug("Participant joined", { id: participant.id, username: participant.username });
-        });
-
-        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANT_LEFT, (participant) => {
-            setParticipants((prev) => prev.filter((p) => p.id !== participant.id));
-            logger.debug("Participant left", { id: participant.id, username: participant.username });
+        // Listen for the canonical participant_list event
+        socket.on('participant_list', (data: LobbyParticipantListPayload) => {
+            logger.info('[LOBBY] Received participant_list event', data);
+            setParticipants(data.participants);
+            setCreator(data.creator);
         });
 
         // Listen for game_started event
@@ -577,11 +498,9 @@ export default function LobbyPage() {
         }
     };
 
-    // Normalize participant avatars: always use backend-provided avatarEmoji only, no fallback or normalization
-    const normalizedParticipants = participants.map((p) => ({
-        ...p,
-        avatar: p.avatarEmoji
-    }));
+
+    // Use canonical participant type directly
+    const normalizedParticipants = participants;
 
     return (
         <div className="main-content">
@@ -594,7 +513,7 @@ export default function LobbyPage() {
                             {creator ? (
                                 <>
                                     <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--secondary)" }}>
-                                        {creator.avatar}
+                                        {creator.avatarEmoji}
                                     </div>
                                     <span className="font-bold text-lg truncate">{creator.username}</span>
                                 </>
@@ -624,23 +543,33 @@ export default function LobbyPage() {
                     <div className="w-full flex flex-col gap-0">
                         <div className="flex-1 min-h-0 overflow-y-auto flex flex-wrap gap-4 justify-start w-full" style={{ maxHeight: '40vh' }}>
                             {normalizedParticipants.map((p, i) => (
-                                <div key={p.id ? `${p.id}-${i}` : i} className="flex flex-col items-center">
+                                <div key={p.userId ? `${p.userId}-${i}` : i} className="flex flex-col items-center">
                                     <div
                                         className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-3xl"
                                         style={{ borderColor: "var(--primary)" }}
                                     >
-                                        {p.avatar}
+                                        {p.avatarEmoji}
                                     </div>
                                     <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
                                 </div>
                             ))}
                         </div>
                         {isCreator && countdown === null && isQuizLinked === false && (
-                            <div className="w-full flex justify-end">
-                                <button className="btn btn-primary btn-lg mt-4" onClick={handleStart}>
-                                    Démarrer le tournoi
-                                </button>
-                            </div>
+                            <>
+                                {logger.info('[LOBBY] Start button render check', { isCreator, countdown, isQuizLinked })}
+                                <div className="w-full flex justify-end">
+                                    <button className="btn btn-primary btn-lg mt-4" onClick={() => {
+                                        logger.info('[LOBBY] Start button clicked', {
+                                            isCreator,
+                                            creator,
+                                            userProfile,
+                                        });
+                                        handleStart();
+                                    }}>
+                                        Démarrer le tournoi
+                                    </button>
+                                </div>
+                            </>
                         )}
                         {countdown !== null && (
                             <div className="text-5xl font-extrabold text-primary mt-2 text-right w-full">{countdown}</div>

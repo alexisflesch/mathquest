@@ -6,6 +6,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
+import { cleanupGameRedisKeys } from '@/utils/redisCleanup';
 import gameStateService from '@/core/services/gameStateService';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { prisma } from '@/db/prisma';
@@ -13,6 +14,10 @@ import { emitQuestionHandler } from './game/emitQuestionHandler';
 import { dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { GameTimerState } from '@shared/types/core/timer';
 import { computeTimerTimes } from '@/core/services/timerHelpers';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { calculateLeaderboard, persistLeaderboardToGameInstance } from './sharedLeaderboard';
+import { syncSnapshotWithLiveData, emitLeaderboardFromSnapshot } from '@/core/services/gameParticipant/leaderboardSnapshotService';
+import { getCorrectAnswersDisplayTime, getFeedbackDisplayTime } from '@shared/constants/gameTimings';
 
 const logger = createLogger('SharedGameFlow');
 
@@ -53,7 +58,24 @@ export async function runGameFlow(
     runningGameFlows.add(accessCode);
     logger.info({ accessCode, playMode: options.playMode, questionCount: questions.length }, `[SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.`);
 
+
     try {
+        // [MODERNIZATION] Redis cleanup at game start is now disabled to prevent participant/score loss.
+        // If you need to clear Redis for a new game, do it at game end only.
+
+        // Update all PENDING participants to ACTIVE when game starts
+        // This prevents them from being removed when they disconnect
+        await prisma.gameParticipant.updateMany({
+            where: {
+                gameInstance: { accessCode },
+                status: 'PENDING'
+            },
+            data: {
+                status: 'ACTIVE'
+            }
+        });
+        logger.info({ accessCode }, '[SharedGameFlow] Updated all PENDING participants to ACTIVE status');
+
         logger.info({ accessCode }, `[SharedGameFlow] Proceeding with first question immediately.`);
         for (let i = 0; i < questions.length; i++) {
             // Set and persist timer in game state before emitting question
@@ -82,16 +104,32 @@ export async function runGameFlow(
             }
             logger.info({ accessCode, questionIndex: i, questionUid: questions[i].uid }, '[DEBUG] Preparing to emit game_question');
 
-            // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
-            const filteredQuestion = filterQuestionForClient(questions[i]);
 
-            const gameQuestionPayload = {
-                question: filteredQuestion,
-                questionIndex: i, // Use shared type field name
-                totalQuestions: questions.length, // Add total questions count
-                feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1),
-                timer: timer // Use timer state for initial question emission
+            // Modernized: Canonical, flat payload for game_question
+            const { questionDataForStudentSchema } = await import('@/../../shared/types/socketEvents.zod');
+            let filteredQuestion = filterQuestionForClient(questions[i]);
+            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+            if (filteredQuestion.timeLimit == null) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { timeLimit, ...rest } = filteredQuestion;
+                filteredQuestion = rest;
+            }
+            const canonicalPayload = {
+                ...filteredQuestion,
+                currentQuestionIndex: i,
+                totalQuestions: questions.length
             };
+            // Define liveRoom and projectionRoom before use
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${currentState?.gameState?.gameId || ''}`;
+            // Validate with Zod before emitting
+            const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+            if (!parseResult.success) {
+                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+            } else {
+                io.to([liveRoom, projectionRoom]).emit('game_question', canonicalPayload);
+                logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to live and projection rooms');
+            }
 
             // Fetch all sockets in the room
             const roomName = `game_${accessCode}`;
@@ -114,13 +152,6 @@ export async function runGameFlow(
             }
 
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
-
-            // Emit to both live and projection rooms using the canonical event and payload
-            const liveRoom = `game_${accessCode}`;
-            const projectionRoom = `projection_${currentState?.gameState?.gameId || ''}`;
-            console.log(projectionRoom, 'Projection room for game flow');
-            io.to([liveRoom, projectionRoom]).emit('game_question', gameQuestionPayload);
-            logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, payload: gameQuestionPayload }, '[TRACE] Emitted game_question to live and projection rooms');
 
             // Track question start time for all users currently in the room for server-side timing
             try {
@@ -185,18 +216,46 @@ export async function runGameFlow(
             io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
             logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: questions[i].correctAnswers }, '[TRACE] Emitted correct_answers');
             options.onQuestionEnd?.(i);
+
+            // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
+            // This prevents students from determining answer correctness during submission
+            try {
+                // First, sync the snapshot with current live data
+                const syncedSnapshot = await syncSnapshotWithLiveData(accessCode);
+
+                // Then emit the leaderboard from the snapshot (source of truth)
+                await emitLeaderboardFromSnapshot(
+                    io,
+                    accessCode,
+                    [`game_${accessCode}`],
+                    'after_question_end'
+                );
+
+                logger.info({
+                    accessCode,
+                    event: 'leaderboard_update',
+                    questionUid: questions[i].uid,
+                    leaderboardCount: syncedSnapshot.length,
+                    timing: 'after_question_end'
+                }, '[SECURITY] Emitted secure leaderboard_update after question timer expired using snapshot');
+            } catch (leaderboardError) {
+                logger.error({
+                    accessCode,
+                    questionUid: questions[i].uid,
+                    error: leaderboardError
+                }, '[SECURITY] Error emitting secure leaderboard update');
+            }
+
             // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
             // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
             // If batch scoring is needed, refactor to use canonical logic per participant/answer.
 
             // Two separate timing concerns:
-            // 1. Delay between correct answers and feedback event (fixed 1.5s for tournaments)
-            const correctAnswersToFeedbackDelay = options.playMode === 'tournament' ? 1.5 : 1;
+            // 1. Delay between correct answers and feedback event (1.5s for all modes)
+            const correctAnswersToFeedbackDelay = getCorrectAnswersDisplayTime(options.playMode);
 
             // 2. Feedback display duration (from question or default to 5s)
-            const feedbackDisplayDuration = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
-                ? questions[i].feedbackWaitTime
-                : 5; // Default to 5 seconds when feedbackWaitTime is null
+            const feedbackDisplayDuration = getFeedbackDisplayTime(questions[i].feedbackWaitTime);
 
             // Wait for the delay between correct answers and feedback
             await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
@@ -239,10 +298,13 @@ export async function runGameFlow(
 
         // Game completed - persist final leaderboard to database
         try {
-            const { calculateLeaderboard, persistLeaderboardToGameInstance } = await import('./sharedLeaderboard');
             const finalLeaderboard = await calculateLeaderboard(accessCode);
             await persistLeaderboardToGameInstance(accessCode, finalLeaderboard);
             logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');
+
+            // Clear Redis game data after persisting scores to database
+            // This ensures clean state and prevents old scores from contaminating future sessions
+            await cleanupGameRedisKeys(accessCode, 'sharedGameFlow');
         } catch (error) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');
         }

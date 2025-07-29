@@ -1,0 +1,146 @@
+niveau: "CP"
+disciplines:
+  - nom: "Mathématiques"
+    themes:
+      - nom: "Nombres"
+        tags:
+          - "dénombrer"
+          - "comparer des quantités"
+          - "lire les nombres jusqu'à 10"
+          - "représenter des collections"
+      - nom: "Calcul"
+        tags:
+          - "additions simples"
+          - "compléments à 10"
+          - "résolution de problèmes très simples"
+      - nom: "Géométrie"
+        tags:
+          - "repérer dans l'espace"
+          - "formes géométriques usuelles"
+          - "tracer des segments"
+      - nom: "Grandeurs et mesures"
+        tags:
+          - "comparer des longueurs"
+          - "utiliser une règle graduée"
+          - "mesurer en unités entières"
+      - nom: "Organisation et gestion de données"
+        tags:
+          - "lire un tableau simple"
+          - "lire un pictogramme"
+  - nom: "Français"
+    themes:
+      - nom: "Lecture"
+        tags:
+          - "identifier les lettres"
+          - "reconnaître les sons"
+          - "lire des syllabes"
+          - "lire des mots simples"
+      - nom: "Écriture"
+        tags:
+          - "écrire les lettres"
+          - "écrire son prénom"
+          - "copier une phrase courte"
+      - nom: "Orthographe"
+        tags:
+          - "correspondances graphème-phonème"
+          - "dictée de mots"
+          - "accords simples"
+      - nom: "Grammaire"
+        tags:
+          - "reconnaître le nom et le verbe"
+          - "le genre du nom"
+          - "accords en genre"
+      - nom: "Conjugaison"
+        tags:
+          - "présent des verbes être et avoir"
+          - "formes verbales simples"
+          - "sujets et verbes"
+      - nom: "Vocabulaire"
+        tags:
+          - "familles de mots"
+          - "contraires"
+          - "mots étiquettes"
+  - nom: "Questionner le monde"
+    themes:
+      - nom: "Le vivant"
+        tags:
+          - "animaux et leurs caractéristiques"
+          - "plantes et besoins vitaux"
+      - nom: "La matière et les objets"
+        tags:
+          - "propriétés de la matière"
+          - "objets du quotidien"
+      - nom: "Le temps"
+        tags:
+          - "repères temporels"
+          - "jours, mois, saisons"
+      - nom: "L'espace"
+        tags:
+          - "se repérer dans l'espace familier"
+          - "utiliser un plan ou une carte"
+      - nom: "Les objets techniques"
+        tags:
+          - "utilisation d'objets simples"
+          - "observer un mécanisme"
+  - nom: "Éducation artistique"
+    themes:
+      - nom: "Arts plastiques"
+        tags:
+          - "dessiner, colorier, peindre"
+          - "reconnaître des formes et œuvres simples"
+      - nom: "Éducation musicale"
+        tags:
+          - "écoute musicale"
+          - "reproduction de rythmes"
+          - "chant et expression vocale"
+  - nom: "Enseignement moral et civique"
+    themes:
+      - nom: "Vivre ensemble"
+        tags:
+          - "respect des règles"
+          - "coopération et entraide"
+          - "symboles de la République"
+  - nom: "Anglais"
+    themes:
+      - nom: "Compréhension orale"
+        tags:
+          - "mots du quotidien"
+          - "instructions simples"
+      - nom: "Vocabulaire"
+        tags:
+          - "couleurs"
+          - "chiffres"
+          - "animaux"
+  - nom: "Allemand"
+    themes:
+      - nom: "Compréhension orale"
+        tags:
+          - "salutations"
+          - "instructions simples"
+      - nom: "Vocabulaire"
+        tags:
+          - "couleurs"
+          - "chiffres"
+          - "objets de la classe"
+  - nom: "Espagnol"
+    themes:
+      - nom: "Compréhension orale"
+        tags:
+          - "phrases simples"
+          - "salutations"
+      - nom: "Vocabulaire"
+        tags:
+          - "nombres"
+          - "jours de la semaine"
+          - "animaux"
+  - nom: "Italien"
+    themes:
+      - nom: "Compréhension orale"
+        tags:
+          - "phrases du quotidien"
+          - "instructions simples"
+      - nom: "Vocabulaire"
+        tags:
+          - "salutations"
+          - "couleurs"
+          - "objets courants"

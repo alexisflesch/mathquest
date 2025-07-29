@@ -102,6 +102,10 @@ export interface DashboardAnswerStatsUpdatePayload {
 export interface DashboardJoinedPayload {
     gameId: string;
     success: boolean;
+    /**
+     * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
+     */
+    terminatedQuestions: Record<string, boolean>;
 }
 /**
  * Connected count payload (for quiz_connected_count event)
@@ -117,6 +121,11 @@ export interface ShowCorrectAnswersPayload {
     gameId?: string;
     accessCode?: string;
     teacherId?: string;
+    show: boolean;
+    /**
+     * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
+     */
+    terminatedQuestions: Record<string, boolean>;
 }
 /**
  * NEW: Teacher-triggered projection stats toggle
@@ -140,6 +149,7 @@ export interface GameControlStatePayload {
     gameId: string;
     accessCode: string;
     templateName: string;
+    gameInstanceName: string;
     status: 'pending' | 'active' | 'paused' | 'completed';
     currentQuestionUid: string | null;
     questions: QuestionForDashboard[];

@@ -54,20 +54,13 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game instance not found.' });
             return;
         }
-        // Fetch participant (by gameInstanceId, userId, and participationType)
+        // Fetch participant (by gameInstanceId, userId) - unified participant model
         let participant;
-        if (gameInstance.playMode === 'tournament') {
-            // Determine participationType from session intent
-            // If the user is in a deferred session, use 'DEFERRED', else 'LIVE'
-            const isDeferred = !!(gameInstance.differedAvailableFrom && gameInstance.differedAvailableTo && gameInstance.status === 'completed' && payload && payload.deferred === true);
-            if (isDeferred || (typeof payload === 'object' && payload.deferred === true)) {
-                participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' } });
-            } else {
-                participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'LIVE' } });
-            }
-        } else {
-            participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId } });
-        }
+        // With the new schema, there's only one participant per user/game
+        participant = await prisma.gameParticipant.findFirst({
+            where: { gameInstanceId: gameInstance.id, userId },
+            include: { user: true }
+        });
         if (!participant) {
             // Defensive: Try to create participant row if missing
             console.log('[DEBUG] Participant not found, attempting to create', { accessCode, userId });
@@ -91,19 +84,18 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
         let isDeferred = false;
         let contextGameInstance = gameInstance;
         if (gameInstance.playMode === 'tournament' && gameInstance.status === 'completed' && deferredWindowOpen) {
-            contextGameInstance = { ...gameInstance, isDiffered: true };
+            // For deferred tournaments, we use the same gameInstance but track isDeferred separately
             isDeferred = true;
         }
         // Always use per-user session key and timer for deferred
         let sessionKey;
         let attemptCount = 1;
-        if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
+        if (isDeferred || (gameInstance.playMode === 'tournament' && gameInstance.status === 'completed')) {
             // Use socket-stored attemptCount if present (set at session start), else fetch from DB
             if (socket.data.deferredAttemptCount) {
                 attemptCount = socket.data.deferredAttemptCount;
             } else {
-                const deferredParticipant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' }, select: { attemptCount: true } });
-                attemptCount = deferredParticipant?.attemptCount || 1;
+                attemptCount = participant?.nbAttempts || 1;
                 // Store for this socket/session
                 socket.data.deferredAttemptCount = attemptCount;
             }
@@ -158,7 +150,7 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
         if (gameInstance.playMode === 'practice') {
             timer = null;
             canonicalTimer = null;
-        } else if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
+        } else if (isDeferred || (gameInstance.playMode === 'tournament' && gameInstance.status === 'completed')) {
             timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, true, userId, attemptCount, durationMs);
         } else {
             timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, false, undefined, undefined, durationMs);
@@ -254,13 +246,27 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             const filteredQuestion = filterQuestionForClient(firstQuestion);
 
             // Send first question data using filtered question
-            socket.emit(GAME_EVENTS.GAME_QUESTION, {
-                question: filteredQuestion,
-                timer: firstQuestion.timeLimit || 30,
-                questionIndex: 0,
-                totalQuestions: gameInstance.gameTemplate.questions.length,
-                questionState: 'active' as const
-            });
+
+            // Modernized: Canonical, flat payload for game_question
+            const { questionDataSchema } = await import('@/../../shared/types/socketEvents.zod');
+            let canonicalPayload = {
+                ...filteredQuestion,
+                currentQuestionIndex: 0,
+                totalQuestions: gameInstance.gameTemplate.questions.length
+            };
+            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+            if (canonicalPayload.timeLimit == null) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { timeLimit, ...rest } = canonicalPayload;
+                canonicalPayload = rest;
+            }
+            const parseResult = questionDataSchema.safeParse(canonicalPayload);
+            if (!parseResult.success) {
+                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+            } else {
+                socket.emit(GAME_EVENTS.GAME_QUESTION, canonicalPayload);
+                logger.info({ socketId: socket.id, questionUid: firstQuestion.uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to user');
+            }
 
         } catch (err) {
             logger.error({ socketId: socket.id, error: err }, 'Error in start_game handler');

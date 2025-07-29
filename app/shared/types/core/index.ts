@@ -28,7 +28,6 @@ export type {
     BaseParticipant,
     GameParticipant,
     TournamentParticipant,
-    LobbyParticipant,
     LeaderboardEntry,
     ParticipantData
 } from './participant';

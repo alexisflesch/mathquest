@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameTemplateService = void 0;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const deleteAllGameInstanceRedisKeys_1 = require("./deleteAllGameInstanceRedisKeys");
 const logger = (0, logger_1.default)('GameTemplateService');
 class GameTemplateService {
     /**
@@ -167,17 +168,22 @@ class GameTemplateService {
             throw new Error(`Quiz template with ID ${id} not found or you don't have permission to delete it`);
         }
         // Check if there are any game instances using this template
-        const gameInstanceCount = await prisma_1.prisma.gameInstance.count({
-            where: { gameTemplateId: id }
+        const gameInstances = await prisma_1.prisma.gameInstance.findMany({
+            where: { gameTemplateId: id },
+            select: { id: true, accessCode: true }
         });
+        const gameInstanceCount = gameInstances.length;
         if (gameInstanceCount > 0 && !forceDelete) {
             throw new Error(`Cannot delete template: ${gameInstanceCount} game session${gameInstanceCount > 1 ? 's' : ''} still reference${gameInstanceCount === 1 ? 's' : ''} this template. Delete the game sessions first.`);
         }
-        // If forceDelete is true, first delete all related game instances
+        // If forceDelete is true, first delete all related game instances and their Redis state
         if (forceDelete && gameInstanceCount > 0) {
-            await prisma_1.prisma.gameInstance.deleteMany({
-                where: { gameTemplateId: id }
-            });
+            for (const instance of gameInstances) {
+                if (instance.accessCode) {
+                    await (0, deleteAllGameInstanceRedisKeys_1.deleteAllGameInstanceRedisKeys)(instance.accessCode);
+                }
+                await prisma_1.prisma.gameInstance.delete({ where: { id: instance.id } });
+            }
         }
         await prisma_1.prisma.gameTemplate.delete({ where: { id } });
     }

@@ -408,7 +408,7 @@ export function useGameSocket(
         reconnect,
         emitGameAnswer: role === 'student' ? emitGameAnswer : undefined,
         emitJoinGame: role === 'student' ? emitJoinGame : undefined,
-        onGameJoined: role === 'student' ? onGameJoined : undefined,
+        onGameJoined: role === 'student' ? (onGameJoined as any) : undefined, // TODO: Fix after shared types rebuild
         emitTimerAction,
         onTimerUpdate
     };

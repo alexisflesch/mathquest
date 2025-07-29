@@ -1,0 +1,82 @@
+# Questions de mathématiques niveau L2 pour MathQuest
+# Thème : Déterminant
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt3-determinant-001"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Déterminant"]
+  title: "Déterminant anti-diagonal"
+  questionType: "numeric"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Quelle est la valeur du déterminant ci-dessous?
+    \[\begin{vmatrix}
+        0 & 0 & 4 \\
+        0 & 3 & 3 \\
+        2 & 2 & 2
+    \end{vmatrix}\]
+  correctAnswer: -24
+
+
+- uid: "aflesch-mt3-determinant-002"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Déterminant"]
+  title: "Cours déterminant"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+      En dimension finie, le déterminant d'un endomorphisme dépend de la base choisie
+  answerOptions:
+    - Vrai
+    - Faux  
+  correctAnswers: [false, true]
+
+
+- uid: "aflesch-mt3-determinant-003"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Déterminant"]
+  tags: ["règles de calcul"]
+  title: "Propriétés du déterminant"
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  text: |
+    Soit \(A\in \mathcal{M}_n(\mathbb{R})\) où \(n\in \mathbb{N}^\star\).
+    Parmi ces affirmations, lesquelles sont vraies?
+  answerOptions:
+    - Échanger deux lignes de \(A\) ne modifie pas son déterminant
+    - Échanger deux colonnes de \(A\) multiplie son déterminant par \((-1)^n\)
+    - Transposer \(A\) ne modifie pas son déterminant
+    - Si deux lignes de \(A\) sont égales alors son déterminant est nul
+    - Aucune des assertions ci-dessus n'est vraie
+  correctAnswers: [false, true, true, true, false]
+
+
+- uid: "aflesch-mt3-determinant-004"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Déterminant"]
+  tags: ["règles de calcul"]
+  title: "Propriétés du déterminant"
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  text: |
+      Soient \(A\) une matrice carrée de taille \(n\times n\) et \(\lambda\) un nombre complexe. Alors:
+  answerOptions:
+    - \(\mathrm{det}(\lambda A) = \lambda \mathrm{det}(A)\)
+    - \(\mathrm{det}(\lambda A) = \lambda^n \mathrm{det}(A)\)
+    - \(\mathrm{det}(\lambda A) = (-1)^n\lambda^n \mathrm{det}(A)\)
+    - \(\mathrm{det}(\lambda A) =  \mathrm{det}(A)\)
+    - Aucune des réponses ci-dessus n'est vraie
+  correctAnswers: [false, true, false, false, false]
+

@@ -13,12 +13,14 @@
 
 "use client";
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Share2 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
 import { TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
 import type { LeaderboardEntry, ParticipationType } from '@shared/types/core/participant';
+import { logger, getCurrentLogLevel, setLogLevel, LogLevel } from '@/clientLogger';
 
 // Use the shared LeaderboardEntry type directly
 type TournamentLeaderboardEntry = LeaderboardEntry;
@@ -46,21 +48,18 @@ export default function TournamentLeaderboardPage() {
         }
     }, []);
 
-    // Get current player username and avatar from localStorage
-    let currentusername: string | null = null;
-    let currentAvatar: string | null = null;
-    if (typeof window !== "undefined") {
-        currentusername = localStorage.getItem("mathquest_username");
-        currentAvatar = localStorage.getItem("mathquest_avatar");
-    }
+    // Use AuthProvider to get the canonical userId
+    const { getCurrentUserId } = useAuth();
 
     useEffect(() => {
         async function fetchLeaderboard() {
             try {
                 const gameResponse = await makeApiRequest<{ gameInstance: unknown }>(`games/${code}`, {}, undefined, undefined);
+                logger.info('[Leaderboard] gameResponse', gameResponse);
                 if (!gameResponse || !gameResponse.gameInstance) throw new Error('Tournoi introuvable');
 
                 const lb = await makeApiRequest<TournamentLeaderboardResponse>(`games/${code}/leaderboard`, {}, undefined, TournamentLeaderboardResponseSchema);
+                logger.info('[Leaderboard] leaderboard API response', lb);
                 setLeaderboard(lb.leaderboard || []);
 
                 // Vérifier si l'utilisateur peut jouer en différé
@@ -71,6 +70,7 @@ export default function TournamentLeaderboardPage() {
                 if (userId) {
                     try {
                         const differedResponse = await makeApiRequest<CanPlayDifferedResponse>(`games/${code}/can-play-differed?userId=${encodeURIComponent(userId)}`, {}, undefined, CanPlayDifferedResponseSchema);
+                        logger.info('[Leaderboard] can-play-differed API response', differedResponse);
                         setCanPlayDiffered(!!differedResponse.canPlay);
                     } catch (err) {
                         console.error('Error checking differed play availability:', err);
@@ -156,14 +156,11 @@ export default function TournamentLeaderboardPage() {
                             <span><span role="img" aria-label="deferred">🕒</span> = Différé</span>
                         </div>
                         {leaderboard.map((p, idx) => {
-                            // Highlight if current player (username and avatar match)
-                            const isCurrent =
-                                currentusername &&
-                                currentAvatar &&
-                                p.username === currentusername &&
-                                p.avatarEmoji === currentAvatar;
+                            // Highlight if current player (userId matches canonical id from AuthProvider)
+                            const currentUserId = getCurrentUserId();
+                            const isCurrent = currentUserId && p.userId === currentUserId;
 
-                            // Determine if this is a deferred participation
+                            // Use participationType from API response
                             const isDeferred = p.participationType === 'DEFERRED';
 
                             // Use participationId as key if available, otherwise fallback to userId + index
@@ -174,9 +171,7 @@ export default function TournamentLeaderboardPage() {
                                     key={uniqueKey}
                                     className={
                                         "flex items-center gap-4 p-2 rounded " +
-                                        (isCurrent
-                                            ? "font-bold"
-                                            : "")
+                                        (isCurrent ? "font-bold" : "")
                                     }
                                     style={isCurrent ? { backgroundColor: "var(--primary)", color: "white" } : undefined}
                                 >
@@ -188,7 +183,7 @@ export default function TournamentLeaderboardPage() {
                                     >
                                         {p.avatarEmoji}
                                     </div>
-                                    <span className="w-8 text-center">#{idx + 1}</span>
+                                    <span className="w-8 text-center">#{p.rank || idx + 1}</span>
                                     <span className="flex-1 flex items-baseline gap-2">
                                         {isDeferred ? (
                                             <span title="Différé" role="img" aria-label="deferred">🕒</span>
@@ -196,8 +191,8 @@ export default function TournamentLeaderboardPage() {
                                             <span title="Live" role="img" aria-label="live">⚡</span>
                                         )}
                                         {p.username || 'Joueur'}
-                                        {/* Show attempt count for multiple attempts */}
-                                        {p.attemptCount && p.attemptCount > 1 && (
+                                        {/* Show attempt count only for deferred entries with multiple attempts */}
+                                        {isDeferred && p.attemptCount && p.attemptCount > 1 && (
                                             <span className="text-xs opacity-75 ml-1">
                                                 ({p.attemptCount} tentative{p.attemptCount > 1 ? 's' : ''})
                                             </span>

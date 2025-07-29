@@ -5,7 +5,6 @@ const mockGameInstance = {
     accessCode: 'CODE1',
     code: 'CODE1',
     playMode: 'quiz',
-    isDiffered: false,
     status: 'active',
     gameTemplate: { creatorId: 'teacher-1' },
     initiatorUserId: 'teacher-1',

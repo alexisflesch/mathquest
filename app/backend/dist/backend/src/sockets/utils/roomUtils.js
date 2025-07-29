@@ -10,7 +10,6 @@ exports.roomExists = roomExists;
 exports.broadcastToRoom = broadcastToRoom;
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const events_1 = require("@shared/types/socket/events");
 // Create a utility-specific logger
 const logger = (0, logger_1.default)('RoomUtils');
 // Key prefix for room data in Redis
@@ -48,7 +47,7 @@ async function joinRoom(socket, roomName, userData) {
             room: roomName,
             timestamp: new Date().toISOString()
         };
-        socket.emit(events_1.SOCKET_EVENTS.LOBBY.ROOM_JOINED, roomJoinedPayload);
+        // socket.emit(SOCKET_EVENTS.LOBBY.ROOM_JOINED, roomJoinedPayload); // Modernized: handled by participant_list
     }
     catch (error) {
         logger.error({
@@ -85,7 +84,7 @@ async function leaveRoom(socket, roomName) {
             room: roomName,
             timestamp: new Date().toISOString()
         };
-        socket.emit(events_1.SOCKET_EVENTS.LOBBY.ROOM_LEFT, roomLeftPayload);
+        // socket.emit(SOCKET_EVENTS.LOBBY.ROOM_LEFT, roomLeftPayload); // Modernized: handled by participant_list
     }
     catch (error) {
         logger.error({

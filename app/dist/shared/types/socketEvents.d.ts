@@ -7,12 +7,25 @@ import type { LiveQuestionPayload } from './quiz/liveQuestion';
 import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload, JoinDashboardPayload } from './socket/dashboardPayloads';
 import type { PracticeClientToServerEvents, PracticeServerToClientEvents } from './practice/events';
 type LeaderboardEntryData = LeaderboardEntry;
+/**
+ * Unified payload for joining a game (replaces separate lobby and game join events)
+ * Used for both lobby and live game joining in the new unified flow
+ */
 export interface JoinGamePayload {
     accessCode: string;
     userId: string;
     username: string;
     avatarEmoji?: string;
-    isDiffered?: boolean;
+}
+/**
+ * @deprecated Use JoinGamePayload instead
+ * Payload for joining a game lobby
+ */
+export interface JoinLobbyPayload {
+    accessCode: string;
+    userId: string;
+    username: string;
+    avatarEmoji?: string;
 }
 export type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload } from './core';
 export type { LeaderboardEntry as LeaderboardEntryData } from './core';
@@ -37,7 +50,6 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData;
     gameStatus: 'pending' | 'active' | 'completed' | 'archived';
-    isDiffered: boolean;
     differedAvailableFrom?: string;
     differedAvailableTo?: string;
 }
@@ -77,15 +89,7 @@ export interface QuestionData {
     explanation?: string;
 }
 /**
- * Payload for joining a game lobby
- */
-export interface JoinLobbyPayload {
-    accessCode: string;
-    userId: string;
-    username: string;
-    avatarEmoji?: string;
-}
-/**
+ * @deprecated Use JoinGamePayload instead
  * Payload for leaving a game lobby
  */
 export interface LeaveLobbyPayload {
@@ -93,6 +97,7 @@ export interface LeaveLobbyPayload {
     userId?: string;
 }
 /**
+ * @deprecated Use JoinGamePayload instead
  * Payload for requesting participants list
  */
 export interface GetParticipantsPayload {
@@ -176,6 +181,13 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
         classId?: string;
         cookieId?: string;
     }) => void;
+    /**
+     * [LEGACY, to be modernized] Start tournament (creator only)
+     * This is required for now for the live page start button. Remove when backend/contract is modernized.
+     */
+    start_tournament: (payload: {
+        accessCode: string;
+    }) => void;
 }
 export interface ServerToClientEvents extends PracticeServerToClientEvents {
     connect: () => void;
@@ -199,6 +211,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     game_participants: (payload: {
         participants: ParticipantData[];
     }) => void;
+    participants_list: (payload: import('./lobbyParticipantListPayload').LobbyParticipantListPayload) => void;
     game_control_question_set: (payload: {
         questionIndex: number;
         timer: any;
@@ -266,6 +279,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     }) => void;
     projector_state: (payload: any) => void;
     projection_leaderboard_update: (payload: import('./socket/projectionLeaderboardUpdatePayload').ProjectionLeaderboardUpdatePayload) => void;
+    projection_show_stats: (payload: import('./socket/projectionShowStats').ProjectionShowStatsPayload) => void;
 }
 export interface InterServerEvents {
 }

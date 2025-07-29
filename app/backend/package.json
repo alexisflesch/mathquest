@@ -13,7 +13,8 @@
     "test": "jest",
     "test:init-db": "node tests/support/initTestDb.js",
     "test:clean": "npm run test:init-db && jest",
-    "type-check": "tsc --project tsconfig.json --noEmit --pretty"
+    "type-check": "tsc --project tsconfig.json --noEmit --pretty",
+    "cleanup:redis": "npx ts-node scripts/cleanup-redis-game.ts"
   },
   "_moduleAliases": {
     "@": "dist/backend/src",

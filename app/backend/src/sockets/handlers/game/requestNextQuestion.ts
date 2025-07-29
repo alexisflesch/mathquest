@@ -52,8 +52,8 @@ export function requestNextQuestionHandler(
                 where: { accessCode },
                 select: {
                     id: true,
+                    status: true,
                     playMode: true,
-                    isDiffered: true,
                     gameTemplateId: true
                 }
             });

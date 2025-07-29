@@ -104,7 +104,7 @@ export function gameAnswerHandler(
 
             // Validate game state
             // Modernized: Allow answer submission in deferred mode if status is 'active' or 'completed' and within deferred window
-            const isDeferred = gameInstance && gameInstance.isDiffered;
+            const isDeferred = gameInstance && gameInstance.status === 'completed';
             console.log(isDeferred, 'isDeferred value in gameAnswerHandler');
             const now = Date.now();
             const withinDeferredWindow = isDeferred && gameInstance.differedAvailableTo && now < new Date(gameInstance.differedAvailableTo).getTime();
@@ -198,7 +198,7 @@ export function gameAnswerHandler(
             }, isDeferred // PATCH: propagate deferred mode)
             );
             scoringPerformed = true;
-            scoringMode = participant.participationType === 'DEFERRED' ? 'DEFERRED' : gameInstance.playMode;
+            scoringMode = (gameInstance.status === 'completed') ? 'DEFERRED' : gameInstance.playMode;
             scoringResult = submissionResult;
             logger.info({
                 accessCode,
@@ -207,9 +207,9 @@ export function gameAnswerHandler(
                 scoringMode,
                 scoringPerformed,
                 submissionResult,
-                attemptCount: participant?.attemptCount,
-                answerKeyUsed: participant.participationType === 'DEFERRED'
-                    ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
+                attemptCount: participant?.nbAttempts,
+                answerKeyUsed: (gameInstance.status === 'completed')
+                    ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.nbAttempts}`
                     : `mathquest:game:answers:${accessCode}:${questionUid}`
             }, '[DIAGNOSTIC] Scoring service called in gameAnswerHandler (with answer key and attempt)');
 
@@ -242,9 +242,9 @@ export function gameAnswerHandler(
                     totalScore: scoreResult.totalScore,
                     answerChanged: scoreResult.answerChanged,
                     message: scoreResult.message,
-                    attemptCount: participant?.attemptCount,
-                    answerKeyUsed: participant.participationType === 'DEFERRED'
-                        ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
+                    attemptCount: participant?.nbAttempts,
+                    answerKeyUsed: (gameInstance.status === 'completed')
+                        ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.nbAttempts}`
                         : `mathquest:game:answers:${accessCode}:${questionUid}`
                 }, '[DIAGNOSTIC] Answer processed with scoring result and answer key');
 
@@ -292,16 +292,35 @@ export function gameAnswerHandler(
 
                 // Emit to dashboard room - consistent naming across all game types
                 const dashboardRoom = `dashboard_${gameInstance.id}`;
+                const projectionRoom = `projection_${gameInstance.id}`;
 
                 logger.debug({
                     accessCode,
                     questionUid,
                     answerStats,
                     dashboardRoom,
+                    projectionRoom,
                     playMode: gameInstance.playMode
-                }, 'Emitting answer stats update to dashboard room');
+                }, 'Emitting answer stats update to dashboard and projection rooms');
 
                 io.to(dashboardRoom).emit(TEACHER_EVENTS.DASHBOARD_ANSWER_STATS_UPDATE as any, dashboardStatsPayload);
+                // Also emit to projection room using canonical event
+                // [MODERNIZATION] Fetch canonical showStats state from projection display state
+                const { getProjectionDisplayState } = await import('@/core/services/gameStateService');
+                let showStats = false;
+                try {
+                    const displayState = await getProjectionDisplayState(accessCode);
+                    showStats = !!(displayState && typeof displayState.showStats === 'boolean' ? displayState.showStats : false);
+                } catch (err) {
+                    logger.warn({ err, accessCode, questionUid }, '[PROJECTION] Could not fetch canonical showStats state, defaulting to false');
+                    showStats = false;
+                }
+                io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS as any, {
+                    questionUid,
+                    stats: answerStats,
+                    show: showStats,
+                    timestamp: Date.now()
+                });
             } catch (statsError) {
                 logger.error({
                     accessCode,
@@ -326,7 +345,7 @@ export function gameAnswerHandler(
             // Use shared leaderboard calculation
             const leaderboard = await calculateLeaderboard(accessCode);
             logger.debug({ leaderboard }, 'Leaderboard data');
-            if (gameInstance.isDiffered) {
+            if (isDeferred) {
                 // --- Practice and Deferred Mode Feedback Logic ---
                 if (gameInstance.playMode === 'practice') {
                     // Practice mode: send correctAnswers and feedback immediately
@@ -341,7 +360,7 @@ export function gameAnswerHandler(
                     // For practice mode, we don't automatically send the next question
                     // Instead, the client will request the next question after showing feedback
                     logger.info({ accessCode, userId, questionUid }, 'Waiting for client to request next question via request_next_question event');
-                } else if (gameInstance.isDiffered || gameInstance.playMode === 'tournament') {
+                } else if (isDeferred || gameInstance.playMode === 'tournament') {
                     // Tournament (live or deferred): DO NOT send explanation/correctAnswers here
                     // Feedback/explanation is sent at the end of the timer in the tournament flow
                     logger.info({ accessCode, userId, questionUid }, 'Tournament mode: answer_received emitted without explanation/correctAnswers');
@@ -349,14 +368,10 @@ export function gameAnswerHandler(
                 }
             } else {
                 // Quiz mode or other: minimal answer_received
-                let roomName = accessCode;
-                if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
-                    roomName = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
-                } else if (gameInstance.playMode === 'tournament') {
-                    roomName = `game_${accessCode}`;
-                }
-                logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
-                io.to(roomName).emit(SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE as any, { leaderboard });
+                // 🔒 SECURITY FIX: Removed immediate leaderboard emission to prevent cheating
+                // Students were able to determine answer correctness by observing leaderboard changes
+                // Leaderboards are now only emitted after question timer expires (see sharedGameFlow.ts)
+
                 logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
                     socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });

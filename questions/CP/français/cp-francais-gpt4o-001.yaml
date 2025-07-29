@@ -1,0 +1,219 @@
+- uid: "gpt4o-cp-francais-orthographe-001"
+  title: "Orthographe pyjama"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "pijama"
+    - "pyjama"
+    - "pijamma"
+    - "pyjamma"
+  correctAnswers: [false, true, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-francais-orthographe-002"
+  title: "Orthographe papillon"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "papyion"
+    - "papillon"
+    - "papilon"
+    - "pappillon"
+  correctAnswers: [false, true, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-francais-orthographe-003"
+  title: "Orthographe éléphant"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "elefant"
+    - "elephent"
+    - "éléphant"
+    - "eléphante"
+  correctAnswers: [false, false, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-francais-orthographe-004"
+  title: "Orthographe girafe"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "girafe"
+    - "giraphe"
+    - "jirafe"
+    - "jiraphe"
+  correctAnswers: [true, false, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-005"
+  title: "Orthographe bonbon"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "bonbon"
+    - "bombon"
+    - "bombom"
+    - "bonbont"
+  correctAnswers: [true, false, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-006"
+  title: "Orthographe biscuit"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "biscuit"
+    - "bisquit"
+    - "buiscuit"
+    - "bescuit"
+  correctAnswers: [true, false, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-007"
+  title: "Orthographe kangourou"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "kangourou"
+    - "quangourou"
+    - "kangorou"
+    - "canggourou"
+  correctAnswers: [true, false, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-008"
+  title: "Orthographe mouton"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "mouton"
+    - "moutton"
+    - "muton"
+    - "mouthon"
+  correctAnswers: [true, false, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-009"
+  title: "Orthographe caillou"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "quailou"
+    - "kaillou"
+    - "cayou"
+    - "caillou"
+  correctAnswers: [false, false, false, true]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-010"
+  title: "Orthographe renard"
+  text: "Sélectionne la bonne orthographe"
+  questionType: "single_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "renard"
+    - "rennard"
+    - "renar"
+    - "ranard"
+  correctAnswers: [true, false, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+
+- uid: "aflesch-cp-francais-lecture-006"
+  author: "aflesch"
+  discipline: "Français"
+  title: "Mots qui riment"
+  text: "Quel mot rime avec 'poisson' ? Sélectionne la bonne réponse."
+  questionType: "multiple_choice"
+  themes: ["Lecture"]
+  tags: ["reconnaître les sons"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "chat"
+    - "maison"
+    - "chien"
+    - "loup"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-francais-lecture-007"
+  author: "aflesch"
+  discipline: "Français"
+  title: "Mots qui riment"
+  text: "Quel mot rime avec 'ballon' ? Sélectionne la bonne réponse."
+  questionType: "multiple_choice"
+  themes: ["Lecture"]
+  tags: ["reconnaître les sons"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "table"
+    - "sac"
+    - "camion"
+    - "livre"
+  correctAnswers: [false, false, true, false]

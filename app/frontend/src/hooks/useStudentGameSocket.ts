@@ -32,9 +32,10 @@ import type {
     GameJoinedPayload,
     ErrorPayload,
     GameAlreadyPlayedPayload,
-    QuestionData,
     GameStateUpdatePayload
 } from '@shared/types/socketEvents';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 
 import type {
     GameEndedPayload
@@ -42,7 +43,7 @@ import type {
 
 import type {
     LiveQuestionPayload,
-    FilteredQuestion
+    // FilteredQuestion removed: use QuestionDataForStudent instead
 } from '@shared/types/quiz/liveQuestion';
 
 
@@ -54,7 +55,6 @@ import {
     isGameJoinedPayload,
     createSafeEventHandler,
     validateEventPayload,
-    isLiveQuestionPayload,
     isCorrectAnswersPayload,
     isGameStateUpdatePayload,
     isAnswerReceivedPayload,
@@ -101,7 +101,7 @@ export interface TournamentAnswerResult {
  */
 export interface StudentGameUIState {
     // UI-specific game state
-    currentQuestion: FilteredQuestion | null;
+    currentQuestion: QuestionDataForStudent | null;
     questionIndex: number;
     totalQuestions: number;
     answered: boolean;
@@ -110,6 +110,9 @@ export interface StudentGameUIState {
     feedbackRemaining: number | null;
     correctAnswers: boolean[] | null;
     lastAnswerFeedback?: AnswerReceived | null;
+
+    // Canonical leaderboard state (shared type)
+    leaderboard: import('@shared/types/core/leaderboardEntry.zod').LeaderboardEntry[];
 
     // Game metadata from shared types
     gameMode?: PlayMode;
@@ -124,7 +127,6 @@ export interface StudentGameSocketHookProps {
     userId: string | null;
     username: string | null;
     avatarEmoji?: string | null;
-    isDiffered?: boolean;
     onAnswerReceived?: () => void; // Callback when answer is received
 }
 
@@ -135,6 +137,7 @@ export interface StudentGameSocketHook {
     // Connection status
     connected: boolean;
     connecting: boolean;
+
     error: string | null;
 
     // Actions
@@ -148,7 +151,6 @@ export function useStudentGameSocket({
     userId,
     username,
     avatarEmoji,
-    isDiffered = false,
     onAnswerReceived
 }: StudentGameSocketHookProps): StudentGameSocketHook {
 
@@ -168,10 +170,51 @@ export function useStudentGameSocket({
         phase: 'question',
         feedbackRemaining: null,
         correctAnswers: null,
-        gameMode: isDiffered ? 'practice' : 'tournament',
+        leaderboard: [],
+        gameMode: 'tournament', // Default to tournament mode
         linkedQuizId: null,
         lastAnswerFeedback: null
     });
+    // --- Leaderboard Update Handler ---
+    useEffect(() => {
+        if (!socket) return;
+        // Canonical event: leaderboard_update { leaderboard: LeaderboardEntry[] }
+        const handleLeaderboardUpdate = (payload: { leaderboard: import('@shared/types/core/leaderboardEntry.zod').LeaderboardEntry[] }) => {
+            logger.info('🏆 [LEADERBOARD] Received leaderboard_update event', {
+                payloadKeys: Object.keys(payload),
+                leaderboardLength: payload.leaderboard?.length || 0,
+                leaderboard: payload.leaderboard,
+                timestamp: Date.now()
+            });
+
+            if (!payload.leaderboard) {
+                logger.warn('🏆 [LEADERBOARD] Received leaderboard_update with no leaderboard property', payload);
+                return;
+            }
+
+            setGameState(prev => {
+                logger.info('🏆 [LEADERBOARD] Updating game state with new leaderboard', {
+                    previousLength: prev.leaderboard.length,
+                    newLength: payload.leaderboard.length,
+                    previousLeaderboard: prev.leaderboard,
+                    newLeaderboard: payload.leaderboard
+                });
+
+                return {
+                    ...prev,
+                    leaderboard: payload.leaderboard || []
+                };
+            });
+        };
+
+        logger.info('🏆 [LEADERBOARD] Setting up leaderboard_update event listener');
+        socket.on('leaderboard_update', handleLeaderboardUpdate);
+
+        return () => {
+            logger.info('🏆 [LEADERBOARD] Cleaning up leaderboard_update event listener');
+            socket.off('leaderboard_update', handleLeaderboardUpdate);
+        };
+    }, [socket]);
 
     // Use unified timer system for student countdown
     // --- Socket Connection ---
@@ -184,7 +227,6 @@ export function useStudentGameSocket({
         logger.info(`Initializing student socket connection for game: ${accessCode}`, {
             userId,
             username,
-            isDiffered,
             url: SOCKET_CONFIG.url
         });
 
@@ -239,7 +281,7 @@ export function useStudentGameSocket({
             setConnected(false);
             setConnecting(false);
         };
-    }, [accessCode, userId, username, avatarEmoji, isDiffered]);
+    }, [accessCode, userId, username, avatarEmoji]);
 
     // --- Game Event Handlers ---
     useEffect(() => {
@@ -251,33 +293,39 @@ export function useStudentGameSocket({
                 gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
             }));
         }, isGameJoinedPayload, SOCKET_EVENTS.GAME.GAME_JOINED));
-        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION as any, createSafeEventHandler<LiveQuestionPayload>((payload) => {
-            logger.info('Received game_question', payload);
-
-            setGameState(prev => {
-                const newState = {
-                    ...prev,
-                    currentQuestion: payload.question,
-                    questionIndex: payload.questionIndex ?? 0,
-                    totalQuestions: payload.totalQuestions ?? prev.totalQuestions ?? 1, // Fallback to prevent 0
-                    answered: false,
-                    gameStatus: 'active' as const,
-                    phase: 'question' as const,
-                    feedbackRemaining: null,
-                    correctAnswers: null,
-                    connectedToRoom: true
-                };
-
-                logger.info('=== QUESTION STATE UPDATED ===', {
-                    questionUid: payload.question.uid,
-                    questionIndex: payload.questionIndex ?? 0,
-                    totalQuestions: payload.totalQuestions ?? 0,
-                    questionText: payload.question.text.substring(0, 50) + '...'
+        socket.on(
+            SOCKET_EVENTS.GAME.GAME_QUESTION as any,
+            createSafeEventHandler<QuestionDataForStudent>((payload) => {
+                logger.info('Received canonical game_question', payload);
+                // Validate at runtime with Zod
+                const parseResult = questionDataForStudentSchema.safeParse(payload);
+                if (!parseResult.success) {
+                    logger.error({ errors: parseResult.error.errors, payload }, '[MODERNIZATION] Invalid GAME_QUESTION payload received on frontend');
+                    return;
+                }
+                setGameState(prev => {
+                    const newState = {
+                        ...prev,
+                        currentQuestion: payload,
+                        questionIndex: payload.currentQuestionIndex ?? 0,
+                        totalQuestions: payload.totalQuestions ?? prev.totalQuestions ?? 1,
+                        answered: false,
+                        gameStatus: 'active' as const,
+                        phase: 'question' as const,
+                        feedbackRemaining: null,
+                        correctAnswers: null,
+                        connectedToRoom: true
+                    };
+                    logger.info('=== QUESTION STATE UPDATED ===', {
+                        questionUid: payload.uid,
+                        questionIndex: payload.currentQuestionIndex ?? 0,
+                        totalQuestions: payload.totalQuestions ?? 0,
+                        questionText: payload.text.substring(0, 50) + '...'
+                    });
+                    return newState;
                 });
-
-                return newState;
-            });
-        }, isLiveQuestionPayload, SOCKET_EVENTS.GAME.GAME_QUESTION));
+            }, (data): data is QuestionDataForStudent => questionDataForStudentSchema.safeParse(data).success, SOCKET_EVENTS.GAME.GAME_QUESTION)
+        );
 
         // Game state update handler
         socket.on(SOCKET_EVENTS.GAME.GAME_STATE_UPDATE as any, createSafeEventHandler<GameStateUpdatePayload>((data) => {
@@ -288,7 +336,8 @@ export function useStudentGameSocket({
                         uid: data.currentQuestion.uid,
                         text: data.currentQuestion.text,
                         questionType: data.currentQuestion.questionType,
-                        answerOptions: data.currentQuestion.answerOptions || []
+                        answerOptions: data.currentQuestion.answerOptions || [],
+                        timeLimit: data.currentQuestion.timeLimit ?? 30 // fallback to 30s if missing
                     }
                     : prev.currentQuestion,
                 questionIndex: data.questionIndex ?? prev.questionIndex,
@@ -405,6 +454,7 @@ export function useStudentGameSocket({
         };
     }, [socket]);
 
+
     // --- Action Functions ---
     const joinGame = useCallback(() => {
         if (!socket || !accessCode || !userId || !username) {
@@ -412,9 +462,9 @@ export function useStudentGameSocket({
             return;
         }
 
-        logger.info(`Joining game ${accessCode}`, { userId, username, isDiffered });
+        logger.info(`Joining game ${accessCode}`, { userId, username });
 
-        const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼', isDiffered };
+        const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼' };
 
         // Validate payload before emitting
         try {
@@ -423,7 +473,7 @@ export function useStudentGameSocket({
         } catch (error) {
             logger.error('Invalid join_game payload:', error);
         }
-    }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
+    }, [socket, accessCode, userId, username, avatarEmoji]);
 
     const submitAnswer = useCallback((questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
         if (!socket || !accessCode || !userId) {
@@ -462,9 +512,11 @@ export function useStudentGameSocket({
         }
     }, [socket, accessCode, userId]);
 
-    // Auto-join game when connected
+    // UNIFIED JOIN FLOW: Always use join_game event regardless of game state
+    // Backend handles PENDING vs ACTIVE status automatically
     useEffect(() => {
         if (connected && !gameState.connectedToRoom && accessCode && userId && username) {
+            logger.info('Auto-joining game with unified join flow', { accessCode, userId, username, gameStatus: gameState.gameStatus });
             joinGame();
         }
     }, [connected, gameState.connectedToRoom, accessCode, userId, username, joinGame]);

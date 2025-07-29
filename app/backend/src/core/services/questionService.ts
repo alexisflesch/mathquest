@@ -21,7 +21,8 @@ export class QuestionService {
      */
     async createQuestion(userId: string, data: QuestionCreationPayload) {
         try {
-            // Create the question in the database
+            // Use durationMs (canonical, required in payload) to set timeLimit in seconds for DB
+            const timeLimit = typeof data.durationMs === 'number' && data.durationMs > 0 ? Math.round(data.durationMs / 1000) : 30;
             const question = await prisma.question.create({
                 data: {
                     title: data.title,
@@ -36,9 +37,8 @@ export class QuestionService {
                     author: data.author || userId, // Default to userId if not specified
                     explanation: data.explanation,
                     tags: data.tags || [],
-                    // Canonical: use only durationMs, remove timeLimit
-                    // durationMs: data.durationMs, // DO NOT persist to DB (not in Prisma schema)
-                    isHidden: data.isHidden
+                    isHidden: data.isHidden,
+                    timeLimit: timeLimit
                 }
             });
 

@@ -71,7 +71,6 @@ export const CreateGameRequestSchema = z.object({
     gameTemplateId: z.string().uuid('Invalid game template ID').optional(),
     playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
     settings: z.record(z.any()).optional(),
-    isDiffered: z.boolean().optional(),
     differedAvailableFrom: z.string().datetime().optional(),
     differedAvailableTo: z.string().datetime().optional(),
     // Additional fields for student tournaments
@@ -114,6 +113,14 @@ export const UpdateGameTemplateRequestSchema = z.object({
     description: z.string().optional(),
     defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
     questionUids: z.array(z.string()).optional() // Temporarily allow any string format
+});
+
+export const RenameGameTemplateRequestSchema = z.object({
+    name: z.string().min(1, 'Le nom du modèle est requis').max(100, 'Le nom du modèle est trop long')
+});
+
+export const RenameGameInstanceRequestSchema = z.object({
+    name: z.string().min(1, 'Le nom de la session est requis').max(100, 'Le nom de la session est trop long')
 });
 
 // --- Question API Request Schemas ---
@@ -576,7 +583,7 @@ export const PracticeQuestionDataSchema = z.object({
     text: z.string().min(1, "Question text is required"),
     answerOptions: z.array(z.string()).min(2, "At least 2 answer options required"),
     questionType: z.string().min(1, "Question type is required"),
-    timeLimit: z.number().int().min(1).optional(),
+    timeLimit: z.number().int().min(1),
     gradeLevel: z.string().min(1, "Grade level is required"),
     discipline: z.string().min(1, "Discipline is required"),
     themes: z.array(z.string()).min(1, "At least one theme is required")
@@ -739,7 +746,10 @@ export type CreatePracticeSessionApiRequest = z.infer<typeof CreatePracticeSessi
 export type GetPracticeSessionsApiRequest = z.infer<typeof GetPracticeSessionsApiRequestSchema>;
 export type UpdatePracticeSessionApiRequest = z.infer<typeof UpdatePracticeSessionApiRequestSchema>;
 export type GetPracticeQuestionsApiRequest = z.infer<typeof GetPracticeQuestionsApiRequestSchema>;
-export type CreatePracticeSessionApiResponse = z.infer<typeof CreatePracticeSessionApiResponseSchema>;
 export type GetPracticeSessionApiResponse = z.infer<typeof GetPracticeSessionApiResponseSchema>;
 export type GetPracticeSessionsApiResponse = z.infer<typeof GetPracticeSessionsApiResponseSchema>;
 export type GetPracticeQuestionsApiResponse = z.infer<typeof GetPracticeQuestionsApiResponseSchema>;
+export type CreatePracticeSessionApiResponse = z.infer<typeof CreatePracticeSessionApiResponseSchema>;
+
+export type RenameGameTemplateRequest = z.infer<typeof RenameGameTemplateRequestSchema>;
+export type RenameGameInstanceRequest = z.infer<typeof RenameGameInstanceRequestSchema>;

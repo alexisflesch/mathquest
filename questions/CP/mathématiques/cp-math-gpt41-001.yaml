@@ -1,0 +1,373 @@
+# Questions de mathématiques niveau CP pour MathQuest
+# Auteur : gpt4.1 - Alexis Flesch
+
+- uid: "aflesch-cp-math-nombres-001"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  discipline: "Mathématiques"
+  themes: ["Calcul"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "2 + 4 = 6"
+    - "4 + 8 = 11"
+    - "3 + 7 = 10"
+    - "11 + 11 = 23"
+  correctAnswers: [true, false, true, false]
+
+
+- uid: "aflesch-cp-math-nombres-002"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "3 + 5 = 8"
+    - "6 + 2 = 9"
+    - "1 + 7 = 8"
+    - "5 + 5 = 11"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-nombres-003"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "9 - 4 = 5"
+    - "7 - 3 = 5"
+    - "10 - 6 = 4"
+    - "8 - 2 = 7"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-nombres-004"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Comparaisons avec inégalités"
+  text: "Sélectionne les affirmations vraies"
+  questionType: "multiple_choice"
+  themes: ["Nombres"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "5 < 8"
+    - "3 < 9"
+    - "10 < 7"
+    - "6 < 4"
+  correctAnswers: [true, true, false, false]
+
+- uid: "aflesch-cp-math-nombres-005"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions et soustractions"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "4 + 3 = 7"
+    - "8 - 5 = 2"
+    - "6 - 2 = 4"
+    - "2 + 9 = 11"
+  correctAnswers: [true, false, true, true]
+
+
+- uid: "aflesch-cp-math-nombres-006"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "2 + 6 = 9"
+    - "5 + 3 = 8"
+    - "4 + 7 = 12"
+    - "1 + 9 = 10"
+  correctAnswers: [false, true, false, true]
+
+- uid: "aflesch-cp-math-nombres-007"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "10 - 7 = 2"
+    - "8 - 4 = 5"
+    - "9 - 3 = 6"
+    - "6 - 1 = 5"
+  correctAnswers: [false, false, true, true]
+
+- uid: "aflesch-cp-math-nombres-008"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Comparaisons avec inégalités"
+  text: "Sélectionne les affirmations vraies"
+  questionType: "multiple_choice"
+  themes: ["Nombres"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "7 < 5"
+    - "2 < 10"
+    - "9 < 6"
+    - "4 < 8"
+  correctAnswers: [false, true, false, true]
+
+- uid: "aflesch-cp-math-nombres-009"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions et soustractions"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "3 + 4 = 7"
+    - "7 - 2 = 4"
+    - "5 + 2 = 7"
+    - "10 - 8 = 3"
+  correctAnswers: [true, false, true, false]
+
+
+
+- uid: "gpt41-cp-math-nombres-002"
+  author: "gpt-4.1"
+  title: "Nombre suivant"
+  text: "Quel est le chiffre qui vient après 4 ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Nombres"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "3"
+    - "5"
+    - "6"
+    - "2"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-math-nombres-003"
+  author: "gpt-4.1"
+  title: "Côtés d'un triangle"
+  text: "Combien y a-t-il de côtés sur un triangle ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  timeLimit: 30
+  themes: ["Géométrie"]
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "3"
+    - "4"
+    - "2"
+    - "5"
+  correctAnswers: [true, false, false, false]
+
+
+- uid: "gpt41-cp-math-nombres-003"
+  author: "gpt-4.1"
+  title: "Suite de nombres"
+  text: "Complète la suite : 1,3,5,_"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  timeLimit: 30
+  themes: ["Nombres"]
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "6"
+    - "7"
+    - "8"
+    - "10"
+  correctAnswers: [false, true, false, false]
+
+
+- uid: "aflesch-cp-math-nombres-003"
+  author: "Alexis Flesch"
+  title: "Nombres pairs"
+  text: "Quels nombres sont des doubles ?"
+  questionType: "multiple_choice"
+  discipline: "Mathématiques"
+  timeLimit: 30
+  themes: ["Nombres"]
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "6"
+    - "7"
+    - "8"
+    - "12"
+    - "13"
+  correctAnswers: [true, false, true, true, false]
+
+
+- uid: "gpt41-cp-maths-nombres-002"
+  title: "Comparer des nombres"
+  text: "Quel nombre est le plus grand ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "42"
+    - "24"
+    - "34"
+    - "14"
+  correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-maths-nombres-003"
+  title: "Complément à 10"
+  text: "Quel nombre faut-il ajouter à 7 pour faire 10 ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "4"
+    - "3"
+    - "2"
+    - "1"
+  correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-maths-nombres-004"
+  title: "Décomposer un nombre"
+  text: "Quelle opération donne 6 ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "5 + 3"
+    - "7 + 1"
+    - "4 + 2"
+    - "3 + 5"
+  correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-maths-géométrie-002"
+  title: "Nommer une forme"
+  text: "Quel est le nom d’une forme avec 3 cotés ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Géométrie"]
+  tags: ["formes géométriques usuelles"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "Cercle"
+    - "Rectangle"
+    - "Carré"
+    - "Triangle"
+  correctAnswers: [false, false, false, true]
+  author: "gpt-4.1"
+
+
+- uid: "aflesch-cp-math-heures-001"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Lire l’heure"
+  text: "Quelle heure est-il si la grande aiguille est sur 12 et la petite sur 3 ? Sélectionne la bonne réponse."
+  questionType: "multiple_choice"
+  themes: ["Grandeurs et mesures"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "2 heures"
+    - "3 heures"
+    - "4 heures"
+    - "12 heures"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-math-heures-002"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Quelle heure après"
+  text: "Il est 5 heures. Quelle heure sera-t-il dans 1 heure ? Sélectionne la bonne réponse."
+  questionType: "multiple_choice"
+  themes: ["Grandeurs et mesures"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "4 heures"
+    - "5 heures"
+    - "6 heures"
+    - "7 heures"
+  correctAnswers: [false, false, true, false]
+
+- uid: "aflesch-cp-math-heures-003"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Comparer les heures"
+  text: "Sélectionne les affirmations vraies."
+  questionType: "multiple_choice"
+  themes: ["Grandeurs et mesures"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "4 heures est avant 3 heures"
+    - "7 heures est après 5 heures"
+    - "2 heures est après 6 heures"
+    - "8 heures est avant 9 heures"
+  correctAnswers: [false, true, false, true]
+
+- uid: "aflesch-cp-math-heures-004"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Quelle heure avant"
+  text: "Il est 9 heures. Quelle heure était-il il y a 1 heure ? Sélectionne la bonne réponse."
+  questionType: "multiple_choice"
+  themes: ["Grandeurs et mesures"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "10 heures"
+    - "7 heures"
+    - "8 heures"
+    - "9 heures"
+  correctAnswers: [false, false, true, false]

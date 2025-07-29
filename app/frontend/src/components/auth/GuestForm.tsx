@@ -60,13 +60,15 @@ export default function GuestForm({
                 />
             </div>
 
-            <button
-                type="submit"
-                disabled={!username.trim() || !selectedAvatar || isLoading}
-                className="btn btn-primary w-full"
-            >
-                {isLoading ? 'Connexion...' : 'Commencer à jouer'}
-            </button>
+            <div className="flex justify-end">
+                <button
+                    type="submit"
+                    disabled={!username.trim() || !selectedAvatar || isLoading}
+                    className="btn btn-primary"
+                >
+                    {isLoading ? 'Connexion...' : 'Commencer à jouer'}
+                </button>
+            </div>
         </form>
     );
 }

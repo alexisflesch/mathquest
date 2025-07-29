@@ -85,23 +85,37 @@ class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async startTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
+    /**
+     * Start or resume the timer for a question, handling all modes.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
+     * @param durationMs (optional) Canonical duration in ms to use (from handler/Redis override)
+     */
+    async startTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount, durationMsOverride) {
         if (playMode === 'practice')
             return null; // No timer in practice mode
         const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
         let durationMs = 0;
-        try {
-            const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
-            if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
-                durationMs = question.timeLimit * 1000;
-            }
-            else {
-                durationMs = 30000; // fallback to 30s
-            }
+        if (typeof durationMsOverride === 'number' && durationMsOverride > 0) {
+            durationMs = durationMsOverride;
+            logger.info({ accessCode, questionUid, durationMs }, '[TIMER_DEBUG][startTimer] Using provided durationMsOverride');
         }
-        catch (err) {
-            durationMs = 30000;
+        else {
+            try {
+                const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
+                if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+                    durationMs = question.timeLimit * 1000;
+                }
+                else {
+                    durationMs = 30000; // fallback to 30s
+                }
+            }
+            catch (err) {
+                durationMs = 30000;
+            }
+            logger.info({ accessCode, questionUid, durationMs }, '[TIMER_DEBUG][startTimer] Used DB/default durationMs');
         }
         const raw = await this.redis.get(key);
         logger.info({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, key, raw, durationMs }, '[TIMER_DEBUG][startTimer] Raw timer before start/resume');
@@ -260,11 +274,23 @@ class CanonicalTimerService {
         let elapsed = 0;
         let timerEndDateMs = 0;
         if (status === 'run') {
-            elapsed = (timer.lastStateChange && timer.startedAt)
-                ? (now - timer.lastStateChange) + (timer.totalPlayTimeMs || 0)
-                : 0;
-            timeLeftMs = Math.max(0, canonicalDurationMs - elapsed);
-            timerEndDateMs = now + timeLeftMs;
+            // Check if timerEndDateMs is set directly (from editTimer)
+            if (typeof timer.timerEndDateMs === 'number' && timer.timerEndDateMs > 0) {
+                // Use the explicitly set end time
+                timeLeftMs = Math.max(0, timer.timerEndDateMs - now);
+                elapsed = canonicalDurationMs - timeLeftMs;
+                timerEndDateMs = timer.timerEndDateMs;
+                logger.info({ accessCode, questionUid, canonicalDurationMs, elapsed, timeLeftMs, timerEndDateMs, timer, now }, '[CANONICAL_TIMER][getTimer] Running state using explicitly set timerEndDateMs');
+            }
+            else {
+                // Normal case: compute from elapsed time
+                elapsed = (timer.lastStateChange && timer.startedAt)
+                    ? (now - timer.lastStateChange) + (timer.totalPlayTimeMs || 0)
+                    : 0;
+                timeLeftMs = Math.max(0, canonicalDurationMs - elapsed);
+                timerEndDateMs = now + timeLeftMs;
+                logger.info({ accessCode, questionUid, canonicalDurationMs, elapsed, timeLeftMs, timer, now }, '[CANONICAL_TIMER][getTimer] Running state computed from elapsed time');
+            }
         }
         else if (status === 'pause') {
             // Use persisted timeLeftMs if present (set by pauseTimer), else compute from totalPlayTimeMs
@@ -417,10 +443,16 @@ class CanonicalTimerService {
         if (raw) {
             timer = JSON.parse(raw);
             if (timer.status === 'pause') {
-                // If current question, only update timeLeftMs
+                // If current question, always update timeLeftMs; update durationMs only if needed
                 if (isCurrent) {
                     timer.timeLeftMs = durationMs;
-                    logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY timeLeftMs for paused current question');
+                    if (typeof timer.durationMs !== 'number' || durationMs > timer.durationMs) {
+                        timer.durationMs = durationMs;
+                        logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated BOTH timeLeftMs and durationMs for paused current question (durationMs increased)');
+                    }
+                    else {
+                        logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY timeLeftMs for paused current question (durationMs unchanged)');
+                    }
                 }
                 else {
                     // Not current: update only durationMs (not timeLeftMs)
@@ -432,12 +464,26 @@ class CanonicalTimerService {
                 }
             }
             else if (timer.status === 'play') {
-                // For running, update durationMs and adjust timerEndDateMs
-                timer.durationMs = durationMs;
-                const elapsed = now - timer.lastStateChange + (timer.totalPlayTimeMs || 0);
-                timer.totalPlayTimeMs = elapsed;
-                timer.timerEndDateMs = now + Math.max(0, durationMs - elapsed);
-                logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated durationMs for running timer');
+                // For running: immediately change the remaining time (what teacher is editing)
+                const originalDurationMs = timer.durationMs || 0;
+                const currentElapsed = (timer.lastStateChange && timer.startedAt)
+                    ? (now - timer.lastStateChange) + (timer.totalPlayTimeMs || 0)
+                    : 0;
+                // CRITICAL: Teacher wants to immediately change timeLeftMs (remaining time)
+                // This should take effect right now, not restart the timer
+                // Update durationMs if the new time left requires it (for increases)
+                const newTotalDuration = currentElapsed + durationMs; // elapsed + new time left
+                if (newTotalDuration > originalDurationMs) {
+                    timer.durationMs = newTotalDuration;
+                    logger.info({ accessCode, questionUid, originalDurationMs, newTotalDuration, timer }, '[TIMER][editTimer] Increased durationMs to accommodate new timeLeftMs');
+                }
+                // Set the new end time directly - this takes immediate effect
+                timer.timerEndDateMs = now + durationMs;
+                // Update timing state to reflect the new end time
+                // We need to recalculate totalPlayTimeMs to maintain consistency
+                timer.totalPlayTimeMs = Math.max(0, (timer.durationMs || newTotalDuration) - durationMs);
+                timer.lastStateChange = now;
+                logger.info({ accessCode, questionUid, durationMs, originalDurationMs, currentElapsed, newEndTime: timer.timerEndDateMs, timer }, '[TIMER][editTimer] Updated running timer with immediate effect');
             }
             else if (timer.status === 'stop') {
                 // For stopped, update only durationMs (not timeLeftMs)

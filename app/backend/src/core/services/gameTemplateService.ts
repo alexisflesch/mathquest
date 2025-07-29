@@ -2,6 +2,7 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { Prisma } from '@prisma/client';
 import { PlayMode } from '@shared/types/core';
+import { deleteAllGameInstanceRedisKeys } from './deleteAllGameInstanceRedisKeys';
 
 const logger = createLogger('GameTemplateService');
 
@@ -205,19 +206,24 @@ export class GameTemplateService {
         }
 
         // Check if there are any game instances using this template
-        const gameInstanceCount = await prisma.gameInstance.count({
-            where: { gameTemplateId: id }
+        const gameInstances = await prisma.gameInstance.findMany({
+            where: { gameTemplateId: id },
+            select: { id: true, accessCode: true }
         });
+        const gameInstanceCount = gameInstances.length;
 
         if (gameInstanceCount > 0 && !forceDelete) {
             throw new Error(`Cannot delete template: ${gameInstanceCount} game session${gameInstanceCount > 1 ? 's' : ''} still reference${gameInstanceCount === 1 ? 's' : ''} this template. Delete the game sessions first.`);
         }
 
-        // If forceDelete is true, first delete all related game instances
+        // If forceDelete is true, first delete all related game instances and their Redis state
         if (forceDelete && gameInstanceCount > 0) {
-            await prisma.gameInstance.deleteMany({
-                where: { gameTemplateId: id }
-            });
+            for (const instance of gameInstances) {
+                if (instance.accessCode) {
+                    await deleteAllGameInstanceRedisKeys(instance.accessCode);
+                }
+                await prisma.gameInstance.delete({ where: { id: instance.id } });
+            }
         }
 
         await prisma.gameTemplate.delete({ where: { id } });

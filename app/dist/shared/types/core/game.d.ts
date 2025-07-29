@@ -31,7 +31,6 @@ export interface GameInstance {
     endedAt?: Date | null;
     differedAvailableFrom?: Date | null;
     differedAvailableTo?: Date | null;
-    isDiffered: boolean;
     gameTemplateId: string;
     initiatorUserId?: string | null;
     gameTemplate?: GameTemplate;
@@ -73,7 +72,6 @@ export interface GameInstanceCreationData {
     gameTemplateId: string;
     initiatorUserId?: string;
     settings?: any;
-    isDiffered?: boolean;
     differedAvailableFrom?: Date;
     differedAvailableTo?: Date;
 }
@@ -103,6 +101,8 @@ export interface GameState {
     questionUids: string[];
     /** Data of the current question (sent to clients) */
     questionData?: any;
+    /** Canonical timer state for the current question (projection/dashboard only) */
+    timer?: import('./timer').GameTimerState;
     /** Timestamp when game started */
     startedAt?: number;
     /** Whether answers are currently locked */

@@ -4,7 +4,7 @@
  *
  * This component provides automatic MathJax rendering for any LaTeX expressions in its children.
  * It wraps its content with MathJaxContext and MathJax from better-react-mathjax, using a configuration
- * that supports $...$, $$...$$, \(...\), and \[...\] delimiters. This allows you to display user-generated
+ * that supports \(...\), and \[...\] delimiters. This allows you to display user-generated
  * content with inline or block LaTeX without manually wrapping each formula.
  *
  * Usage:
@@ -35,8 +35,8 @@ const logger = createLogger('MathJaxWrapper');
 const mathJaxConfig = {
     loader: { load: ["input/tex", "output/chtml"] },
     tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
         processEscapes: true,
         // Ignore erreurs de parsing LaTeX
         errorSettings: { message: [""] },

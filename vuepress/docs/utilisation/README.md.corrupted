@@ -1,0 +1,150 @@
+---
+title: Utilisation de l'application
+---
+
+# Utilisation de l'application
+
+> Cette page présente les principales fonctionnalités de MathQuest.
+
+## Fonctionnalités principales
+
+MathQuest propose trois modes de jeu principaux :
+
+- **Quiz (mode enseignant)** : Quiz en temps réel piloté par l'enseignant. L'enseignant contrôle l'enchaînement des questions, le timer, et la diffusion des réponses/corrections. Les élèves répondent en direct, sans feedback automatique (feedback oral ou à la fin).
+- **Tournoi (mode compétition)** : Tournoi synchrone ou différé. Tous les participants reçoivent les questions en même temps (synchrone) ou peuvent rejouer la partie en différé (asynchrone). Le backend gère le timer, la progression, le classement et la diffusion des bonnes réponses et des feedbacks (si présents) à la fin de chaque question.
+- **Entraînement (mode libre)** : Mode individuel, sans timer. L'utilisateur choisit d'enchaîner les questions à son rythme, reçoit un feedback immédiat après chaque réponse, et peut recommencer autant de fois qu'il le souhaite. Aucun score n'est enregistré.
+
+## Prise en main rapide
+
+1. **Connexion à l'application**
+   - Choisissez votre profil (élève, enseignant, invité) à la connexion. En mode invité, pas besoin de créer un compte: choisissez simplement un pseudo et un avatar et vous êtes prêt à jouer. Vos résultats ne seront pas sauvegardés mais vous pourrez mettre à jour votre profil plus tard si vous le souhaitez.
+   - Si vous êtes enseignant, vous pouvez créer un compte vous permettant de gérer vos activités: regroupez des questions et créez des quiz pour une utilisation en classe, ou des tournois voire des sessions d'entraînement pour vos élèves.
+
+2. **Déroulement selon le mode**
+   - **Quiz** : L'enseignant crée ou sélectionne un quiz, invite les élèves à rejoindre, puis contrôle le déroulement.
+   - **Tournoi** : Un utilisateur (élève ou enseignant) lance un tournoi (synchrone ou différé), les participants rejoignent via un code, le backend gère la progression.
+   - **Entraînement** : L'utilisateur démarre une session d'entraînement libre, répond à des questions à son rythme, et obtient un feedback immédiat.
+
+## Guides détaillés
+
+### Quiz (enseignant)
+
+Le mode Quiz permet à l'enseignant de piloter entièrement une session de questions en temps réel avec ses élèves.
+
+#### 1. Sélection et création de quiz
+
+L'enseignant commence par créer ou sélectionner un quiz dans la section dédiée de l'interface.
+
+<div class="screenshot-container">
+  <img src="/screenshots/activites-light.png" alt="Interface de sélection de quiz - thème clair" class="theme-screenshot screenshot-light">
+  <img src="/screenshots/activites-dark.png" alt="Interface de sélection de quiz - thème sombre" class="theme-screenshot screenshot-dark">
+  <p><em>Interface de gestion des activités et sélection de quiz</em></p>
+</div>
+
+#### 2. Vue vidéoprojecteur
+
+Une fois le quiz sélectionné, l'enseignant affiche sur vidéoprojecteur une page dédiée avec QR code et lien pour rejoindre le quiz. Cette page se rafraîchit automatiquement pour afficher :
+- Les questions en cours
+- Le chronomètre
+- Les statistiques de réponses (affichage optionnel)
+- Le podium des résultats
+
+<div class="screenshot-container">
+  <img src="/screenshots/projection-light.png" alt="Vue vidéoprojecteur - thème clair" class="theme-screenshot screenshot-light">
+  <img src="/screenshots/projection-dark.png" alt="Vue vidéoprojecteur - thème sombre" class="theme-screenshot screenshot-dark">
+  <p><em>Vue de projection pour la classe avec QR code et statistiques</em></p>
+</div>
+
+**💡 Fonctionnalités de la vue projection :**
+- **Affichage/masquage des statistiques** : L'enseignant peut choisir d'afficher ou non les stats de réponses en temps réel
+- **QR code dynamique** : Permet aux élèves de rejoindre facilement avec leur téléphone
+- **Mise à jour automatique** : La page se synchronise automatiquement avec le dashboard enseignant
+
+#### 3. Dashboard de contrôle
+
+L'enseignant dispose d'un tableau de bord complet pour contrôler la session. Il peut utiliser son ordinateur ou son téléphone portable pour un contrôle total.
+
+<div class="screenshots-grid">
+  <div class="screenshot-container">
+    <h4>🖥️ Dashboard desktop</h4>
+    <img src="/screenshots/dashboard-light.png" alt="Dashboard enseignant desktop - thème clair" class="theme-screenshot screenshot-light">
+    <img src="/screenshots/dashboard-dark.png" alt="Dashboard enseignant desktop - thème sombre" class="theme-screenshot screenshot-dark">
+    <p><em>Interface de contrôle complète sur ordinateur</em></p>
+  </div>
+  
+  <div class="screenshot-container">
+    <h4>📱 Dashboard mobile</h4>
+    <img src="/screenshots/dashboard-phone-light.png" alt="Dashboard enseignant mobile - thème clair" class="theme-screenshot screenshot-light mobile-screenshot">
+    <img src="/screenshots/dashboard-phone-dark.png" alt="Dashboard enseignant mobile - thème sombre" class="theme-screenshot screenshot-dark mobile-screenshot">
+    <p><em>Contrôle depuis le téléphone portable</em></p>
+  </div>
+</div>
+
+**🎛️ Fonctionnalités du dashboard :**
+- **Contrôle total du timer** : Démarrer, arrêter, modifier le temps restant
+- **Navigation entre questions** : Passer à la question suivante/précédente à tout moment
+- **Statistiques en temps réel** : Voir qui a répondu, les réponses données, le taux de bonnes réponses
+- **Gestion des corrections** : Décider quand afficher les bonnes réponses et calculer les scores
+- **Flexibilité mobile** : Contrôler la session depuis son téléphone pour circuler dans la classe
+
+#### 4. Expérience élève
+
+- Les élèves rejoignent via un code ou un lien (QR code)
+- Ils répondent en temps réel aux questions affichées
+- **Pas de feedback immédiat** : Les élèves ne voient pas si leur réponse est correcte
+- L'enseignant décide quand révéler les bonnes réponses et afficher les scores
+- Le feedback est donné oralement par l'enseignant ou à la fin du quizon
+---
+
+# Utilisation de l'application
+
+
+> Cette page présente les principales fonctionnalités de MathQuest.
+
+## Fonctionnalités principales
+
+MathQuest propose trois modes de jeu principaux :
+
+- **Quiz (mode enseignant)** : Quiz en temps réel piloté par l’enseignant. L’enseignant contrôle l’enchaînement des questions, le timer, et la diffusion des réponses/corrections. Les élèves répondent en direct, sans feedback automatique (feedback oral ou à la fin).
+- **Tournoi (mode compétition)** : Tournoi synchrone ou différé. Tous les participants reçoivent les questions en même temps (synchrone) ou peuvent rejouer la partie en différé (asynchrone). Le backend gère le timer, la progression, le classement et la diffusion des bonnes réponses et des feedbacks (si présents) à la fin de chaque question.
+- **Entraînement (mode libre)** : Mode individuel, sans timer. L’utilisateur choisit d’enchaîner les questions à son rythme, reçoit un feedback immédiat après chaque réponse, et peut recommencer autant de fois qu’il le souhaite. Aucun score n’est enregistré.
+
+## Prise en main rapide
+
+1. **Connexion à l’application**
+   - Choisissez votre profil (élève, enseignant, invité) à la connexion. En mode invité, pas besoin de créer un compte: choisissez simplement un pseudo et un avatar et vous êtes prêt à jouer. Vos résultats ne seront pas sauvegardés mais vous pourrez mettre à jour votre profil plus tard si vous le souhaitez.
+   - Si vous êtes enseignant, vous pouvez créer un compte vous permettant de gérer vos activités: regroupez des questions et créez des quiz pour une utilisation en classe, ou des tournois voire des sessions d’entraînement pour vos élèves.
+
+
+2. **Déroulement selon le mode**
+   - **Quiz** : L’enseignant crée ou sélectionne un quiz, invite les élèves à rejoindre, puis contrôle le déroulement.
+   - **Tournoi** : Un utilisateur (élève ou enseignant) lance un tournoi (synchrone ou différé), les participants rejoignent via un code, le backend gère la progression.
+   - **Entraînement** : L’utilisateur démarre une session d’entraînement libre, répond à des questions à son rythme, et obtient un feedback immédiat.
+
+## Guides détaillés
+
+### Quiz (enseignant)
+- L’enseignant crée ou sélectionne un quiz dans la section dédiée.
+- Il affiche alors sur vidéoprojecteur une page dédiée avec qrcode et lien pour rejoindre le quiz. La page est rafraîchie automatiquement pour afficher les questions, le chrono, des stats (optionnel) et un podium.
+- Les élèves rejoignent via un code ou un lien.
+- L’enseignant contrôle l’enchaînement des questions, le timer, et la diffusion des réponses.
+- Le feedback est donné oralement ou à la fin du quiz.
+
+### Tournoi
+- Un organisateur (enseignant ou élève) crée un tournoi.
+- Les participants rejoignent via un code.
+- L'organisateur démarre son tournoi quand il le souhaite
+- Le backend gère alors le timer, la progression, le classement et la diffusion des corrections à la fin de chaque question.
+- Les résultats sont affichés à la fin du tournoi.
+
+### Entraînement (libre)
+- L’utilisateur démarre une session d’entraînement depuis le menu principal.
+- Il répond à des questions à son rythme, sans limite de temps.
+- Le feedback (bonne/mauvaise réponse, explication) est affiché immédiatement après chaque réponse.
+- Il peut recommencer autant de fois qu’il le souhaite.
+
+## Architecture de l'application (aperçu)
+
+- **Frontend** : Application React/Next.js (interface utilisateur, navigation, gestion d'état, communication temps réel via Socket.IO).
+- **Backend** : API Node.js/Express (gestion des utilisateurs, parties, questions, statistiques, WebSocket).
+- **Base de données** : PostgreSQL, schéma géré par Prisma.

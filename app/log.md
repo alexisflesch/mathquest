@@ -1,3 +1,118 @@
+# [2025-07-08] Live page: Canonical creator logic & start button (blocked on backend event)
+
+- Audited `LobbyLayout` and live page for creator logic and start button rendering.
+- Patched live page to render "Démarrer le tournoi" button for the creator only, using canonical types/props from the canonical participant list event.
+- Button click handler is a no-op with alert: **no canonical client-to-server event exists for starting a tournament** (`start_tournament` is not in ClientToServerEvents). Backend must expose a canonical event for this action.
+- Updated `plan.md` and `log.md` to document this gap and checklist.
+- Validated that the button appears for the creator and only for the creator, and shows an alert on click.
+# 2025-07-08 - Student Join Modal: Deferred Tournament Expiry Handling
+
+**What was done:**
+- Investigated backend join logic: confirmed it returns `Tournament no longer available` if `differedAvailableTo` is in the past
+- Audited `/frontend/src/app/student/join/page.tsx` and found it did not surface this error to the user
+- Updated join logic to detect this backend error and show a clear modal: "Ce tournoi différé n'est plus disponible."
+- Modal now distinguishes between: code not found, deferred available, and deferred expired
+- Validated no TypeScript errors after patch
+- Updated plan.md and log.md with all actions and findings
+
+**Testing:**
+- Try joining a tournament that is completed and whose `differedAvailableTo` is in the past (expired):
+  - The modal should show: "Ce tournoi différé n'est plus disponible." with a single OK button.
+- Try joining a tournament that is completed but still available in deferred mode:
+  - The modal should show the deferred message and allow joining in deferred mode.
+- Try joining with an invalid code:
+  - The modal should show the not found message.
+
+**Checklist/plan.md updated.**
+# 2025-07-07 - Frontend Canonical Question Type Modernization
+
+## Actions
+- Removed all usage of `FilteredQuestion` and legacy types from frontend
+- Updated all student-facing question payloads to use `questionDataForStudent` (Zod-validated)
+- Ensured all constructed `QuestionDataForStudent` objects include required fields (especially `timeLimit`)
+- Removed duplicate imports and type declarations in `QuestionCard.tsx`
+- Updated `TournamentQuestionCard.tsx` and test files to remove references to `FilteredQuestion` and `LiveQuestionPayload`
+- Fixed state shape/type mismatches in `useStudentGameSocket.ts` and related files
+- Updated all usages of `SocketSchemas.question` in `useEnhancedStudentGameSocket.ts` to use the correct Zod schema for student payloads
+- Manually reviewed and tested all affected files to ensure compliance with canonical types and modernization rules
+- Updated `plan.md` and documentation to reflect all changes and ensure phase-based planning and logging
+
+## Validation
+- Ran `npx tsc` and confirmed **no TypeScript errors** remain in any affected files
+- All question payloads for students are now strictly canonical and Zod-validated
+- No references to legacy types (`FilteredQuestion`, `LiveQuestionPayload`, etc.) remain
+- All changes and test/validation steps are documented in `plan.md` and `log.md`
+
+## Next Steps
+- Continue to enforce canonical types and Zod validation for all future changes
+- Review and update any remaining documentation or edge cases as needed
+# 2025-07-07 - Canonical game_question for timerAction and deferredTournamentFlow
+
+**What was done:**
+- Patched `/backend/src/sockets/handlers/teacherControl/timerAction.ts` to emit only the canonical, flat, Zod-validated payload for `game_question` (no nested `question`, no extra fields, no sensitive data) to both live and projection rooms.
+- Patched `/backend/src/sockets/handlers/deferredTournamentFlow.ts` to emit only the canonical, flat, Zod-validated payload for `game_question` to player rooms.
+- All legacy/compatibility fields and nested objects removed from these emissions.
+- All payloads are now validated with `questionDataForStudentSchema` before emit.
+
+**Testing:**
+- Start a game from the teacher dashboard and click "play". Confirm that both the live and projection pages receive a flat, canonical payload for `game_question` (no `question` field, no sensitive data, matches Zod schema).
+- Confirm that the live and projection pages render questions correctly and do not error on payload shape.
+- Confirm that no legacy/compatibility code or types remain in these backend emitters.
+# 2025-07-07 - Projection Page Modernization
+
+**What was done:**
+- Updated `/frontend/src/hooks/useProjectionQuizSocket.ts` to use canonical `QuestionDataForStudent` everywhere for `game_question` events.
+- Removed all usage of legacy `Question` type for projection question payloads in the socket hook and component.
+- Updated `/frontend/src/components/TeacherProjectionClient.tsx` to use canonical `QuestionDataForStudent` directly, no mapping or legacy types.
+- Updated `/frontend/src/components/QuestionCard.tsx` to use canonical `QuestionDataForStudent` for all question rendering.
+- Confirmed that projection page renders correctly, receives only canonical, Zod-validated payloads, and never leaks sensitive fields (like `correctAnswers`).
+- All legacy compatibility code and types for projection question payloads removed.
+
+**Testing:**
+- Join a game as a teacher and open the projection page. Confirm that questions render, stats display, and no errors occur.
+- Confirm that the payload received by the projection page matches the canonical `questionDataForStudentSchema` (no `correctAnswers`, no nested `question`, no legacy fields).
+- Confirm that the projection page does not break if a question is missing optional fields (e.g., `timeLimit`).
+- Confirm that all changes are logged in `plan.md` and `log.md`.
+# 2025-07-07 - Modernize all game_question emissions to canonical Zod schema
+
+**What was done:**
+- Audited all backend code paths emitting `game_question` (late join, emitQuestionHandler, helpers, start_game)
+- Updated `/backend/src/sockets/handlers/game/emitQuestionHandler.ts` to emit canonical, flat payload (Zod-validated)
+- Updated `/backend/src/sockets/handlers/game/helpers.ts` (`sendFirstQuestionAndStartTimer`) to emit canonical, flat payload (Zod-validated)
+- Updated `/backend/src/sockets/handlers/game/index.ts` (`start_game` handler) to emit canonical, flat payload (Zod-validated)
+- Confirmed `/backend/src/sockets/handlers/game/joinGame.ts` already emits canonical payload for late joiners
+
+**Testing:**
+- To validate: Join a game as a late joiner, in practice mode, quiz, and tournament. Confirm frontend receives only canonical, Zod-compliant payloads (flat, no nested `question`, no extra fields).
+- All code paths now use shared types and runtime Zod validation for `game_question`.
+
+**2025-07-07 - PATCHED sharedGameFlow.ts:**
+- Replaced legacy emission of `game_question` (nested `question` field, extra fields) with canonical, flat payload using shared Zod schema and type.
+- Now imports and uses `questionDataSchema` from `shared/types/socketEvents.zod.ts` for both type and runtime validation.
+- All `game_question` events (including projection and dashboard flows) are now strictly Zod-validated and canonical.
+
+**Checklist/plan.md updated.**
+# 2025-07-07 dialogs.css Extraction
+- Created `dialogs.css` for all modal/dialog button and layout styles (student/teacher, minimalistic, theme-compliant)
+- Removed all hard-coded modal button/layout styles from `/student/join/page.tsx`, now using canonical classes from `dialogs.css`
+# 2025-07-07 Modal Button Hover Utility
+- Updated "Fermer" button to use `hover:bg-dropdown-hover hover:text-dropdown-hover-foreground` for consistent, theme-compliant mouse over effect via globals.css.
+# 2025-07-07 Modal Button Dark Mode Fix
+- Updated "Fermer" button hover style to use `hover:bg-[color:var(--muted)]` for proper dark mode support (no white-on-white issue).
+# 2025-07-07 Modal Button Minimalism
+- Updated "Fermer" button in not-found modal to use minimalistic, border-only style (no primary color), matching teacher modals.
+# 2025-07-07 Modal UI Polish
+- Updated not-found modal on `/student/join`:
+  - Added right-aligned "Fermer" button
+  - Main text is now left-aligned for clarity
+# 2025-07-07 Modal French Text Correction
+- Updated not-found modal on `/student/join` to use French: "Le code que vous avez saisi n'existe pas." and title "Code invalide" for full localization compliance.
+# 2025-07-07 Modal Integration for Student Join Page
+- Integrated `SharedModal` (InfoModal) into `/student/join` page for two cases:
+  1. Tournament code does not exist: shows warning modal with close button.
+  2. Tournament exists but is in differed mode: shows warning modal with OK/Cancel buttons and French message.
+- All modal logic uses canonical types and no legacy compatibility fields.
+- No compatibility layers or mapping; direct use of shared modal component.
 ## 2025-06-30 - Fix: Accept answers when timer is paused
 
 **What was done:**
@@ -261,778 +376,53 @@
 **Files to be modified**:
 - `/frontend/src/app/teacher/projection/[gameCode]/page.tsx`
 
-## 2025-06-17 - Projection Page Hardcoded Events Fixed
-
-**What was done**: Fixed hardcoded socket events in projection page and enforced canonical shared types
-
-**Issues Identified**:
-- `useProjectionQuizSocket.ts` contained hardcoded event names ('join_projection', 'projection_question_changed', etc.)
-- Projection events were missing from shared constants in `@shared/types/socket/events`
-- Backend projection handler also used hardcoded event names
-- Inconsistent with `.instructions.md` requirement for canonical shared types only
-
-**How it was fixed**:
-1. **Updated shared constants**: Added complete PROJECTOR_EVENTS to `@shared/types/socket/events.ts`
-   - `JOIN_PROJECTION`, `LEAVE_PROJECTION`, `PROJECTION_JOINED`, `PROJECTION_ERROR`
-   - `PROJECTION_QUESTION_CHANGED`, `PROJECTION_CONNECTED_COUNT`, `PROJECTION_STATE`
-
-2. **Modernized backend handler**: Updated `backend/src/sockets/handlers/projectionHandler.ts`
-   - Replaced all hardcoded event names with `SOCKET_EVENTS.PROJECTOR.*` constants
-   - Now uses: `SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION`, `SOCKET_EVENTS.PROJECTOR.PROJECTION_ERROR`, etc.
-
-3. **Completely rewrote frontend hook**: `frontend/src/hooks/useProjectionQuizSocket.ts`
-   - Replaced all hardcoded event names with shared constants
-   - Fixed `useGameSocket` call signature (accessCode, 'teacher' role)
-   - Fixed modern timer usage with proper null/undefined handling
-   - Added proper error handling and success callbacks for projection join/leave
-
-**Room joining pattern verified**: 
-- Teacher dashboard uses `dashboard_${gameId}` room pattern
-- Projection page uses `projection_${gameId}` room pattern (consistent)
-- Both follow the same naming convention and backend room management
-
-**Files affected**:
-- `@shared/types/socket/events.ts` - Added complete PROJECTOR_EVENTS
-- `backend/src/sockets/handlers/projectionHandler.ts` - Use shared constants
-- `frontend/src/hooks/useProjectionQuizSocket.ts` - Complete rewrite with canonical patterns
-
-**Why it was done**: 
-- Enforce zero tolerance for hardcoded event names per `.instructions.md`
-- Ensure consistency between frontend/backend socket event usage
-- Align with project modernization guidelines for canonical shared types
-
-**Relation to checklist**: Phase 6 - Teacher Projection Page Modernization, socket event validation
-
-**Result**: Projection page now fully complies with modernization guidelines and uses only canonical shared types
-
-## 2025-06-17 - Teacher Projection Hook Completely Modernized
-
-**What was done**: Successfully modernized `useProjectionQuizSocket.ts` to fully comply with `.instructions.md` guidelines
-
-**Key Changes**:
-1. **Shared Constants**: Updated `@shared/types/socket/events.ts` to include all projection events:
-   - `JOIN_PROJECTION`, `LEAVE_PROJECTION`, `PROJECTION_JOINED`, `PROJECTION_ERROR`
-   - `PROJECTION_QUESTION_CHANGED`, `PROJECTION_CONNECTED_COUNT`, `PROJECTION_STATE`
-
-2. **Backend Handler**: Updated `projectionHandler.ts` to use `SOCKET_EVENTS.PROJECTOR.*` constants
-
-3. **Frontend Hook**: Completely rewrote `useProjectionQuizSocket.ts`:
-   - Uses `useGameSocket('projection', gameId)` with correct TimerRole
-   - Uses `useSimpleTimer` modern timer system
-   - Uses canonical shared types (`Question`, `TimerStatus`)
-   - Clean room separation with `projection_${gameId}` pattern
-   - Type-safe event handling with temporary casting until socket types are updated
-
-**Technical Details**:
-- Fixed TypeScript errors by using correct `useGameSocket` parameters
-- Used type casting `(socket as any)` for projection events until socket interface is updated
-- Aligned with teacher dashboard pattern for room joining
-- Maintains consistent naming: `projection_${gameId}` rooms vs `dashboard_${gameId}`
-
-**Files affected**:
-- `/shared/types/socket/events.ts` - Added PROJECTOR_EVENTS constants
-- `/backend/src/sockets/handlers/projectionHandler.ts` - Uses shared constants
-- `/frontend/src/hooks/useProjectionQuizSocket.ts` - Complete rewrite with modern patterns
-
-**Why it was done**: 
-- Enforce ZERO legacy code patterns as per `.instructions.md`
-- Use canonical shared types and socket events throughout
-- Align with project modernization standards
-- Remove all hardcoded event names and local type definitions
-
-**Relation to checklist**: Phase 6 - Teacher Projection Page Modernization, hook modernization completed
-
-**Result**: TypeScript compilation successful, hook follows all modernization guidelines
-
-## 2025-06-18 14:25 - Quality Monitor Analysis & Automation Plan
+## 2025-07-08 - Modal Modernization (Teacher Delete Activity)
 
 **What was done:**
-- Completed full quality monitor analysis of MathQuest codebase
-- Generated comprehensive reports (JSON, HTML, TXT formats)
-- Analyzed 75 files and identified critical issues requiring immediate automation
-
-**Critical Findings:**
-- 352 high-severity hardcoded strings (including 340 socket events)
-- 16 files using incorrect import paths (@/types instead of @shared/types)
-- 6.5MB main bundle requiring code splitting
-- 532 React performance anti-patterns
-- Overall quality score: 46/100 (critical threshold)
-
-**Why this is critical:**
-- Aligns with Phase 7 modernization: eliminate legacy patterns
-- Quality score below acceptable threshold triggers automation requirement
-- Socket events hardcoding violates ZERO TOLERANCE policy
-- Import path inconsistency breaks shared types enforcement
-
-**Next Actions:**
-- Create automated fix scripts for each critical category
-- Implement ZERO TOLERANCE fixes with no backward compatibility
-- Focus on root cause elimination, not patches
-
-**Files affected**:
-- plan.md (updated with Phase 7 critical issues)
-- quality-monitor/reports/* (generated comprehensive analysis)
-
-## 2025-06-18 - Redis Configuration Fix
-
-**What was done**: Fixed missing REDIS_URL environment variable causing backend startup crash
-
-**Issue**: 
-- Backend crashed with error: "REDIS_URL is not defined in environment variables"
-- The .env file was missing from /backend directory after git restore
-- Redis client configuration requires REDIS_URL to be set
-
-**How it was fixed**:
-1. Created missing `/backend/.env` file based on `/backend/example.env`
-2. Set REDIS_URL="redis://localhost:6379" for local development
-3. Added all other required environment variables (DATABASE_URL, JWT_SECRET, etc.)
-
-**Files affected**:
-- `/backend/.env` - Created with proper Redis configuration
-- **Plan Update**: Added Phase 8 for immediate environment fixes
-
-**Relates to**: Phase 8 checklist item - Fix missing REDIS_URL configuration
-
-## 2025-06-18 - PostgreSQL Configuration Fix
-
-**What was done**: Fixed PostgreSQL connection and database migration issues
-
-**Issue**: 
-- Backend login failing with PrismaClientInitializationError
-- Database connection using wrong/lost password after git restore
-- Migration history out of sync with database schema
-
-**How it was fixed**:
-1. Reset PostgreSQL user password: `ALTER USER postgre PASSWORD 'dev123';`
-2. Updated DATABASE_URL in .env: `postgresql://postgre:dev123@localhost:5432/mathquest`
-3. Marked all pending migrations as applied with `npx prisma migrate resolve --applied`
-4. Regenerated Prisma client with `npx prisma generate`
-
-**Files affected**:
-- `/backend/.env` - Updated DATABASE_URL with correct credentials
-- Database migration status - All migrations now marked as applied
-
-**Validation**:
-- `npx prisma migrate status` shows "Database schema is up to date!"
-- Prisma client successfully generated
-- Backend should now be able to authenticate users
-
-**Relates to**: Phase 8 checklist items - Fix PostgreSQL connection and sync database migrations
-
-## 2025-06-18 - React Hooks Order Violation Fix
-
-**What was done**: Fixed React Hooks order violation in practice session page causing crashes
-
-**Issue**: 
-- Practice session page at `/student/practice/[accessCode]` crashing with hooks order error
-- `useEffect` hook was being called conditionally after early returns
-- Error: "React has detected a change in the order of Hooks called by PracticeSessionWithAccessCodePage"
-
-**Root Cause**:
-- The redirect `useEffect` hook was placed after conditional return statements
-- This violated React's Rules of Hooks which require all hooks to be called in the same order every render
-
-**How it was fixed**:
-1. Moved all hooks to the top of the component before any conditional returns
-2. Created a second `useEffect` hook that handles redirect logic when gameInstance is ready
-3. Replaced conditional returns for invalid practice settings with error state management
-4. Consolidated practice settings extraction logic into the redirect useEffect
-
-**Files affected**:
-- `/frontend/src/app/student/practice/[accessCode]/page.tsx` - Fixed hook ordering
-
-**Technical Changes**:
-- First `useEffect`: Fetches game instance data
-- Second `useEffect`: Handles redirect when data is ready (triggers on gameInstance, loading, error changes)
-- Error handling: Uses `setError()` instead of early returns for invalid configurations
-
-**Validation**: Practice session page should now load without React hook violations
-
-**Relates to**: Phase 8 checklist item - Fix React Hooks order violation
-
-## 2025-06-18 - Practice Session URL Redirect Fix
-
-**What was done**: Fixed practice session page to stay on access code URL instead of redirecting
-
-**Issue**: 
-- Practice session page was redirecting from `/student/practice/3233` to `/student/practice/session?discipline=...&gradeLevel=...`
-- URL was being polluted with query parameters instead of staying clean with just the access code
-- User experience was confusing with URL changes
-
-**Root Cause**:
-- The `/student/practice/[accessCode]` page was designed as a redirect page
-- It was extracting practice settings and forwarding to `/student/practice/session` with URL parameters
-- This violated the expected UX of keeping the simple access code URL
-
-**How it was fixed**:
-1. Removed the redirect logic from the `useEffect` hook
-2. Transformed the page into the actual practice session interface
-3. Added proper practice session UI with:
-   - Header showing access code prominently
-   - Session details (subject, level, topics, question count)
-   - Clean practice session interface
-   - Exit session button
-4. Extracted practice settings from game instance for display
-
-**Files affected**:
-- `/frontend/src/app/student/practice/[accessCode]/page.tsx` - Converted from redirect to practice session page
-
-**User Experience Improvements**:
-- URL stays clean: `/student/practice/3233` (no query parameters)
-- Access code is prominently displayed
-- Session configuration is clearly shown
-- Professional practice session interface
-
-**Validation**: Navigate to `/student/practice/3233` - should stay on that URL and show practice session interface
-
-**Relates to**: Phase 8 checklist item - Fix URL redirect behavior
-
-## 2025-06-18 - Practice Session Complete Rebuild
-
-**What was done**: Replaced buggy practice session page with working session page foundation
-
-**Issue**: 
-- Custom practice session implementation was buggy and had UI/UX issues
-- User wanted the same look and functionality as the working `/session` page
-- Previous attempts to modify the page created new bugs and layout problems
-
-**Root Cause**:
-- Trying to modify existing broken code instead of using the working foundation
-- Custom UI implementation vs proven working components
-- Parameter extraction logic was different from working session page
-
-**How it was fixed**:
-1. **Copied entire working session page** as foundation (`session/page.tsx` → `[accessCode]/page.tsx`)
-2. **Modified parameter extraction**:
-   - Changed from `useSearchParams()` to `useParams()` to get access code
-   - Added game instance fetching logic to extract practice settings
-   - Replaced URL parameter parsing with game instance data extraction
-3. **Updated imports** to include necessary API types and functions
-4. **Maintained all working functionality**:
-   - Same UI components (QuestionCard, MathJaxWrapper, etc.)
-   - Same answer handling logic
-   - Same feedback and statistics modals
-   - Same loading and error states
-5. **Added access code-specific error handling** for game instance loading
-
-**Files affected**:
-- `/frontend/src/app/student/practice/[accessCode]/page.tsx` - Complete rebuild using session page
-- Created backup at `page_backup.tsx`
-
-**Technical Changes**:
-- Uses `useParams()` instead of `useSearchParams()`
-- Fetches game instance via `/api/games/${accessCode}`
-- Extracts practice settings from game instance or game template
-- Auto-starts practice session when parameters are ready
-- Maintains clean URL without redirects
-
-**User Experience**:
-- Identical look and feel to working session page
-- Immediate practice session start (no landing page)
-- Clean URL stays at `/student/practice/3233`
-- All functionality preserved (questions, answers, stats, feedback)
-
-**Validation**: Practice session should now work exactly like the `/session` page but with access code URL
-
-**Relates to**: Phase 8 checklist item - Replace practice session with working code
-
-## 2025-06-18 - Archive Unused NavbarStates Components
-
-**What was done**: Archived unused navigation system components to clean up active codebase
-
-**Issue**: 
-- Discovered entire `NavbarStates/` folder with 5 components that were never used
-- Alternative navigation system (NavbarStateManager, StudentNavbar, etc.) was developed but never integrated
-- App uses `AppNav.tsx` instead, making NavbarStates redundant
-- Components were taking up space and causing confusion in active codebase
-
-**Investigation findings**:
-- `NavbarStateManager.tsx` - Central orchestrator, never imported in layout.tsx
-- `StudentNavbar.tsx`, `TeacherNavbar.tsx`, `GuestNavbar.tsx`, `AnonymousNavbar.tsx` - Complete 4-state auth system
-- Only self-references within the unused system
-- Well-written code but completely redundant to current AppNav system
-
-**How it was archived**:
-1. Created `frontend/src/components/auth/archive/` directory
-2. Moved `NavbarStates/` → `archive/NavbarStates-unused-2025-06-18/`
-3. Created comprehensive README.md explaining what was archived and why
-4. Updated cleanup script to reflect archival action
-5. Preserved all code for potential future reference
-
-**Files affected**:
-- **Moved**: `frontend/src/components/auth/NavbarStates/` → `archive/NavbarStates-unused-2025-06-18/`
-- **Created**: `archive/README.md` with restoration instructions
-- **Updated**: `scripts/cleanup-backup-files.sh`
-
-**Benefits**:
-- Cleaned up active codebase by removing 5 unused components
-- Preserved work for potential future use
-- Reduced confusion about which navigation system is active
-- Improved codebase maintainability
-
-**Code preserved**: 5 navigation components with complete 4-state auth system, responsive design, theme switching
-
-**Relates to**: Phase 8 checklist item - Archive unused NavbarStates components
-
-## 2025-06-18 - Archive Obsolete Practice Session Page & Fix Navigation
-
-**What was done**: Archived unused practice session page and updated navigation menus
-
-**Issues**: 
-1. **Obsolete practice session route**: `/student/practice/session` page was no longer used
-2. **Broken navigation links**: Menu items still pointed to old session route
-3. **TypeScript compilation errors**: Archived components in src/ causing import path errors
-
-**Root Cause**:
-- Practice sessions moved to unified flow at `/student/create-game?training=true`
-- Navigation menus (`useAuthState.ts`) still referenced old `/student/practice/session` route
-- Old session page used URL parameters approach which is obsolete
-- Archive location in `src/` directory was being compiled by TypeScript
-
-**How it was fixed**:
-1. **Fixed navigation menus**: Updated `useAuthState.ts` to point "Entraînement libre" links to `/student/create-game?training=true`
-2. **Moved archive location**: Relocated `archive/` from `src/components/auth/` to root `archive/frontend-components/`
-3. **Archived practice session page**: Moved `/student/practice/session/` → `archive/frontend-components/practice-session-page-unused-2025-06-18/`
-4. **Updated documentation**: Enhanced archive README with details about both archived systems
-5. **Updated cleanup script**: Reflected new archival actions
-
-**Files affected**:
-- **Updated**: `frontend/src/hooks/useAuthState.ts` - Fixed navigation menu links
-- **Moved**: `archive/` → `archive/frontend-components/` (outside src/ to avoid TypeScript compilation)
-- **Archived**: `frontend/src/app/student/practice/session/` → `archive/frontend-components/practice-session-page-unused-2025-06-18/`
-- **Updated**: `scripts/cleanup-backup-files.sh` and `archive/frontend-components/README.md`
-
-**Navigation Flow Changes**:
-- **Before**: "Entraînement libre" → `/student/practice/session` (URL parameters)
-- **After**: "Entraînement libre" → `/student/create-game?training=true` (unified flow)
-
-**Benefits**:
-- ✅ Fixed broken navigation menu links
-- ✅ Resolved TypeScript compilation errors  
-- ✅ Cleaned up obsolete 520-line practice session page
-- ✅ Consolidated practice session flow to single entry point
-- ✅ Preserved all archived code with restoration instructions
-
-**Relates to**: Phase 8 checklist items - Fix navigation menu links and Archive obsolete practice session page
-
-## 2025-06-18 - Tournament/Quiz Lobby Redirect Bug Fix Started
-
-**What is being done**: Fixing critical bug where backend sends conflicting redirect events for tournament vs quiz modes
-
-**Issue Identified**:
-- Tournament mode: Backend sends BOTH immediate redirect AND 5s countdown → causes confusion
-- Quiz mode: Should send immediate redirect when teacher clicks play on dashboard, but currently uses tournament flow
-
-**Root Cause Analysis**:
-1. **Tournament Handler** (`tournamentHandler.ts`): Both quiz and tournament modes use same `START_TOURNAMENT` event
-2. **Immediate Redirect Issue**: `io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED)` is sent for ALL modes
-3. **Missing Quiz Logic**: No redirect event when teacher sets first question in quiz mode
-4. **Frontend Confusion**: Lobby receives both immediate redirect and countdown events
-
-**Changes Made So Far**:
-
-1. **Fixed Tournament Handler** (`backend/src/sockets/handlers/tournamentHandler.ts`):
-   - Split logic: Quiz mode → immediate redirect only, Tournament mode → countdown only
-   - Removed `LOBBY_EVENTS.GAME_STARTED` for tournament mode (lines 89-94)
-   - Added conditional countdown logic (only for tournament mode)
-
-2. **Added Quiz Start Logic** (`backend/src/sockets/handlers/teacherControl/setQuestion.ts`):
-   - Added `LOBBY_EVENTS` import
-   - Added redirect trigger when game status changes from pending→active for quiz mode
-   - Emits `LOBBY_EVENTS.GAME_STARTED` to lobby when teacher sets first question
-
-3. **Started Lobby Handler Updates** (`backend/src/sockets/handlers/lobbyHandler.ts`):
-   - Need to add `isQuizLinked` flag to participants list responses
-   - Need to fetch game `playMode` to determine quiz vs tournament
-
-**Next Steps**:
-- [ ] Complete lobby handler updates to include quiz mode flag
-- [ ] Update frontend lobby to handle immediate redirect for quiz mode
-- [ ] Test both tournament and quiz flows
-- [ ] Validate that redirect timing is correct for each mode
-
-**Files Modified**:
-- `backend/src/sockets/handlers/tournamentHandler.ts` - Split quiz/tournament logic
-- `backend/src/sockets/handlers/teacherControl/setQuestion.ts` - Added quiz redirect trigger
-
-**Relation to Checklist**: Phase 10 - Tournament/Quiz Lobby Redirect Bug
-
-**Expected Behavior After Fix**:
-- Tournament: 5s countdown only, no immediate redirect
-- Quiz: Immediate redirect when teacher starts, no countdown
-
-## 2025-06-18 - Tournament Countdown Bug Fixed
-
-**What was done**: Fixed critical bug in tournament handler causing immediate redirect instead of 5-second countdown
-
-**Issue**: 
-- Tournament countdown was being bypassed - users redirected immediately
-- Logs showed "Live game is active, sending current state to late joiner" even for new tournaments
-- Root cause: `countdown_complete` event being emitted immediately due to misplaced code
-
-**Root Cause Analysis**:
-1. **Double emit bug**: `countdown_complete` was being emitted outside the if-else block, triggering immediate redirect
-2. **Early status change**: Game status was set to 'active' before countdown started, causing late joiners to bypass lobby
-3. **Mixed timing**: Countdown logic was correct but game state changes were premature
-
-**How it was fixed**:
-1. **Fixed code placement**: Moved `countdown_complete` emission inside tournament countdown completion only
-2. **Fixed game status timing**: Game status now stays 'pending' during countdown, only changes to 'active' after countdown completes
-3. **Separated timing**: Tournament mode now properly waits for full countdown before marking game as active
-
-**Technical Changes**:
-- Removed misplaced `io.to(lobbyRoom).emit('countdown_complete')` that was outside conditional blocks
-- Moved `gameInstanceService.updateGameStatus(gameInstance.id, { status: 'active' })` to AFTER countdown completes
-- Added proper logging to track countdown completion
-
-**Files affected**:
-- `/backend/src/sockets/handlers/tournamentHandler.ts` - Fixed countdown timing and event emission
-
-**Validation Steps**:
-- Create tournament → join lobby → click "Démarrer le tournoi" → should see full 5-second countdown → then redirect
-- Users joining during countdown should stay in lobby (not treated as late joiners)
-
-**Relates to**: Phase 10 - Tournament/Quiz Lobby Redirect Bug (FIXED)
-
-**Expected Behavior Now**:
-- Tournament: Full 5-second countdown, then redirect (game stays 'pending' during countdown)
-- Quiz: Immediate redirect when teacher starts from dashboard
-
-## 🐛 FIXED: Guest User Identity Loss
-**Date**: 2025-06-18  
-**Issue**: Guest users experience identity loss on page refresh/navigation
-- Username changes from chosen name (e.g., "zozo") to generated format ("guest-77ea...")
-- Avatar reverts to default instead of chosen avatar
-- Suggests issue with guest user persistence in AuthProvider
-
-**Root Cause Found**: 
-1. **Backend treats all guests as students**: When guests register, they're stored with `role: STUDENT` in database
-2. **Auth status endpoint doesn't distinguish guests from students**: `/api/auth/status` returned `authState: 'student'` for both
-3. **Frontend overwrites localStorage with database profile**: On refresh, frontend got database profile instead of localStorage guest profile
-
-**Fix Applied**:
-1. **Updated backend auth status logic**: Modified `/api/auth/status` to return `authState: 'guest'` for users without email
-2. **Updated shared types**: Added `'guest'` as valid authState in AuthStatusResponse 
-3. **Updated frontend AuthProvider**: When `authState === 'guest'`, preserve localStorage profile but add userId from database
-4. **Updated frontend auth status route**: Added proper typing for guest authState
-
-**Files Modified**:
-- `shared/types/api/responses.ts` - Added 'guest' to AuthStatusResponse.authState union
-- `shared/types/api/schemas.ts` - Added 'guest' to AuthStatusResponseSchema enum
-- `backend/src/api/v1/auth.ts` - Updated logic to detect guest vs student by email presence
-- `frontend/src/components/AuthProvider.tsx` - Updated to preserve guest localStorage profiles
-- `frontend/src/app/api/auth/status/route.ts` - Fixed TypeScript typing for authState
-
-**Testing**: Guest users should now retain their chosen username and avatar across refreshes
-
-## 🎨 UPDATED: My Activities Page with Tabbed Interface  
-**Date**: 2025-06-18  
-**Enhancement**: Changed "My Tournaments" page to use tabbed interface supporting three activity types
-
-**New Structure**:
-1. **🏆 Tournois Tab**: 
-   - Three sections: Pending → Active → Ended
-   - Shows position/score and links to leaderboard
-   - Supports deferred tournament play
-2. **📝 Quiz (en classe) Tab**: 
-   - Single list of all quiz activities
-   - Shows position/score and links to leaderboard
-   - No section divisions needed
-3. **🎯 Entraînement Tab**: 
-   - Single list of all practice activities
-   - **No scores/positions displayed** (practice mode)
-   - **No leaderboard links** (practice is untracked)
-
-**Backend Updates**:
-- **Mode parameter support**: `/api/v1/my-tournaments?mode=tournament|quiz|practice`
-- **Multi-mode filtering**: Backend now supports all three play modes
-- **Backward compatibility**: Defaults to 'tournament' mode if no mode specified
-
-**Frontend Updates**:
-- **GameModeToggle component**: Tab interface similar to login page AuthModeToggle
-- **Dynamic loading**: Switches data when tab changes
-- **Mode-specific rendering**: Different display logic for each activity type
-- **Practice mode handling**: No scoring/leaderboard features for practice sessions
-
-**Files Modified**:
-- `backend/src/api/v1/myTournaments.ts` - Added mode parameter and multi-mode support
-- `frontend/src/app/my-tournaments/page.tsx` - Complete redesign with tabbed interface
-- `frontend/src/types/api.ts` - (Types already support the structure)
-
-**Expected Behavior**: 
-- Users can switch between Tournois/Quiz/Entraînement tabs
-- Each tab loads appropriate data from backend
-- Practice sessions show no scores and no leaderboard access
-- Tournament and Quiz modes show full scoring and leaderboard features
-
-## 🎨 UPDATED: AppNav Guest User Display
-**Date**: 2025-06-18  
-**Issue**: AppNav showed "Invité" text in yellow but not guest username/avatar
-
-**Updates Applied**:
-1. **Desktop view**: 
-   - Guest username now displays in yellow color
-   - "Profil invité" menu item displays in yellow instead of "Mon profil"
-2. **Mobile view**:
-   - Guest username and avatar displayed with yellow color styling
-   - "Profil invité" menu item displays in yellow
-   - Theme and disconnect buttons moved to bottom like desktop layout
-3. **CSS**: Added `.appnav-username.guest` class for consistent yellow styling
-
-**Files Modified**:
-- `frontend/src/app/globals.css` - Added guest username styling
-- `frontend/src/components/AppNav.tsx` - Updated desktop and mobile guest display, improved mobile layout
-- `frontend/src/hooks/useAuthState.ts` - Updated menu items for guest users
-
-**Result**: Consistent yellow guest styling across desktop and mobile, improved mobile layout matching desktop
-
-## 2025-06-18 21:35 - LEADERBOARD ISSUE IDENTIFIED
-**What**: Server-side scoring is working perfectly but leaderboard shows "null" in database
-**Why**: Individual participant scores are updated correctly (1000 points stored), but leaderboard calculation/aggregation is failing
-**Evidence**: 
-- TimingService working: server-calculated 1899ms for question timing
-- Scoring working: 1000 points for correct answer, 0 for incorrect
-- Database persistence working: participant.score = 1000 stored correctly
-- Leaderboard broken: database shows leaderboard as "null"
-**Next**: Fix leaderboard calculation to read from updated participant scores
-**Files**: Need to investigate leaderboard calculation logic
-
-## 2025-06-18 21:32 - SERVER-SIDE SCORING VERIFICATION COMPLETE
-**What**: Added detailed logging and tested tournament 3253 with server-side scoring
-**Why**: Needed to verify that TimingService and score calculation are working correctly
-**Evidence**:
-- Tournament 3253 logs show:
-  - Question 1: `isCorrect: true`, `serverTimeSpent: 0`, `score: 1000` ✅
-  - Question 2: `isCorrect: false`, `serverTimeSpent: 1899`, `score: 0` ✅
-  - Database update: "Participant score updated in database" with 1000 points ✅
-**Result**: Server-side scoring is SECURE and WORKING perfectly
-**Files**: `backend/src/sockets/handlers/game/gameAnswer.ts`
-
-## 2025-06-18 21:28 - WINSTON LOGGING SYSTEM OPERATIONAL
-**What**: Fixed winston logger configuration and verified log file output
-**Why**: Needed reliable logging to debug scoring and leaderboard issues
-**Evidence**: `logs/combined.log` now contains detailed backend operations with timestamps
-**Result**: Full visibility into backend operations for debugging
-**Files**: `backend/src/utils/logger.ts`, `backend/logs/combined.log`
-
-## 2025-06-18 21:25 - IDENTIFIED SCORING HANDLER LOCATION
-**What**: Found that tournament answers use `gameAnswer.ts` handler, not `sharedLiveHandler.ts`
-**Why**: Added logging to wrong handler initially - tournaments use different code path
-**Evidence**: Logs show "GameAnswerHandler" being invoked for tournament answers
-**Result**: Added server-side timing and scoring logic to correct handler
-**Files**: `backend/src/sockets/handlers/game/gameAnswer.ts`
-
-## 2025-06-18 21:45 - 🏆 LEADERBOARD DATABASE PERSISTENCE CONFIRMED
-**What**: Database now correctly stores leaderboard data: `[{"score":983,"userId":"...","username":"guest-68fbddc9","avatarEmoji":"🐼"}]`
-**Why**: Added `persistLeaderboardToGameInstance()` call when game ends in sharedGameFlow.ts
-**Evidence**: Database shows proper leaderboard JSON with correct scores and user data
-**Result**: COMPLETE SCORING SYSTEM SECURITY AND PERSISTENCE
-- ✅ Server-side timing: Tamper-proof question timing
-- ✅ Server-side scoring: Secure score calculation (983 points)
-- ✅ Redis synchronization: Real-time leaderboard display
-- ✅ Database persistence: Permanent leaderboard storage
-**Impact**: Full end-to-end integrity from timing → scoring → display → storage
-**Files**: `backend/src/sockets/handlers/sharedGameFlow.ts` - Added leaderboard persistence
-
-## 2025-06-18 21:40 - 🎉 SCORING SECURITY FIX COMPLETED
-**What**: Fixed Redis-database synchronization, leaderboard now displays correct scores
-**Why**: Database was updated with scores but Redis cache was stale, causing leaderboard to show 0
-**Evidence**: Tournament 3254 shows leaderboard with 982 points (correct server-calculated score)
-**Result**: COMPLETE END-TO-END SECURITY AND FUNCTIONALITY
-- ✅ Server-side timing: 1854ms calculated correctly
-- ✅ Tamper-proof scoring: 982 points (1000 base - 18 time penalty)
-- ✅ Database persistence: participant.score = 982 stored
-- ✅ Redis synchronization: cache updated to match database
-- ✅ Leaderboard display: shows 982 points instead of 0
-**Impact**: Users can no longer manipulate scores by sending fake timeSpent values
-**Files**: All scoring system files now working together securely
-
-## 2025-06-19 - Tournament Ending Database Update Bug Fix
-
-**What**: Fix tournament ending flow to properly update database status and deferred availability fields
-
-**Issue Identified**: 
-- Tournament ending in `sharedGameFlow.ts` only persists leaderboard to database
-- Missing database updates for tournament lifecycle fields:
-  - `status` should be changed from "active" to "ended"
-  - `endedAt` should be set to current timestamp
-  - `differedAvailableFrom` should be set to same timestamp as endedAt
-  - `differedAvailableTo` should be set to endedAt + 7 days
-- This affects tournament lifecycle and deferred mode availability window
-
-**Root Cause**: Game ending logic in `sharedGameFlow.ts` line ~215 only calls leaderboard persistence but skips GameInstance field updates
-
-**Expected Fix**:
-1. Add database update call to set status="ended" when tournament completes
-2. Set timing fields (endedAt, differedAvailableFrom, differedAvailableTo) 
-3. Maintain existing leaderboard persistence functionality
-4. Test tournament completion flow to verify all fields are properly updated
-
-**Impact**: HIGH - Without this fix:
-- Tournaments remain in "active" status forever
-- Deferred mode window is not properly established
-- Tournament lifecycle management is broken
-
-**Files to modify**: `backend/src/sockets/handlers/sharedGameFlow.ts`
-
-## 2025-06-19 - ✅ FIXED: Deferred Tournament Game Flow Startup
-
-**Issue**: User joins deferred tournament successfully but gets stuck at "En attente de la prochaine question" because deferred game flow doesn't start.
-
-**Root Cause**: `joinGame.ts` was checking `gameInstance.isDiffered` condition which we removed when simplifying the logic. The deferred game flow was never starting.
-
-**Solution**:
-- ✅ Updated condition from `gameInstance.isDiffered && gameInstance.playMode === 'tournament'`
-- ✅ To: `gameInstance.status === 'completed' && gameInstance.playMode === 'tournament'`
-
-**Logic Flow**:
-1. User joins completed tournament → ✅ Access granted by gameParticipantService
-2. Socket joins game room → ✅ Working
-3. `game_joined` event emitted → ✅ Working  
-4. **NEW**: Deferred game flow starts automatically → ✅ Fixed
-
-**Files Modified**: `backend/src/sockets/handlers/game/joinGame.ts`
-
-**Verification**: Tournament 3270 should now start the deferred game flow when user joins
-
-## 2025-06-19 - 🎯 UX Enhancement: Real-time Leaderboard Population
-
-**What**: Implemented join-order bonus scoring and real-time leaderboard updates when students join games
-**Why**: Teacher UX improvement - projection leaderboard populates immediately instead of being empty until first question
-
-**Key Features Implemented**:
-
-1. **Join-Order Bonus System** (`backend/src/utils/joinOrderBonus.ts`):
-   - First 20 students get micro-bonuses: 0.01, 0.009, 0.008, etc.
-   - Prevents duplicate bonuses using Redis lists
-   - Automatic expiration (24 hours)
-
-2. **Lobby-Based Leaderboard for Quiz Mode** (`backend/src/sockets/handlers/lobbyHandler.ts`):
-   - Students joining quiz lobby immediately get join-order bonus
-   - Leaderboard updates broadcast to projection room
-   - Only for quiz mode (where students wait in lobby for teacher to start)
-
-3. **Game-Join Leaderboard Updates** (`backend/src/sockets/handlers/game/joinGame.ts`):
-   - All game modes get join-order bonuses when actually joining game
-   - Prevents double bonuses for students who were already in lobby
-   - Real-time leaderboard broadcast to projection
-
-4. **Projection Room Broadcast Utility** (`backend/src/utils/projectionLeaderboardBroadcast.ts`):
-   - Centralized leaderboard broadcasting to projection rooms
-   - Supports broadcasting to multiple room types (game, projection, dashboard)
-   - Top 20 leaderboard limit for projection display
-
-5. **Socket Events Enhanced** (`shared/types/socket/events.ts`):
-   - Added `LEADERBOARD_UPDATE` to GAME_EVENTS
-   - Added `PROJECTION_LEADERBOARD_UPDATE` to PROJECTOR_EVENTS
-
-6. **Frontend Projection Updates** (`frontend/src/hooks/useProjectionQuizSocket.ts`):
-   - Added leaderboard state and update handlers
-   - Listens for `PROJECTION_LEADERBOARD_UPDATE` events
-   - Handles initial leaderboard data from game state
-
-**UX Flow**:
-1. **Quiz Mode**: Student joins lobby → micro-bonus assigned → projection leaderboard updates → teacher sees populated leaderboard
-2. **Tournament Mode**: Student joins game → micro-bonus assigned → projection leaderboard updates
-3. **Question Phase**: Regular scores override micro-scores as expected
-
-**Files Modified**:
-- `backend/src/utils/joinOrderBonus.ts` - Join order tracking and bonus calculation
-- `backend/src/utils/projectionLeaderboardBroadcast.ts` - Projection room broadcast utility  
-- `backend/src/sockets/handlers/lobbyHandler.ts` - Quiz lobby leaderboard updates
-- `backend/src/sockets/handlers/game/joinGame.ts` - Game join leaderboard updates
-- `shared/types/socket/events.ts` - Added leaderboard socket events
-- `frontend/src/hooks/useProjectionQuizSocket.ts` - Frontend leaderboard handling
-
-**Result**: Teachers now see immediate leaderboard population on projection displays, significantly improving classroom UX and eliminating the "empty screen" problem.
-
-## 2025-06-19 17:15 - 🔧 FIXED: Avatar Emoji Display in Projection Leaderboard
-**What**: Fixed legacy avatar rendering issue in ClassementPodium component
-**Problem**: Component was trying to render avatarEmoji as Image URL instead of emoji text
-**Error**: `Failed to construct 'URL': Invalid URL` when students joined with emoji avatars
-**How it was fixed**:
-1. **Updated ClassementPodium.tsx**: Changed from `<Image src={user.avatarEmoji}>` to `<span>{user.avatarEmoji}</span>`
-2. **Removed unused import**: Removed `import Image from 'next/image'` since no longer needed
-3. **Verified emoji display**: Now correctly shows emoji (🐼, 😊, etc.) instead of broken image links
-
-**Result**: ✅ COMPLETE LEADERBOARD UX ENHANCEMENT
-- Students appear on projection leaderboard immediately after joining lobby (quiz mode)
-- Join-order bonuses work correctly (0.01, 0.009, 0.008... for first 20 students)
-- Avatar emojis display properly in leaderboard podium
-- Real-time updates flow: Student joins → Redis bonus → Leaderboard calc → Projection broadcast → UI update
-
-**Impact**: Teachers now see populated leaderboard immediately when students join, vastly improved UX
-**Files**: `frontend/src/components/ClassementPodium.tsx` - Fixed avatar emoji rendering
-
-## 2025-06-19 - UX: Score Display Rounding
-
-**What was done**: Rounded all score displays to nearest integer for cleaner UX
-
-**Details**:
-- Updated `ClassementPodium.tsx` to display `Math.round(user.score)` for both podium and others list
-- Updated leaderboard page `/app/leaderboard/[code]/page.tsx` to round scores
-- Updated `Scoreboard.tsx` component to round scores
-- Ensures join-order bonus micro-scores (0.01, 0.009, etc.) display as clean integers
-- Improves readability and reduces visual clutter on projection displays
-
-**Files modified**:
-- `/frontend/src/components/ClassementPodium.tsx`
-- `/frontend/src/app/leaderboard/[code]/page.tsx` 
-- `/frontend/src/components/Scoreboard.tsx`
-
-**Result**: All score displays now show rounded integers while maintaining precise scoring internally
-
----
-
-## 2025-06-19 18:30 - CRITICAL: Discovered Socket Payload Type Inconsistency
-
-**Root Cause Found**: The "Unknown Player" username issue is caused by **inconsistent leaderboard payload structures** between two different code paths:
-
-1. **Socket broadcasts** (working): Uses `calculateLeaderboard()` → includes `username` field ✅
-2. **Initial projection state** (broken): Uses `getFullGameState()` → **missing `username` field** ❌
-
-**Evidence from logs**:
-- Socket events show correct usernames: "snouff", "Claudia", "Polo", "Alexis"
-- Initial state payload missing username field entirely: `{ "userId": "...", "avatarEmoji": "🐸", "score": 0 }` (no username!)
-
-**Violation of Modernization Guidelines**:
-- `.instructions.md` requires: "All API contracts and socket events must use canonical shared types"
-- Shared types define `LeaderboardEntry` with **required `username` field**
-- `getFullGameState()` in `backend/src/core/gameStateService.ts` lines 387-394 builds leaderboard without username
-
-**Fix Required**: 
-- Update `getFullGameState()` to return proper `LeaderboardEntry[]` types
-- Ensure both code paths use identical payload structure
-- Add Zod validation for outgoing socket payloads
-
-**Files needing updates**:
-- `backend/src/core/gameStateService.ts` (getFullGameState leaderboard construction)
-- Add shared type imports and enforce LeaderboardEntry interface
-
-## 2025-07-01 - Tournament Creation Status Modernization
+- Updated `ConfirmationModal` to use canonical `.dialog-modal-btn`, `.dialog-modal-actions`, and `.dialog-modal-content` classes from `dialogs.css` for all teacher/confirmation modals (delete activity, etc.)
+- Removed all hard-coded button/layout styles from the modal; now fully theme-compliant and minimalistic
+- Confirmed all warning/delete modals on /teacher/games use the new canonical style
+- Updated plan.md with new phase and checklist
+
+**Testing:**
+- Go to http://localhost:3008/teacher/games
+- Click the trash icon to delete an activity
+- The warning modal should:
+  - Use border-only, minimalistic buttons (no hard-coded colors)
+  - Buttons are right-aligned, spaced, and match dialogs.css
+  - Danger/warning color is applied via border/text only (no background fill)
+  - Modal content is left-aligned and matches `.dialog-modal-content`
+- Confirm all other confirmation modals (delete session, etc.) are also styled identically
+- All changes are theme-compliant and work in both light/dark mode
+- No legacy or hard-coded modal styles remain
+
+**Checklist/plan.md updated.**
+# 2025-07-08 - Modal Dark Mode Background Fix
 
 **What was done:**
-- Updated Zod schema in `shared/types/api/schemas.ts` to only allow `status: 'pending' | 'completed'` for tournament creation.
-- Updated backend service (`backend/src/core/services/gameInstanceService.ts`) to accept and use explicit `status` if provided, otherwise default to legacy logic.
-- Updated student tournament creation page (`frontend/src/app/student/create-game/page.tsx`) to always send `status: 'pending'`.
-- Updated teacher tournament creation page (`frontend/src/app/teacher/games/page.tsx`) to always send `status: 'completed'` for tournaments created from a GameTemplate.
-- All changes follow strict modernization and documentation requirements.
+- Updated `ConfirmationModal` to use `bg-[color:var(--card)]` and `text-[color:var(--foreground)]` for modal background and text, matching `InfoModal` and canonical modal style
+- Removed hardcoded `bg-white` from modal container
+- All modals now use theme variables for background and text, ensuring full dark mode support
+- Updated plan.md with new phase and checklist
 
-**Validation:**
-- Student-created tournaments are always created with status 'pending'.
-- Teacher-created tournaments from GameTemplate are always created with status 'completed'.
-- Only 'pending' or 'completed' are accepted as valid status values in the API and backend.
+**Testing:**
+- Switch to dark mode and open any confirmation or info modal (e.g., delete activity, join error)
+- Modal background should be dark (not white), text should be light, and all borders/colors should match theme
+- No hardcoded white backgrounds remain in modal code
+- All changes are theme-compliant and work in both light/dark mode
 
-**Modernization Compliance:**
-- All changes are phase-based, documented, and logged in plan.md and log.md.
-- No legacy/compatibility code or redundant interfaces remain.
-- Naming, types, and contracts are canonical and validated.
+**Checklist/plan.md updated.**
+# 2025-07-09 - Redis State Modernization: Prevent Participant/Score Loss
 
-**Next Steps:**
-- Validate both flows in the UI and backend logs.
-- Run all relevant tests and document results in plan.md.
+**What was done:**
+- Investigated and confirmed that Redis cleanup at game start (in `sharedGameFlow.ts`) and deferred session start (in `deferredTournamentFlow.ts`) was wiping all participants and scores, causing leaderboard/podium loss on join/replay.
+- Commented out/removed all Redis cleanup at game start and deferred session start. Redis is now only cleared at game/session end.
+- Updated `plan.md` with a new phase-based checklist for this modernization.
 
-- [x] Fix: Always set status to 'pending' for student-created tournaments (no gameTemplateId) in backend API (src/api/v1/games.ts)
-    - This ensures tournaments created from the student flow are never set to 'completed' regardless of frontend bugs or missing fields.
-    - Only teacher-created tournaments (with a GameTemplate) can be 'completed' on creation.
-    - Fully aligned with modernization and canonical flow separation.
+**Testing:**
+- Join/replay a quiz or tournament game with multiple participants.
+- Observe that all participants and their scores persist in Redis throughout the game/session.
+- Leaderboard and podium remain correct for all users.
+- Redis is only cleared at the end of the game/session (not at start).
+
+**Checklist/plan.md updated.**

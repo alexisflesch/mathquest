@@ -1,0 +1,170 @@
+# Questions de mathématiques niveau CE1 pour MathQuest
+# Auteur : gpt4.1
+
+- uid: "gpt41-ce1-math-nombres-001"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Calcul mental et lecture"
+  text: "La maman de Léa lui a donné 12 bonbons. Elle en a mangé 5 et donné 3 à son petit frère. Combien lui en reste-t-il ?"
+  questionType: "numeric"
+  discipline: "Mathématiques"
+  themes: ["Calcul"]
+  tags: ["calcul mental"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 4
+  explanation: "Les bonbons qui ont été mangés sont au nombre de 5+3=8. On calcule ensuite 12-8=4 pour savoir combien il reste de bonbons."
+  feedbackWaitTime: 15
+
+
+
+- uid: "gpt41-ce1-math-nombres-002"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "L'écureuil et les noisettes"
+  text: "Un écureuil a 15 noisettes. Il en cache 6 et en donne 2 à son ami. Combien lui en reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 7
+  explanation: "15 - 6 - 2 = 7"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-003"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Le pirate et les pièces d'or"
+  text: "Un pirate trouve 23 pièces d’or. Il en dépense 8 pour une carte et en perd 5. Combien lui en reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CE1"
+  correctAnswer: 10
+  explanation: "23 - 8 - 5 = 10"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-004"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les livres d’Emma"
+  text: "Emma a 9 livres. Elle en lit 4 et en rend 3 autres à la bibliothèque. Combien lui en reste-t-il à lire ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 2
+  explanation: "9 - 4 - 3 = 2"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-005"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les œufs de la ferme"
+  text: "La poule pond 18 œufs. Le fermier en vend 7 et 4 se cassent. Combien en reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CE1"
+  correctAnswer: 7
+  explanation: "18 - 7 - 4 = 7"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-006"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les autocollants de Noé"
+  text: "Noé a 27 autocollants. Il en donne 9 à son ami puis en gagne 5 de plus. Combien en a-t-il maintenant ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 23
+  explanation: "27 - 9 + 5 = 23"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-007"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les ballons qui éclatent"
+  text: "Lila a 16 ballons. Trois éclatent, puis elle en achète 4 nouveaux. Combien en a-t-elle maintenant ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 17
+  explanation: "16 - 3 + 4 = 17"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-008"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les crayons perdus et retrouvés"
+  text: "Tom a 20 crayons. Il en perd 6 puis en retrouve 2. Combien lui en reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 16
+  explanation: "20 - 6 + 2 = 16"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-009"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les cupcakes"
+  text: "Julie prépare 14 cupcakes. Elle en mange 5 et en offre 3. Combien en reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 6
+  explanation: "14 - 5 - 3 = 6"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-010"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les timbres"
+  text: "Lucas a 30 timbres. Il en utilise 12 pour des lettres et en reçoit 4 de son grand-père. Combien en a-t-il maintenant ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 22
+  explanation: "30 - 12 + 4 = 22"
+  feedbackWaitTime: 15
+
+- uid: "gpt41-ce1-math-nombres-011"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Les petites voitures"
+  text: "Zoé a 11 petites voitures. Elle en reçoit 7 pour son anniversaire et en donne 5 à son cousin. Combien lui en reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "problèmes"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 13
+  explanation: "11 + 7 - 5 = 13"
+  feedbackWaitTime: 15

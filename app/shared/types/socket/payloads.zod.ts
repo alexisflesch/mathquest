@@ -121,6 +121,27 @@ export const resumeTournamentPayloadSchema = z.object({
   code: z.string(),
 });
 
+
+// Dashboard/GameControlStatePayload Zod schema
+export const gameControlStatePayloadSchema = z.object({
+  gameId: z.string(),
+  accessCode: z.string(),
+  templateName: z.string(),
+  gameInstanceName: z.string(),
+  status: z.enum(["pending", "active", "paused", "completed"]),
+  currentQuestionUid: z.string().nullable(),
+  questions: z.array(z.any()), // TODO: Replace z.any() with canonical QuestionForDashboardSchema if available
+  timer: z.any(), // TODO: Replace z.any() with canonical GameTimerStateSchema if available
+  answersLocked: z.boolean(),
+  participantCount: z.number(),
+  answerStats: z.record(z.string(), z.number()).optional(),
+});
+
+export type GameControlStatePayload = z.infer<typeof gameControlStatePayloadSchema>;
+
 // Type exports from Zod schemas
 export type SetTimerPayload = z.infer<typeof setTimerPayloadSchema>;
 export type UpdateTournamentCodePayload = z.infer<typeof updateTournamentCodePayloadSchema>;
+
+// [MODERNIZATION] Canonical Zod schema import for projection_show_stats event
+export { ProjectionShowStatsPayloadSchema } from './projectionShowStats';

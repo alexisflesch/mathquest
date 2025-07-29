@@ -250,17 +250,31 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
         localCountdownRefs.current[questionUid] = setInterval(() => {
             const now = Date.now();
             const remaining = computeTimeLeftMs(timerEndDateMs, now);
+
+            // Only update state if the displayed time (in seconds) has changed
             setTimerStates(prev => {
                 const prevState = prev[questionUid];
                 if (!prevState) return prev;
-                return {
-                    ...prev,
-                    [questionUid]: {
-                        ...prevState,
-                        timeLeftMs: remaining
-                    }
-                };
+
+                // Convert to seconds for comparison
+                const prevSeconds = Math.ceil(prevState.timeLeftMs / 1000);
+                const newSeconds = Math.ceil(remaining / 1000);
+
+                // Only update if the second value changed or if timer reached zero
+                if (prevSeconds !== newSeconds || remaining <= 0) {
+                    return {
+                        ...prev,
+                        [questionUid]: {
+                            ...prevState,
+                            timeLeftMs: remaining
+                        }
+                    };
+                }
+
+                // No change needed, return same state to prevent re-render
+                return prev;
             });
+
             if (remaining <= 0) {
                 logger.info('[SimpleTimer] Countdown reached zero, stopping', { questionUid });
                 stopLocalCountdown(questionUid);
@@ -301,8 +315,10 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             action: 'run',
             timerEndDateMs,
             targetTimeMs: durationMs,
+            durationMs, // <--- ensure durationMs is always sent for canonical backend logic
             questionUid
         };
+        logger.info('[FRONTEND][SOCKET][EMIT] quiz_timer_action payload', payload);
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
     }, [role, socket, accessCode]);
 

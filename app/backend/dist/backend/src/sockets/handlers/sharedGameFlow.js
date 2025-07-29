@@ -43,11 +43,15 @@ exports.runGameFlow = runGameFlow;
 const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const redisCleanup_1 = require("@/utils/redisCleanup");
 const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
 const prisma_1 = require("@/db/prisma");
 const emitQuestionHandler_1 = require("./game/emitQuestionHandler");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const sharedLeaderboard_1 = require("./sharedLeaderboard");
+const leaderboardSnapshotService_1 = require("@/core/services/gameParticipant/leaderboardSnapshotService");
+const gameTimings_1 = require("@shared/constants/gameTimings");
 const logger = (0, logger_1.default)('SharedGameFlow');
 // Track running game flows to prevent duplicates
 const runningGameFlows = new Set();
@@ -69,6 +73,20 @@ async function runGameFlow(io, accessCode, questions, options) {
     runningGameFlows.add(accessCode);
     logger.info({ accessCode, playMode: options.playMode, questionCount: questions.length }, `[SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.`);
     try {
+        // [MODERNIZATION] Redis cleanup at game start is now disabled to prevent participant/score loss.
+        // If you need to clear Redis for a new game, do it at game end only.
+        // Update all PENDING participants to ACTIVE when game starts
+        // This prevents them from being removed when they disconnect
+        await prisma_1.prisma.gameParticipant.updateMany({
+            where: {
+                gameInstance: { accessCode },
+                status: 'PENDING'
+            },
+            data: {
+                status: 'ACTIVE'
+            }
+        });
+        logger.info({ accessCode }, '[SharedGameFlow] Updated all PENDING participants to ACTIVE status');
         logger.info({ accessCode }, `[SharedGameFlow] Proceeding with first question immediately.`);
         for (let i = 0; i < questions.length; i++) {
             // Set and persist timer in game state before emitting question
@@ -96,15 +114,32 @@ async function runGameFlow(io, accessCode, questions, options) {
                 logger.info({ accessCode, room: `game_${accessCode}`, socketIds }, '[DEBUG] Sockets in live room before emitting first game_question');
             }
             logger.info({ accessCode, questionIndex: i, questionUid: questions[i].uid }, '[DEBUG] Preparing to emit game_question');
-            // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
-            const filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(questions[i]);
-            const gameQuestionPayload = {
-                question: filteredQuestion,
-                questionIndex: i, // Use shared type field name
-                totalQuestions: questions.length, // Add total questions count
-                feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1),
-                timer: timer // Use timer state for initial question emission
+            // Modernized: Canonical, flat payload for game_question
+            const { questionDataForStudentSchema } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/socketEvents.zod')));
+            let filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(questions[i]);
+            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+            if (filteredQuestion.timeLimit == null) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { timeLimit, ...rest } = filteredQuestion;
+                filteredQuestion = rest;
+            }
+            const canonicalPayload = {
+                ...filteredQuestion,
+                currentQuestionIndex: i,
+                totalQuestions: questions.length
             };
+            // Define liveRoom and projectionRoom before use
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${currentState?.gameState?.gameId || ''}`;
+            // Validate with Zod before emitting
+            const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+            if (!parseResult.success) {
+                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+            }
+            else {
+                io.to([liveRoom, projectionRoom]).emit('game_question', canonicalPayload);
+                logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to live and projection rooms');
+            }
             // Fetch all sockets in the room
             const roomName = `game_${accessCode}`;
             const socketsInRoom = await io.in(roomName).fetchSockets();
@@ -126,12 +161,6 @@ async function runGameFlow(io, accessCode, questions, options) {
                 }
             }
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
-            // Emit to both live and projection rooms using the canonical event and payload
-            const liveRoom = `game_${accessCode}`;
-            const projectionRoom = `projection_${currentState?.gameState?.gameId || ''}`;
-            console.log(projectionRoom, 'Projection room for game flow');
-            io.to([liveRoom, projectionRoom]).emit('game_question', gameQuestionPayload);
-            logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, payload: gameQuestionPayload }, '[TRACE] Emitted game_question to live and projection rooms');
             // Track question start time for all users currently in the room for server-side timing
             try {
                 const roomName = `game_${accessCode}`;
@@ -191,16 +220,36 @@ async function runGameFlow(io, accessCode, questions, options) {
             io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
             logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: questions[i].correctAnswers }, '[TRACE] Emitted correct_answers');
             options.onQuestionEnd?.(i);
+            // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
+            // This prevents students from determining answer correctness during submission
+            try {
+                // First, sync the snapshot with current live data
+                const syncedSnapshot = await (0, leaderboardSnapshotService_1.syncSnapshotWithLiveData)(accessCode);
+                // Then emit the leaderboard from the snapshot (source of truth)
+                await (0, leaderboardSnapshotService_1.emitLeaderboardFromSnapshot)(io, accessCode, [`game_${accessCode}`], 'after_question_end');
+                logger.info({
+                    accessCode,
+                    event: 'leaderboard_update',
+                    questionUid: questions[i].uid,
+                    leaderboardCount: syncedSnapshot.length,
+                    timing: 'after_question_end'
+                }, '[SECURITY] Emitted secure leaderboard_update after question timer expired using snapshot');
+            }
+            catch (leaderboardError) {
+                logger.error({
+                    accessCode,
+                    questionUid: questions[i].uid,
+                    error: leaderboardError
+                }, '[SECURITY] Error emitting secure leaderboard update');
+            }
             // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
             // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
             // If batch scoring is needed, refactor to use canonical logic per participant/answer.
             // Two separate timing concerns:
-            // 1. Delay between correct answers and feedback event (fixed 1.5s for tournaments)
-            const correctAnswersToFeedbackDelay = options.playMode === 'tournament' ? 1.5 : 1;
+            // 1. Delay between correct answers and feedback event (1.5s for all modes)
+            const correctAnswersToFeedbackDelay = (0, gameTimings_1.getCorrectAnswersDisplayTime)(options.playMode);
             // 2. Feedback display duration (from question or default to 5s)
-            const feedbackDisplayDuration = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
-                ? questions[i].feedbackWaitTime
-                : 5; // Default to 5 seconds when feedbackWaitTime is null
+            const feedbackDisplayDuration = (0, gameTimings_1.getFeedbackDisplayTime)(questions[i].feedbackWaitTime);
             // Wait for the delay between correct answers and feedback
             await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
             // Only emit feedback event if there's an explanation to show
@@ -237,10 +286,12 @@ async function runGameFlow(io, accessCode, questions, options) {
         }
         // Game completed - persist final leaderboard to database
         try {
-            const { calculateLeaderboard, persistLeaderboardToGameInstance } = await Promise.resolve().then(() => __importStar(require('./sharedLeaderboard')));
-            const finalLeaderboard = await calculateLeaderboard(accessCode);
-            await persistLeaderboardToGameInstance(accessCode, finalLeaderboard);
+            const finalLeaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
+            await (0, sharedLeaderboard_1.persistLeaderboardToGameInstance)(accessCode, finalLeaderboard);
             logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');
+            // Clear Redis game data after persisting scores to database
+            // This ensures clean state and prevents old scores from contaminating future sessions
+            await (0, redisCleanup_1.cleanupGameRedisKeys)(accessCode, 'sharedGameFlow');
         }
         catch (error) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');

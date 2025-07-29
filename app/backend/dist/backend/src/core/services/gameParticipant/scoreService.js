@@ -31,36 +31,39 @@ class DifferedScoreService {
      * Get or create a differed participation for a user/tournament.
      * If a new attempt, resets score and increments attempt count.
      */
-    static async getOrCreateParticipation({ userId, gameInstanceId }) {
-        // Find existing DEFERRED participant for this user/gameInstance
+    static async getOrCreateParticipation({ userId, gameInstanceId, mode }) {
+        // Find existing participant for this user/gameInstance (unified model)
         let participant = await prisma_1.prisma.gameParticipant.findFirst({
             where: {
                 gameInstanceId,
-                userId,
-                participationType: 'DEFERRED'
+                userId
             }
         });
         if (!participant) {
-            // Create new DEFERRED participant
+            // Create new participant
             participant = await prisma_1.prisma.gameParticipant.create({
                 data: {
                     gameInstanceId,
                     userId,
-                    score: 0,
-                    participationType: 'DEFERRED',
-                    attemptCount: 1
+                    liveScore: 0,
+                    deferredScore: 0,
+                    nbAttempts: 1,
+                    status: 'ACTIVE'
                 }
             });
         }
         else {
-            // New attempt: increment attemptCount, reset score
-            participant = await prisma_1.prisma.gameParticipant.update({
-                where: { id: participant.id },
-                data: {
-                    attemptCount: { increment: 1 },
-                    score: 0
-                }
-            });
+            // Only reset score and increment attempts for tournament mode
+            if (mode === 'tournament') {
+                participant = await prisma_1.prisma.gameParticipant.update({
+                    where: { id: participant.id },
+                    data: {
+                        nbAttempts: { increment: 1 },
+                        deferredScore: 0
+                    }
+                });
+            }
+            // For quiz mode, do not reset score or increment attempts
         }
         return participant;
     }
@@ -71,8 +74,7 @@ class DifferedScoreService {
         let participant = await prisma_1.prisma.gameParticipant.findFirst({
             where: {
                 gameInstanceId,
-                userId,
-                participationType: 'DEFERRED'
+                userId
             }
         });
         if (!participant)
@@ -80,7 +82,7 @@ class DifferedScoreService {
         // Always replace score for DEFERRED, but you can keep best in Redis if needed
         participant = await prisma_1.prisma.gameParticipant.update({
             where: { id: participant.id },
-            data: { score }
+            data: { deferredScore: score }
         });
         return participant;
     }
@@ -91,13 +93,12 @@ class DifferedScoreService {
         const participant = await prisma_1.prisma.gameParticipant.findFirst({
             where: {
                 gameInstanceId,
-                userId,
-                participationType: 'DEFERRED'
+                userId
             }
         });
         if (!participant)
             throw new Error('Participant not found');
-        return { score: participant.score, attemptCount: participant.attemptCount };
+        return { score: participant.liveScore || participant.deferredScore, attemptCount: participant.nbAttempts };
     }
     /**
      * Submit an answer and update score for a participant (delegates to ScoringService)
@@ -115,22 +116,21 @@ class DifferedScoreService {
             const participant = await prisma_1.prisma.gameParticipant.findFirst({
                 where: {
                     gameInstanceId,
-                    userId,
-                    participationType: 'DEFERRED'
+                    userId
                 },
                 include: { user: true }
             });
             if (!participant) {
-                logger.error({ gameInstanceId, userId }, 'No deferred participant found for finalization');
+                logger.error({ gameInstanceId, userId }, 'No participant found for finalization');
                 return { success: false, error: 'Participant not found' };
             }
             const redisKey = `mathquest:deferred:best_score:${gameInstanceId}:${userId}`;
             const previousBestScore = await redis_1.redisClient.get(redisKey);
-            const bestScore = Math.max(currentAttemptScore, previousBestScore ? parseInt(previousBestScore) : 0, participant.score || 0);
+            const bestScore = Math.max(currentAttemptScore, previousBestScore ? parseInt(previousBestScore) : 0, participant.deferredScore || 0);
             await redis_1.redisClient.set(redisKey, bestScore.toString());
             const updatedParticipant = await prisma_1.prisma.gameParticipant.update({
                 where: { id: participant.id },
-                data: { score: bestScore },
+                data: { deferredScore: bestScore },
                 include: { user: true }
             });
             logger.info({
@@ -140,7 +140,7 @@ class DifferedScoreService {
                 currentAttemptScore,
                 previousBestScore: previousBestScore ? parseInt(previousBestScore) : 0,
                 finalBestScore: bestScore,
-                attemptCount: participant.attemptCount
+                attemptCount: participant.nbAttempts
             }, 'Finalized deferred tournament attempt with best score');
             return {
                 success: true,

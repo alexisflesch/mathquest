@@ -16,7 +16,8 @@ import {
     gameJoinedPayloadSchema,
     participantDataSchema,
     questionDataSchema,
-    leaderboardEntryDataSchema
+    leaderboardEntryDataSchema,
+    questionDataForStudentSchema
 } from '@shared/types/socketEvents.zod';
 
 import {
@@ -132,6 +133,7 @@ export const SocketSchemas = {
     error: errorPayloadSchema,
     participant: participantDataSchema,
     question: questionDataSchema,
+    studentQuestion: questionDataForStudentSchema,
     leaderboard: leaderboardEntryDataSchema,
 
     // Outgoing events (from client to server)

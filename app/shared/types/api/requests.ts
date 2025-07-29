@@ -19,6 +19,8 @@ export type {
     GameStatusUpdateRequest,
     CreateGameTemplateRequest,
     UpdateGameTemplateRequest,
+    RenameGameTemplateRequest,
+    RenameGameInstanceRequest,
     CreateQuestionRequest,
     UpdateQuestionRequest,
     UpdateUserRequest,
@@ -41,6 +43,8 @@ export {
     GameStatusUpdateRequestSchema,
     CreateGameTemplateRequestSchema,
     UpdateGameTemplateRequestSchema,
+    RenameGameTemplateRequestSchema,
+    RenameGameInstanceRequestSchema,
     CreateQuestionRequestSchema,
     UpdateQuestionRequestSchema,
     UpdateUserRequestSchema,
@@ -76,7 +80,6 @@ export interface GameCreationRequest {
     gameTemplateId: string;
     playMode: PlayMode | string; // Allow both for flexibility during migration
     settings?: any;
-    isDiffered?: boolean;
     differedAvailableFrom?: string;
     differedAvailableTo?: string;
     // Additional fields used in the backend

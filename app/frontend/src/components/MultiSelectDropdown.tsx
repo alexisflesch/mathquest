@@ -69,60 +69,70 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
 
     return (
         <div className={`w-full flex flex-col gap-2 ${className}`}>
-            {label && <label className="font-bold text-lg mb-1">{label}</label>}
+            {label && (
+                <label
+                    className="font-bold text-lg mb-1 text-dropdown-foreground"
+                >
+                    {label}
+                </label>
+            )}
             <div className="relative w-full" ref={dropdownRef}>
                 <button
-                    className="border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 w-full transition-colors"
+                    className="border border-dropdown-border hover:border-dropdown-border-hover bg-dropdown text-dropdown px-3 py-2 w-full transition-colors"
                     style={{ borderRadius: 'var(--radius)' }}
                     onClick={e => { e.preventDefault(); if (!disabled) setOpen(o => !o); }}
                     type="button"
                     disabled={disabled}
                 >
                     <div className="flex items-center justify-between w-full">
-                        <span className={`${(selected?.length ?? 0) === 0 ? "text-gray-500" : "text-gray-900 dark:text-gray-100"} truncate flex-1 text-left text-sm`}>
+                        <span
+                            className={`truncate flex-1 text-left text-sm ${(selected?.length ?? 0) === 0
+                                ? 'text-placeholder-foreground'
+                                : 'text-dropdown-foreground'
+                                }`}
+                        >
                             {(selected?.length ?? 0) === 0 ? placeholder : (selected || []).join(", ")}
                         </span>
                         <ChevronDown
                             size={16}
-                            className="ml-2 flex-shrink-0 text-gray-500"
+                            className="ml-2 flex-shrink-0 text-placeholder-foreground"
                             style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
                         />
                     </div>
                 </button>
                 <div
-                    className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg mt-1 max-h-60 overflow-y-auto"
+                    className="absolute z-10 bg-dropdown text-dropdown-foreground border border-dropdown-border shadow-lg mt-1 max-h-60 overflow-y-auto"
                     style={{
                         display: open ? 'block' : 'none',
                         left: '0',
                         minWidth: '100%',
                         width: 'max-content',
-                        maxWidth: '300px', // Prevent extremely wide dropdowns
+                        maxWidth: '300px',
                         borderRadius: 'var(--radius)',
                     }}
                 >
-                    <style>{`
-                        .multi-dropdown-option:hover {
-                            background-color: #f3f4f6 !important;
-                        }
-                        .dark .multi-dropdown-option:hover {
-                            background-color: #374151 !important;
-                        }
-                    `}</style>
-                    {options.map((option) => (
-                        <label
-                            key={option}
-                            className={`multi-dropdown-option flex items-center px-3 py-2 cursor-pointer text-sm ${(selected ?? []).includes(option) ? 'bg-gray-100 dark:bg-gray-700 font-medium' : 'text-gray-900 dark:text-gray-100'}`}
-                            style={{ userSelect: 'none' }}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={(selected ?? []).includes(option)}
-                                onChange={() => handleToggle(option)}
-                                className="w-4 h-4 mr-2 text-gray-600 border-gray-300 rounded focus:ring-0 flex-shrink-0"
-                            />
-                            <span className="text-left">{option}</span>
-                        </label>
-                    ))}
+                    {options.map((option) => {
+                        const isSelected = (selected ?? []).includes(option);
+                        return (
+                            <label
+                                key={option}
+                                className={`multi-dropdown-option flex items-center px-3 py-2 cursor-pointer text-sm transition-colors
+                                    ${isSelected
+                                        ? 'bg-dropdown-hover font-medium text-dropdown-hover-foreground'
+                                        : 'text-dropdown-foreground hover:bg-dropdown-hover hover:text-dropdown-hover-foreground'}
+                                `}
+                                style={{ userSelect: 'none' }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => handleToggle(option)}
+                                    className="w-4 h-4 mr-2 text-dropdown-foreground border-dropdown-border bg-dropdown focus:ring-0 flex-shrink-0"
+                                />
+                                <span className="text-left">{option}</span>
+                            </label>
+                        );
+                    })}
                 </div>
             </div>
         </div>

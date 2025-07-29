@@ -19,7 +19,7 @@
  * This is a central component of the teacher's quiz management interface.
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import type { Question } from '@shared/types/core/question';
@@ -44,6 +44,7 @@ interface DraggableQuestionsListProps {
     onPause: () => void;
     onStop: () => void;
     onEditTimer: (uid: string, newTime: number) => void;
+    onResume: (uid: string) => void;
     onReorder?: (newQuestions: Question[]) => void;
     timerStatus?: 'run' | 'pause' | 'stop';
     timerQuestionUid?: string | null;
@@ -62,35 +63,54 @@ interface DraggableQuestionsListProps {
         questionUid: string;
         isActive: boolean;
     };
+    // Modernization: terminatedQuestions from backend (Record<string, boolean>)
+    terminatedQuestions?: Record<string, boolean>;
 }
 
-export default function DraggableQuestionsList({
-    quizId,
-    currentTournamentCode,
-    quizSocket,
-    questions,
-    currentQuestionIdx,
-    isChronoRunning,
-    isQuizEnded, // Although not directly used here, accept it if passed
-    questionActiveUid,
-    onSelect,
-    onPlay,
-    onPause,
-    onStop,
-    onEditTimer,
-    onReorder,
-    timerStatus,
-    timerQuestionUid,
-    timeLeftMs,
-    timerDurationMs, // Add to props
-    onTimerAction,
-    onImmediateUpdateActiveTimer,
-    disabled,
-    getStatsForQuestion,
-    expandedUids,
-    onToggleExpand,
-    getTimerState,
-}: DraggableQuestionsListProps) {
+export default React.memo(function DraggableQuestionsList(props: DraggableQuestionsListProps) {
+
+    // Re-render logging for performance monitoring
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [QUESTIONS-LIST-RERENDER] DraggableQuestionsList re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+
+    const {
+        quizId,
+        currentTournamentCode,
+        quizSocket,
+        questions,
+        currentQuestionIdx,
+        isChronoRunning,
+        isQuizEnded, // Although not directly used here, accept it if passed
+        questionActiveUid,
+        onSelect,
+        onPlay,
+        onPause,
+        onStop,
+        onEditTimer,
+        onResume,
+        onReorder,
+        timerStatus,
+        timerQuestionUid,
+        timeLeftMs,
+        timerDurationMs, // Add to props
+        onTimerAction,
+        onImmediateUpdateActiveTimer,
+        disabled,
+        getStatsForQuestion,
+        expandedUids,
+        onToggleExpand,
+        getTimerState,
+        terminatedQuestions,
+    } = props;
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
     //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionUid}, Time left: ${timeLeftMs}`);
@@ -201,37 +221,81 @@ export default function DraggableQuestionsList({
 
     // Pass canonical timer state to SortableQuestion
     return (
-        <ul className="draggable-questions-list">
+        <ul className="draggable-questions-list flex flex-col gap-3 sm:gap-4">
             {questions.map((q, idx) => {
                 const timer = getCanonicalTimer(q.uid);
+                // Use questionActiveUid for isActive, not just timer.isActive
+                const isActive = questionActiveUid === q.uid;
+                let className = '';
+                const isTerminated = !!(terminatedQuestions && terminatedQuestions[q.uid]);
+                logger.info(`[DEBUG][STATE] q.uid=${q.uid} | isActive=${isActive} | timer.status=${timer.status} | terminated=${isTerminated}`);
+                if (isActive) {
+                    if (isTerminated && timer.status === 'run') className = 'question-finished-active-running';
+                    else if (isTerminated && timer.status === 'pause') className = 'question-finished-active-paused';
+                    else if (isTerminated && timer.status === 'stop') className = 'question-finished-stopped';
+                    else if (timer.status === 'run') className = 'question-active-running';
+                    else if (timer.status === 'pause') className = 'question-active-paused';
+                    else if (timer.status === 'stop') className = 'question-active-stopped';
+                } else {
+                    if (isTerminated) className = 'question-finished';
+                    else className = 'question-pending';
+                }
+                logger.info(`[RENDER][DraggableQuestionsList] Rendering SortableQuestion: q.uid=${q.uid} className=${className} | timer.status=${timer.status} | isActive=${isActive}`);
                 return (
                     <SortableQuestion
                         key={q.uid}
                         q={q}
                         durationMs={timer.durationMs}
-                        isActive={timer.isActive}
+                        isActive={isActive}
                         open={expandedUids.has(q.uid)}
                         setOpen={() => onToggleExpand(q.uid)}
                         onPlay={(uid, timerValue) => {
-                            logger.info(`[DEBUG][DraggableQuestionsList] onPlay for ${uid} with timerValue (ms): ${timerValue}`);
-                            handlePlay(uid, timerValue);
+                            logger.info(`[ACTION][onPlay] uid=${uid} timerValue=${timerValue}`);
+                            onPlay(uid, timerValue);
                         }}
                         onEditTimer={(newTimeMs) => {
-                            logger.info(`[DEBUG][DraggableQuestionsList] onEditTimer for ${q.uid} with newTimeMs: ${newTimeMs}`);
+                            logger.info(`[ACTION][onEditTimer] q.uid=${q.uid} newTimeMs=${newTimeMs}`);
                             onEditTimer(q.uid, newTimeMs);
                         }}
-                        onPause={handlePause}
-                        onStop={handleStop}
-                        liveTimeLeft={timer.isActive ? timer.timeLeftMs : undefined}
-                        liveStatus={timer.isActive ? (['run', 'pause', 'stop'].includes(timer.status) ? timer.status as 'run' | 'pause' | 'stop' : undefined) : undefined}
+                        onPause={() => {
+                            logger.info(`[ACTION][onPause] q.uid=${q.uid}`);
+                            handlePause();
+                        }}
+                        onStop={() => {
+                            logger.info(`[ACTION][onStop] q.uid=${q.uid}`);
+                            handleStop();
+                        }}
+                        liveTimeLeft={isActive ? timer.timeLeftMs : undefined}
+                        liveStatus={isActive ? (['run', 'pause', 'stop'].includes(timer.status) ? timer.status as 'run' | 'pause' | 'stop' : undefined) : undefined}
                         onImmediateUpdateActiveTimer={handleImmediateUpdate}
                         disabled={disabled}
                         quizId={quizId}
                         currentTournamentCode={currentTournamentCode}
                         stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
+                        onResume={(uid) => {
+                            logger.info(`[ACTION][onResume] uid=${uid}`);
+                            onPlay(uid, 0);
+                        }}
+                        className={className}
                     />
                 );
             })}
         </ul>
     );
-}
+}, (prevProps, nextProps) => {
+    // Custom comparison function to debug which props are changing
+    const keys = Object.keys(nextProps) as Array<keyof DraggableQuestionsListProps>;
+    let hasChanges = false;
+
+    for (const key of keys) {
+        if (prevProps[key] !== nextProps[key]) {
+            logger.info(`🔄 [QUESTIONS-LIST-PROP-CHANGE] ${key} changed`, {
+                prev: typeof prevProps[key] === 'object' ? 'object' : prevProps[key],
+                next: typeof nextProps[key] === 'object' ? 'object' : nextProps[key]
+            });
+            hasChanges = true;
+        }
+    }
+
+    return !hasChanges; // Return true if props are equal (no re-render), false if changed (re-render)
+});

@@ -29,6 +29,7 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
 
             // Use accessCode or gameId to find the game
             let gameInstance;
+            let resolvedAccessCode = accessCode;
             if (accessCode) {
                 gameInstance = await prisma.gameInstance.findUnique({
                     where: { accessCode }
@@ -37,6 +38,9 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
                 gameInstance = await prisma.gameInstance.findUnique({
                     where: { id: gameId }
                 });
+                if (gameInstance) {
+                    resolvedAccessCode = gameInstance.accessCode;
+                }
             }
 
             if (!gameInstance) {
@@ -47,13 +51,43 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
                 return;
             }
 
-            // Prepare projection stats payload (no questionUid)
-            const projectionStatsPayload = {
+            // Persist the new showStats state
+            try {
+                const { updateProjectionDisplayState } = await import('@/core/services/gameStateService');
+                if (resolvedAccessCode) {
+                    await updateProjectionDisplayState(resolvedAccessCode, { showStats: show });
+                    logger.info({ showStats: show, resolvedAccessCode }, 'Persisted showStats state');
+                }
+            } catch (persistError) {
+                logger.error({ persistError, resolvedAccessCode }, 'Failed to persist showStats state');
+            }
+
+            // Prepare projection stats payload: fetch current question and stats if toggling ON
+            let projectionStatsPayload: any = {
                 show,
-                stats: show ? {} : {}, // No stats for global toggle, backend/projection can decide what to show
+                stats: {},
                 timestamp: Date.now()
             };
-
+            if (show) {
+                // Fetch current question UID and answer stats
+                const { getFullGameState } = await import('@/core/services/gameStateService');
+                const { getAnswerStats } = await import('./helpers');
+                const fullState = await getFullGameState(gameInstance.accessCode);
+                const gameState = fullState?.gameState;
+                let currentQuestionUid = null;
+                if (gameState && typeof gameState.currentQuestionIndex === 'number' && Array.isArray(gameState.questionUids)) {
+                    currentQuestionUid = gameState.questionUids[gameState.currentQuestionIndex] || null;
+                }
+                if (currentQuestionUid) {
+                    const answerStats = await getAnswerStats(gameInstance.accessCode, currentQuestionUid);
+                    projectionStatsPayload = {
+                        show,
+                        stats: answerStats || {},
+                        questionUid: currentQuestionUid,
+                        timestamp: Date.now()
+                    };
+                }
+            }
             // Emit to projection room
             io.to(`projection_${gameInstance.id}`).emit(PROJECTOR_EVENTS.PROJECTION_SHOW_STATS, projectionStatsPayload);
             logger.info({ projectionStatsPayload }, 'Emitted global projection stats toggle');

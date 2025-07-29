@@ -14,11 +14,56 @@ export type ClassementPodiumProps = {
     others: { userId?: string; name: string; score: number }[];
     zoomFactor?: number; // Add optional zoomFactor prop
     correctAnswers?: boolean[]; // Allow correctAnswers prop - changed to boolean[]
+    animate?: boolean; // NEW: Only animate when true
 };
 
 const medalEmojis = ['🥇', '🥈', '🥉'];
 
-export default function ClassementPodium({ top3, others, zoomFactor = 1, correctAnswers }: ClassementPodiumProps) { // Destructure zoomFactor with default
+// Custom comparison function to prevent unnecessary re-renders
+const arePropsEqual = (prevProps: ClassementPodiumProps, nextProps: ClassementPodiumProps): boolean => {
+    // Compare top3 array
+    if (prevProps.top3.length !== nextProps.top3.length) return false;
+    for (let i = 0; i < prevProps.top3.length; i++) {
+        const prev = prevProps.top3[i];
+        const next = nextProps.top3[i];
+        if (prev.userId !== next.userId ||
+            prev.name !== next.name ||
+            prev.avatarEmoji !== next.avatarEmoji ||
+            prev.score !== next.score) {
+            return false;
+        }
+    }
+
+    // Compare others array
+    if (prevProps.others.length !== nextProps.others.length) return false;
+    for (let i = 0; i < prevProps.others.length; i++) {
+        const prev = prevProps.others[i];
+        const next = nextProps.others[i];
+        if (prev.userId !== next.userId ||
+            prev.name !== next.name ||
+            prev.score !== next.score) {
+            return false;
+        }
+    }
+
+    // Compare other props
+    if (prevProps.zoomFactor !== nextProps.zoomFactor) return false;
+
+    // Only compare correctAnswers if both are defined (ignore changes when it's irrelevant)
+    if (prevProps.correctAnswers && nextProps.correctAnswers) {
+        if (prevProps.correctAnswers.length !== nextProps.correctAnswers.length) return false;
+        for (let i = 0; i < prevProps.correctAnswers.length; i++) {
+            if (prevProps.correctAnswers[i] !== nextProps.correctAnswers[i]) return false;
+        }
+    } else if (prevProps.correctAnswers !== nextProps.correctAnswers) {
+        // If one is undefined and the other isn't, they're different
+        return false;
+    }
+
+    return true;
+};
+
+function ClassementPodium({ top3, others, zoomFactor = 1, correctAnswers, animate = true }: ClassementPodiumProps) { // Destructure zoomFactor with default, animate default true
     const podiumOrder = [1, 0, 2];
     const podiumMargins = ['mb-4', 'mb-8', 'mb-0'];
 
@@ -41,16 +86,14 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
                     return (
                         <motion.div
                             key={user.userId || `player-${podiumIdx}`}
-                            // Utiliser une valeur relative à la hauteur du viewport
-                            initial={{ y: "-100vh", opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            // Utiliser une animation custom pour surmonter les limites du conteneur
-                            transition={{
-                                defaultMode: 'spring',
-                                bounce: 0.3,
-                                duration: 1.5,
+                            initial={animate ? { y: "-100vh", opacity: 0, scale: 1.2 } : false}
+                            animate={animate ? { y: 0, opacity: 1, scale: 1 } : false}
+                            transition={animate ? {
+                                type: 'spring',
+                                bounce: 0.45,
+                                duration: 1.9,
                                 delay: animationDelay
-                            }}
+                            } : {}}
                             className={`flex flex-col items-center justify-end ${zIndex} ${heightClass}`}
                             style={{
                                 flex: pos === 1 ? 1.2 : 1,
@@ -112,3 +155,6 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
         </div>
     );
 }
+
+// Export the memoized component to prevent unnecessary re-renders
+export default React.memo(ClassementPodium, arePropsEqual);

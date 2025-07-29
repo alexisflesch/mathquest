@@ -48,7 +48,7 @@ export async function joinRoom(socket: Socket, roomName: string, userData?: Reco
             room: roomName,
             timestamp: new Date().toISOString()
         };
-        socket.emit(SOCKET_EVENTS.LOBBY.ROOM_JOINED, roomJoinedPayload);
+        // socket.emit(SOCKET_EVENTS.LOBBY.ROOM_JOINED, roomJoinedPayload); // Modernized: handled by participant_list
     } catch (error) {
         logger.error({
             error,
@@ -90,7 +90,7 @@ export async function leaveRoom(socket: Socket, roomName: string): Promise<void>
             room: roomName,
             timestamp: new Date().toISOString()
         };
-        socket.emit(SOCKET_EVENTS.LOBBY.ROOM_LEFT, roomLeftPayload);
+        // socket.emit(SOCKET_EVENTS.LOBBY.ROOM_LEFT, roomLeftPayload); // Modernized: handled by participant_list
     } catch (error) {
         logger.error({
             error,

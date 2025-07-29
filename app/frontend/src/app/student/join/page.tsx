@@ -19,6 +19,7 @@
 
 "use client";
 import React, { useState } from "react";
+import InfoModal from '@/components/SharedModal';
 import { useRouter } from "next/navigation";
 import { makeApiRequest } from '@/config/api';
 import { GameJoinResponse } from '@/types/api';
@@ -29,6 +30,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed' | 'expired', message: string }>(null);
     const router = useRouter();
     const { userProfile } = useAuthState();
 
@@ -46,19 +48,20 @@ export default function StudentJoinPage() {
             }
 
             // First, get the game instance to check playMode
-            // Modernization: Use canonical Next.js API route
             const gameData = await makeApiRequest<{ gameInstance: any }>(`/api/games/${code}`);
             const gameInstance = gameData.gameInstance;
 
-            // Check if this is a practice session
+            if (!gameInstance) {
+                setModal({ type: 'notfound', message: "Ce code de tournoi n'existe pas." });
+                return;
+            }
+
             if (gameInstance.playMode === 'practice') {
-                // Redirect directly to practice session - no joining required
                 router.push(`/student/practice/${code}`);
                 return;
             }
 
             // For quiz/tournament games, proceed with join logic
-            // Modernization: Use canonical Next.js API route
             const data = await makeApiRequest<GameJoinResponse>(`/api/games/${code}/join`, {
                 method: 'POST',
                 body: JSON.stringify({ userId: userProfile.userId }),
@@ -67,27 +70,37 @@ export default function StudentJoinPage() {
             const status = game.status;
             const accessCode = game.accessCode || code;
 
-            // Strict naming: use only canonical GameStatus values
-            // Backend and frontend must use: 'pending', 'active', 'paused', 'completed', 'archived'
-            if (game.isDiffered) {
-                router.push(`/live/${accessCode}`);
-                return;
+            // A game is deferred when it's completed but still available for replay
+            if (game.status === 'completed' && game.differedAvailableTo) {
+                const now = new Date();
+                const availableUntil = new Date(game.differedAvailableTo);
+                if (availableUntil > now) {
+                    setModal({
+                        type: 'differed',
+                        message: "Ce tournoi est terminé. Vous pouvez le jouer en différé si vous le souhaitez."
+                    });
+                    return;
+                }
             }
-            if (status === 'pending') {
-                router.push(`/lobby/${accessCode}`);
-                return;
-            }
-            if (status === 'active') {
+            if (status === 'pending' || status === 'active') {
                 router.push(`/live/${accessCode}`);
                 return;
             }
             if (status === 'completed' || status === 'ended') {
-                router.push(`/live/${accessCode}?differed=1`);
+                setModal({
+                    type: 'differed',
+                    message: "Ce tournoi est terminé. Vous pouvez le jouer en différé si vous le souhaitez."
+                });
                 return;
             }
             setError(`Code erroné (status: ${status})`);
         } catch (err: any) {
-            setError(err?.message || "Code erroné");
+            const msg = err?.message || "Code erroné";
+            if (msg.includes('Tournament no longer available') || msg.includes('plus disponible')) {
+                setModal({ type: 'expired', message: "Ce tournoi différé n'est plus disponible." });
+            } else {
+                setModal({ type: 'notfound', message: msg });
+            }
         }
     };
 
@@ -98,7 +111,7 @@ export default function StudentJoinPage() {
                 className="card w-full max-w-md shadow-xl bg-base-100 my-6"
             >
                 <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl mb-4">Rejoindre une session</h1>
+                    <h1 className="card-title text-2xl mb-4">Rejoindre une activité</h1>
                     <input
                         className="input input-bordered input-lg w-full text-center tracking-widest"
                         type="tel"
@@ -106,7 +119,7 @@ export default function StudentJoinPage() {
                         pattern="[0-9]*"
                         maxLength={8}
                         minLength={4}
-                        placeholder="Code de la session"
+                        placeholder="Code de l'activité"
                         value={code}
                         onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
                         autoFocus
@@ -125,6 +138,70 @@ export default function StudentJoinPage() {
                     </button>
                 </div>
             </form>
+
+            {/* Modal for not found, differed, or expired mode */}
+            <InfoModal
+                isOpen={!!modal}
+                onClose={() => setModal(null)}
+                title={
+                    modal?.type === 'notfound'
+                        ? 'Code invalide'
+                        : modal?.type === 'expired'
+                            ? 'Tournoi différé expiré'
+                            : 'Tournoi terminé'
+                }
+                showCloseButton={false}
+                size="sm"
+            >
+                {modal?.type === 'notfound' && (
+                    <div className="dialog-modal-content gap-4">
+                        <span>Le code que vous avez saisi n'existe pas.</span>
+                        <div className="dialog-modal-actions">
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => setModal(null)}
+                            >
+                                Fermer
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {modal?.type === 'expired' && (
+                    <div className="dialog-modal-content gap-4">
+                        <span>{modal?.message}</span>
+                        <div className="dialog-modal-actions">
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => setModal(null)}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {modal?.type === 'differed' && (
+                    <div className="dialog-modal-content gap-4">
+                        <span>{modal?.message}</span>
+                        <div className="dialog-modal-actions">
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => setModal(null)}
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => {
+                                    setModal(null);
+                                    router.push(`/live/${code}?differed=1`);
+                                }}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </InfoModal>
         </div>
     );
 }

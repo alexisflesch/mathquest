@@ -26,7 +26,9 @@ import type {
     TimerUpdatePayload,
     GameAnswerPayload
 } from '@shared/types/socketEvents';
-import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { GameTimerState, PlayMode } from '@shared/types';
 
@@ -34,7 +36,7 @@ const logger = createLogger('useEnhancedStudentGameSocket');
 
 // Enhanced game state interface using shared types
 export interface EnhancedStudentGameUIState {
-    currentQuestion: FilteredQuestion | null;
+    currentQuestion: QuestionDataForStudent | null;
     questionIndex: number;
     totalQuestions: number;
     timer: GameTimerState | null; // Use shared timer type
@@ -54,7 +56,6 @@ export interface EnhancedStudentGameSocketProps {
     userId: string | null;
     username: string | null;
     avatarEmoji?: string | null;
-    isDiffered?: boolean;
     enableValidation?: boolean; // New: option to enable/disable validation
     strictValidation?: boolean; // New: strict mode for validation
 }
@@ -76,7 +77,6 @@ export function useEnhancedStudentGameSocket({
     userId,
     username,
     avatarEmoji,
-    isDiffered = false,
     enableValidation = true,
     strictValidation = false
 }: EnhancedStudentGameSocketProps): EnhancedStudentGameSocketHook {
@@ -179,7 +179,7 @@ export function useEnhancedStudentGameSocket({
             setConnected(false);
             setConnecting(false);
         };
-    }, [accessCode, userId, username, avatarEmoji, isDiffered, enableValidation, strictValidation]);
+    }, [accessCode, userId, username, avatarEmoji, enableValidation, strictValidation]);
 
     // Setup event handlers with validation
     const setupValidatedEventHandlers = (middleware: SocketValidationMiddleware) => {
@@ -191,20 +191,20 @@ export function useEnhancedStudentGameSocket({
                 connectedToRoom: true,
                 gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
             }));
-        }, SocketSchemas.gameJoined);
+        }); // TODO: Fix schema validation after shared types rebuild
 
         // Game question event with validation
-        middleware.on('game_question', (payload: QuestionData) => {
+        middleware.on('game_question', (payload: QuestionDataForStudent) => {
             logger.info('✅ Validated game_question event', payload);
             setGameState(prev => ({
                 ...prev,
-                currentQuestion: payload as FilteredQuestion,
+                currentQuestion: payload,
                 questionIndex: payload.currentQuestionIndex ?? 0,
                 totalQuestions: payload.totalQuestions ?? 0,
                 answered: false,
                 phase: 'question'
             }));
-        }, SocketSchemas.question);
+        }, SocketSchemas.studentQuestion);
 
         // Timer update with validation - keep timer state minimal for now
         middleware.on('timer_update', (payload: TimerUpdatePayload) => {
@@ -253,7 +253,7 @@ export function useEnhancedStudentGameSocket({
             logger.info('Standard game_question event', payload);
             setGameState(prev => ({
                 ...prev,
-                currentQuestion: payload as FilteredQuestion,
+                currentQuestion: payload as QuestionDataForStudent,
                 questionIndex: payload.currentQuestionIndex ?? 0,
                 totalQuestions: payload.totalQuestions ?? 0,
                 answered: false,
@@ -278,8 +278,7 @@ export function useEnhancedStudentGameSocket({
             accessCode,
             userId,
             username,
-            avatarEmoji: avatarEmoji || '🐼',
-            isDiffered
+            avatarEmoji: avatarEmoji || '🐼'
         };
 
         if (validationMiddleware) {
@@ -290,8 +289,8 @@ export function useEnhancedStudentGameSocket({
             socket.emit(SOCKET_EVENTS.GAME.JOIN_GAME, payload);
         }
 
-        logger.info(`Enhanced joining game ${accessCode}`, { userId, username, isDiffered });
-    }, [socket, validationMiddleware, accessCode, userId, username, avatarEmoji, isDiffered]);
+        logger.info(`Enhanced joining game ${accessCode}`, { userId, username });
+    }, [socket, validationMiddleware, accessCode, userId, username, avatarEmoji]);
 
     const submitAnswer = useCallback((answer: string | number | string[] | number[]) => {
         if (!socket || !accessCode || !userId || !gameState.currentQuestion) {

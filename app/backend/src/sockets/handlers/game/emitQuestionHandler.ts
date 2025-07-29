@@ -6,6 +6,9 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
+import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
+import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
+import { questionDataSchema } from '@shared/types/socketEvents.zod';
 
 const logger = createLogger('EmitQuestionHandler');
 
@@ -27,8 +30,8 @@ export function emitQuestionHandler(
             where: { accessCode },
             select: {
                 id: true,
+                status: true,
                 playMode: true,
-                isDiffered: true,
                 gameTemplateId: true
             }
         });
@@ -69,25 +72,29 @@ export function emitQuestionHandler(
         // Modern timer logic
         const canonicalTimerService = new CanonicalTimerService(redisClient);
         let timerPayload = null;
+        // Determine if this is a deferred (completed) tournament
+        const isDeferred = gameInstance.status === 'completed';
+
         logger.info({
             accessCode,
             userId,
             questionUid: targetQuestion.uid,
             playMode: gameInstance.playMode,
-            isDiffered: gameInstance.isDiffered
+            isDeferred: isDeferred
         }, '[TIMER_DEBUG] About to start timer in emitQuestionHandler');
+
         // Always reset and start timer for all modes except practice
-        if ((gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament') && !gameInstance.isDiffered) {
+        if ((gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament') && !isDeferred) {
             // Global timer for quiz and live tournament
-            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
-            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
-            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
+            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred);
+            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred);
+            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred);
             logger.info({
                 accessCode,
                 userId,
                 questionUid: targetQuestion.uid,
                 playMode: gameInstance.playMode,
-                isDiffered: gameInstance.isDiffered,
+                isDeferred: isDeferred,
                 elapsed
             }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler');
             timerPayload = {
@@ -98,19 +105,19 @@ export function emitQuestionHandler(
                 timestamp: Date.now() - elapsed,
                 localTimeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed
             };
-        } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
-            // Per-user session timer for differed tournaments
-            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
-            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
-            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
+        } else if (gameInstance.playMode === 'tournament' && isDeferred) {
+            // Per-user session timer for deferred tournaments
+            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred, userId);
+            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred, userId);
+            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, isDeferred, userId);
             logger.info({
                 accessCode,
                 userId,
                 questionUid: targetQuestion.uid,
                 playMode: gameInstance.playMode,
-                isDiffered: gameInstance.isDiffered,
+                isDeferred: isDeferred,
                 elapsed
-            }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler (differed)');
+            }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler (deferred)');
             timerPayload = {
                 status: 'play',
                 timeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed,
@@ -123,23 +130,75 @@ export function emitQuestionHandler(
             // No timer for practice mode
             timerPayload = null;
         }
-        // Prepare payload
+        // Modernized: Prepare canonical, flat payload for game_question
         const questionIndex = allQuestions.findIndex(q => q.questionUid === targetQuestion.uid);
         const totalQuestions = allQuestions.length;
-        const liveQuestionPayload = {
-            question: {
-                uid: targetQuestion.uid,
-                text: targetQuestion.text,
-                questionType: targetQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
-                answerOptions: targetQuestion.answerOptions || []
-            },
-            ...(timerPayload ? { timer: timerPayload } : {}),
-            questionIndex: questionIndex,
-            totalQuestions: totalQuestions,
-            questionState: 'active' as const
+        let filteredQuestion = filterQuestionForClient(targetQuestion);
+        // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+        if (filteredQuestion.timeLimit == null) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { timeLimit, ...rest } = filteredQuestion;
+            filteredQuestion = rest;
+        }
+        const canonicalPayload = {
+            ...filteredQuestion,
+            currentQuestionIndex: questionIndex,
+            totalQuestions: totalQuestions
         };
-        // Emit to the socket (or room as needed)
-        socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, liveQuestionPayload);
-        logger.info({ accessCode, userId, questionUid: targetQuestion.uid }, '[DEBUG] Emitted question to user');
+        // Use canonical student schema for student/game flows
+        const { questionDataForStudentSchema } = await import('@shared/types/socketEvents.zod');
+        const questionParseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+        if (!questionParseResult.success) {
+            logger.error({
+                errors: questionParseResult.error.errors,
+                canonicalPayload,
+                schema: 'questionDataForStudentSchema',
+                payloadKeys: Object.keys(canonicalPayload),
+                payload: canonicalPayload
+            }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+        } else {
+            socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, canonicalPayload);
+            logger.info({ accessCode, userId, questionUid: targetQuestion.uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to user (student flow)');
+        }
+
+        // [MODERNIZATION] Emit canonical stats for new question to both projection and dashboard rooms
+        const projectionRoom = `projection_${gameInstance.id}`;
+        const dashboardRoom = `dashboard_${gameInstance.id}`;
+        let answerStats = {};
+        let showStats = false;
+        try {
+            // Canonical: get stats for this question if any exist
+            const { getAnswerStats } = await import('../teacherControl/helpers');
+            answerStats = await getAnswerStats(accessCode, targetQuestion.uid);
+            // Defensive: always ensure answerStats is a non-null object
+            if (!answerStats || typeof answerStats !== 'object') answerStats = {};
+            showStats = answerStats && Object.keys(answerStats).length > 0;
+        } catch (err) {
+            logger.warn({ err, accessCode, questionUid: targetQuestion.uid }, '[PROJECTION] Could not fetch answer stats for new question, sending empty stats');
+            answerStats = {};
+            showStats = false;
+        }
+        // Canonical: use shared type and runtime validation for projection_show_stats event
+        const statsPayload: ProjectionShowStatsPayload = {
+            questionUid: targetQuestion.uid,
+            show: showStats,
+            stats: answerStats || {}, // Defensive: always non-null object
+            timestamp: Date.now()
+        };
+        // Validate at runtime before emitting
+        const statsParseResult = ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
+        if (!statsParseResult.success) {
+            logger.error({ errors: statsParseResult.error.errors, statsPayload }, '[PROJECTION] Invalid PROJECTION_SHOW_STATS payload, not emitting');
+        } else {
+            io.to(projectionRoom).emit(
+                "projection_show_stats",
+                statsPayload
+            );
+            io.to(dashboardRoom).emit(
+                "projection_show_stats",
+                statsPayload
+            );
+            logger.info({ projectionRoom, dashboardRoom, questionUid: targetQuestion.uid, showStats, answerStats }, '[PROJECTION] Emitted PROJECTION_SHOW_STATS (canonical stats) to both projection and dashboard rooms for new question');
+        }
     };
 }

@@ -13,11 +13,11 @@ model User {
   username               String
   email                  String?           @unique
   passwordHash           String?
-  avatarEmoji            String?
   createdAt              DateTime          @default(now())
   role                   UserRole
   resetToken             String?           @map("reset_token")
   resetTokenExpiresAt    DateTime?         @map("reset_token_expires_at")
+  avatarEmoji            String?
   studentProfile         StudentProfile?
   teacherProfile         TeacherProfile?
   initiatedGameInstances GameInstance[]    @relation("InitiatedGameInstancesByUser")
@@ -48,7 +48,7 @@ model Question {
   author           String?
   explanation      String?
   tags             String[]
-  timeLimit        Int?                      @map("time_limit_seconds")
+  timeLimit        Int                       @map("time_limit_seconds")
   isHidden         Boolean?                  @default(false) @map("is_hidden")
   createdAt        DateTime                  @default(now()) @map("created_at")
   updatedAt        DateTime                  @updatedAt @map("updated_at")
@@ -105,7 +105,6 @@ model GameInstance {
   endedAt               DateTime?         @map("ended_at")
   differedAvailableFrom DateTime?         @map("differed_available_from")
   differedAvailableTo   DateTime?         @map("differed_available_to")
-  isDiffered            Boolean           @default(false) @map("is_differed")
   gameTemplateId        String            @map("game_template_id")
   initiatorUserId       String?           @map("initiator_user_id")
   gameTemplate          GameTemplate      @relation(fields: [gameTemplateId], references: [id])
@@ -117,16 +116,29 @@ model GameInstance {
 }
 
 model GameParticipant {
-  id                String            @id @default(uuid())
-  gameInstanceId    String            @map("game_instance_id")
-  userId            String            @map("user_id")
-  score             Int               @default(0)
-  joinedAt          DateTime          @default(now()) @map("joined_at")
-  participationType ParticipationType @default(LIVE) @map("participation_type")
-  attemptCount      Int               @default(1) @map("attempt_count")
-  gameInstance      GameInstance      @relation(fields: [gameInstanceId], references: [id], onDelete: Cascade)
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String @id @default(uuid())
+  gameInstanceId String @map("game_instance_id")
+  userId         String @map("user_id")
 
+  // Unified scoring system - one participant record per user/game
+  liveScore     Int @default(0) @map("live_score")
+  deferredScore Int @default(0) @map("deferred_score")
+  nbAttempts    Int @default(0) @map("nb_attempts")
+
+  // Status tracking
+  status ParticipantStatus @default(PENDING) @map("status")
+
+  // Timestamps
+  joinedAt     DateTime  @default(now()) @map("joined_at")
+  lastActiveAt DateTime? @map("last_active_at")
+  completedAt  DateTime? @map("completed_at")
+
+  // Relations
+  gameInstance GameInstance @relation(fields: [gameInstanceId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // UNIQUE CONSTRAINT: One participant record per user per game (eliminates duplicates!)
+  @@unique([gameInstanceId, userId])
   @@map("game_participants")
 }
 
@@ -142,7 +154,9 @@ enum PlayMode {
   class
 }
 
-enum ParticipationType {
-  LIVE
-  DEFERRED
+enum ParticipantStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  LEFT
 }

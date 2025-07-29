@@ -70,7 +70,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     {/* Modal */}
                     <motion.div
                         ref={modalRef}
-                        className="relative bg-white rounded-lg shadow-lg w-full max-w-md border p-6 mx-4"
+                        className="relative bg-[color:var(--card)] text-[color:var(--foreground)] rounded-lg shadow-lg w-full max-w-md border border-[color:var(--border)] p-6 mx-4 dialog-modal-content"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
@@ -89,24 +89,22 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         </div>
 
                         {/* Content */}
-                        <p className="text-gray-700 mb-6">{message}</p>
+                        <p className="mb-6">{message}</p>
 
                         {/* Actions */}
-                        <div className="flex justify-end gap-3">
+                        <div className="dialog-modal-actions">
                             <button
                                 onClick={onCancel}
                                 disabled={isLoading}
-                                className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+                                className="dialog-modal-btn"
                             >
                                 {cancelText}
                             </button>
                             <button
                                 onClick={onConfirm}
                                 disabled={isLoading}
-                                className={`px-4 py-2 rounded-lg text-white transition disabled:opacity-50 ${type === 'danger' ? 'bg-red-600 hover:bg-red-700' :
-                                    type === 'warning' ? 'bg-yellow-600 hover:bg-yellow-700' :
-                                        'bg-blue-600 hover:bg-blue-700'
-                                    }`}
+                                className="dialog-modal-btn"
+                                style={type === 'danger' ? { borderColor: 'var(--alert)', color: 'var(--alert)' } : type === 'warning' ? { borderColor: 'var(--warning)', color: 'var(--warning)' } : {}}
                             >
                                 {isLoading ? 'Loading...' : confirmText}
                             </button>

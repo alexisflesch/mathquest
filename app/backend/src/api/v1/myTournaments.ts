@@ -49,7 +49,6 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                         createdAt: true,
                         startedAt: true,
                         endedAt: true,
-                        isDiffered: true,
                         differedAvailableFrom: true,
                         differedAvailableTo: true,
                         initiatorUser: {
@@ -83,8 +82,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                     } else if (game.status === 'active') {
                         // Check if it's still available in deferred mode
                         const now = new Date();
-                        const isStillAvailable = game.isDiffered &&
-                            game.differedAvailableTo &&
+                        const isStillAvailable = game.differedAvailableTo &&
                             new Date(game.differedAvailableTo) > now;
 
                         if (isStillAvailable) {
@@ -144,7 +142,6 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                             createdAt: true,
                             startedAt: true,
                             endedAt: true,
-                            isDiffered: true,
                             differedAvailableFrom: true,
                             differedAvailableTo: true,
                             initiatorUser: {
@@ -167,7 +164,9 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                                     userId: targetUserId
                                 },
                                 select: {
-                                    score: true
+                                    liveScore: true,
+                                    deferredScore: true,
+                                    status: true
                                 }
                             });
                             return { gameId: game.id, participant };
@@ -178,6 +177,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                     participatedGames.forEach(game => {
                         const participantInfo = participantData.find(p => p.gameId === game.id);
                         const participation = participantInfo?.participant;
+                        const isDeferred = participation?.status === 'ACTIVE' && game.status === 'completed';
                         const tournament = {
                             id: game.id,
                             code: game.accessCode,
@@ -189,7 +189,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                             date_fin: game.endedAt?.toISOString() || null,
                             creatorUsername: game.initiatorUser?.username || 'Inconnu',
                             position: 0, // Rank removed - would need to calculate from leaderboard if needed
-                            score: participation?.score || 0
+                            score: isDeferred ? (participation?.deferredScore || 0) : (participation?.liveScore || 0)
                         };
 
                         if (game.status === 'pending') {
@@ -197,8 +197,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                         } else if (game.status === 'active') {
                             // Check if it's still available in deferred mode
                             const now = new Date();
-                            const isStillAvailable = game.isDiffered &&
-                                game.differedAvailableTo &&
+                            const isStillAvailable = game.differedAvailableTo &&
                                 new Date(game.differedAvailableTo) > now;
 
                             if (isStillAvailable) {

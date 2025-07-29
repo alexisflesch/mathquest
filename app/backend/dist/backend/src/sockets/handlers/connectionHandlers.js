@@ -9,7 +9,6 @@ const lobbyHandler_1 = require("./lobbyHandler");
 const gameHandler_1 = __importDefault(require("./gameHandler"));
 const teacherControlHandler_1 = __importDefault(require("./teacherControlHandler"));
 const tournament_1 = require("./tournament");
-const disconnectHandler_1 = require("./disconnectHandler");
 const practiceSessionHandler_1 = require("./practiceSessionHandler");
 const projectionHandler_1 = require("./projectionHandler");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
@@ -23,6 +22,12 @@ const logger = (0, logger_1.default)('ConnectionHandlers');
 function registerConnectionHandlers(io) {
     io.on('connection', (socket) => {
         logger.info('[SOCKET DEBUG] New socket connection:', socket.id);
+        console.log('[SOCKET DEBUG] New socket connection:', socket.id, {
+            handshake: socket.handshake,
+            headers: socket.handshake.headers,
+            auth: socket.handshake.auth,
+            query: socket.handshake.query
+        });
         // TOP-LEVEL: Log all events received by any socket for deep debugging
         socket.onAny((event, ...args) => {
             logger.info('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);
@@ -32,8 +37,7 @@ function registerConnectionHandlers(io) {
         socket.on('disconnect', (reason) => {
             // Handle practice session cleanup first
             (0, practiceSessionHandler_1.handlePracticeSessionDisconnect)(io, socket);
-            // Then handle normal disconnect
-            (0, disconnectHandler_1.disconnectHandler)(io, socket)(reason);
+            // Note: Game-specific disconnect handler is registered in game/index.ts
         });
         // Register feature-specific handlers
         (0, lobbyHandler_1.registerLobbyHandlers)(io, socket);

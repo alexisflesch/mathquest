@@ -34,12 +34,31 @@ import type {
 // Define LeaderboardEntryData for this file's usage
 type LeaderboardEntryData = LeaderboardEntry;
 
+// ===== UNIFIED JOIN EVENT PAYLOAD =====
+
+/**
+ * Unified payload for joining a game (replaces separate lobby and game join events)
+ * Used for both lobby and live game joining in the new unified flow
+ */
 export interface JoinGamePayload {
     accessCode: string;
     userId: string;
     username: string;
     avatarEmoji?: string;
-    isDiffered?: boolean; // For joining a differed mode game
+}
+
+// ===== LEGACY EVENT PAYLOADS (DEPRECATED) =====
+// These will be removed after the unified join flow is implemented
+
+/**
+ * @deprecated Use JoinGamePayload instead
+ * Payload for joining a game lobby
+ */
+export interface JoinLobbyPayload {
+    accessCode: string;
+    userId: string;
+    username: string;
+    avatarEmoji?: string;
 }
 
 // Re-export core types for backward compatibility
@@ -78,7 +97,6 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData; // Detailed information about the participant who joined
     gameStatus: 'pending' | 'active' | 'completed' | 'archived'; // Current status of the game
-    isDiffered: boolean;
     differedAvailableFrom?: string; // ISO string
     differedAvailableTo?: string;   // ISO string
     // Potentially include initial game state info here if needed immediately on join
@@ -135,19 +153,8 @@ export interface QuestionData {
     explanation?: string; // Question explanation
 }
 
-// ===== Lobby Event Payloads =====
-
 /**
- * Payload for joining a game lobby
- */
-export interface JoinLobbyPayload {
-    accessCode: string;
-    userId: string;
-    username: string;
-    avatarEmoji?: string;
-}
-
-/**
+ * @deprecated Use JoinGamePayload instead
  * Payload for leaving a game lobby
  */
 export interface LeaveLobbyPayload {
@@ -156,6 +163,7 @@ export interface LeaveLobbyPayload {
 }
 
 /**
+ * @deprecated Use JoinGamePayload instead
  * Payload for requesting participants list
  */
 export interface GetParticipantsPayload {
@@ -223,6 +231,11 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
     update_tournament_code: (payload: { gameId: string; newCode: string }) => void;
     // Tournament events
     join_tournament: (payload: { code: string; username?: string; avatar?: string; isDeferred?: boolean; userId?: string; classId?: string; cookieId?: string }) => void;
+    /**
+     * [LEGACY, to be modernized] Start tournament (creator only)
+     * This is required for now for the live page start button. Remove when backend/contract is modernized.
+     */
+    start_tournament: (payload: { accessCode: string }) => void;
     // Add other client-to-server events here
 }
 
@@ -239,6 +252,9 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     player_joined_game: (payload: PlayerJoinedGamePayload) => void; // Updated to use PlayerJoinedGamePayload
     player_left_game: (payload: { userId: string; socketId: string }) => void; // Broadcast when a player leaves
     game_participants: (payload: { participants: ParticipantData[] }) => void; // Full list of participants
+
+    // Lobby events
+    participants_list: (payload: import('./lobbyParticipantListPayload').LobbyParticipantListPayload) => void; // Canonical lobby participants list
 
     // Game control events
     game_control_question_set: (payload: { questionIndex: number; timer: any }) => void;
@@ -272,6 +288,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     projector_state: (payload: any) => void;
 
     projection_leaderboard_update: (payload: import('./socket/projectionLeaderboardUpdatePayload').ProjectionLeaderboardUpdatePayload) => void;
+    projection_show_stats: (payload: import('./socket/projectionShowStats').ProjectionShowStatsPayload) => void;
 
     // Add other server-to-client events here
 }

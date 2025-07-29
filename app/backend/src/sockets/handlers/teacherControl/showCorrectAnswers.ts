@@ -4,6 +4,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { ShowCorrectAnswersPayload } from '@shared/types/socket/payloads';
 import createLogger from '@/utils/logger';
 import { updateProjectionDisplayState, getFullGameState } from '@/core/services/gameStateService';
+import { getCorrectAnswersDisplayTime, getFeedbackDisplayTime } from '@shared/constants/gameTimings';
 
 // Create a handler-specific logger
 const logger = createLogger('ShowCorrectAnswersHandler');
@@ -18,6 +19,18 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
             logger.info({ socketId: socket.id, payload }, 'Teacher requesting to show correct answers');
 
             const { gameId, accessCode, teacherId } = payload;
+
+            // Validate accessCode and questionUid with Zod
+            const { z } = await import('zod');
+            const accessCodeSchema = z.string().min(1);
+
+            if (!accessCodeSchema.safeParse(accessCode).success) {
+                logger.error({ socketId: socket.id, payload }, 'Invalid accessCode');
+                socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
+                    error: 'Invalid access code'
+                });
+                return;
+            }
 
             // Use accessCode or gameId to find the game
             let gameInstance;
@@ -70,9 +83,11 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
 
             if (!currentQuestionUid) {
                 logger.error({ socketId: socket.id, accessCode: gameInstance.accessCode }, 'No current question set in game state');
-                socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                    error: 'No current question set in game state'
-                });
+                const errorPayload: import('@shared/types/socketEvents').ErrorPayload = {
+                    code: 'NO_CURRENT_QUESTION',
+                    message: "Le quiz n'a pas encore commencé"
+                };
+                socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, errorPayload);
                 return;
             }
 
@@ -91,10 +106,36 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
 
             const question = questionWrapper.question;
 
-            // Prepare correct answers payload for students
+            // Validate questionUid with Zod
+            const questionUidSchema = z.string().min(1);
+            if (!questionUidSchema.safeParse(question.uid).success) {
+                logger.error({ socketId: socket.id, questionUid: question.uid }, 'Invalid questionUid');
+                socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
+                    error: 'Invalid questionUid'
+                });
+                return;
+            }
+
+
+            // --- MODERNIZATION: Fetch terminated questions from Redis and build map ---
+            let terminatedQuestions: Record<string, boolean> = {};
+            try {
+                const terminatedKey = `mathquest:game:terminatedQuestions:${gameInstance.accessCode}`;
+                const terminatedSet = await (await import('@/config/redis')).redisClient.smembers(terminatedKey);
+                if (Array.isArray(terminatedSet)) {
+                    terminatedSet.forEach((uid: string) => {
+                        terminatedQuestions[uid] = true;
+                    });
+                }
+            } catch (err) {
+                logger.error({ err }, 'Failed to fetch terminated questions from Redis');
+            }
+
+            // Prepare correct answers payload for students and dashboard
             const correctAnswersPayload = {
                 questionUid: question.uid,
-                correctAnswers: question.correctAnswers || []
+                correctAnswers: question.correctAnswers || [],
+                terminatedQuestions
             };
 
             // Prepare projection-specific payload with additional context
@@ -132,8 +173,152 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
                 statePersisted: true
             }, 'Emitted correct answers to projection room and persisted state');
 
-            // TODO: Mark question as "closed" in game state if needed
-            // This could involve updating Redis game state to track question status
+            // Emit to dashboard room so teacher UI updates trophy state
+            const dashboardRoom = `dashboard_${gameInstance.id}`;
+
+            // --- MODERNIZATION: Track terminated questions in Redis ---
+            // Use canonical key: mathquest:game:terminatedQuestions:{accessCode}
+            const { redisClient } = await import('@/config/redis');
+            const terminatedKey = `mathquest:game:terminatedQuestions:${gameInstance.accessCode}`;
+            await redisClient.sadd(terminatedKey, question.uid);
+            logger.info({ terminatedKey, questionUid: question.uid }, 'Marked question as terminated in Redis');
+
+            // Re-fetch the set, but also optimistically add the just-terminated question
+            let updatedTerminatedQuestions: Record<string, boolean> = {};
+            try {
+                const updatedSet = await redisClient.smembers(terminatedKey);
+                if (Array.isArray(updatedSet)) {
+                    updatedSet.forEach((uid: string) => {
+                        updatedTerminatedQuestions[uid] = true;
+                    });
+                }
+            } catch (err) {
+                logger.error({ err }, 'Failed to fetch updated terminated questions from Redis');
+            }
+            // Optimistically add the just-terminated questionUid
+            updatedTerminatedQuestions[question.uid] = true;
+
+            // Emit to dashboard room with up-to-date terminatedQuestions map
+            io.to(dashboardRoom).emit(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, { show: true, terminatedQuestions: updatedTerminatedQuestions });
+            logger.info({
+                dashboardRoom,
+                show: true,
+                event: SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS
+            }, '[TROPHY_DEBUG] Emitted show_correct_answers to dashboard room (after Redis update, optimistic)');
+
+            // Automatic progression logic - handle feedback timing and next question
+            const handleAutomaticProgression = async () => {
+                try {
+                    // Two separate timing concerns:
+                    // 1. Time to show correct answers before proceeding (1.5s for all modes)
+                    const correctAnswersDisplayTime = getCorrectAnswersDisplayTime(gameInstance.playMode);
+                    
+                    // 2. Feedback display duration (from question or default to 5s)
+                    const feedbackDisplayTime = getFeedbackDisplayTime(question.feedbackWaitTime);
+
+                    logger.info({
+                        questionUid: question.uid,
+                        correctAnswersDisplayTime,
+                        feedbackDisplayTime,
+                        playMode: gameInstance.playMode,
+                        questionFeedbackWaitTime: question.feedbackWaitTime
+                    }, '[TROPHY_DEBUG] Starting automatic progression with proper timing constants');
+
+                    // Wait for correct answers display duration
+                    await new Promise((resolve) => setTimeout(resolve, correctAnswersDisplayTime * 1000));
+
+                    // Emit feedback event if there's an explanation
+                    if (question.explanation) {
+                        const feedbackPayload = {
+                            questionUid: question.uid,
+                            feedbackRemaining: feedbackDisplayTime,
+                            explanation: question.explanation
+                        };
+
+                        io.to(gameRoom).emit('feedback', feedbackPayload);
+                        logger.info({
+                            accessCode: gameInstance.accessCode,
+                            questionUid: question.uid,
+                            hasExplanation: true,
+                            feedbackDisplayTime
+                        }, '[TROPHY_DEBUG] Emitted feedback with explanation');
+
+                        // Wait for feedback display duration
+                        await new Promise((resolve) => setTimeout(resolve, feedbackDisplayTime * 1000));
+                    }
+
+                    // Check if there's a next question to auto-advance to
+                    const currentIndex = gameState?.currentQuestionIndex ?? -1;
+                    const allQuestions = gameInstance.gameTemplate.questions;
+
+                    if (currentIndex >= 0 && currentIndex < allQuestions.length - 1) {
+                        // There is a next question - auto advance
+                        const nextIndex = currentIndex + 1;
+                        const nextQuestion = allQuestions[nextIndex];
+
+                        logger.info({
+                            accessCode: gameInstance.accessCode,
+                            currentIndex,
+                            nextIndex,
+                            nextQuestionUid: nextQuestion.question.uid
+                        }, '[TROPHY_DEBUG] Auto-advancing to next question');
+
+                        // Update game state to next question
+                        const { updateGameState, getFullGameState } = await import('@/core/services/gameStateService');
+                        const currentFullState = await getFullGameState(gameInstance.accessCode);
+                        if (currentFullState && currentFullState.gameState) {
+                            const updatedGameState = {
+                                ...currentFullState.gameState,
+                                currentQuestionIndex: nextIndex
+                            };
+                            await updateGameState(gameInstance.accessCode, updatedGameState);
+                        }
+
+                        // Use emitQuestionHandler to emit the next question to all players
+                        const { emitQuestionHandler } = await import('../game/emitQuestionHandler');
+
+                        // Create a temporary socket for the emission (teacher initiating)
+                        const emitQuestion = emitQuestionHandler(io, socket);
+
+                        // Emit to all participants in the game
+                        const participants = await prisma.gameParticipant.findMany({
+                            where: { gameInstanceId: gameInstance.id },
+                            include: { user: true }
+                        });
+
+                        for (const participant of participants) {
+                            await emitQuestion({
+                                accessCode: gameInstance.accessCode,
+                                userId: participant.userId,
+                                questionUid: nextQuestion.question.uid
+                            });
+                        }
+
+                        logger.info({
+                            accessCode: gameInstance.accessCode,
+                            nextQuestionUid: nextQuestion.question.uid,
+                            participantCount: participants.length
+                        }, '[TROPHY_DEBUG] Successfully emitted next question to all participants');
+
+                    } else {
+                        logger.info({
+                            accessCode: gameInstance.accessCode,
+                            currentIndex,
+                            totalQuestions: allQuestions.length
+                        }, '[TROPHY_DEBUG] No next question available - game completed or staying on current question');
+                    }
+
+                } catch (error) {
+                    logger.error({
+                        accessCode: gameInstance.accessCode,
+                        questionUid: question.uid,
+                        error
+                    }, '[TROPHY_DEBUG] Error in automatic progression');
+                }
+            };
+
+            // Start automatic progression in background (don't await to avoid blocking response)
+            handleAutomaticProgression();
 
             logger.info({
                 socketId: socket.id,

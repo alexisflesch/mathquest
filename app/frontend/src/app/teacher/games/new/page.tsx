@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import QuestionDisplay from '@/components/QuestionDisplay';
 import type { Question } from '@shared/types/core/question'; // Use canonical shared type
 import Link from 'next/link';
@@ -28,8 +29,9 @@ import {
     useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, ShoppingCart, X, Clock } from 'lucide-react';
+import { GripVertical, ShoppingCart, X, Clock, Check } from 'lucide-react';
 import Snackbar from '@/components/Snackbar';
+import InfoModal from '@/components/SharedModal';
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
@@ -106,12 +108,17 @@ export default function CreateActivityPage() {
     const [activityName, setActivityName] = useState('');
     const [savingActivity, setSavingActivity] = useState(false);
 
-    // Snackbar states
+    // Snackbar states (only for errors now)
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('error');
+
+    // Success modal states
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [createdActivityName, setCreatedActivityName] = useState('');
 
     const { teacherId, userState, userProfile, isTeacher } = useAuth();
+    const router = useRouter();
 
     // Enhanced filter state with compatibility information
     const [filters, setFilters] = useState<EnhancedFilters>({
@@ -409,9 +416,9 @@ export default function CreateActivityPage() {
                 throw new Error('Failed to create game template - no ID returned');
             }
 
-            setSnackbarMessage(`Activité "${activityName}" créée avec succès !`);
-            setSnackbarType('success');
-            setSnackbarOpen(true);
+            // Show success modal instead of snackbar
+            setCreatedActivityName(activityName);
+            setShowSuccessModal(true);
             setActivityName('');
             setSelectedQuestions([]);
             setActivityMeta({ levels: [], themes: [] });
@@ -457,7 +464,7 @@ export default function CreateActivityPage() {
     // }, [filters.levels, filters.disciplines, filters.themes, filters.authors]); // Only depend on the actual filter arrays
 
     return (
-        <div className="h-screen bg-background flex flex-col overflow-hidden">
+        <div className="teacher-content-flex">
             {/* Header */}
             <div className="bg-background border-b border-[color:var(--border)] px-4 sm:px-6 lg:px-8 flex-shrink-0">
                 <div className="max-w-7xl mx-auto py-4 sm:py-6">
@@ -638,7 +645,7 @@ export default function CreateActivityPage() {
                                 onClick={handleSaveActivity}
                                 disabled={savingActivity || selectedQuestions.length === 0 || !activityName.trim()}
                             >
-                                {savingActivity ? 'Sauvegarde...' : 'Sauvegarder l\'activité'}
+                                {savingActivity ? 'Sauvegarde...' : 'Sauvegarder'}
                             </button>
                         </div>
                     </div>
@@ -780,7 +787,40 @@ export default function CreateActivityPage() {
                 )}
             </div>
 
-            {/* Success/Error Messages */}
+            {/* Success Modal */}
+            <InfoModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                title={
+                    <div className="flex items-center gap-3 justify-center">
+                        <Check size={24} />
+                        <span>Activité créée</span>
+                    </div>
+                }
+                size="sm"
+            >
+                <div className="dialog-modal-content">
+                    <p className="text-[color:var(--foreground)] mb-4">
+                        L'activité <strong>"{createdActivityName}"</strong> a été créée avec succès.
+                    </p>
+                    <div className="dialog-modal-actions">
+                        <button
+                            className="dialog-modal-btn"
+                            onClick={() => setShowSuccessModal(false)}
+                        >
+                            Fermer
+                        </button>
+                        <button
+                            className="dialog-modal-btn"
+                            onClick={() => router.push('/teacher/games')}
+                        >
+                            Voir
+                        </button>
+                    </div>
+                </div>
+            </InfoModal>
+
+            {/* Error Messages Only */}
             <Snackbar
                 open={snackbarOpen}
                 message={snackbarMessage}

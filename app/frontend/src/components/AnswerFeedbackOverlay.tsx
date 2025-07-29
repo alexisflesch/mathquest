@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BookOpenCheck, CheckCircle, XCircle, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import MathJaxWrapper from "./MathJaxWrapper";
 
 interface AnswerFeedbackOverlayProps {
     explanation: string;
@@ -129,7 +130,9 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
                         </div>
                     )}
 
-                    <p className="feedback-text mb-3 p-2">{explanation}</p>
+                    <MathJaxWrapper>
+                        <p className="feedback-text mb-3 p-2">{explanation}</p>
+                    </MathJaxWrapper>
                 </div>
             </div>
         </div>

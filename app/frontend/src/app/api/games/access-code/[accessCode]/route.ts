@@ -34,9 +34,11 @@ export async function GET(
         );
 
         logger.info('Game instance fetched successfully', {
-            gameId: response.gameInstance.id,
             accessCode: response.gameInstance.accessCode,
-            status: response.gameInstance.status
+            status: response.gameInstance.status,
+            playMode: response.gameInstance.playMode,
+            linkedQuizId: response.gameInstance.linkedQuizId,
+            name: response.gameInstance.name
         });
 
         return NextResponse.json(response);

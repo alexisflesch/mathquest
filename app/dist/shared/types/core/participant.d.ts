@@ -13,6 +13,20 @@ export declare enum ParticipationType {
     DEFERRED = "DEFERRED"
 }
 /**
+ * Participant status enum for unified join flow
+ * Tracks the participant's current state in the game lifecycle
+ */
+export declare enum ParticipantStatus {
+    /** Participant is in the lobby waiting for game to start */
+    PENDING = "PENDING",
+    /** Participant is actively playing the game */
+    ACTIVE = "ACTIVE",
+    /** Participant has completed the game */
+    COMPLETED = "COMPLETED",
+    /** Participant left before game started */
+    LEFT = "LEFT"
+}
+/**
  * Base participant interface with core properties
  * Used as foundation for all participant-related types
  */
@@ -25,20 +39,6 @@ export interface BaseParticipant {
     avatarEmoji: string;
     /** Current score in the game/tournament */
     score: number;
-}
-/**
- * Lobby participant interface for pre-game lobby management
- * Used specifically in tournament lobbies before games start
- */
-export interface LobbyParticipant {
-    /** Socket ID serving as temporary identifier */
-    id: string;
-    /** Display name for the participant */
-    username: string;
-    /** Avatar emoji representation */
-    avatarEmoji: string;
-    /** Optional cookie ID for session tracking */
-    cookie_id?: string;
 }
 /**
  * Extended participant interface for game sessions
@@ -55,8 +55,8 @@ export interface GameParticipant extends BaseParticipant {
     joinedAt?: number | string;
     /** Whether participant is in deferred mode */
     isDeferred?: boolean;
-    /** Type of participation (live or deferred) */
-    participationType?: ParticipationType;
+    /** Current status in the game lifecycle */
+    status?: ParticipantStatus;
     /** Number of attempts for this tournament */
     attemptCount?: number;
     /** Backup identifier for session management */
@@ -87,12 +87,14 @@ export interface LeaderboardEntry {
     score: number;
     /** Calculated rank position */
     rank?: number;
-    /** Type of participation (live or deferred) */
-    participationType?: ParticipationType;
+    /** Current status in the game lifecycle */
+    status?: ParticipantStatus;
     /** Number of attempts for this tournament */
     attemptCount?: number;
     /** Unique ID for this specific participation (optional for backwards compatibility) */
     participationId?: string;
+    /** Participation type to distinguish between live and deferred scores */
+    participationType?: ParticipationType;
 }
 /**
  * Tournament answer interface

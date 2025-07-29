@@ -125,11 +125,11 @@ exports.Prisma.UserScalarFieldEnum = {
   username: 'username',
   email: 'email',
   passwordHash: 'passwordHash',
-  avatarEmoji: 'avatarEmoji',
   createdAt: 'createdAt',
   role: 'role',
   resetToken: 'resetToken',
-  resetTokenExpiresAt: 'resetTokenExpiresAt'
+  resetTokenExpiresAt: 'resetTokenExpiresAt',
+  avatarEmoji: 'avatarEmoji'
 };
 
 exports.Prisma.TeacherProfileScalarFieldEnum = {
@@ -196,7 +196,6 @@ exports.Prisma.GameInstanceScalarFieldEnum = {
   endedAt: 'endedAt',
   differedAvailableFrom: 'differedAvailableFrom',
   differedAvailableTo: 'differedAvailableTo',
-  isDiffered: 'isDiffered',
   gameTemplateId: 'gameTemplateId',
   initiatorUserId: 'initiatorUserId'
 };
@@ -205,10 +204,13 @@ exports.Prisma.GameParticipantScalarFieldEnum = {
   id: 'id',
   gameInstanceId: 'gameInstanceId',
   userId: 'userId',
-  score: 'score',
+  liveScore: 'liveScore',
+  deferredScore: 'deferredScore',
+  nbAttempts: 'nbAttempts',
+  status: 'status',
   joinedAt: 'joinedAt',
-  participationType: 'participationType',
-  attemptCount: 'attemptCount'
+  lastActiveAt: 'lastActiveAt',
+  completedAt: 'completedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -248,9 +250,11 @@ exports.PlayMode = exports.$Enums.PlayMode = {
   class: 'class'
 };
 
-exports.ParticipationType = exports.$Enums.ParticipationType = {
-  LIVE: 'LIVE',
-  DEFERRED: 'DEFERRED'
+exports.ParticipantStatus = exports.$Enums.ParticipantStatus = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  LEFT: 'LEFT'
 };
 
 exports.Prisma.ModelName = {

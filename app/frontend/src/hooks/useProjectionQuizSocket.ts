@@ -1,4 +1,3 @@
-// ...existing code...
 /**
  * Projection Quiz Socket Hook
  * 
@@ -13,16 +12,24 @@
  * - Zod validation for socket payloads
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from './useSimpleTimer';
 import { useGameSocket } from './useGameSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-import type { Question, TimerStatus } from '@shared/types';
+import type { TimerStatus } from '@shared/types';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+import type { z } from 'zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import type { GameState } from '@shared/types/core/game';
 import { ProjectionLeaderboardUpdatePayload, ProjectionLeaderboardUpdatePayloadSchema } from '@shared/types/socket/projectionLeaderboardUpdatePayload';
+import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
 
 const logger = createLogger('useProjectionQuizSocket');
+
+// Stable empty objects to prevent unnecessary re-renders
+const EMPTY_STATS: Record<string, number> = {};
+const EMPTY_LEADERBOARD: Array<{ userId: string; username: string; avatarEmoji?: string; score: number }> = [];
 
 /**
  * Hook for teacher projection page that displays quiz content
@@ -30,21 +37,26 @@ const logger = createLogger('useProjectionQuizSocket');
  */
 export function useProjectionQuizSocket(accessCode: string, gameId: string | null) {
     // NEW: Handle canonical game_question event (for question updates)
-    const handleGameQuestion = (payload: { question: Question; questionUid: string; questionIndex?: number }) => {
+    const handleGameQuestion = (payload: QuestionDataForStudent) => {
         logger.info('🟢 [PROJECTION] game_question received:', payload);
+        // Validate with Zod
+        const parseResult = questionDataForStudentSchema.safeParse(payload);
+        if (!parseResult.success) {
+            logger.error({ errors: parseResult.error.errors, payload }, '[PROJECTION] Invalid GAME_QUESTION payload received');
+            return;
+        }
         setGameState(prev => {
             if (!prev) return prev;
-            let idx = payload.questionIndex;
+            let idx = payload.currentQuestionIndex;
             if (typeof idx !== 'number' && Array.isArray(prev.questionUids)) {
-                idx = prev.questionUids.findIndex((uid: string) => uid === payload.questionUid);
+                idx = prev.questionUids.findIndex((uid: string) => uid === payload.uid);
             }
-            // If questionData is an array, update the correct index; otherwise, set as single question
             let newQuestionData: any = prev.questionData;
             if (Array.isArray(prev.questionData) && typeof idx === 'number' && idx >= 0) {
                 newQuestionData = [...prev.questionData];
-                newQuestionData[idx] = payload.question;
+                newQuestionData[idx] = payload;
             } else {
-                newQuestionData = payload.question;
+                newQuestionData = payload;
             }
             return {
                 ...prev,
@@ -64,11 +76,13 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         username: string;
         avatarEmoji?: string;
         score: number;
-    }>>([]);
+    }>>(EMPTY_LEADERBOARD);
+    // Track when a leaderboard update is received from the backend
+    const [leaderboardUpdateTrigger, setLeaderboardUpdateTrigger] = useState(0);
 
     // NEW: Projection display state
     const [showStats, setShowStats] = useState<boolean>(false);
-    const [currentStats, setCurrentStats] = useState<Record<string, number>>({});
+    const [currentStats, setCurrentStats] = useState<Record<string, number>>(EMPTY_STATS);
     const [showCorrectAnswers, setShowCorrectAnswers] = useState<boolean>(false);
     const [correctAnswersData, setCorrectAnswersData] = useState<{
         questionUid: string;
@@ -76,6 +90,20 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         questionText?: string;
         answerOptions?: string[];
     } | null>(null);
+
+    // NEW: Listen for initial stats state from backend (always sent on join)
+    useEffect(() => {
+        if (!socket.socket) return;
+        const handleInitialStatsState = (payload: { showStats: boolean; currentStats: Record<string, number>; statsQuestionUid: string | null; timestamp?: number }) => {
+            console.log('🟢 [PROJECTION] Received PROJECTION_STATS_STATE:', payload);
+            setShowStats(!!payload.showStats);
+            setCurrentStats(payload.currentStats || EMPTY_STATS);
+        };
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, handleInitialStatsState);
+        return () => {
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, handleInitialStatsState);
+        };
+    }, [socket.socket]);
 
     // Error state that page can handle
     const [socketError, setSocketError] = useState<any>(null);
@@ -94,6 +122,54 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         timerQuestionUid = gameState.questionUids[gameState.currentQuestionIndex] || null;
     }
     const timerState = timerQuestionUid ? timer.getTimerState(timerQuestionUid) : undefined;
+
+    // Optimize timer updates: only update when display value changes (every second, not every 100ms)
+    const [optimizedTimeLeftMs, setOptimizedTimeLeftMs] = useState<number | undefined>(timerState?.timeLeftMs);
+    const [optimizedTimerStatus, setOptimizedTimerStatus] = useState<TimerStatus | undefined>(timerState?.status);
+    const lastTimeLeftMsRef = useRef<number | undefined>(timerState?.timeLeftMs);
+    const lastTimerStatusRef = useRef<TimerStatus | undefined>(timerState?.status);
+
+    // Extract just the timeLeftMs and status values to avoid dependency on the entire timerState object
+    const currentTimeLeftMs = timerState?.timeLeftMs;
+    const currentTimerStatus = timerState?.status;
+
+    useEffect(() => {
+        let shouldUpdateTimeLeft = false;
+        let shouldUpdateStatus = false;
+
+        // Check if timer status changed
+        if (currentTimerStatus !== lastTimerStatusRef.current) {
+            console.log('🔍 [TIMER DEBUG] Status changed:', lastTimerStatusRef.current, '->', currentTimerStatus);
+            lastTimerStatusRef.current = currentTimerStatus;
+            shouldUpdateStatus = true;
+        }
+
+        // Check if time left changed meaningfully
+        if (currentTimeLeftMs !== lastTimeLeftMsRef.current) {
+            lastTimeLeftMsRef.current = currentTimeLeftMs;
+
+            if (currentTimeLeftMs === null || currentTimeLeftMs === undefined) {
+                shouldUpdateTimeLeft = true;
+            } else {
+                const newDisplaySeconds = Math.floor(currentTimeLeftMs / 1000);
+                const currentDisplaySeconds = optimizedTimeLeftMs ? Math.floor(optimizedTimeLeftMs / 1000) : -1;
+
+                // Only update if the displayed seconds value has changed
+                if (newDisplaySeconds !== currentDisplaySeconds) {
+                    console.log('🔍 [TIMER DEBUG] Display seconds changed:', currentDisplaySeconds, '->', newDisplaySeconds);
+                    shouldUpdateTimeLeft = true;
+                }
+            }
+        }
+
+        // Update states only if needed
+        if (shouldUpdateTimeLeft) {
+            setOptimizedTimeLeftMs(currentTimeLeftMs);
+        }
+        if (shouldUpdateStatus) {
+            setOptimizedTimerStatus(currentTimerStatus);
+        }
+    }, [currentTimeLeftMs, currentTimerStatus]); // Only depend on extracted values
 
     // Join projection room when socket connects
     useEffect(() => {
@@ -187,7 +263,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         if (!socket.socket) return;
 
         // Handle question changes from teacher dashboard (timer updates will come through timer system)
-        const handleQuestionChanged = (payload: { question: Question; questionUid: string; questionIndex?: number; timer?: any }) => {
+        // LEGACY: Remove usage of Question type, use canonical type or remove if not needed
+        const handleQuestionChanged = (payload: { question: any; questionUid: string; questionIndex?: number; timer?: any }) => {
             logger.info('📋 Projection question changed:', payload);
             setGameState(prev => {
                 if (!prev) return prev;
@@ -246,17 +323,55 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 leaderboardLength: payload.leaderboard?.length || 0,
                 topPlayers: payload.leaderboard?.slice(0, 3).map((p) => ({ username: p.username, score: p.score })) || []
             });
-            const processedLeaderboard = payload.leaderboard.map((entry) => ({
-                userId: entry.userId,
-                username: entry.username || 'Unknown Player',
-                avatarEmoji: entry.avatarEmoji,
-                score: entry.score || 0
-            }));
-            setLeaderboard(processedLeaderboard);
+            const processedLeaderboard = payload.leaderboard.map((entry) => {
+                console.log('[SCORE DEBUG] Raw entry.score:', entry.score, 'Type:', typeof entry.score);
+                const processedScore = entry.score ?? 0;
+                console.log('[SCORE DEBUG] Processed score:', processedScore, 'Type:', typeof processedScore);
+                return {
+                    userId: entry.userId,
+                    username: entry.username || 'Unknown Player',
+                    avatarEmoji: entry.avatarEmoji,
+                    score: processedScore // Use nullish coalescing to preserve small decimal scores
+                };
+            });
+
+
+            // Log both arrays for debugging
+            setLeaderboard(prevLeaderboard => {
+                logger.debug('[LEADERBOARD DIFF DEBUG] prevLeaderboard:', JSON.stringify(prevLeaderboard));
+                logger.debug('[LEADERBOARD DIFF DEBUG] processedLeaderboard:', JSON.stringify(processedLeaderboard));
+
+                // Compare lengths first (quick check)
+                if (prevLeaderboard.length !== processedLeaderboard.length) {
+                    logger.info('🔄 [PROJECTION-FRONTEND] Leaderboard length changed, updating state');
+                    setLeaderboardUpdateTrigger(t => t + 1); // Mark as new leaderboard update
+                    return processedLeaderboard;
+                }
+
+                // Compare each entry
+                const hasChanged = processedLeaderboard.some((newEntry, index) => {
+                    const prevEntry = prevLeaderboard[index];
+                    return !prevEntry ||
+                        prevEntry.userId !== newEntry.userId ||
+                        prevEntry.username !== newEntry.username ||
+                        prevEntry.avatarEmoji !== newEntry.avatarEmoji ||
+                        prevEntry.score !== newEntry.score;
+                });
+
+                if (hasChanged) {
+                    logger.info('🔄 [PROJECTION-FRONTEND] Leaderboard data changed, updating state');
+                    setLeaderboardUpdateTrigger(t => t + 1); // Mark as new leaderboard update
+                    return processedLeaderboard;
+                } else {
+                    logger.debug('⏸️ [PROJECTION-FRONTEND] Leaderboard data unchanged, skipping update');
+                    return prevLeaderboard; // Return previous state to prevent re-render
+                }
+            });
+
             logger.info({
                 leaderboardCount: processedLeaderboard.length,
                 topScores: processedLeaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
-            }, '✅ [PROJECTION-FRONTEND] Updated projection leaderboard state');
+            }, '✅ [PROJECTION-FRONTEND] Processed projection leaderboard update');
         };        // Handle game state updates (including initial state from getFullGameState)
         const handleGameStateUpdate = (payload: any) => {
             logger.info('🎮 Game state update received:', payload);
@@ -300,13 +415,44 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                         }, '🔍 [FRONTEND-DEBUG-INITIAL] Processing initial leaderboard entry for username');
                     });
 
-                    setLeaderboard(payload.leaderboard.map((entry: any) => ({
+                    const initialLeaderboard = payload.leaderboard.map((entry: any) => ({
                         userId: entry.userId,
                         username: entry.username || 'Unknown Player',
                         avatarEmoji: entry.avatarEmoji,
-                        score: entry.score || 0
-                    })));
-                    logger.info(`🎯 Initialized projection leaderboard with ${payload.leaderboard.length} students from initial state`);
+                        score: entry.score ?? 0 // Use nullish coalescing to preserve small decimal scores
+                    }));
+
+                    // Only update if data is different (initial state comparison)
+                    setLeaderboard(prevLeaderboard => {
+                        // On initial load, prevLeaderboard will be empty array
+                        if (prevLeaderboard.length === 0 && initialLeaderboard.length > 0) {
+                            logger.info(`🎯 Initializing projection leaderboard with ${initialLeaderboard.length} students from initial state`);
+                            return initialLeaderboard;
+                        }
+
+                        // Compare if already has data
+                        if (prevLeaderboard.length !== initialLeaderboard.length) {
+                            logger.info('🔄 [PROJECTION-FRONTEND] Initial leaderboard length changed, updating state');
+                            return initialLeaderboard;
+                        }
+
+                        const hasChanged = initialLeaderboard.some((newEntry: any, index: number) => {
+                            const prevEntry = prevLeaderboard[index];
+                            return !prevEntry ||
+                                prevEntry.userId !== newEntry.userId ||
+                                prevEntry.username !== newEntry.username ||
+                                prevEntry.avatarEmoji !== newEntry.avatarEmoji ||
+                                prevEntry.score !== newEntry.score;
+                        });
+
+                        if (hasChanged) {
+                            logger.info('🔄 [PROJECTION-FRONTEND] Initial leaderboard data changed, updating state');
+                            return initialLeaderboard;
+                        } else {
+                            logger.debug('⏸️ [PROJECTION-FRONTEND] Initial leaderboard data unchanged, skipping update');
+                            return prevLeaderboard;
+                        }
+                    });
                 }
 
                 // Debug: log the timer and question details
@@ -337,16 +483,24 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
 
         // NEW: Handle projection stats show/hide
-        const handleProjectionShowStats = (payload: { questionUid: string; stats: Record<string, number>; timestamp?: number }) => {
-            console.log('🔥🔥🔥 [PROJECTION HOOK] RECEIVED SHOW STATS EVENT!');
-            console.log('📊 Payload:', payload);
-            console.log('🔥🔥🔥 Setting showStats to TRUE and updating currentStats');
-
-            logger.info('📊 [PROJECTION-FRONTEND] Show stats request received:', payload);
-            setCurrentStats(payload.stats || {});
-            setShowStats(true);
-
-            console.log('✅ Stats state updated successfully');
+        // Modernized: Handle show/hide stats in a single handler, respecting payload.show
+        const handleProjectionShowStats = (payload: ProjectionShowStatsPayload) => {
+            // Runtime validation
+            const parseResult = ProjectionShowStatsPayloadSchema.safeParse(payload);
+            if (!parseResult.success) {
+                console.error('[PROJECTION HOOK] Invalid PROJECTION_SHOW_STATS payload:', parseResult.error.errors, payload);
+                logger.error('[PROJECTION-FRONTEND] Invalid PROJECTION_SHOW_STATS payload:', parseResult.error.errors, payload);
+                return;
+            }
+            if (payload.show) {
+                logger.info('📊 [PROJECTION-FRONTEND] Show stats request received (show=TRUE):', payload);
+                setCurrentStats(payload.stats || EMPTY_STATS);
+                setShowStats(true);
+            } else {
+                logger.info('📊 [PROJECTION-FRONTEND] Hide stats request received (show=FALSE):', payload);
+                setShowStats(false);
+                setCurrentStats(EMPTY_STATS);
+            }
         };
 
         const handleProjectionHideStats = (payload: { questionUid: string; timestamp?: number }) => {
@@ -356,7 +510,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
             logger.info('📊 [PROJECTION-FRONTEND] Hide stats request received:', payload);
             setShowStats(false);
-            setCurrentStats({});
+            setCurrentStats(EMPTY_STATS);
 
             console.log('✅ Stats hidden successfully');
         };
@@ -377,12 +531,13 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 answerOptions: payload.answerOptions
             });
             setShowCorrectAnswers(true);
+        };
 
-            // Optional: Auto-hide after some time
-            setTimeout(() => {
-                setShowCorrectAnswers(false);
-                setCorrectAnswersData(null);
-            }, 15000); // Hide after 15 seconds
+        // Hide correct answers when a new question arrives
+        const handleGameQuestionWithReset = (payload: QuestionDataForStudent) => {
+            setShowCorrectAnswers(false);
+            setCorrectAnswersData(null);
+            handleGameQuestion(payload);
         };
 
         // Listen to projection events using shared constants (with type casting until types are updated)
@@ -404,7 +559,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
         // Listen for canonical game_question event
-        (socket.socket as any).on('game_question', handleGameQuestion);
+        (socket.socket as any).on('game_question', handleGameQuestionWithReset);
 
         // NEW: Listen to projection display control events
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, handleProjectionShowStats);
@@ -457,10 +612,18 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
     }, [socket.socket]);
 
+    // Memoize currentStats to prevent unnecessary re-renders when object content hasn't changed
+    const memoizedCurrentStats = useMemo(() => {
+        if (Object.keys(currentStats).length === 0) {
+            return EMPTY_STATS;
+        }
+        return currentStats;
+    }, [currentStats]);
+
     // Return clean interface using canonical types only
 
     // Derive currentQuestion from gameState and current index
-    let currentQuestion: Question | null = null;
+    let currentQuestion: any = null;
     if (gameState && Array.isArray(gameState.questionData) && typeof gameState.currentQuestionIndex === 'number') {
         currentQuestion = gameState.questionData[gameState.currentQuestionIndex] || null;
     } else if (gameState && gameState.questionData && !Array.isArray(gameState.questionData)) {
@@ -468,51 +631,67 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         currentQuestion = gameState.questionData;
     }
 
-    const returnValue = {
-        // Socket connection status
-        isConnected: socket.socketState.connected,
+    const returnValue = useMemo(() => {
+        return {
+            // Socket connection status
+            isConnected: socket.socketState.connected,
 
-        // Game state using canonical types
-        gameState,
-        currentQuestion,
-        currentQuestionUid: timerQuestionUid, // Use timer's questionUid only
+            // Game state using canonical types
+            gameState,
+            currentQuestion,
+            currentQuestionUid: timerQuestionUid, // Use timer's questionUid only
+            connectedCount,
+            gameStatus: gameState?.status ?? 'pending',
+            isAnswersLocked: gameState?.answersLocked ?? false,
+
+            // Leaderboard data for projection display (UX enhancement)
+            leaderboard,
+            leaderboardUpdateTrigger,
+
+            // NEW: Projection display state
+            showStats,
+            currentStats: memoizedCurrentStats,
+            showCorrectAnswers,
+            correctAnswersData,
+
+            // Canonical timer state (per-question) - ONLY optimized values
+            timerStatus: optimizedTimerStatus,
+            timerQuestionUid: timerQuestionUid,
+            timeLeftMs: optimizedTimeLeftMs,
+
+            // Socket error for auth handling (DRY principle)
+            socketError,
+
+            // Socket reference (if needed for advanced usage)
+            socket: socket.socket
+        };
+    }, [
+        // MINIMAL DEPS: Only include values that should trigger re-renders when they actually change display
+        socket.socketState.connected,
+        gameState?.status,
+        gameState?.currentQuestionIndex,
+        gameState?.answersLocked,
+        timerQuestionUid,
         connectedCount,
-        gameStatus: gameState?.status ?? 'pending',
-        isAnswersLocked: gameState?.answersLocked ?? false,
-
-        // Leaderboard data for projection display (UX enhancement)
-        leaderboard,
-
-        // NEW: Projection display state
+        leaderboard?.length, // Only re-render if count changes
+        leaderboardUpdateTrigger,
         showStats,
-        currentStats,
         showCorrectAnswers,
-        correctAnswersData,
-
-        // Canonical timer state (per-question)
-        timerStates: timer.timerStates,
-        getTimerState: timer.getTimerState,
-
-        // Canonical timer state (per-question)
-        timerStatus: timerState?.status,
-        timerQuestionUid: timerQuestionUid,
-        timeLeftMs: timerState?.timeLeftMs,
-
-        // Socket error for auth handling (DRY principle)
-        socketError,
-
-        // Socket reference (if needed for advanced usage)
-        socket: socket.socket
-    };
+        correctAnswersData?.questionUid, // Only if question changes
+        optimizedTimerStatus, // Use optimized status instead of timerState?.status
+        optimizedTimeLeftMs, // This only changes when display seconds change
+        socketError?.message
+    ]);
 
     // Debug logging to see what we're returning
-    console.log('🚀 [HOOK] PROJECTION STATE VALUES:', {
-        showStats,
-        currentStats,
-        showCorrectAnswers,
-        correctAnswersData
-    });
+    // console.log('🚀 [HOOK] PROJECTION STATE VALUES:', {
+    //     showStats,
+    //     currentStats,
+    //     showCorrectAnswers,
+    //     correctAnswersData
+    // });
 
+    /*
     logger.debug('🔍 useProjectionQuizSocket returning:', {
         hasGameState: !!returnValue.gameState,
         gameStateKeys: returnValue.gameState ? Object.keys(returnValue.gameState) : null,
@@ -532,6 +711,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             finalStatus: returnValue.timerStatus
         }
     });
+    */
 
     return returnValue;
 }

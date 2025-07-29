@@ -10,10 +10,13 @@ const gameParticipantService_1 = require("@/core/services/gameParticipantService
 const gameTemplateService_1 = require("@/core/services/gameTemplateService");
 // Import specific functions from gameStateService
 const gameStateService_1 = require("@/core/services/gameStateService");
+const redis_1 = require("@/config/redis");
 const prisma_1 = require("@/db/prisma");
 const auth_1 = require("@/middleware/auth");
 const validation_1 = require("@/middleware/validation");
 const logger_1 = __importDefault(require("@/utils/logger"));
+// Import modular join service to replace legacy joinGame
+const joinService_1 = require("@/core/services/gameParticipant/joinService");
 const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
 const logger = (0, logger_1.default)('GamesAPI');
@@ -77,8 +80,9 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             userId = initiatorStudentId;
             role = 'STUDENT';
         }
-        if (!userId) {
-            res.status(401).json({ error: 'Authentication required (teacher or student)' });
+        // Allow GUEST users as well as STUDENT and TEACHER
+        if (!userId || !role || !['STUDENT', 'TEACHER', 'GUEST'].includes(role.toUpperCase())) {
+            res.status(401).json({ error: 'Authentication required (teacher, student, or guest)' });
             return;
         }
         let finalgameTemplateId = gameTemplateId;
@@ -136,6 +140,24 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             ...(status ? { status } : {})
         });
         logger.info('GamesAPI created gameInstance debug', { gameInstanceSettings: gameInstance.settings });
+        // Clean up any stale Redis data for this access code before initializing fresh state
+        const accessCode = gameInstance.accessCode;
+        const redisPatterns = [
+            `mathquest:game:*${accessCode}*`, // Game state and participants
+            `mathquest:timer:${accessCode}:*`, // Timer states for all questions
+            `mathquest:projection:display:${accessCode}`, // Projection display state (stats/trophy toggles)
+            `mathquest:explanation_sent:${accessCode}:*`, // Explanation tracking
+            `mathquest:lobby:${accessCode}`, // Lobby state
+            `leaderboard:snapshot:${accessCode}`, // Leaderboard snapshots
+            `*${accessCode}*` // Catch any remaining keys with accessCode
+        ];
+        for (const pattern of redisPatterns) {
+            const keys = await redis_1.redisClient.keys(pattern);
+            if (keys.length > 0) {
+                logger.info({ pattern, keys, accessCode }, 'Cleaning stale Redis keys before game initialization');
+                await redis_1.redisClient.del(...keys);
+            }
+        }
         // Initialize game state in Redis immediately after game instance creation
         await (0, gameStateService_1.initializeGameState)(gameInstance.id);
         res.status(201).json({ gameInstance });
@@ -158,13 +180,49 @@ router.get('/:accessCode', async (req, res) => {
             res.status(400).json({ error: 'Invalid access code format' });
             return;
         }
-        const includeParticipants = req.query.includeParticipants === 'true';
-        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(accessCode, includeParticipants);
+        // Always fetch the game instance (no participants, no questions)
+        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(accessCode, false);
         if (!gameInstance) {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        res.status(200).json({ gameInstance });
+        // Canonical: Only return minimal public info for lobby/public consumers
+        // Use shared PublicGameInstance type
+        // linkedQuizId is always in settings (object or JSON), never top-level
+        let linkedQuizId = null;
+        if (gameInstance.settings && typeof gameInstance.settings === 'object' && 'linkedQuizId' in gameInstance.settings) {
+            linkedQuizId = gameInstance.settings.linkedQuizId ?? null;
+        }
+        // If this is a practice session, extract canonical practiceSettings
+        let practiceSettings = undefined;
+        if (gameInstance.playMode === 'practice') {
+            // Prefer settings.practiceSettings if present, else fallback to gameTemplate
+            if (gameInstance.settings && typeof gameInstance.settings === 'object' && 'practiceSettings' in gameInstance.settings) {
+                practiceSettings = gameInstance.settings.practiceSettings;
+            }
+            else if ('gameTemplate' in gameInstance && gameInstance.gameTemplate) {
+                const template = gameInstance.gameTemplate;
+                practiceSettings = {
+                    discipline: template.discipline || '',
+                    gradeLevel: template.gradeLevel || '',
+                    themes: template.themes || [],
+                    questionCount: Array.isArray(template.questions) ? template.questions.length : 10,
+                    showImmediateFeedback: true,
+                    allowRetry: true,
+                    randomizeQuestions: false,
+                    gameTemplateId: template.id
+                };
+            }
+        }
+        const publicGameInstance = {
+            accessCode: gameInstance.accessCode,
+            playMode: gameInstance.playMode,
+            linkedQuizId,
+            status: gameInstance.status,
+            name: gameInstance.name,
+            ...(practiceSettings ? { practiceSettings } : {})
+        };
+        res.status(200).json({ gameInstance: publicGameInstance });
     }
     catch (error) {
         logger.error({ error }, 'Error fetching game instance');
@@ -215,7 +273,12 @@ router.post('/:accessCode/join', (0, validation_1.validateRequestBody)(schemas_1
             res.status(400).json({ error: 'Player ID is required' });
             return;
         }
-        const joinResult = await getGameParticipantService().joinGame(userId, accessCode);
+        const joinResult = await (0, joinService_1.joinGame)({
+            userId,
+            accessCode,
+            username: undefined, // API doesn't provide username
+            avatarEmoji: undefined // API doesn't provide avatarEmoji
+        });
         if (!joinResult.success) {
             res.status(400).json({ error: joinResult.error || 'Failed to join game' });
             return;
@@ -224,10 +287,38 @@ router.post('/:accessCode/join', (0, validation_1.validateRequestBody)(schemas_1
             res.status(500).json({ error: 'Incomplete join result' });
             return;
         }
+        // Map the gameInstance to include required fields
+        const gameInstance = {
+            ...joinResult.gameInstance,
+            accessCode: accessCode, // Use the access code from the route parameter
+            createdAt: new Date(), // Add missing createdAt field
+            gameTemplateId: 'unknown', // Add missing gameTemplateId field
+            gameTemplate: {
+                id: 'unknown',
+                name: joinResult.gameInstance.gameTemplate?.name || 'Unknown Template',
+                themes: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                creatorId: 'unknown'
+            }
+        };
+        // Map the participant to include required fields
+        const isDeferred = joinResult.participant.status === 'ACTIVE' && joinResult.gameInstance.status === 'completed';
+        const participant = {
+            id: joinResult.participant.id,
+            userId: joinResult.participant.userId,
+            username: joinResult.participant.user?.username || 'Unknown',
+            avatarEmoji: joinResult.participant.user?.avatarEmoji || '🐼',
+            score: isDeferred ? (joinResult.participant.deferredScore || 0) : (joinResult.participant.liveScore || 0),
+            joinedAt: joinResult.participant.joinedAt?.toISOString() || new Date().toISOString(),
+            participationType: isDeferred ? 'DEFERRED' : 'LIVE',
+            attemptCount: joinResult.participant.nbAttempts || 1,
+            online: true
+        };
         res.status(200).json({
             success: true,
-            gameInstance: joinResult.gameInstance,
-            participant: joinResult.participant
+            gameInstance,
+            participant
         });
     }
     catch (error) {
@@ -355,20 +446,37 @@ router.patch('/:id/differed', auth_1.teacherAuth, async (req, res) => {
 /**
  * GET /api/v1/games/:code/leaderboard
  * Returns the leaderboard for a given game instance (by access code)
+ * ANTI-CHEATING: Only accessible after game ends (status = 'completed')
  */
+// Modernized: Accepts optional userId query param and marks isCurrentUser in leaderboard
 router.get('/:code/leaderboard', async (req, res) => {
     const { code } = req.params;
+    const userId = req.query.userId;
     try {
         const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
         if (!gameInstance) {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        // Use the new getFormattedLeaderboard function
-        const leaderboard = await (0, gameStateService_1.getFormattedLeaderboard)(code);
-        // If gameInstance.leaderboard is the source of truth and needs to be updated,
-        // consider doing that here or in a separate sync process.
-        // For now, we return the Redis-based leaderboard directly.
+        // ANTI-CHEATING: Block leaderboard access during active games
+        if (gameInstance.status !== 'completed') {
+            logger.warn({
+                accessCode: code,
+                gameStatus: gameInstance.status,
+                userId: userId || 'anonymous'
+            }, '[ANTI-CHEATING] Blocked leaderboard access during active game');
+            res.status(403).json({
+                error: 'Leaderboard not available during active game. Please wait for the game to end.'
+            });
+            return;
+        }
+        let leaderboard = await (0, gameStateService_1.getFormattedLeaderboard)(code);
+        if (userId) {
+            leaderboard = leaderboard.map(entry => ({
+                ...entry,
+                isCurrentUser: entry.userId === userId
+            }));
+        }
         res.json({ leaderboard });
     }
     catch (error) {
@@ -534,6 +642,43 @@ router.put('/instance/:id', auth_1.teacherAuth, async (req, res) => {
     }
 });
 /**
+ * Rename a game instance
+ * PATCH /api/v1/games/instance/:id/name
+ * Requires teacher authentication
+ */
+router.patch('/instance/:id/name', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schemas_1.RenameGameInstanceRequestSchema), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        const user = req.user;
+        if (!id) {
+            res.status(400).json({ error: 'ID de la session requis' });
+            return;
+        }
+        // Check if the game exists and the user is the creator
+        const existingGame = await getGameInstanceService().getGameInstanceById(id);
+        if (!existingGame) {
+            res.status(404).json({ error: 'Session non trouvée' });
+            return;
+        }
+        const isCreator = user && user.userId && existingGame.initiatorUserId === user.userId;
+        if (!isCreator) {
+            res.status(403).json({ error: 'Vous n\'avez pas la permission de renommer cette session' });
+            return;
+        }
+        logger.info({ gameId: id, userId: user.userId, newName: name }, 'Renaming game instance');
+        // Update only the name
+        const updatedGame = await getGameInstanceService().updateGameInstance(id, {
+            name
+        });
+        res.status(200).json({ gameInstance: updatedGame });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error renaming game instance');
+        res.status(500).json({ error: 'Une erreur s\'est produite lors du renommage de la session' });
+    }
+});
+/**
  * Get game instances by template ID (teacher only)
  * GET /api/v1/games/template/:templateId/instances
  * Requires teacher authentication
@@ -575,8 +720,33 @@ router.delete('/:id', auth_1.teacherAuth, async (req, res) => {
             return;
         }
         logger.info({ instanceId: id, userId: req.user.userId }, 'Deleting game instance');
-        // Delete the game instance
+        // Fetch the game instance to get the accessCode
+        const gameInstance = await getGameInstanceService().getGameInstanceById(id);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game instance not found' });
+            return;
+        }
+        const accessCode = gameInstance.accessCode;
+        // Delete all Redis keys related to this game instance
+        const redisPatterns = [
+            `mathquest:game:*${accessCode}*`, // Game state and participants
+            `mathquest:timer:${accessCode}:*`, // Timer states for all questions
+            `mathquest:projection:display:${accessCode}`, // Projection display state (stats/trophy toggles)
+            `mathquest:explanation_sent:${accessCode}:*`, // Explanation tracking
+            `mathquest:lobby:${accessCode}`, // Lobby state
+            `leaderboard:snapshot:${accessCode}`, // Leaderboard snapshots
+            `*${accessCode}*` // Catch any remaining keys with accessCode
+        ];
+        for (const pattern of redisPatterns) {
+            const keys = await redis_1.redisClient.keys(pattern);
+            if (keys.length > 0) {
+                logger.info({ pattern, keys, accessCode }, 'Deleting Redis keys for game deletion');
+                await redis_1.redisClient.del(...keys);
+            }
+        }
+        // Delete the game instance from the database
         await getGameInstanceService().deleteGameInstance(req.user.userId, id);
+        logger.info({ instanceId: id, userId: req.user.userId, accessCode }, 'Game instance and Redis state deleted');
         // Return 204 No Content for successful deletion
         res.status(204).send();
     }
@@ -617,8 +787,8 @@ router.get('/:code/can-play-differed', async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        // Check if the game is configured for differed play
-        if (!gameInstance.isDiffered || !gameInstance.differedAvailableTo) {
+        // Check if the game is configured for differed play (completed tournaments with differed availability)
+        if (gameInstance.status !== 'completed' || !gameInstance.differedAvailableTo) {
             res.json({ canPlay: false });
             return;
         }

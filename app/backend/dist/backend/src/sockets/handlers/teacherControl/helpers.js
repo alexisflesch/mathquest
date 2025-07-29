@@ -172,6 +172,7 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
             gameId: gameInstance.id,
             accessCode: gameInstance.accessCode,
             templateName: gameTemplate.name,
+            gameInstanceName: gameInstance.name, // Modernization: include canonical gameInstanceName
             status: gameState.status,
             currentQuestionUid,
             questions,

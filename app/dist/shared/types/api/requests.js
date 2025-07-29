@@ -8,7 +8,7 @@
  * Types are inferred from Zod schemas for runtime validation.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SetQuestionRequestSchema = exports.TeacherUpgradeRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
+exports.SetQuestionRequestSchema = exports.TeacherUpgradeRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.RenameGameInstanceRequestSchema = exports.RenameGameTemplateRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
 // Export schemas for runtime validation
 var schemas_1 = require("./schemas");
 Object.defineProperty(exports, "LoginRequestSchema", { enumerable: true, get: function () { return schemas_1.LoginRequestSchema; } });
@@ -18,6 +18,8 @@ Object.defineProperty(exports, "GameJoinRequestSchema", { enumerable: true, get:
 Object.defineProperty(exports, "GameStatusUpdateRequestSchema", { enumerable: true, get: function () { return schemas_1.GameStatusUpdateRequestSchema; } });
 Object.defineProperty(exports, "CreateGameTemplateRequestSchema", { enumerable: true, get: function () { return schemas_1.CreateGameTemplateRequestSchema; } });
 Object.defineProperty(exports, "UpdateGameTemplateRequestSchema", { enumerable: true, get: function () { return schemas_1.UpdateGameTemplateRequestSchema; } });
+Object.defineProperty(exports, "RenameGameTemplateRequestSchema", { enumerable: true, get: function () { return schemas_1.RenameGameTemplateRequestSchema; } });
+Object.defineProperty(exports, "RenameGameInstanceRequestSchema", { enumerable: true, get: function () { return schemas_1.RenameGameInstanceRequestSchema; } });
 Object.defineProperty(exports, "CreateQuestionRequestSchema", { enumerable: true, get: function () { return schemas_1.CreateQuestionRequestSchema; } });
 Object.defineProperty(exports, "UpdateQuestionRequestSchema", { enumerable: true, get: function () { return schemas_1.UpdateQuestionRequestSchema; } });
 Object.defineProperty(exports, "UpdateUserRequestSchema", { enumerable: true, get: function () { return schemas_1.UpdateUserRequestSchema; } });

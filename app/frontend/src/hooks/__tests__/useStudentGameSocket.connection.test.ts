@@ -135,7 +135,7 @@ describe('useStudentGameSocket - Connection', () => {
         });
     });
 
-    it('should auto-rejoin game after reconnection', async () => {
+    it('should NOT auto-rejoin game after reconnection - components handle join manually', async () => {
         const hookProps = {
             accessCode: 'TEST123',
             userId: 'user-123',
@@ -157,19 +157,13 @@ describe('useStudentGameSocket - Connection', () => {
             expect(result.current.error).toBeNull();
         });
 
-        // Should emit join_game after reconnection
+        // Should NOT emit join_game after reconnection - components handle join manually
         await waitFor(() => {
-            expect(mockSocket.emit).toHaveBeenCalledWith('join_game', {
-                accessCode: 'TEST123',
-                userId: 'user-123',
-                username: 'TestUser',
-                avatarEmoji: '🐼', // Default avatar when none provided
-                isDiffered: false
-            });
+            expect(mockSocket.emit).not.toHaveBeenCalledWith('join_game', expect.anything());
         });
     });
 
-    it('should auto-join game when connected and parameters are available', async () => {
+    it('should NOT auto-join game when connected - components handle join manually', async () => {
         const hookProps = {
             accessCode: 'TEST123',
             userId: 'user-123',
@@ -188,15 +182,9 @@ describe('useStudentGameSocket - Connection', () => {
             expect(result.current.connected).toBe(true);
         });
 
-        // Should auto-join game
+        // Should NOT auto-join game - components handle join manually to prevent duplicate joins
         await waitFor(() => {
-            expect(mockSocket.emit).toHaveBeenCalledWith('join_game', {
-                accessCode: 'TEST123',
-                userId: 'user-123',
-                username: 'TestUser',
-                avatarEmoji: 'https://example.com/avatar.jpg',
-                isDiffered: false
-            });
+            expect(mockSocket.emit).not.toHaveBeenCalledWith('join_game', expect.anything());
         });
     });
 

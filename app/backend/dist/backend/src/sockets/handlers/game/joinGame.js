@@ -43,11 +43,13 @@ const redis_1 = require("@/config/redis");
 const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
 const gameStateService_1 = __importStar(require("@/core/services/gameStateService"));
 const events_1 = require("@shared/types/socket/events");
+const leaderboardSnapshotService_1 = require("@/core/services/gameParticipant/leaderboardSnapshotService");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const joinOrderBonus_1 = require("@/utils/joinOrderBonus");
 const projectionLeaderboardBroadcast_1 = require("@/utils/projectionLeaderboardBroadcast");
 const joinService_1 = require("@/core/services/gameParticipant/joinService");
 const scoreService_1 = require("@/core/services/gameParticipant/scoreService");
+const lobbyHandler_1 = require("../lobbyHandler");
 const logger = (0, logger_1.default)('JoinGameHandler');
 // Update handler signature with shared types
 function joinGameHandler(io, socket) {
@@ -79,7 +81,7 @@ function joinGameHandler(io, socket) {
             const gameJoinedPayload = {
                 accessCode: 'PRACTICE',
                 gameStatus: 'active', // Practice mode is immediately active
-                isDiffered: false, // Practice mode is not deferred
+                // Practice mode is not deferred - always fresh session
                 participant: {
                     id: userId,
                     userId: userId, // Same as id for practice mode
@@ -98,7 +100,6 @@ function joinGameHandler(io, socket) {
                 where: { accessCode },
                 select: {
                     id: true,
-                    isDiffered: true,
                     differedAvailableFrom: true,
                     differedAvailableTo: true,
                     status: true,
@@ -116,7 +117,9 @@ function joinGameHandler(io, socket) {
             const now = new Date();
             const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
             const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
-            if (gameInstance.isDiffered) {
+            // FIXED: A game is deferred when status is 'completed' and available for replay
+            const isDeferred = gameInstance.status === 'completed';
+            if (isDeferred) {
                 const inDifferedWindow = (!from || now >= from) && (!to || now <= to);
                 logger.debug({ inDifferedWindow, from, to, now }, 'Checking differed window');
                 if (!inDifferedWindow) {
@@ -138,6 +141,8 @@ function joinGameHandler(io, socket) {
                 }
                 logger.debug({ roomName, socketId: socket.id }, '[DEBUG] Player joining room');
                 await socket.join(roomName);
+                // Also join lobby room for participant list updates
+                await socket.join(`lobby_${accessCode}`);
                 // --- DEBUG: Print room membership after join ---
                 const joinedRoomSockets = io.sockets.adapter.rooms.get(roomName);
                 const joinedRoomSocketIds = joinedRoomSockets ? Array.from(joinedRoomSockets) : [];
@@ -168,9 +173,43 @@ function joinGameHandler(io, socket) {
             const userIdToSocketIdKey = `mathquest:game:userIdToSocketId:${accessCode}`;
             const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
             // UX ENHANCEMENT: Assign join-order bonus for early joiners (only if not already assigned in lobby)
-            const joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, userId);
-            // Apply join-order bonus to participant score
-            const finalScore = (joinResult.participant.score ?? 0) + joinOrderBonus;
+            // Skip join order bonus for deferred mode (when completed tournaments are accessed individually)
+            const isCurrentlyDeferred = gameInstance.status === 'completed';
+            const joinOrderBonus = isCurrentlyDeferred ? 0 : await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, userId);
+            // 🐛 BUG FIX: Preserve existing Redis score when user rejoins/reloads
+            // During live gameplay, scores are stored in Redis, not database. 
+            // When user rejoins, we must preserve their Redis score, not overwrite with database score (which is 0).
+            let finalScore = 0;
+            const existingRedisData = await redis_1.redisClient.hget(participantsKey, userId);
+            if (existingRedisData) {
+                // User is rejoining - preserve their existing Redis score
+                const existingParticipant = JSON.parse(existingRedisData);
+                finalScore = existingParticipant.score || 0;
+                logger.info({
+                    accessCode,
+                    userId,
+                    username,
+                    existingScore: finalScore,
+                    trigger: 'rejoin_preserve_score'
+                }, '🔄 [REJOIN] Preserved existing Redis score for rejoining participant');
+            }
+            else {
+                // New user - use database score + join bonus
+                const isInDeferredSession = joinResult.participant.nbAttempts > 1;
+                const currentScore = isInDeferredSession ?
+                    (joinResult.participant.deferredScore ?? 0) :
+                    (joinResult.participant.liveScore ?? 0);
+                finalScore = currentScore + joinOrderBonus;
+                logger.info({
+                    accessCode,
+                    userId,
+                    username,
+                    databaseScore: currentScore,
+                    joinOrderBonus,
+                    finalScore,
+                    trigger: 'new_join_with_bonus'
+                }, '🆕 [NEW-JOIN] Applied database score + join bonus for new participant');
+            }
             // Create participant data using core types (map from Prisma structure)
             const participantDataForRedis = {
                 id: joinResult.participant.id,
@@ -186,8 +225,8 @@ function joinGameHandler(io, socket) {
                 online: true,
                 socketId: socket.id // Track current socket ID
             };
-            // For live games (not differed), assign join-order bonus for better projection UX
-            if (!gameInstance.isDiffered && (gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament')) {
+            // For live games (not deferred), assign join-order bonus for better projection UX
+            if (!isDeferred && (gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament')) {
                 const joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, userId);
                 if (joinOrderBonus > 0) {
                     participantDataForRedis.score = (participantDataForRedis.score || 0) + joinOrderBonus;
@@ -203,16 +242,35 @@ function joinGameHandler(io, socket) {
             logger.debug({ participantsKey, userId: joinResult.participant.userId, participantDataForRedis }, 'Storing participant in Redis by userId');
             // Store main participant data keyed by userId
             await redis_1.redisClient.hset(participantsKey, joinResult.participant.userId, JSON.stringify(participantDataForRedis));
-            // Update leaderboard in Redis with participant score (including any join-order bonus)
+            // 🚨 CRITICAL BUG FIX: Preserve existing Redis scores during user rejoin
+            // During active gameplay, Redis is the source of truth. Never overwrite existing scores.
             const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
-            await redis_1.redisClient.zadd(leaderboardKey, finalScore, userId);
-            logger.debug({
-                accessCode,
-                userId,
-                finalScore,
-                joinOrderBonus,
-                leaderboardKey
-            }, 'Added participant to leaderboard with final score (including join-order bonus)');
+            const existingLeaderboardScore = await redis_1.redisClient.zscore(leaderboardKey, userId);
+            if (existingLeaderboardScore === null) {
+                // User not in leaderboard yet - safe to add with final score
+                await redis_1.redisClient.zadd(leaderboardKey, finalScore, userId);
+                logger.info({
+                    accessCode,
+                    userId,
+                    finalScore,
+                    joinOrderBonus,
+                    leaderboardKey,
+                    action: 'added_new_user'
+                }, '[LEADERBOARD] Added new participant to Redis leaderboard');
+            }
+            else {
+                // User already in leaderboard - preserve existing score in BOTH leaderboard AND participant data
+                participantDataForRedis.score = parseFloat(existingLeaderboardScore);
+                await redis_1.redisClient.hset(participantsKey, joinResult.participant.userId, JSON.stringify(participantDataForRedis));
+                logger.warn({
+                    accessCode,
+                    userId,
+                    existingScore: existingLeaderboardScore,
+                    attemptedScore: finalScore,
+                    leaderboardKey,
+                    action: 'preserved_existing_score'
+                }, '[LEADERBOARD] Preserved existing Redis leaderboard score - did not overwrite');
+            }
             // Update mappings
             logger.debug({ userIdToSocketIdKey, userId, socketId: socket.id }, 'Updating userIdToSocketId mapping');
             await redis_1.redisClient.hset(userIdToSocketIdKey, userId, socket.id);
@@ -234,101 +292,144 @@ function joinGameHandler(io, socket) {
                     online: true,
                 },
                 gameStatus: gameInstance.status,
-                isDiffered: gameInstance.isDiffered,
+                // Include deferred status based on game completion and availability
                 differedAvailableFrom: gameInstance.differedAvailableFrom?.toISOString(),
                 differedAvailableTo: gameInstance.differedAvailableTo?.toISOString(),
             };
             logger.info({ gameJoinedPayload }, 'Emitting game_joined');
             socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_JOINED, gameJoinedPayload);
+            // 🎯 LEADERBOARD ON JOIN: Send current leaderboard state to new joiners
+            // This handles late joiners, reconnections, and page reloads gracefully
+            try {
+                // Only send leaderboard if game has started (status: 'active' or 'completed')
+                // Skip if game is still pending (no participants have scores yet)
+                if (gameInstance.status === 'active' || gameInstance.status === 'completed') {
+                    // DEFERRED SESSION FIX: Send empty leaderboard for deferred sessions to avoid stale data contamination
+                    if (isDeferred) {
+                        // For deferred sessions, send empty leaderboard on join
+                        // Individual player progress will be sent after each question
+                        socket.emit('leaderboard_update', { leaderboard: [] });
+                        logger.info({
+                            accessCode,
+                            userId,
+                            gameStatus: gameInstance.status,
+                            trigger: 'join_game_deferred_empty_leaderboard'
+                        }, '[JOIN-LEADERBOARD] Sent empty leaderboard for deferred session - avoiding stale data');
+                    }
+                    else {
+                        // Use snapshot-based emission for live sessions
+                        await (0, leaderboardSnapshotService_1.emitLeaderboardFromSnapshot)(io, accessCode, [socket.id], // Emit only to this specific socket
+                        'join_game_initial_load');
+                        logger.info({
+                            accessCode,
+                            userId,
+                            gameStatus: gameInstance.status,
+                            trigger: 'join_game_initial_load',
+                            dataSource: 'leaderboard_snapshot'
+                        }, '[JOIN-LEADERBOARD] Emitted initial leaderboard state to new joiner from snapshot');
+                    }
+                }
+                else {
+                    logger.debug({
+                        accessCode,
+                        userId,
+                        gameStatus: gameInstance.status
+                    }, '[JOIN-LEADERBOARD] Skipping leaderboard emission - game not started yet');
+                }
+            }
+            catch (leaderboardError) {
+                logger.error({
+                    accessCode,
+                    userId,
+                    error: leaderboardError
+                }, '[JOIN-LEADERBOARD] Error emitting initial leaderboard to new joiner');
+            }
             // Use modular scoreService for best score update if needed (for deferred)
-            if (gameInstance.isDiffered) {
+            if (isDeferred) {
                 await scoreService_1.DifferedScoreService.updateBestScoreInRedis({
                     gameInstanceId: gameInstance.id,
                     userId,
-                    score: joinResult.participant.score || 0
+                    score: joinResult.participant.deferredScore || 0
                 });
             }
-            // For live games (quiz and tournament, not deferred), check if game is active and send current state to late joiners
-            if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
-                logger.info({ accessCode, userId, playMode: gameInstance.playMode }, 'Live game is active, sending current state to late joiner');
-                try {
-                    const currentGameState = await gameStateService_1.default.getFullGameState(accessCode);
-                    if (currentGameState && currentGameState.gameState && currentGameState.gameState.currentQuestionIndex >= 0) {
-                        const { gameState } = currentGameState;
-                        // Get the current question data
-                        const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
-                            where: { id: gameInstance.id },
-                            include: {
-                                gameTemplate: {
-                                    include: {
-                                        questions: {
-                                            include: { question: true },
-                                            orderBy: { sequence: 'asc' }
+            // Canonical: On join, emit either current question (if active) or participants_list (if pending)
+            if (!isDeferred && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
+                if (gameInstance.status === 'active') {
+                    logger.info({ accessCode, userId, playMode: gameInstance.playMode }, 'Live game is active, sending current state to late joiner');
+                    try {
+                        const currentGameState = await gameStateService_1.default.getFullGameState(accessCode);
+                        if (currentGameState && currentGameState.gameState && currentGameState.gameState.currentQuestionIndex >= 0) {
+                            const { gameState } = currentGameState;
+                            // Get the current question data
+                            const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
+                                where: { id: gameInstance.id },
+                                include: {
+                                    gameTemplate: {
+                                        include: {
+                                            questions: {
+                                                include: { question: true },
+                                                orderBy: { sequence: 'asc' }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            if (gameInstanceWithQuestions?.gameTemplate?.questions &&
+                                gameState.currentQuestionIndex < gameInstanceWithQuestions.gameTemplate.questions.length) {
+                                const currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[gameState.currentQuestionIndex]?.question;
+                                if (currentQuestion) {
+                                    const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@shared/types/quiz/liveQuestion')));
+                                    let filteredQuestion = filterQuestionForClient(currentQuestion);
+                                    if (filteredQuestion.timeLimit == null) {
+                                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                        const { timeLimit, ...rest } = filteredQuestion;
+                                        filteredQuestion = rest;
+                                    }
+                                    const questionPayload = {
+                                        ...filteredQuestion,
+                                        currentQuestionIndex: gameState.currentQuestionIndex,
+                                        totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length
+                                    };
+                                    logger.info({
+                                        accessCode,
+                                        userId,
+                                        playMode: gameInstance.playMode,
+                                        questionIndex: gameState.currentQuestionIndex,
+                                        payload: questionPayload
+                                    }, '[MODERNIZATION] Sending current question to late joiner (schema-compliant)');
+                                    socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, questionPayload);
+                                    // Also send timer update (canonical)
+                                    const durationMs = typeof currentQuestion.timeLimit === 'number' && currentQuestion.timeLimit > 0 ? currentQuestion.timeLimit * 1000 : 0;
+                                    if (durationMs > 0) {
+                                        const canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, currentQuestion.uid, gameState.gameMode, gameState.status === 'completed', durationMs, undefined);
+                                        if (canonicalTimer) {
+                                            const timerUpdatePayload = {
+                                                timer: canonicalTimer,
+                                                questionUid: canonicalTimer.questionUid
+                                            };
+                                            socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED, timerUpdatePayload);
                                         }
                                     }
                                 }
                             }
-                        });
-                        if (gameInstanceWithQuestions?.gameTemplate?.questions &&
-                            gameState.currentQuestionIndex < gameInstanceWithQuestions.gameTemplate.questions.length) {
-                            const currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[gameState.currentQuestionIndex]?.question;
-                            if (currentQuestion) {
-                                const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@shared/types/quiz/liveQuestion')));
-                                const filteredQuestion = filterQuestionForClient(currentQuestion);
-                                // --- MODERNIZATION: Use canonical timer system for late joiners ---
-                                // LEGACY: The following line is legacy and should be removed after migration:
-                                // const actualTimer = calculateTimerForLateJoiner(gameState.timer);
-                                // TODO: Remove all legacy timer usage after full migration.
-                                // MIGRATION NOTE: Use canonical timer system only.
-                                // Always use canonical durationMs from the question object (no fallback allowed)
-                                const durationMs = typeof currentQuestion.timeLimit === 'number' && currentQuestion.timeLimit > 0 ? currentQuestion.timeLimit * 1000 : 0;
-                                if (durationMs <= 0) {
-                                    logger.error({ currentQuestion, durationMs }, '[JOIN_GAME] Failed to get canonical durationMs');
-                                    // handle error or return
-                                }
-                                const canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, currentQuestion.uid, gameState.gameMode, gameState.status === 'completed', durationMs, undefined);
-                                // Send current question with canonical timer
-                                const lateJoinerQuestionPayload = {
-                                    question: filteredQuestion,
-                                    questionIndex: gameState.currentQuestionIndex, // Use shared type field name
-                                    totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length, // Add total questions count
-                                    feedbackWaitTime: currentQuestion.feedbackWaitTime || (gameInstance.playMode === 'tournament' ? 1.5 : 1),
-                                    timer: canonicalTimer // Only canonical timer
-                                };
-                                logger.info({
-                                    accessCode,
-                                    userId,
-                                    playMode: gameInstance.playMode,
-                                    questionIndex: gameState.currentQuestionIndex,
-                                    // originalTimeLeft: gameState.timer?.timeLeftMs, // LEGACY: Remove after migration
-                                    // originalStatus: gameState.timer?.status, // LEGACY: Remove after migration
-                                    canonicalTimer,
-                                    payload: lateJoinerQuestionPayload
-                                }, '[MODERNIZATION] Sending current question to late joiner with canonical timer');
-                                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, lateJoinerQuestionPayload);
-                                // Also send timer update (canonical)
-                                if (canonicalTimer) {
-                                    const timerUpdatePayload = {
-                                        timer: canonicalTimer,
-                                        questionUid: canonicalTimer.questionUid
-                                    };
-                                    socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED, timerUpdatePayload);
-                                }
-                            }
                         }
                     }
+                    catch (error) {
+                        logger.error({ error, accessCode, userId }, 'Error sending current state to late joiner');
+                    }
                 }
-                catch (error) {
-                    logger.error({ error, accessCode, userId }, 'Error sending current state to late joiner');
+                else if (gameInstance.status === 'pending') {
+                    // Canonical: participant_list emission is now handled by lobbyHandler only
+                    logger.info({ accessCode, userId }, '[MODERNIZATION] Game is pending, participant_list emission handled by lobbyHandler');
                 }
             }
-            if (!gameInstance.isDiffered && socket.data.currentGameRoom) {
+            if (!isDeferred && socket.data.currentGameRoom) {
                 const playerJoinedPayload = {
                     participant: {
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
                         username: username || 'Unknown',
-                        score: participantDataForRedis.score, // Use the score with join-order bonus
+                        score: participantDataForRedis.score,
                         avatarEmoji: avatarEmoji || joinResult.participant.user?.avatarEmoji || '🐼',
                         online: true
                     }
@@ -372,15 +473,37 @@ function joinGameHandler(io, socket) {
                         .map(gtq => gtq.question)
                         .filter(q => q != null);
                     if (actualQuestions.length > 0) {
-                        logger.info({ accessCode, userId, questionCount: actualQuestions.length }, 'Starting individual deferred tournament game flow');
-                        // Use the new per-user deferred session logic
-                        const { startDeferredTournamentSession } = await Promise.resolve().then(() => __importStar(require('../deferredTournamentFlow')));
-                        await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
+                        logger.info({ accessCode, userId, questionCount: actualQuestions.length }, '[DEBUG] About to import startDeferredTournamentSession');
+                        try {
+                            const { startDeferredTournamentSession } = await Promise.resolve().then(() => __importStar(require('../deferredTournamentFlow')));
+                            logger.info({ accessCode, userId }, '[DEBUG] Successfully imported startDeferredTournamentSession');
+                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
+                            logger.info({ accessCode, userId }, '[DEBUG] startDeferredTournamentSession completed');
+                        }
+                        catch (err) {
+                            logger.error({ accessCode, userId, err }, '[ERROR] Failed to start deferred tournament session');
+                        }
                     }
+                }
+            }
+            // --- MODERNIZATION: Emit correct_answers to student if trophy is active ---
+            // Only for live games (not deferred), after join is complete
+            if (!isDeferred) {
+                const displayState = await gameStateService_1.default.getProjectionDisplayState(accessCode);
+                if (displayState?.showCorrectAnswers && displayState.correctAnswersData) {
+                    // Use canonical event and payload (match showCorrectAnswersHandler)
+                    const correctAnswersPayload = {
+                        questionUid: displayState.correctAnswersData.questionUid,
+                        correctAnswers: displayState.correctAnswersData.correctAnswers || []
+                    };
+                    socket.emit(events_1.SOCKET_EVENTS.GAME.CORRECT_ANSWERS, correctAnswersPayload);
+                    logger.info({ accessCode, userId, questionUid: correctAnswersPayload.questionUid }, '[JOIN_GAME] Emitted correct_answers to student on join (trophy active)');
                 }
             }
             // Emit updated participant count to teacher dashboard
             await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
+            // MODERNIZATION: Emit unified participant list for lobby display
+            await (0, lobbyHandler_1.emitParticipantList)(io, accessCode);
             // Emit updated participant count
             const participantCount = await prisma_1.prisma.gameParticipant.count({
                 where: { gameInstanceId: gameInstance.id }
@@ -397,7 +520,7 @@ function joinGameHandler(io, socket) {
                     userId: p.userId,
                     username: p.user?.username || 'Unknown',
                     avatar: p.user?.avatarEmoji || '�',
-                    score: p.score ?? 0,
+                    score: isDeferred ? (p.deferredScore ?? 0) : (p.liveScore ?? 0),
                     avatarEmoji: p.user?.avatarEmoji || '🐼',
                     joinedAt: p.joinedAt ? (typeof p.joinedAt === 'string' ? p.joinedAt : p.joinedAt.toISOString()) : new Date().toISOString(),
                     online: true,

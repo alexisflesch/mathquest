@@ -160,6 +160,7 @@ export async function getGameControlState(
             gameId: gameInstance.id,
             accessCode: gameInstance.accessCode,
             templateName: gameTemplate.name,
+            gameInstanceName: gameInstance.name, // Modernization: include canonical gameInstanceName
             status: gameState.status,
             currentQuestionUid,
             questions,

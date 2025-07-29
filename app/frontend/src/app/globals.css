@@ -1,3 +1,37 @@
+@import "./dialogs.css";
+
+@layer components {
+
+  /* Ensure metadata (span) in .question-header is always right-aligned, even in compact mode */
+  .question-header>span {
+    margin-left: auto !important;
+    text-align: right !important;
+    flex-shrink: 0;
+    min-width: 80px;
+    display: inline-block;
+  }
+}
+
+/* Ensure enhanced multi-select dropdown option hover is always visible and theme-compliant */
+.enhanced-dropdown-option:hover {
+  background-color: var(--dropdown-hover) !important;
+  color: var(--dropdown-hover-foreground) !important;
+}
+
+/* Ensure multi-select dropdown option hover is always visible and theme-compliant */
+.multi-dropdown-option:hover {
+  background-color: var(--dropdown-hover) !important;
+  color: var(--dropdown-hover-foreground) !important;
+}
+
+/* Ensure dropdown option hover is always visible and theme-compliant */
+.enhanced-single-dropdown-option:hover {
+  background-color: var(--dropdown-hover) !important;
+  color: var(--dropdown-hover-foreground) !important;
+}
+
+
+@import "./question-cards.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,6 +43,20 @@
 #FF8C42;
 #10b981; */
 
+/* Dropdown hover and foreground utility classes */
+.bg-dropdown-hover {
+  background-color: var(--dropdown-hover) !important;
+}
+
+.text-dropdown-foreground {
+  color: var(--dropdown-foreground) !important;
+}
+
+/* Add dropdown-hover-foreground for both themes */
+/*
+  Canonical navbar height variable. Use everywhere for AppNav/topbar height.
+  Change this value to update all layouts at once.
+*/
 :root {
   --navbar-height: 56px;
   --background: #ebf0f5;
@@ -40,10 +88,22 @@
   --tab-bar-bg: #f3f4f6;
   /* neutral-100/200 for light mode, not pure white */
   /* neutral-200 for light mode */
+
+  /* Dropdown hover color for light mode */
+  --dropdown-hover: #f3f4f6;
+  --dropdown-hover-foreground: #23272f;
 }
 
 /* Force theme by [data-theme] attribute on html, takes precedence over prefers-color-scheme */
+
 html[data-theme="dark"] {
+  --dropdown-hover: #374151;
+  --dropdown-hover-foreground: #f3f4f6;
+
+  .text-dropdown-hover-foreground {
+    color: var(--dropdown-hover-foreground) !important;
+  }
+
   --background: #23272f;
   --card: #2d3340;
   --foreground: #f3f4f6;
@@ -61,7 +121,7 @@ html[data-theme="dark"] {
   /* Foncé mais pas noir, plus doux */
   --success: #6ee7b7;
   --success-foreground: #1f2937;
-  --border: #374151;
+  --border: #6c7f9e;
   /* Un gris un peu plus clair que #27272a */
   --input: #374151;
   --muted: #2d3340;
@@ -816,17 +876,7 @@ textarea:focus {
   }
 }
 
-@layer components {
 
-  /* Ensure metadata (span) in .question-header is always right-aligned, even in compact mode */
-  .question-header>span {
-    margin-left: auto !important;
-    text-align: right !important;
-    flex-shrink: 0;
-    min-width: 80px;
-    display: inline-block;
-  }
-}
 
 /* ================================
    EMOJI AVATAR CONSISTENCY
@@ -855,9 +905,31 @@ textarea:focus {
   text-decoration: none !important;
 }
 
+
+/*
+  Mobile: main-content sits below fixed AppNav (56px height).
+  Use height: calc(100dvh - 56px) to avoid overflow and unwanted scrollbars.
+  On desktop, revert to default (sidebar layout).
+*/
+
+/*
+  Mobile: main-content sits below fixed AppNav (56px height).
+  Use height: calc(100dvh - 56px) to avoid overflow and unwanted scrollbars.
+  On desktop, ensure min-height: 100dvh for full-viewport layouts.
+*/
+/*
+  Mobile: main-content sits below fixed AppNav (height: var(--navbar-height)).
+  Use height: calc(100dvh - var(--navbar-height)) to avoid overflow and unwanted scrollbars.
+  On desktop, ensure min-height: 100dvh for full-viewport layouts.
+*/
+/*
+  Mobile: main-content sits below fixed AppNav (height: var(--navbar-height)).
+  Use min-height: calc(100dvh - var(--navbar-height)) to allow scrolling for large content.
+  Add overflow-y: auto for scrollable content.
+*/
 .main-content {
-  min-height: 100dvh;
-  padding-top: 56px;
+  min-height: calc(100dvh - var(--navbar-height));
+  overflow-y: auto;
   padding-left: 1rem;
   padding-right: 1rem;
   background: var(--background);
@@ -870,7 +942,9 @@ textarea:focus {
 
 @media (min-width: 768px) {
   .main-content {
-    padding-top: 0;
+    height: auto;
+    min-height: 100dvh;
+    /* Desktop: sidebar, no AppNav at top, no offset needed */
   }
 }
 
@@ -885,6 +959,40 @@ textarea:focus {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+/*
+  Teacher content: Full-width layout for teacher pages that need more space.
+  Fixes mobile horizontal scroll by ensuring proper overflow handling
+  while preserving the original wide layout design.
+*/
+.teacher-content {
+  /* Mobile: Account for AppNav height to prevent unnecessary vertical scroll */
+  min-height: calc(100dvh - var(--navbar-height));
+  background: var(--background);
+}
+
+@media (min-width: 768px) {
+  .teacher-content {
+    /* Desktop: No AppNav at top, use full viewport height */
+    min-height: 100dvh;
+  }
+}
+
+.teacher-content-flex {
+  /* Mobile: Account for AppNav height to prevent unnecessary vertical scroll */
+  height: calc(100dvh - var(--navbar-height));
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .teacher-content-flex {
+    /* Desktop: No AppNav at top, use full viewport height */
+    height: 100dvh;
+  }
 }
 
 .tqcard-content {
@@ -925,10 +1033,13 @@ textarea:focus {
   color: var (--foreground);
 }
 
-.tqcard-answer-unselected:hover {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--navbar);
+
+@media (hover: hover) and (pointer: fine) {
+  .tqcard-answer-unselected:hover {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--navbar);
+  }
 }
 
 .step-label-xs {

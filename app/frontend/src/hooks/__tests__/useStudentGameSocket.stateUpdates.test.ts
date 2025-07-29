@@ -1,7 +1,9 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
-import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
@@ -62,13 +64,13 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: LiveQuestionPayload = {
+        const questionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is the capital of France?',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['London', 'Paris', 'Berlin', 'Madrid']
-                // explanation and correctAnswers removed for security
+                answerOptions: ['London', 'Paris', 'Berlin', 'Madrid'],
+                timeLimit: 30
             },
             timer: {
                 status: 'run' as const,
@@ -122,13 +124,13 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         // Now receive a new question
-        const questionPayload: LiveQuestionPayload = {
+        const questionPayload = {
             question: {
                 uid: 'q2',
                 text: 'What is 5 + 3?',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['6', '7', '8', '9']
-                // explanation and correctAnswers removed for security
+                answerOptions: ['6', '7', '8', '9'],
+                timeLimit: 30
             },
             timer: {
                 status: 'run' as const,
@@ -180,13 +182,13 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         // Connection should persist through question updates
-        const questionPayload: LiveQuestionPayload = {
+        const questionPayload = {
             question: {
                 uid: 'q1',
                 text: 'Test question',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['A', 'B', 'C', 'D']
-                // explanation and correctAnswers removed for security
+                answerOptions: ['A', 'B', 'C', 'D'],
+                timeLimit: 30
             },
             timer: {
                 status: 'run' as const,
@@ -220,12 +222,13 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const multipleChoicePayload: LiveQuestionPayload = {
+        const multipleChoicePayload = {
             question: {
                 uid: 'q3',
                 text: 'Which of the following are prime numbers?',
                 questionType: QUESTION_TYPES.MULTIPLE_CHOICE,
-                answerOptions: ['2', '3', '4', '5', '6', '7']
+                answerOptions: ['2', '3', '4', '5', '6', '7'],
+                timeLimit: 60
             },
             timer: {
                 status: 'run' as const,
@@ -364,12 +367,13 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionWithMetadata: LiveQuestionPayload = {
+        const questionWithMetadata = {
             question: {
                 uid: 'q5',
                 text: 'What is photosynthesis?',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['A', 'B', 'C', 'D']
+                answerOptions: ['A', 'B', 'C', 'D'],
+                timeLimit: 40
             },
             timer: {
                 status: 'run' as const,
@@ -440,12 +444,13 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: LiveQuestionPayload = {
+        const questionPayload = {
             question: {
                 uid: 'q1',
                 text: 'Quick question',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['A', 'B']
+                answerOptions: ['A', 'B'],
+                timeLimit: 20
             },
             timer: {
                 status: 'stop' as const,

@@ -190,6 +190,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     //     });
     // };
 
+    // DEBUG: Log className and question.uid for each render
+    logger.info(`[QuestionDisplay] Render: question.uid=${question.uid} className=${className}`);
     return (
         <div
             className={`question-display flex flex-col select-none transition-all duration-150 ease-in-out ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
@@ -484,6 +486,9 @@ export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
             if (prevProps.stats[i] !== nextProps.stats[i]) return false;
         }
     }
+
+    // CRITICAL: Compare className for style changes (terminated, etc)
+    if (prevProps.className !== nextProps.className) return false;
 
     return true; // No meaningful changes detected
 });

@@ -32,6 +32,9 @@ export interface SortableQuestionProps {
     disabled?: boolean;
     stats?: number[]; // Accepts number[] for per-question stats bar
     durationMs: number; // Canonical duration from parent
+    onResume?: (uid: string) => void;
+    // Modernization: allow extra className for question state
+    className?: string;
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -67,7 +70,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs, className }: SortableQuestionProps) => {
     // ...existing code...
 
     // ...existing code...
@@ -280,11 +283,21 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         logger.debug('SortableQuestion handlePlayWithCurrentTime - isActive:', isActive);
         logger.debug('SortableQuestion handlePlayWithCurrentTime - liveStatus:', liveStatus);
 
-        // Always use full duration for non-active questions to ensure proper "new question" detection
-        // Only use remaining time if this is the currently active question and it's paused
-        const timeToUse = (isActive && liveStatus === 'pause')
-            ? displayedTimeLeft  // Use remaining time for paused current question
-            : (durationMs ?? 0);  // Use full duration for new questions (already in ms from backend)
+        // Canonical: Always use the latest durationMs after an edit (teacher's intent)
+        // If the timer is paused, but durationMs has changed since pause, use durationMs
+        let timeToUse: number;
+        if (isActive && liveStatus === 'pause') {
+            // If the canonical durationMs differs from the paused value, use durationMs (edit happened while paused)
+            const pausedValue = pausedTimeLeftByUid[q.uid];
+            if (typeof pausedValue === 'number' && durationMs !== pausedValue) {
+                logger.info('[SortableQuestion] Timer was edited while paused. Using new durationMs.', { q_uid: q.uid, durationMs, pausedValue });
+                timeToUse = durationMs ?? 0;
+            } else {
+                timeToUse = pausedValue ?? durationMs ?? 0;
+            }
+        } else {
+            timeToUse = durationMs ?? 0;
+        }
         console.debug('[SortableQuestion] handlePlayWithCurrentTime: onPlay called with', timeToUse, 'ms');
         onPlay(q.uid, timeToUse);
     };
@@ -326,7 +339,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     const timerEditInput = editingTimer ? (
         <div className="relative">
             <QuestionDisplay
-                className="question-dashboard opacity-40 pointer-events-none select-none"
+                className={`question-dashboard opacity-40 pointer-events-none select-none ${className ?? ''}`}
                 question={toLegacyQuestionShape(q)}
                 isOpen={open}
                 onToggleOpen={setOpen}
@@ -394,7 +407,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 ) : (
                     // Affiche le composant QuestionDisplay normal
                     <QuestionDisplay
-                        className="question-dashboard"
+                        className={className}
                         question={toLegacyQuestionShape(q)}
                         isOpen={open}
                         onToggleOpen={setOpen}

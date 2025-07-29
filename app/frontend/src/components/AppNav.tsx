@@ -123,10 +123,10 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
     const iconMap = {
         'Accueil': Home,
         'Espace élève': GraduationCap,
-        'Rejoindre un tournoi': Users,
+        'Rejoindre une activité': Users,
         'Entraînement libre': Dumbbell,
         'Créer un tournoi': PlusCircle,
-        'Mes tournois': ClipboardList,
+        'Historique': ClipboardList,
         'Espace enseignant': BookOpen,
         'Mes activités': BookOpen,
         'Créer une activité': FilePlus,
@@ -144,58 +144,58 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
     };
 
     // Menu structure based on the new 4-state authentication system
-    const menu = useMemo(() => {
+    // For anonymous, we split the menu to insert the info rectangle after the first two items
+    // Add a discriminated union type for menu items
+    type MenuItem =
+        | { label: string; href: string; type?: undefined; defaultMode?: undefined }
+        | { type: 'info-rectangle'; label?: undefined; href?: undefined; defaultMode?: undefined }
+        | { defaultMode: 'section'; label: string; href?: undefined; type?: undefined };
+
+    const menu: MenuItem[] = useMemo(() => {
         switch (userState) {
             case 'anonymous':
-                // State 1: Not connected, no profile set up
                 return [
                     { label: 'Accueil', href: '/' },
                     { label: 'Se connecter', href: '/login' },
+                    { type: 'info-rectangle' },
                 ];
-
             case 'guest':
-                // State 2: Guest (profile set but no account)
                 return [
                     { label: 'Accueil', href: '/' },
                     { label: 'Entraînement libre', href: '/student/create-game?training=true' },
-                    { label: 'Rejoindre un tournoi', href: '/student/join' },
+                    { label: 'Rejoindre une activité', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
-                    { label: 'Mes tournois', href: '/my-tournaments' },
+                    { label: 'Historique', href: '/my-tournaments' },
                     { label: 'Profil invité', href: '/profile' },
                 ];
-
             case 'student':
-                // State 3: Student (full account)
                 return [
                     { label: 'Accueil', href: '/' },
                     { label: 'Entraînement libre', href: '/student/create-game?training=true' },
-                    { label: 'Rejoindre un tournoi', href: '/student/join' },
+                    { label: 'Rejoindre une activité', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
-                    { label: 'Mes tournois', href: '/my-tournaments' },
+                    { label: 'Historique', href: '/my-tournaments' },
                     { label: 'Mon profil', href: '/profile' },
                 ];
-
             case 'teacher':
-                // State 4: Teacher account with admin features
                 return [
                     { label: 'Accueil', href: '/' },
                     { label: 'Entraînement libre', href: '/student/create-game?training=true' },
-                    { label: 'Rejoindre un tournoi', href: '/student/join' },
+                    { label: 'Rejoindre une activité', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
-                    { label: 'Mes tournois', href: '/my-tournaments' },
+                    { label: 'Historique', href: '/my-tournaments' },
                     { defaultMode: 'section', label: 'Enseignant' },
                     { label: 'Mes activités', href: '/teacher/games' },
                     { label: 'Créer une activité', href: '/teacher/games/new' },
                     { defaultMode: 'section', label: 'Compte' },
                     { label: 'Mon profil', href: '/profile' },
                 ];
-
             default:
-                // Fallback to anonymous state
                 console.warn('Unknown userState:', userState, 'falling back to anonymous');
                 return [
                     { label: 'Accueil', href: '/' },
                     { label: 'Se connecter', href: '/login' },
+                    { type: 'info-rectangle' },
                 ];
         }
     }, [userState]);
@@ -308,25 +308,27 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     )}
                 </div>
 
-                {/* Warning section for anonymous users */}
-                {!sidebarCollapsed && userState === 'anonymous' && (
-                    <div className="px-4 py-3 border-b border-white/10">
-                        <div className="flex items-start space-x-2 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-                            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                            <div className="text-sm">
-                                <div className="font-semibold text-yellow-300">Profil requis</div>
-                                <div className="text-yellow-200/80 mt-1">
-                                    Connectez-vous pour accéder aux fonctionnalités
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {/* ...removed duplicate anonymous info panel... */}
 
                 <nav className={`flex-1 p-1 space-y-1`}>
                     {menu.map((item, index) => {
-                        const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
-                        if (item.defaultMode === 'section') {
+                        if ('type' in item && item.type === 'info-rectangle' && userState === 'anonymous' && !sidebarCollapsed) {
+                            return (
+                                <div key="info-rectangle" className="px-2 py-2">
+                                    <div className="border-t border-white/20 mb-4"></div>
+                                    <div className="p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg flex flex-col gap-2">
+                                        <div className="flex items-center gap-2 mb-1 mt-4">
+                                            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                                            <span className="font-semibold text-yellow-300">Non connecté</span>
+                                        </div>
+                                        <div className="ml-7 text-yellow-100 text-sm">
+                                            Connectez-vous en mode invité ou avec un compte pour accéder à l'appli
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        if ('defaultMode' in item && item.defaultMode === 'section') {
                             return (
                                 <div key={`section-${index}`} className="pt-4 pb-1 relative h-6 flex items-center">
                                     <div className="flex items-center w-full px-2 relative">
@@ -352,15 +354,17 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                                 </div>
                             );
                         }
-                        if (!item.href) return null;
+                        if (!('label' in item) || !item.href) return null;
+                        const label: string = item.label!;
+                        const Icon = (iconMap as Record<string, typeof Home>)[label] || Home;
                         return (
                             <SidebarRow
-                                key={item.label}
+                                key={label}
                                 icon={Icon}
-                                label={item.label}
+                                label={label}
                                 href={item.href as string}
                                 sidebarCollapsed={sidebarCollapsed}
-                                title={sidebarCollapsed ? item.label : undefined}
+                                title={sidebarCollapsed ? label : undefined}
                             />
                         );
                     })}
@@ -408,11 +412,12 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
             </motion.aside>
 
             {/* Top bar for mobile only */}
-            <div className="md:hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '56px', zIndex: 100, background: 'var(--navbar)' }}>
+            {/* Use canonical --navbar-height variable for topbar height */}
+            <div className="md:hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: 'var(--navbar-height)', zIndex: 100, background: 'var(--navbar)' }}>
                 <div className="appnav-header-row h-14">
                     {/* Burger menu button */}
                     <button onClick={() => setOpen(o => !o)} aria-label="Ouvrir le menu" className="focus:outline-none">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
@@ -489,10 +494,27 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                             {/* Menu items */}
                             <div className="p-6 space-y-1 flex-1">
                                 {menu.map((item, index) => {
-                                    const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
-
-                                    // Handle section headers
-                                    if (item.defaultMode === 'section') {
+                                    // Info rectangle for anonymous users (mobile)
+                                    if ('type' in item && item.type === 'info-rectangle' && userState === 'anonymous') {
+                                        return (
+                                            <React.Fragment key="mobile-info-rectangle">
+                                                <div className="border-t border-white/20 mb-4"></div>
+                                                <div style={{ marginTop: '1rem' }}>
+                                                    <div className="p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg flex flex-col gap-2">
+                                                        <div className="flex items-center gap-2 mb-1 mt-2">
+                                                            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                                                            <span className="font-semibold text-yellow-300">Non connecté</span>
+                                                        </div>
+                                                        <div className="ml-7 text-yellow-100 text-sm">
+                                                            Connectez-vous en mode invité ou avec un compte pour accéder à l'appli
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </React.Fragment>
+                                        );
+                                    }
+                                    // Section headers
+                                    if ('defaultMode' in item && item.defaultMode === 'section') {
                                         return (
                                             <div key={`mobile-section-${index}`} className="pt-3 pb-1">
                                                 <div className="flex items-center gap-2 px-2">
@@ -505,19 +527,21 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                                             </div>
                                         );
                                     }
-
-                                    return (
-                                        <div key={item.label}>
-                                            {item.href && (
+                                    // Menu links
+                                    if ('label' in item && item.href) {
+                                        const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
+                                        return (
+                                            <div key={`mobile-link-${item.label}`}>
                                                 <Link href={item.href} className="flex items-center gap-3 px-4 py-1.5 rounded hover:bg-gray-700 text-sm" onClick={() => setOpen(false)}>
                                                     <Icon className="w-5 h-5" />
                                                     <span className={item.label === 'Profil invité' ? 'text-[color:var(--guest)] font-semibold' : ''}>
                                                         {item.label}
                                                     </span>
                                                 </Link>
-                                            )}
-                                        </div>
-                                    );
+                                            </div>
+                                        );
+                                    }
+                                    return null;
                                 })}
                             </div>
 

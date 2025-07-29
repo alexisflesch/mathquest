@@ -50,6 +50,8 @@ const gameStateService = __importStar(require("@/core/services/gameStateService"
 const logger = (0, logger_1.default)('JoinDashboardHandler');
 function joinDashboardHandler(io, socket) {
     return async (payload, callback) => {
+        // --- MODERNIZATION: Ensure terminatedQuestions is always in scope for all post-handler logic ---
+        let terminatedQuestions = {};
         // CRITICAL: Log every join_dashboard event received, even before validation
         logger.info({
             socketId: socket.id,
@@ -206,9 +208,19 @@ function joinDashboardHandler(io, socket) {
                 joinedAt: Date.now()
             }));
             // Get and send comprehensive game state for dashboard
-            const { controlState, errorDetails } = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveUserId, isTestEnvironment);
+            let { controlState, errorDetails } = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveUserId, isTestEnvironment);
             if (!controlState) {
-                logger.warn({ gameId, userId: effectiveUserId }, 'Could not retrieve game control state');
+                logger.warn({ gameId, userId: effectiveUserId }, 'Game control state missing, attempting to initialize game state in Redis');
+                // Attempt to initialize game state in Redis
+                const initialized = await gameStateService.initializeGameState(gameInstance.id);
+                if (initialized) {
+                    logger.info({ gameId, userId: effectiveUserId }, 'Game state initialized in Redis, retrying getGameControlState');
+                    // Try again to get control state
+                    ({ controlState, errorDetails } = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveUserId, isTestEnvironment));
+                }
+            }
+            if (!controlState) {
+                logger.warn({ gameId, userId: effectiveUserId }, 'Could not retrieve game control state after initialization attempt');
                 if (isTestEnvironment) {
                     // In test environment, return success anyway to not block tests
                     logger.info({ gameId }, 'Test environment: Returning successful response despite missing game state');
@@ -248,6 +260,19 @@ function joinDashboardHandler(io, socket) {
                 }
                 return;
             }
+            // --- MODERNIZATION: Fetch terminated questions from Redis and build map ---
+            try {
+                const terminatedKey = `mathquest:game:terminatedQuestions:${gameInstance.accessCode}`;
+                const terminatedSet = await redis_1.redisClient.smembers(terminatedKey);
+                if (Array.isArray(terminatedSet)) {
+                    terminatedSet.forEach((uid) => {
+                        terminatedQuestions[uid] = true;
+                    });
+                }
+            }
+            catch (err) {
+                logger.error({ err }, 'Failed to fetch terminated questions from Redis');
+            }
             // Send the comprehensive initial state
             socket.emit(events_1.TEACHER_EVENTS.GAME_CONTROL_STATE, controlState);
             // Send initial timer state to the dashboard timer hook
@@ -284,8 +309,8 @@ function joinDashboardHandler(io, socket) {
             }, 'Emitting dashboard_joined event');
             socket.emit(events_1.TEACHER_EVENTS.DASHBOARD_JOINED, {
                 gameId: gameInstance.id,
-                accessCode: gameInstance.accessCode,
-                userId: effectiveUserId
+                success: true,
+                terminatedQuestions
             });
             // Call the callback if provided
             if (callback) {
@@ -326,6 +351,45 @@ function joinDashboardHandler(io, socket) {
                     details: error instanceof Error ? error.message : String(error)
                 });
             }
+        }
+        // --- Emit initial showStats state to dashboard (for global stats toggle) ---
+        try {
+            const gameAccessCode = gameInstance?.accessCode || accessCode;
+            if (gameAccessCode) {
+                const displayState = await gameStateService.getProjectionDisplayState(gameAccessCode);
+                // Emit initial showStats state
+                if (displayState && typeof displayState.showStats === 'boolean') {
+                    socket.emit(events_1.TEACHER_EVENTS.TOGGLE_PROJECTION_STATS, {
+                        show: displayState.showStats
+                    });
+                    logger.info({ showStats: displayState.showStats, gameAccessCode }, 'Emitted initial showStats state to dashboard');
+                }
+                // Emit initial showCorrectAnswers state (trophy) based on terminatedQuestions map
+                let showTrophy = false;
+                try {
+                    // Use the same terminatedQuestions map as sent in dashboard_joined
+                    // If there is no current question, always emit show: false
+                    const currentQuestionUid = displayState?.correctAnswersData?.questionUid || null;
+                    if (currentQuestionUid && terminatedQuestions[currentQuestionUid]) {
+                        showTrophy = true;
+                    }
+                    else {
+                        showTrophy = false;
+                    }
+                }
+                catch (err) {
+                    logger.error({ err }, 'Error determining initial showCorrectAnswers state');
+                    showTrophy = false;
+                }
+                socket.emit(events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, {
+                    show: showTrophy,
+                    terminatedQuestions: terminatedQuestions || {}
+                });
+                logger.info({ showCorrectAnswers: showTrophy, gameAccessCode }, 'Emitted initial showCorrectAnswers state to dashboard (modernized, safe for no current question)');
+            }
+        }
+        catch (err) {
+            logger.error({ err }, 'Error emitting initial showStats state to dashboard');
         }
         // Add a global catch-all event logger for deep debugging
         socket.onAny((event, ...args) => {

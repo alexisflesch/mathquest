@@ -243,7 +243,7 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
             // Send leaderboard update to both live and projection
             if (fullGameState.leaderboard.length > 0) {
                 io.to([liveRoom, projectionRoom]).emit('leaderboard_update', {
-                    leaderboard: fullGameState.leaderboard.slice(0, 10) // Top 10
+                    leaderboard: fullGameState.leaderboard
                 });
             }
             // Update teacher control panel (modernized, but legacy field commented)

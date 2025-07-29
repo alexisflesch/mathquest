@@ -12,7 +12,6 @@ postgre.md
 # Ignore all .env files in any directory
 **/.env
 
-# Ignore node_modules
 node_modules
 
 **/vuepress/docs/.vuepress/.temp/

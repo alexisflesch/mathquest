@@ -57,6 +57,9 @@ export interface AuthContextType {
     canCreateQuiz: () => boolean;
     canJoinGame: () => boolean;
     requiresAuth: () => boolean;
+
+    // Utility
+    getCurrentUserId: () => string | undefined;
 }
 
 // GuestProfileData is now imported from shared types above

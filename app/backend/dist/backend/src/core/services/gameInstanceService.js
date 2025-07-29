@@ -141,7 +141,7 @@ class GameInstanceService {
                             }
                         },
                         orderBy: {
-                            score: 'desc'
+                            liveScore: 'desc'
                         }
                     } : false
                 }
@@ -185,7 +185,7 @@ class GameInstanceService {
                             }
                         },
                         orderBy: {
-                            score: 'desc'
+                            liveScore: 'desc'
                         }
                     } : false
                 }
@@ -280,12 +280,11 @@ class GameInstanceService {
         }
     }
     /**
-     * Update differed mode and window for a game instance
+     * Update deferred mode window for a game instance
      */
-    async updateDifferedMode(gameId, opts) {
+    async updateDeferredMode(gameId, opts) {
         try {
             const updates = {
-                isDiffered: opts.isDiffered,
                 differedAvailableFrom: opts.differedAvailableFrom,
                 differedAvailableTo: opts.differedAvailableTo
             };
