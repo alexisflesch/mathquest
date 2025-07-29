@@ -8,4 +8,4 @@
 
 L'application est disponible en ligne à l'adresse [mathquest.alexisfles.ch](https://mathquest.alexisfles.ch).
 
-Une documentation complète est accessible à : https://alexisflesch.github.io/mathquest/
+Une documentation complète est accessible à [ici](https://alexisflesch.github.io/mathquest/).

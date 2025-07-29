@@ -4,22 +4,29 @@
 
 set -e
 
-# Génération des fichiers JSON nécessaires
-python3 /home/aflesch/mathquest/scripts/generate_json.py
+# Répertoire racine du projet (parent de scripts)
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-BUILD_DIR="$(cd "$(dirname "$0")" && pwd)/docs/.vuepress/dist"
+# Génération des fichiers JSON nécessaires
+python3 "$(dirname "$0")/generate_json.py"
+
+BUILD_DIR="$PROJECT_ROOT/vuepress/docs/.vuepress/dist"
 REPO_URL="https://github.com/alexisflesch/mathquest.git"
 BRANCH="gh-pages"
 ORIGIN_DIR="$(pwd)"
 
- # Build la doc
+# Se déplacer dans le répertoire vuepress pour exécuter npm
+cd "$PROJECT_ROOT/vuepress"
+
+# Build la doc
 npm run docs:build
 
-
 # Copie manuelle du logo et du favicon si besoin (contournement bug VuePress)
-cp "$(cd "$(dirname "$0")" && pwd)/docs/public/assets/logo.svg" "$BUILD_DIR/assets/logo.svg"
-if [ -f "$(cd "$(dirname "$0")" && pwd)/docs/public/favicon.ico" ]; then
-  cp "$(cd "$(dirname "$0")" && pwd)/docs/public/favicon.ico" "$BUILD_DIR/favicon.ico"
+if [ -f "$PROJECT_ROOT/vuepress/docs/public/assets/logo.svg" ]; then
+  cp "$PROJECT_ROOT/vuepress/docs/public/assets/logo.svg" "$BUILD_DIR/assets/logo.svg"
+fi
+if [ -f "$PROJECT_ROOT/vuepress/docs/public/favicon.ico" ]; then
+  cp "$PROJECT_ROOT/vuepress/docs/public/favicon.ico" "$BUILD_DIR/favicon.ico"
 fi
 
 cd "$BUILD_DIR"

@@ -1,3 +1,7 @@
+"""
+    Utilitaire pour la génération de la doc (nomenclature)
+"""
+
 import yaml
 import json
 import os

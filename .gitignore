@@ -17,3 +17,7 @@ script/deploy_to_vps.sh
 
 # Ignore node_modules directory
 node_modules/
+
+# Ignore tex and pdf
+*.tex
+*.pdf

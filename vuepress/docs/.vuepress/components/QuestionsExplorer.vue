@@ -21,17 +21,14 @@
       </select>
     </label>
     
-    <label v-if="tags.length">Tag :
-      <select v-model="selectedTag">
-        <option value="">-- Choisir un tag --</option>
-        <option v-for="tag in tags" :key="tag" :value="tag">{{ tag }}</option>
-      </select>
-    </label>
-    
-    <div v-if="selectedTag">
-      <h3>Tag sélectionné :</h3>
-      <p><strong>{{ selectedTag }}</strong></p>
-      <p><em>Niveau: {{ selectedNiveau }}, Discipline: {{ selectedDiscipline }}, Thème: {{ selectedTheme }}</em></p>
+    <!-- Liste simple des tags -->
+    <div v-if="tags.length" class="tags-container">
+      <h3>Tags disponibles :</h3>
+      <ul class="tags-list">
+        <li v-for="tag in tags" :key="tag">
+          {{ tag }}
+        </li>
+      </ul>
     </div>
     
     <div v-if="niveaux.length === 0">
@@ -43,30 +40,63 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-// Import JSON files directly (this is more reliable in VuePress)
-import cpData from '../data/cp.json'
-import ce1Data from '../data/ce1.json'
+// Import dynamique de tous les fichiers JSON dans le dossier data/
+const jsonModules = import.meta.glob('../data/*.json', { eager: true })
+
+// Ordre des niveaux dans le système français
+const ORDRE_NIVEAUX = [
+  'cp', 'ce1', 'ce2', 'cm1', 'cm2',
+  'sixieme', '6eme', '6e',
+  'cinquieme', '5eme', '5e',
+  'quatrieme', '4eme', '4e',
+  'troisieme', '3eme', '3e',
+  'seconde', '2nde', '2de',
+  'premiere', '1ere', '1re',
+  'terminale', 'term', 'tle',
+  'l1', 'l2', 'l3', 'm1', 'm2'
+]
 
 const niveaux = ref([])
 const niveauxData = ref({})
 const selectedNiveau = ref('')
 const selectedDiscipline = ref('')
 const selectedTheme = ref('')
-const selectedTag = ref('')
 
 // Load data from imported JSON files
 async function fetchNiveaux() {
   try {
-    // Use imported data directly instead of fetching
-    const dataMap = {
-      'cp': cpData,
-      'ce1': ce1Data
+    // Convertir les modules importés en objet avec le nom du fichier comme clé
+    const dataMap = {}
+    const niveauxTrouves = []
+    
+    for (const path in jsonModules) {
+      // Extraire le nom du fichier sans extension
+      const fileName = path.split('/').pop().replace('.json', '')
+      dataMap[fileName] = jsonModules[path].default || jsonModules[path]
+      niveauxTrouves.push(fileName) // Garder la casse originale !
     }
     
-    niveaux.value = Object.keys(dataMap)
+    // Trier les niveaux selon l'ordre défini
+    niveaux.value = niveauxTrouves.sort((a, b) => {
+      const indexA = ORDRE_NIVEAUX.indexOf(a.toLowerCase()) // Comparer en lowercase
+      const indexB = ORDRE_NIVEAUX.indexOf(b.toLowerCase()) // mais garder l'original
+      
+      // Si les deux sont dans l'ordre défini
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB
+      }
+      // Si seulement A est dans l'ordre défini, il vient en premier
+      if (indexA !== -1) return -1
+      // Si seulement B est dans l'ordre défini, il vient en premier
+      if (indexB !== -1) return 1
+      // Sinon, ordre alphabétique
+      return a.localeCompare(b)
+    })
+    
     niveauxData.value = dataMap
     
     console.log('Loaded data:', niveauxData.value)
+    console.log('Niveaux triés:', niveaux.value)
     
     if (niveaux.value.length > 0) {
       selectedNiveau.value = niveaux.value[0]
@@ -126,14 +156,12 @@ const tags = computed(() => {
 function onNiveauChange() {
   selectedDiscipline.value = ''
   selectedTheme.value = ''
-  selectedTag.value = ''
 }
 function onDisciplineChange() {
   selectedTheme.value = ''
-  selectedTag.value = ''
 }
 function onThemeChange() {
-  selectedTag.value = ''
+  // Plus besoin de réinitialiser selectedTag
 }
 </script>
 
@@ -144,5 +172,24 @@ label {
 }
 select {
   margin-left: 0.5em;
+}
+
+.tags-container {
+  margin-top: 1em;
+}
+
+.tags-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.tags-list li {
+  padding: 0.5em 1em;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 </style>

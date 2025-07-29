@@ -1,3 +1,7 @@
+"""
+    Utilitaire pour générer des pdfs à partir des questions yaml
+"""
+
 #!/usr/bin/env python3
 import os
 import yaml
@@ -234,7 +238,8 @@ def clean_aux_files(folder):
 def main():
 
     import argparse
-    base_dir = Path(__file__).parent.parent.resolve()
+    # Le script est maintenant dans monapp/scripts, donc on remonte d'un niveau et on va dans questions
+    base_dir = Path(__file__).parent.parent.resolve() / 'questions'
     parser = argparse.ArgumentParser(description="Compile les fichiers YAML en LaTeX.")
     parser.add_argument('dossier', nargs='?', help='Nom du dossier à compiler (optionnel)')
     parser.add_argument('sous_dossier', nargs='?', help='Nom du sous-dossier à compiler (optionnel)')
@@ -274,18 +279,6 @@ def main():
             f.write(latex_footer())
         compile_latex(out_tex)
         clean_aux_files(folder)
-
-    # Met à jour le .gitignore
-    gitignore = Path(base_dir) / '.gitignore'
-    lines = []
-    if gitignore.exists():
-        with open(gitignore, 'r') as f:
-            lines = f.readlines()
-    for ext in ['*.tex', '*.pdf']:
-        if ext + '\n' not in lines and ext not in ''.join(lines):
-            lines.append(ext + '\n')
-    with open(gitignore, 'w') as f:
-        f.writelines(lines)
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,7 @@
+"""
+    Pour importer les questions dans la BDD
+"""
+
 import yaml
 import psycopg2
 import os
