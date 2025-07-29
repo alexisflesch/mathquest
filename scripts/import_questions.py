@@ -250,9 +250,9 @@ def import_questions():
     try:
         conn = get_conn()
         cur = conn.cursor()
-        print_colored('INFO', 'Clearing the Question table...')
-        cur.execute('DELETE FROM questions')
-        conn.commit()
+        print_colored('INFO', 'Updating the Question table...')
+        # cur.execute('DELETE FROM questions') # DANGEREUX : supprime les liens en cascade vers GameTemplate !!
+        # conn.commit()
         # Insérer les questions seulement après suppression
         for q, yaml_path in all_questions:
             try:
@@ -300,6 +300,10 @@ def import_questions():
                 logging.error(msg)
                 all_errors.append(msg)
                 total_errors += 1
+        # Nettoyer les questions obsolètes
+        print_colored('INFO', 'Cleaning obsolete questions...')
+        question_uids = [q.get('uid') for q, _ in all_questions]  # ← FIX ICI
+        cur.execute('DELETE FROM questions WHERE uid != ALL(%s)', (question_uids,))
         conn.commit()
         cur.close()
         conn.close()
