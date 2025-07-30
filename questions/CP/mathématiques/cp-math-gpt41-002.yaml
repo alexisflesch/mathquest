@@ -432,6 +432,6 @@
   answerOptions:
     - "26 + 20 = 46"
     - "38 + 10 = 58"
-    - "30 + 40 = 70"
+    - "30 + 40 = 80"
     - "52 + 10 = 61"
   correctAnswers: [true, true, false, false]
