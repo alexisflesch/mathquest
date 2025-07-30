@@ -1,0 +1,437 @@
+# Questions de mathématiques niveau CP pour MathQuest
+# Auteur : gpt4.1 - Alexis Flesch
+- uid: "aflesch-cp-math-nombres-010"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Comparer des quantités"
+  text: "Sélectionne les affirmations vraies"
+  questionType: "multiple_choice"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "5 est plus grand que 2"
+    - "8 est plus petit que 6"
+    - "3 est plus petit que 9"
+    - "7 est plus grand que 10"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-calcul-001"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 4 pour faire 10 ?"
+  questionType: "single_choice"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "5"
+    - "6"
+    - "7"
+    - "4"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-math-calcul-002"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "3 + 6 = 9"
+    - "2 + 5 = 6"
+    - "7 + 1 = 8"
+    - "4 + 4 = 9"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-geo-001"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Formes géométriques"
+  text: "Quelle forme a 4 côtés égaux ?"
+  questionType: "single_choice"
+  themes: ["Géométrie"]
+  tags: ["formes géométriques usuelles"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Triangle"
+    - "Carré"
+    - "Cercle"
+    - "Rectangle"
+  correctAnswers: [false, true, false, false]
+
+
+- uid: "aflesch-cp-math-calcul-003"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "7 - 3 = 4"
+    - "6 - 2 = 5"
+    - "9 - 4 = 5"
+    - "8 - 5 = 4"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-calcul-004"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "10 - 6 = 4"
+    - "5 - 2 = 2"
+    - "8 - 3 = 5"
+    - "4 - 1 = 3"
+  correctAnswers: [true, false, true, true]
+
+- uid: "aflesch-cp-math-calcul-005"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "6 - 1 = 5"
+    - "7 - 2 = 6"
+    - "5 - 5 = 0"
+    - "9 - 4 = 6"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-calcul-006"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "4 - 3 = 1"
+    - "3 - 2 = 1"
+    - "6 - 4 = 1"
+    - "2 - 1 = 3"
+  correctAnswers: [true, true, false, false]
+
+- uid: "aflesch-cp-math-calcul-007"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "10 - 2 = 8"
+    - "9 - 3 = 7"
+    - "8 - 6 = 3"
+    - "7 - 1 = 6"
+  correctAnswers: [true, false, false, true]
+
+- uid: "aflesch-cp-math-calcul-008"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "5 - 3 = 2"
+    - "6 - 3 = 4"
+    - "7 - 4 = 3"
+    - "4 - 2 = 1"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-calcul-009"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "9 - 5 = 4"
+    - "6 - 4 = 2"
+    - "3 - 3 = 1"
+    - "2 - 2 = 0"
+  correctAnswers: [true, true, false, true]
+
+- uid: "aflesch-cp-math-calcul-010"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "1 - 1 = 0"
+    - "4 - 0 = 3"
+    - "6 - 6 = 0"
+    - "3 - 2 = 1"
+  correctAnswers: [true, false, true, true]
+
+- uid: "aflesch-cp-math-calcul-011"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "8 - 0 = 8"
+    - "7 - 7 = 1"
+    - "5 - 1 = 4"
+    - "6 - 5 = 2"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-calcul-012"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions simples"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "2 - 1 = 1"
+    - "4 - 2 = 2"
+    - "9 - 5 = 3"
+    - "7 - 0 = 7"
+  correctAnswers: [true, true, false, true]
+
+
+- uid: "aflesch-cp-math-calcul-013"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["résolution de problèmes très simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "40 - 20 = 20"
+    - "96 - 40 = 6"
+    - "47 - 40 = 17"
+    - "50 - 40 = 15"
+  correctAnswers: [false, false, true, false]
+
+- uid: "aflesch-cp-math-calcul-014"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["résolution de problèmes très simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "60 - 40 = 30"
+    - "45 - 20 = 25"
+    - "33 - 30 = 13"
+    - "58 - 40 = 28"
+  correctAnswers: [false, true, false, true]
+
+- uid: "aflesch-cp-math-calcul-015"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["résolution de problèmes très simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "72 - 30 = 42"
+    - "46 - 20 = 26"
+    - "39 - 10 = 28"
+    - "53 - 50 = 33"
+  correctAnswers: [true, true, true, false]
+
+- uid: "aflesch-cp-math-calcul-016"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["résolution de problèmes très simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "62 - 20 = 52"
+    - "58 - 30 = 28"
+    - "50 - 20 = 35"
+    - "41 - 40 = 1"
+  correctAnswers: [false, true, false, true]
+
+- uid: "aflesch-cp-math-calcul-017"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Soustractions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["résolution de problèmes très simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "44 - 20 = 24"
+    - "37 - 30 = 7"
+    - "49 - 10 = 39"
+    - "64 - 40 = 24"
+  correctAnswers: [true, true, true, true]
+
+
+
+- uid: "aflesch-cp-math-calcul-018"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "12 + 30 = 52"
+    - "40 + 10 = 50"
+    - "23 + 20 = 53"
+    - "31 + 40 = 60"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-math-calcul-019"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "15 + 20 = 35"
+    - "25 + 40 = 35"
+    - "14 + 50 = 84"
+    - "13 + 30 = 33"
+  correctAnswers: [true, false, false, false]
+
+- uid: "aflesch-cp-math-calcul-020"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "19 + 40 = 59"
+    - "11 + 30 = 41"
+    - "22 + 50 = 72"
+    - "20 + 60 = 70"
+  correctAnswers: [true, true, true, false]
+
+- uid: "aflesch-cp-math-calcul-021"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "18 + 40 = 58"
+    - "36 + 30 = 76"
+    - "45 + 20 = 65"
+    - "17 + 30 = 48"
+  correctAnswers: [true, false, true, false]
+
+- uid: "aflesch-cp-math-calcul-022"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Additions avec des dizaines"
+  text: "Sélectionne le ou les calculs justes"
+  questionType: "multiple_choice"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "26 + 20 = 46"
+    - "38 + 10 = 58"
+    - "30 + 40 = 70"
+    - "52 + 10 = 61"
+  correctAnswers: [true, true, false, false]
