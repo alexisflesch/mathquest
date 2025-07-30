@@ -20,3 +20,4 @@ node_modules
 # For vuepress
 **/dist/
 **/.temp/
+.vuepress
