@@ -1,0 +1,56 @@
+# Questions de mathématiques niveau CP pour MathQuest
+# Auteur : gpt4.1 - Alexis Flesch
+
+
+- uid: "aflesch-cp-geo-reperage-001"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Qui est deuxième ?"
+  text: "Paul, Clémence et Agathe font la course. Paul finit premier et Clémence finit après Agathe. Qui est deuxième ?"
+  questionType: "single_choice"
+  themes: ["Géométrie"]
+  tags: ["repérer dans l'espace"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Paul"
+    - "Clémence"
+    - "Agathe"
+  correctAnswers: [false, false, true]
+
+- uid: "aflesch-cp-geo-reperage-002"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Qui est à gauche ?"
+  text: "Sur un banc, Léa est assise à gauche de Tom. Tom est à gauche de Inès. Qui est au milieu ?"
+  questionType: "single_choice"
+  themes: ["Géométrie"]
+  tags: ["repérer dans l'espace"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Léa"
+    - "Tom"
+    - "Inès"
+  correctAnswers: [false, true, false]
+
+- uid: "aflesch-cp-geo-reperage-003"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Qui est dernier ?"
+  text: "En file indienne, Marc est devant Emma, qui est devant Léo. Qui est le dernier ?"
+  questionType: "single_choice"
+  themes: ["Géométrie"]
+  tags: ["repérer dans l'espace"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Marc"
+    - "Emma"
+    - "Léo"
+  correctAnswers: [false, false, true]
+
+
