@@ -1,0 +1,234 @@
+# Questions de mathématiques niveau L1 pour MathQuest
+# Thème : Logique et raisonnement
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt1-logique-et-raisonnement-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: "Négation d'une assertion"
+  tags: ["quantificateurs", "négation"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Quelle est la négation de l'assertion \(P\) ci-dessous ?
+    \[ P~:~ \forall x \in\mathbb{R}, \exists y<0,\, x-y<0.\]
+  answerOptions:
+    - \(\exists x \in\mathbb{R}, \forall y<0,\, x-y\geqslant 0.\)
+    - \(\exists x \in\mathbb{R}, \exists y<0,\, x-y>0.\)
+    - \(\exists x \in\mathbb{R}, \forall y> 0,\, x-y\geqslant 0.\)
+    - \(\forall x \in\mathbb{R}, \exists y>0,\, x-y>0.\)
+  correctAnswers: [true, false, false, false]
+
+
+- uid: "aflesch-mt1-logique-et-raisonnement-002"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: "Négation d'une assertion avec quantificateurs"
+  tags: ["quantificateurs", "négation"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Quelle est la négation de l'assertion \(P\) ci-dessous ?
+    \[ P~:~ \exists x \in \mathbb{R}, \forall y > 0,\, x + y > 0. \]
+  answerOptions:
+    - \(\exists x \in \mathbb{R}, \exists y > 0,\, x + y \leq 0.\)
+    - \(\forall x \in \mathbb{R}, \forall y > 0,\, x + y \leq 0.\)
+    - \(\exists x \in \mathbb{R}, \forall y > 0,\, x + y \leq 0.\)
+    - \(\forall x \in \mathbb{R}, \exists y > 0,\, x + y \leq 0.\)
+  correctAnswers: [false, false, false, true]
+
+- uid: "aflesch-mt1-logique-et-raisonnement-003"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: "Négation d'une implication"
+  tags: ["implication", "négation"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Quelle est la négation de l'assertion suivante ?
+    \[ P~:~ A \implies B \]
+  answerOptions:
+    - \(A \text{ et } \bar B\)
+    - \(\bar A \text{ et } B\)
+    - \(\bar A \implies \bar B\)
+    - \(B \implies A\)
+  correctAnswers: [true, false, false, false]
+
+- uid: "aflesch-mt1-logique-et-raisonnement-004"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: "Négation d'une assertion avec contrainte"
+  tags: ["quantificateurs", "négation"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Quelle est la négation de l'assertion ci-dessous ?
+    \[ \forall n \in \mathbb{N},\quad \left( n \geq 1 \implies n^2 \geq 1\right) \]
+  answerOptions:
+    - \(\forall n \in \mathbb{N},\, n \geq 1 \text{ et } n^2 < 1\)
+    - \(\exists n \in \mathbb{N},\, n \geq 1 \text{ et } n^2 < 1\)
+    - \(\exists n \in \mathbb{N},\, \left( n < 1 \implies n^2 < 1\right)\)
+    - \(\exists n \in \mathbb{N},\, \left( n \geq 1 \implies n^2 < 1\right)\)
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-mt1-logique-et-raisonnement-005"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: "Négation d'une assertion avec quantificateurs"
+  tags: ["quantificateurs", "négation"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Quelle est la négation de l'assertion ci-dessous ?
+    \[ \exists x \in \mathbb{R}, \forall y \in \mathbb{R}, x + y = 0. \]
+  answerOptions:
+    - \(\forall x \in \mathbb{R}, \forall y \in \mathbb{R}, x + y \neq 0.\)
+    - \(\exists x \in \mathbb{R}, \exists y \in \mathbb{R}, x + y \neq 0.\)
+    - \(\forall x \in \mathbb{R}, \exists y \in \mathbb{R}, x + y = 0.\)
+    - \(\forall x \in \mathbb{R}, \exists y \in \mathbb{R}, x + y \neq 0.\)
+  correctAnswers: [false, false, false, true]
+
+
+- uid: "aflesch-mt1-logique-et-raisonnement-006"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: |
+    "Contraposée de \(P \implies Q\)"
+  tags: ["contraposée"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    La contraposée de \(P \implies Q\) est :
+  answerOptions:
+    - \(P \text{ et } \left(\text{non } Q\right)\)
+    - \(\text{ non } P \implies \text{ non } Q\)
+    - \(Q \implies P\)
+    - \(\text{ non } Q \implies \text{ non } P\)
+    - \(Q \text{ et } \left(\text{non } P\right)\)
+  correctAnswers: [false, false, false, true, false]
+
+
+
+- uid: "aflesch-mt1-logique-et-raisonnement-007"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: |
+    Devinette logique (Faux \(\implies\) Faux)
+  tags: ["proposition"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    L'assertion \((1=2) \Rightarrow (2=3)\) est :
+  answerOptions:
+    - Fausse
+    - Ce n'est pas une assertion
+    - Vraie
+  correctAnswers: [false, false, true]
+
+- uid: "aflesch-mt1-logique-et-raisonnement-008"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: "Négation d'une suite croissante"
+  tags: ["quantificateurs", "négation"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Soit \(\left(u_n\right)_{n \in \mathbb{N}}\) une suite réelle.  
+    Quelle est la négation de l'assertion suivante : «\(\left(u_n\right)\) est une suite croissante» ?
+  answerOptions:
+    - \(\left(u_n\right)\) est une suite décroissante.
+    - \(\left(u_n\right)\) est une suite strictement décroissante.
+    - \(\left(u_n\right)\) n'est pas une suite.
+    - \(\forall n \in \mathbb{N},\, u_n > u_{n+1}\).
+    - \(\exists n \in \mathbb{N},\, u_n > u_{n+1}\).
+  correctAnswers: [false, false, false, false, true]
+
+- uid: "aflesch-mt1-logique-et-raisonnement-009"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: "Négation d'une assertion avec quantificateurs et fonctions"
+  tags: ["quantificateurs", "négation"]
+  questionType: "single_choice"
+  timeLimit: 40
+  difficulty: 2
+  text: |
+    Quelle est la négation de l'assertion suivante ?
+    \[
+      \forall \varepsilon>0, \exists \delta>0, \forall x \in \mathbb{R}, 
+      \big(|x| < \delta \Rightarrow |\cos(x) - 1| < \varepsilon \big).
+    \]
+  answerOptions:
+    - \(\exists \varepsilon \leq 0, \forall \delta \leq 0, \exists x \in \mathbb{R}, \big( |x| < \delta \text{ et } |\cos(x)-1| \geq \varepsilon \big)\)
+    - \(\exists \varepsilon > 0, \forall \delta > 0, \exists x \in \mathbb{R}, \big( |\cos(x)-1| \leq \varepsilon \Rightarrow |x| < \delta \big)\)
+    - \(\exists \varepsilon > 0, \forall \delta > 0, \exists x \in \mathbb{R}, \big( |x| < \delta \text{ et } |\cos(x)-1| \geq \varepsilon \big)\)
+    - \(\forall \varepsilon > 0, \exists \delta > 0, \forall x \in \mathbb{R}, \big( |\cos(x)-1| \geq \varepsilon \Rightarrow |x| \geq \delta \big)\)
+    - \(\exists \varepsilon \leq 0, \forall \delta \leq 0, \exists x \in \mathbb{R}, \big( |\cos(x)-1| \leq \varepsilon \Rightarrow |x| < \delta \big)\)
+  correctAnswers: [false, false, true, false, false]
+
+- uid: "aflesch-mt1-logique-et-raisonnement-010"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: |
+    Négation de la réciproque
+  tags: ["négation", "implication"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Quelle est la négation de la réciproque de \(P \implies Q\) ?
+  answerOptions:
+    - \(\bar P \Rightarrow \bar Q\)
+    - \(Q \Rightarrow P\)
+    - \(P \text{ et } \bar Q\)
+    - \(\bar Q \Rightarrow \bar P\)
+    - \(Q \text{ et } \bar P\)
+  correctAnswers: [false, false, false, false, true]
+
+- uid: "aflesch-mt1-logique-et-raisonnement-011"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Logique et raisonnement"]
+  title: |
+    Contraposée de la réciproque
+  tags: ["contraposée", "implication"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Quelle est la contraposée de la réciproque de \(P \implies Q\) ?
+  answerOptions:
+    - \(\bar Q \Rightarrow \bar P\)
+    - \(P \text{ et } \bar Q\)
+    - \(\bar P \Rightarrow \bar Q\)
+    - \(Q \Rightarrow P\)
+    - \(Q \text{ et } \bar P\)
+  correctAnswers: [false, false, true, false, false]

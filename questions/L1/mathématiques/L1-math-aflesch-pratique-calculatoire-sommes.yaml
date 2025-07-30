@@ -1,0 +1,91 @@
+# Questions de mathématiques niveau L1 pour MathQuest
+# Thème : Pratique calculatoire
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt1-pratique-calculatoire-sommes-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Changement d'indice simple"
+  tags: ["changement d'indice"]
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  text: |
+    Parmi les formules ci-dessous, déterminer celle qui est égale à :
+    \[ \sum_{k=1}^n \frac{1}{k} .\]
+  answerOptions:
+    - \(\displaystyle\frac{1}{\sum_{k=1}^n k}\)
+    - \(\displaystyle\frac{k}{n}\)
+    - \(\displaystyle\sum_{k=0}^{n-1} \frac{1}{k+1}\)
+    - \(\displaystyle\frac{n}{k}\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, true, false, false]
+
+
+- uid: "aflesch-mt1-pratique-calculatoire-sommes-002"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Formule de somme géométrique"
+  tags: ["somme géométrique"]
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  text: |
+    Soit \(q\neq 1\). Parmi les formules ci-dessous, déterminer celle qui est égale à :
+    \[ \sum_{k=1}^n q^k\]
+  answerOptions:
+    - \(\displaystyle \frac{1-q^n}{1-q}\)
+    - \(\displaystyle \frac{1-q^{n+1}}{1-q}\)
+    - \(\displaystyle \frac{n(n+1)}{2}\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, true]
+
+
+- uid: "aflesch-mt1-pratique-calculatoire-sommes-003"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Formule du binôme"
+  tags: ["formule du binôme"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Soient \((a,b)\in\mathbb{C}^2\) et \(n\in\mathbb{N}^\star\).
+    Quelle formule est correcte?
+  answerOptions:
+    - \(\displaystyle(a-b)^n = \sum_{k=1}^n \binom{n}{k} a^k b^{n-k}\)
+    - \(\displaystyle(a+b)^n = (a-b) \sum_{k=0}^n a^kb^{n-k}\)
+    - \(\displaystyle(a+b)^n = \sum_{k=0}^n \binom{n}{k} a^{n-k}b^k\)
+    - \(\displaystyle a^n-b^n = \sum_{k=0}^n \binom{n}{k}a^kb^{n-k}\)
+    - \(\displaystyle (a+b)^n = \sum_{k=1}^n \binom{n}{k}a^kb^{n-k}\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, true, false, false, false]
+
+
+
+- uid: "aflesch-mt1-pratique-calculatoire-sommes-003"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Coefficient binomial"
+  tags: ["formule du binôme"]
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 2
+  text: |
+    Quel est le coefficient de \(x^{23}\) dans l'écriture développée du
+    polynôme \( (1-x)^{100} \) ?
+  answerOptions:
+    - \( - \binom{100}{77} \)
+    - \( 77^{23} \)
+    - \( -100^{23} \)
+    - \( \binom{100}{23} \)
+    - Aucune des propositions ci-dessus
+  correctAnswers: [true, false, false, false, false]

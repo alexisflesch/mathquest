@@ -1,0 +1,249 @@
+# Questions de mathématiques niveau L1 pour MathQuest
+# Thème : Pratique calculatoire
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Équation trigonométrique"
+  tags: ["équations trigonométriques", "formules de duplication"]
+  questionType: "multiple_choice"
+  timeLimit: 120
+  difficulty: 3
+  text: |
+    Soit \((E)\) l'équation d'inconnue \(x\) suivante, où \(x\in[0,2\pi[\) :
+    \[ (E)~:~\cos(x)\sin(x)=0.3 \]
+  answerOptions:
+    - \((E)\) n'admet pas de solution.
+    - \((E)\) admet exactement une solution.
+    - \((E)\) admet exactement deux solutions.
+    - \((E)\) admet une infinité de solutions.
+    - Aucune des réponses ci-dessus.
+  correctAnswers: [false, false, false, false, true]
+
+
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-002"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(\cos(a+b)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Soient \(a\) et \(b\) deux nombres réels. Alors, 
+    \[ \cos(a+b) = \ldots \]
+  answerOptions:
+    - \(\cos(a)\sin(b)-\cos(b)\sin(a)\)
+    - \(\cos(a)\sin(b)+\cos(b)\sin(a)\)
+    - \(\cos(a)\cos(b)-\sin(a)\sin(b)\)
+    - \(\cos(a)\cos(b)+\sin(a)\sin(b)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, true, false, false]
+
+
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-003"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(cos(a-b)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Soient \(a\) et \(b\) deux nombres réels. Alors, 
+    \[ \cos(a-b) = \ldots \]
+  answerOptions:
+    - \(\cos(a)\cos(b) + \sin(a)\sin(b)\)
+    - \(\cos(a)\sin(b) - \cos(b)\sin(a)\)
+    - \(\cos(a)\cos(b) - \sin(a)\sin(b)\)
+    - \(\sin(a)\cos(b) + \cos(a)\sin(b)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [true, false, false, false, false]
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-004"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(sin(a+b)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Soient \(a\) et \(b\) deux nombres réels. Alors, 
+    \[ \sin(a+b) = \ldots \]
+  answerOptions:
+    - \(\sin(a)\sin(b) + \cos(a)\cos(b)\)
+    - \(\cos(a)\cos(b) - \sin(a)\sin(b)\)
+    - \(\cos(a)\sin(b) - \sin(a)\cos(b)\)
+    - \(\sin(a)\cos(b) + \cos(a)\sin(b)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, true, false]
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-005"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(sin(a-b)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Soient \(a\) et \(b\) deux nombres réels. Alors, 
+    \[ \sin(a-b) = \ldots \]
+  answerOptions:
+    - \(\sin(a)\cos(b) + \cos(a)\sin(b)\)
+    - \(\sin(a)\cos(b) - \cos(a)\sin(b)\)
+    - \(\cos(a)\cos(b) - \sin(a)\sin(b)\)
+    - \(\sin(a)\sin(b) - \cos(a)\cos(b)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, true, false, false, false]
+
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-006"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(\sin(\pi - x)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Soit \(x\) un nombre réel. Alors,
+    \[ \sin(\pi - x) = \ldots \]
+  answerOptions:
+    - \(\sin(x)\)
+    - \(-\sin(x)\)
+    - \(\cos(x)\)
+    - \(-\cos(x)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [true, false, false, false, false]
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-007"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(\cos(x + \frac{\pi}{2})\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Soit \(x\) un nombre réel. Alors,
+    \[ \cos\left(x + \frac{\pi}{2}\right) = \ldots \]
+  answerOptions:
+    - \(\sin(x)\)
+    - \(\cos(x)\)
+    - \(-\sin(x)\)
+    - \(-\cos(x)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, true, false, false]
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-008"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(\sin(x + \pi)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Soit \(x\) un nombre réel. Alors,
+    \[ \sin(x + \pi) = \ldots \]
+  answerOptions:
+    - \(\sin(x)\)
+    - \(\cos(x)\)
+    - \(-\cos(x)\)
+    - \(-\sin(x)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, true, false]
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-009"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(\cos(\pi - x)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Soit \(x\) un nombre réel. Alors,
+    \[ \cos(\pi - x) = \ldots \]
+  answerOptions:
+    - \(\cos(x)\)
+    - \(-\cos(x)\)
+    - \(\sin(x)\)
+    - \(-\sin(x)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, true, false, false, false]
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-010"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(\sin\left(\frac{\pi}{2} - x\right)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Soit \(x\) un nombre réel. Alors,
+    \[ \sin\left(\frac{\pi}{2} - x\right) = \ldots \]
+  answerOptions:
+    - \(\cos(x)\)
+    - \(-\cos(x)\)
+    - \(\sin(x)\)
+    - \(-\sin(x)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [true, false, false, false, false]
+
+- uid: "aflesch-mt1-pratique-calculatoire-trigo-011"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: |
+    Formule de trigo : \(\cos\left(x - \frac{\pi}{2}\right)\)
+  tags: ["équations trigonométriques", "formules d'addition"]
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Soit \(x\) un nombre réel. Alors,
+    \[ \cos\left(x - \frac{\pi}{2}\right) = \ldots \]
+  answerOptions:
+    - \(-\sin(x)\)
+    - \(\cos(x)\)
+    - \(\sin(x)\)
+    - \(-\cos(x)\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, true, false]
