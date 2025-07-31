@@ -203,19 +203,22 @@ def import_questions():
                                 all_errors.append(msg)
                                 total_errors += 1
                                 return
-                            # 3. Tags (optionnel, si la question a des tags)
-                            if 'tags' in q and q['tags']:
-                                tags = q['tags']
-                                if isinstance(tags, str):
-                                    tags = [tags]
-                                known_tags = disciplines_dict.get(discipline, {}).get(theme, set())
-                                for tag in tags:
-                                    if tag not in known_tags:
-                                        msg = f"Tag '{tag}' inconnu pour le thème '{theme}' de la discipline '{discipline}' (uid={q.get('uid')}) dans {yaml_path}"
-                                        print_colored('ERROR', msg)
-                                        all_errors.append(msg)
-                                        total_errors += 1
-                                        return
+                        # 3. Tags (optionnel, si la question a des tags)
+                        if 'tags' in q and q['tags']:
+                            tags = q['tags']
+                            if isinstance(tags, str):
+                                tags = [tags]
+                            # Rassembler tous les tags connus pour tous les thèmes de la question
+                            known_tags_all_themes = set()
+                            for theme in themes:
+                                known_tags_all_themes.update(disciplines_dict.get(discipline, {}).get(theme, set()))
+                            for tag in tags:
+                                if tag not in known_tags_all_themes:
+                                    msg = f"Tag '{tag}' inconnu pour les thèmes {themes} de la discipline '{discipline}' (uid={q.get('uid')}) dans {yaml_path}"
+                                    print_colored('ERROR', msg)
+                                    all_errors.append(msg)
+                                    total_errors += 1
+                                    return
                         if missing or invalid_time_limit:
                             msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants ou timeLimit invalide : {missing if missing else ''}{' (timeLimit must be a positive integer)' if invalid_time_limit else ''}"
                             print_colored('ERROR', msg)
@@ -333,7 +336,8 @@ def import_questions():
                 sub = ''
             grouped[top].append((sub, count))
         for top in sorted(grouped):
-            print(color_text(f"-------- {top} -----------", Colors.HEADER))
+            total_top = sum(count for _, count in grouped[top])
+            print(color_text(f"-------- {top} ({total_top}) -----------", Colors.HEADER))
             for sub, count in sorted(grouped[top]):
                 # Only print sub if not empty
                 if sub:

@@ -205,10 +205,10 @@
   text: |
     Quelle est la négation de la réciproque de \(P \implies Q\) ?
   answerOptions:
-    - \(\bar P \Rightarrow \bar Q\)
-    - \(Q \Rightarrow P\)
+    - \(\bar P \implies \bar Q\)
+    - \(Q \implies P\)
     - \(P \text{ et } \bar Q\)
-    - \(\bar Q \Rightarrow \bar P\)
+    - \(\bar Q \implies \bar P\)
     - \(Q \text{ et } \bar P\)
   correctAnswers: [false, false, false, false, true]
 
