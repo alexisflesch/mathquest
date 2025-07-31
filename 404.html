@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr-FR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="generator" content="VuePress 2.0.0-rc.23" />
+    <style>
+      :root {
+        --vp-c-bg: #fff;
+      }
+
+      [data-theme='dark'] {
+        --vp-c-bg: #1b1b1f;
+      }
+
+      html,
+      body {
+        background-color: var(--vp-c-bg);
+      }
+    </style>
+    <script>
+      const useChoice = localStorage.getItem('vuepress-color-scheme')
+      const systemStatus =
+        'matchMedia' in window
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          : false
+
+      if (useChoice === 'light') {
+        document.documentElement.dataset.theme = 'light'
+      } else if (useChoice === 'dark' || systemStatus) {
+        document.documentElement.dataset.theme = 'dark'
+      }
+    </script>
+    <link rel="icon" href="/mathquest/favicon.ico"><link rel="stylesheet" href="/mathquest/styles/screenshots.css"><title>MathQuest</title><meta name="description" content="Alternative libre et open source à Kahoot, pour les enseignants et leurs élèves.">
+    <link rel="preload" href="/mathquest/assets/style-Dkmw-xJK.css" as="style"><link rel="stylesheet" href="/mathquest/assets/style-Dkmw-xJK.css">
+    <link rel="modulepreload" href="/mathquest/assets/app-Dy0TEIs4.js"><link rel="modulepreload" href="/mathquest/assets/404.html-BOpuPPmq.js">
+    <link rel="prefetch" href="/mathquest/assets/index.html-Bd-9zBKw.js" as="script"><link rel="prefetch" href="/mathquest/assets/get-started.html-mIFYUodK.js" as="script"><link rel="prefetch" href="/mathquest/assets/index.html-CKjro9Wh.js" as="script"><link rel="prefetch" href="/mathquest/assets/contribuer.html-UbGs01EY.js" as="script"><link rel="prefetch" href="/mathquest/assets/index.html-De88M4s0.js" as="script"><link rel="prefetch" href="/mathquest/assets/entrainement.html-BkUEcuQp.js" as="script"><link rel="prefetch" href="/mathquest/assets/quiz.html-Blh1vTUd.js" as="script"><link rel="prefetch" href="/mathquest/assets/tournoi.html-HUxUbwd6.js" as="script"><link rel="prefetch" href="/mathquest/assets/index.html-CxDCyqMr.js" as="script">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="vp-theme-container" vp-container data-v-33d3430e><main class="page" data-v-33d3430e><div vp-content data-v-33d3430e><h1 data-v-33d3430e>404</h1><blockquote data-v-33d3430e>There&#39;s nothing here.</blockquote><a class="route-link" href="/mathquest/" data-v-33d3430e>Take me home</a></div></main></div><!--[--><!----><!--]--><!--]--></div>
+    <script type="module" src="/mathquest/assets/app-Dy0TEIs4.js" defer></script>
+  </body>
+</html>

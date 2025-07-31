@@ -1,0 +1,58 @@
+/* Styles pour les screenshots adaptatifs par thème */
+
+.theme-screenshot {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.screenshot-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.screenshots-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+    margin: 40px 0;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .screenshots-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+/* Thème clair - afficher les screenshots clairs */
+[data-theme="light"] .screenshot-dark,
+html:not([data-theme="dark"]) .screenshot-dark {
+    display: none;
+}
+
+[data-theme="light"] .screenshot-light,
+html:not([data-theme="dark"]) .screenshot-light {
+    display: block;
+}
+
+/* Thème sombre - afficher les screenshots sombres */
+[data-theme="dark"] .screenshot-light {
+    display: none;
+}
+
+[data-theme="dark"] .screenshot-dark {
+    display: block;
+}
+
+.projection-screenshot {
+    max-width: 100%;
+}
+
+.mobile-screenshot {
+    max-width: 45%;
+    max-height: 300px;
+    margin: 0 auto;
+    display: block;
+}
