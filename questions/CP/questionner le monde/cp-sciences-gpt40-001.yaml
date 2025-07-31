@@ -189,3 +189,334 @@
   correctAnswers: [false, true, false, false]
   tags: ["animaux et leurs caractéristiques"]
   timeLimit: 30
+
+
+- uid: "aflesch-cp-qlm-vivant-001"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Animaux"
+  text: "Lequel de ces animaux vit dans l'eau ?"
+  questionType: "single_choice"
+  themes: ["Le vivant"]
+  tags: ["animaux et leurs caractéristiques"]
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Le cheval"
+    - "Le poisson"
+    - "L'oiseau"
+    - "Le chat"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-qlm-vivant-002"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Besoin des plantes"
+  text: "De quoi une plante a-t-elle besoin pour grandir ?"
+  questionType: "multiple_choice"
+  themes: ["Le vivant"]
+  tags: ["plantes et besoins vitaux"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Soleil"
+    - "Air"
+    - "Télévision"
+    - "Eau"
+  correctAnswers: [true, true, false, true]
+
+- uid: "aflesch-cp-qlm-vivant-003"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Famille animale"
+  text: "Quel animal est un mammifère ?"
+  questionType: "single_choice"
+  themes: ["Le vivant"]
+  tags: ["animaux et leurs caractéristiques"]
+  timeLimit: 45
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "Le papillon"
+    - "La vache"
+    - "La mouche"
+    - "Le crabe"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-qlm-vivant-004"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Animation animale"
+  text: |
+    Parmi ces animeaux, lesquelles volent ?
+  questionType: "multiple_choice"
+  themes: ["Le vivant"]
+  tags: ["animaux et leurs caractéristiques"]
+  timeLimit: 60
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "Un oiseau"
+    - "Un papillon"
+    - "Un poisson"
+    - "Un chat"
+  correctAnswers: [true, true, false, false]
+
+- uid: "aflesch-cp-qlm-vivant-005"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Cycle de vie"
+  text: |
+    Quelle est la bonne affirmation ?
+  questionType: "single_choice"
+  themes: ["Le vivant"]
+  tags: ["plantes et besoins vitaux"]
+  timeLimit: 45
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "Une graine devient une plante"
+    - "Une plante peut donner une graine"
+    - "Les graines poussent sans eau ni soleil"
+    - "La plante est un animal"
+  correctAnswers: [true, true, false, false]
+
+
+
+- uid: "aflesch-cp-qlm-matiere-001"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Solide ou liquide"
+  text: "Lequel de ces objets est liquide à température ambiante ?"
+  questionType: "single_choice"
+  themes: ["La matière et les objets"]
+  tags: ["propriétés de la matière"]
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "La pierre"
+    - "L'eau"
+    - "Le sable"
+    - "Le bois"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-qlm-matiere-002"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Flotte ou coule"
+  text: "Lequel de ces objets flotte sur l'eau ?"
+  questionType: "single_choice"
+  themes: ["La matière et les objets"]
+  tags: ["propriétés de la matière"]
+  timeLimit: 45
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "Une pierre"
+    - "Un bateau en bois"
+    - "Un morceau de métal"
+    - "Une bille"
+  correctAnswers: [false, true, false, false]
+
+
+- uid: "aflesch-cp-qlm-matiere-004"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Sens du toucher"
+  text: "Un cube en bois est-il plutôt ... ?"
+  questionType: "single_choice"
+  themes: ["La matière et les objets"]
+  tags: ["propriétés de la matière"]
+  timeLimit: 45
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "Doux"
+    - "Glissant"
+    - "Dur"
+    - "Mou"
+  correctAnswers: [false, false, true, false]
+
+- uid: "aflesch-cp-qlm-matiere-005"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Tri des objets"
+  text: |
+    Parmi ces objets, 
+    🧼 savon  
+    🍎 pomme  
+    📦 carton
+    🎺 trompette
+
+    lesquels sont des objets fabriqués par l'homme ?
+  questionType: "single_choice"
+  themes: ["La matière et les objets"]
+  tags: ["objets du quotidien"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "La pomme"
+    - "Le savon"
+    - "Le carton"
+    - "Tous"
+  correctAnswers: [true, false, true, true]
+
+
+- uid: "aflesch-cp-qlm-temps-001"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Avant ou après"
+  text: "Qu’est-ce qui vient juste avant le matin ?"
+  questionType: "single_choice"
+  themes: ["Le temps"]
+  tags: ["repères temporels"]
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Le soir"
+    - "L'après-midi"
+    - "La nuit"
+    - "La semaine"
+  correctAnswers: [false, false, true, false]
+
+
+- uid: "aflesch-cp-qlm-temps-002"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Saisons"
+  text: "Quelle saison vient juste après l'été ?"
+  questionType: "single_choice"
+  themes: ["Le temps"]
+  tags: ["jours, mois, saisons"]
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Le printemps"
+    - "L'automne"
+    - "L'hiver"
+    - "L'été"
+  correctAnswers: [false, true, false, false]
+
+
+
+- uid: "aflesch-cp-qlm-temps-004"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Calendrier"
+  text: |
+    Combien y a-t-il de mois dans une année ?
+  questionType: "numeric"
+  themes: ["Le temps"]
+  tags: ["jours, mois, saisons"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12
+
+
+
+- uid: "aflesch-cp-qlm-espace-003"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Position relative"
+  text: |
+    Où se trouvent les 🔵 ?
+    🔵⬜⬜  
+    ⬜⬜⬜  
+    ⬜⬜🔵
+  questionType: "single_choice"
+  themes: ["L'espace"]
+  tags: ["se repérer dans l'espace familier"]
+  timeLimit: 60
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "En haut à gauche"
+    - "En bas à gauche"
+    - "En haut à droite"
+    - "En bas à droite"
+    - "Au centre"
+  correctAnswers: [true, false, false, true, false]
+
+
+- uid: "aflesch-cp-qlm-tech-001"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Objet technique"
+  text: "Lequel de ces objets sert à mesurer le temps ?"
+  questionType: "single_choice"
+  themes: ["Les objets techniques"]
+  tags: ["utilisation d'objets simples"]
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Le crayon"
+    - "La montre"
+    - "La règle"
+    - "Le livre"
+  correctAnswers: [false, true, false, false]
+
+
+
+- uid: "aflesch-cp-qlm-tech-002"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Fonction d’un outil"
+  text: "À quoi sert une loupe ?"
+  questionType: "single_choice"
+  themes: ["Les objets techniques"]
+  tags: ["utilisation d'objets simples"]
+  timeLimit: 45
+  gradeLevel: "CP"
+  difficulty: 1
+  answerOptions:
+    - "À couper des feuilles"
+    - "À agrandir les choses"
+    - "À écrire"
+    - "À espionner le voisin"
+  correctAnswers: [false, true, false, false]
+
+- uid: "aflesch-cp-qlm-tech-003"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Observation de mécanisme"
+  text: |
+    Quel objet tourne quand on l'ouvre ?
+  questionType: "multiple_choice"
+  themes: ["Les objets techniques"]
+  tags: ["observer un mécanisme"]
+  timeLimit: 60
+  gradeLevel: "CP"
+  difficulty: 2
+  answerOptions:
+    - "Une porte"
+    - "Un ventilateur"
+    - "Un tournevis"
+    - "Une boîte fermée"
+  correctAnswers: [true, false, false, false]
+
+
+- uid: "aflesch-cp-qlm-tech-005"
+  author: "aflesch"
+  discipline: "Questionner le monde"
+  title: "Sécurité"
+  text: "Pourquoi on porte un casque quand on fait du vélo ?"
+  questionType: "single_choice"
+  themes: ["Les objets techniques"]
+  tags: ["utilisation d'objets simples"]
+  timeLimit: 45
+  gradeLevel: "CP"
+  difficulty: 1
+  answerOptions:
+    - "Pour mieux pédaler"
+    - "Pour protéger la tête"
+    - "Pour aller plus vite"
+    - "Pour être beau"
+  correctAnswers: [false, true, false, false]

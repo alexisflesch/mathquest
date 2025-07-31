@@ -129,3 +129,62 @@
   correctAnswers: [false, true, false, false]
   tags: ["chant et expression vocale"]
   timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-arts-couleurs-005"
+  title: "Arts plastiques"
+  text: "Quelle couleur obtient-on en mélangeant du bleu et du rouge ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Arts plastiques"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Orange"
+    - "Vert"
+    - "Violet"
+    - "Rose"
+  correctAnswers: [false, false, true, false]
+  tags: ["dessiner, colorier, peindre"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-arts-couleurs-008"
+  title: "Arts plastiques"
+  text: "En mélangeant du rouge avec du blanc, quelle couleur obtient-on ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Arts plastiques"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "Rose"
+    - "Violet"
+    - "Orange"
+    - "Gris"
+  correctAnswers: [true, false, false, false]
+  tags: ["dessiner, colorier, peindre"]
+  timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-arts-musicale-006"
+  title: "Éducation musicale"
+  text: "Dans quel instrument faut-il souffler pour en jouer ?"
+  questionType: "single_choice"
+  discipline: "Éducation artistique"
+  themes: ["Éducation musicale"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "La batterie"
+    - "Le violon"
+    - "Le tambourin"
+    - "La flûte"
+  correctAnswers: [false, false, false, true]
+  tags: ["écoute musicale"]
+  timeLimit: 30
