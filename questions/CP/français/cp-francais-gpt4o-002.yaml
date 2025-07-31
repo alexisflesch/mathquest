@@ -1,0 +1,906 @@
+- uid: "gpt4o-cp-lecture-identifier-son-o-001"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "moto"
+    - "lune"
+    - "tapis"
+    - "robot"
+  correctAnswers: [true, false, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-002"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "porte"
+    - "vélo"
+    - "stylo"
+    - "matin"
+  correctAnswers: [true, true, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-003"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "rose"
+    - "télé"
+    - "photo"
+    - "clé"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-004"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "sirop"
+    - "coco"
+    - "bobo"
+    - "voix"
+  correctAnswers: [true, true, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-005"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "moto"
+    - "lapin"
+    - "carton"
+    - "vase"
+  correctAnswers: [true, false, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-006"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "ours"
+    - "photo"
+    - "tortue"
+    - "âne"
+  correctAnswers: [false, true, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-007"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "robot"
+    - "lire"
+    - "poteau"
+    - "froid"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-008"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "photo"
+    - "joli"
+    - "papier"
+    - "lapin"
+  correctAnswers: [true, true, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-009"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "salade"
+    - "trop"
+    - "bébé"
+    - "dos"
+  correctAnswers: [false, true, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-lecture-identifier-son-o-010"
+  title: "Le son [o]"
+  text: "Dans quels mots entends-tu le son [o] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "vélo"
+    - "bateau"
+    - "chien"
+    - "clown"
+  correctAnswers: [true, true, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-francais-lecture-001"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "papa"
+    - "moto"
+    - "lune"
+    - "canard"
+  correctAnswers: [true, false, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-002"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "tapis"
+    - "salade"
+    - "chat"
+    - "nez"
+  correctAnswers: [true, true, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-003"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "bras"
+    - "ville"
+    - "rat"
+    - "pied"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-004"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "rue"
+    - "banane"
+    - "crayon"
+    - "bébé"
+  correctAnswers: [false, true, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-005"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "matin"
+    - "souris"
+    - "papa"
+    - "voiture"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-006"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "avion"
+    - "âne"
+    - "stylo"
+    - "sapin"
+  correctAnswers: [true, true, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-007"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "chat"
+    - "pied"
+    - "porte"
+    - "carte"
+  correctAnswers: [true, false, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-008"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "maman"
+    - "ciel"
+    - "chapeau"
+    - "roue"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-009"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "lait"
+    - "château"
+    - "âne"
+    - "midi"
+  correctAnswers: [false, true, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-010"
+  title: "Le son [a]"
+  text: "Dans quels mots entends-tu le son [a] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "chat"
+    - "poule"
+    - "lampe"
+    - "vélo"
+  correctAnswers: [true, false, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-francais-lecture-011"
+  title: "Entendre [i]"
+  text: "Dans quels mots entends-tu le son [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "lit"
+    - "chat"
+    - "ville"
+    - "loup"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-012"
+  title: "Son [i]"
+  text: "Dans quels mots entends-tu le son [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "nid"
+    - "rue"
+    - "stylo"
+    - "riz"
+  correctAnswers: [true, false, true, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-013"
+  title: "Où est le [i] ?"
+  text: "Sélectionne les mots où tu entends [i]."
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "midi"
+    - "beurre"
+    - "genou"
+    - "biscuit"
+  correctAnswers: [true, false, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-014"
+  title: "Cherche le son [i]"
+  text: "Quels mots contiennent le son [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "fil"
+    - "chou"
+    - "belle"
+    - "livre"
+  correctAnswers: [true, false, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-015"
+  title: "Le son [i]"
+  text: "Dans quels mots entends-tu [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "lit"
+    - "tapis"
+    - "canard"
+    - "robe"
+  correctAnswers: [true, true, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-016"
+  title: "Reconnaître le [i]"
+  text: "Quels mots ont le son [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "gris"
+    - "mur"
+    - "stylo"
+    - "lit"
+  correctAnswers: [true, false, true, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-017"
+  title: "Écoute le [i]"
+  text: "Quels mots contiennent [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "pain"
+    - "épaule"
+    - "piscine"
+    - "nez"
+  correctAnswers: [false, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-018"
+  title: "Le son [i] à trouver"
+  text: "Dans quels mots entends-tu le son [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "fille"
+    - "clou"
+    - "lire"
+    - "coq"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-019"
+  title: "Cherche le [i]"
+  text: "Sélectionne les mots contenant le son [i]."
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "pique"
+    - "chaud"
+    - "miroir"
+    - "table"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-020"
+  title: "Où entends-tu [i] ?"
+  text: "Quels mots ont le son [i] ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "chat"
+    - "lit"
+    - "cible"
+    - "rue"
+  correctAnswers: [false, true, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+
+
+- uid: "gpt4o-cp-francais-orthographe-021"
+  title: "Son ‘é’ - vélo, bébé ou banane ?"
+  text: "Dans quels mots entends-tu le son ‘é’ comme dans 'fée' ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "vélo"
+    - "chat"
+    - "bébé"
+    - "banane"
+  correctAnswers: [true, false, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-022"
+  title: "Son ‘é’ - fée ou fleur ?"
+  text: "Sélectionne les mots où tu entends le son ‘é’ comme dans 'fée'."
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "nez"
+    - "chat"
+    - "fleur"
+    - "clé"
+  correctAnswers: [true, false, false, true]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-023"
+  title: "Son ‘é’ - télé ou tapis ?"
+  text: "Quels mots contiennent le son ‘é’ comme dans 'fée' ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "télé"
+    - "tapis"
+    - "bébé"
+    - "papa"
+  correctAnswers: [true, false, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-024"
+  title: "Son ‘é’ - métier ou ballon ?"
+  text: "Choisis les mots avec le son ‘é’ comme dans 'fée'."
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "métier"
+    - "bébé"
+    - "ballon"
+    - "camion"
+  correctAnswers: [true, true, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-025"
+  title: "Son ‘é’ - château ou gâteau ?"
+  text: "Quels mots ont le son ‘é’ comme dans 'fée' ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "château"
+    - "clé"
+    - "gâteau"
+    - "livre"
+  correctAnswers: [false, true, false, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-026"
+  title: "Son ‘é’ - bébé ou maman ?"
+  text: "Coche les mots où tu entends le son ‘é’ comme dans 'fée'."
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "maman"
+    - "bébé"
+    - "clé"
+    - "canard"
+  correctAnswers: [false, true, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-027"
+  title: "Son ‘é’ - télé, doudou ou bébé ?"
+  text: "Quels mots contiennent le son ‘é’ comme dans 'fée' ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "télé"
+    - "doudou"
+    - "bébé"
+    - "papa"
+  correctAnswers: [true, false, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-028"
+  title: "Son ‘é’ - éléphant ou tigre ?"
+  text: "Coche les mots avec le son ‘é’."
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "éléphant"
+    - "tigre"
+    - "clé"
+    - "lama"
+  correctAnswers: [true, false, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-029"
+  title: "Son ‘é’ - épée ou robot ?"
+  text: "Quels mots ont le son ‘é’ comme dans 'fée' ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "épée"
+    - "robot"
+    - "clé"
+    - "banane"
+  correctAnswers: [true, false, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-orthographe-030"
+  title: "Son ‘é’ - bébé ou pain ?"
+  text: "Sélectionne les mots contenant le son ‘é’."
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Orthographe"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "pain"
+    - "bébé"
+    - "clé"
+    - "chat"
+  correctAnswers: [false, true, true, false]
+  tags: ["correspondances graphème-phonème"]
+  timeLimit: 30
+
+
+- uid: "gpt4o-cp-francais-lecture-u-001"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "prune"
+    - "loup"
+    - "mule"
+    - "poule"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-002"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "musique"
+    - "chat"
+    - "nuage"
+    - "fou"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-003"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "nu"
+    - "chat"
+    - "loutre"
+    - "lundi"
+  correctAnswers: [true, false, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-004"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "lumière"
+    - "loup"
+    - "bulle"
+    - "tour"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-005"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "lune"
+    - "poule"
+    - "tulipe"
+    - "chat"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-006"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "mule"
+    - "sou"
+    - "chat"
+    - "nuage"
+  correctAnswers: [true, false, false, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-007"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "jour"
+    - "fou"
+    - "nuage"
+    - "bulle"
+  correctAnswers: [false, false, true, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-008"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "tu"
+    - "loup"
+    - "bulle"
+    - "mule"
+  correctAnswers: [true, false, true, true]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-009"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "muse"
+    - "soupe"
+    - "lune"
+    - "tout"
+  correctAnswers: [true, false, true, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30
+
+- uid: "gpt4o-cp-francais-lecture-u-010"
+  title: "Le son u"
+  text: "Dans quels mots entends-tu le son ‘u’ comme dans ‘lune’ ?"
+  questionType: "multiple_choice"
+  discipline: "Français"
+  themes: ["Lecture"]
+  difficulty: 1
+  gradeLevel: "CP"
+  author: "gpt4o"
+  answerOptions:
+    - "lune"
+    - "sou"
+    - "fou"
+    - "chat"
+  correctAnswers: [true, false, false, false]
+  tags: ["reconnaître les sons"]
+  timeLimit: 30

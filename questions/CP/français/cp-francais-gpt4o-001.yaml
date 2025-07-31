@@ -214,6 +214,6 @@
   answerOptions:
     - "table"
     - "sac"
-    - "camion"
+    - "liseron"
     - "livre"
   correctAnswers: [false, false, true, false]
