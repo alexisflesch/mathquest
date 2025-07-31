@@ -107,7 +107,7 @@
     - "Dans le jardin"
     - "Dans un chapeau"
     - "Dans un bateau"
-  correctAnswers: [true, false, false, false]
+  correctAnswers: [false, false, true, false]
   tags: ["chant et expression vocale"]
   timeLimit: 30
 

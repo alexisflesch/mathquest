@@ -126,3 +126,97 @@
     - "Agathe a cueilli 4 pommes"
     - "Agathe a cueilli plus de fruits que Paul"
   correctAnswers: [true, false, false, true]
+
+
+
+- uid: "aflesch-cp-math-donnees-002"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Lire un pictogramme"
+  text: |
+    Voici l'ordre de blocs :
+    🔵 🟢 🔴 🟡
+
+    Quelles affirmations sont vraies ?
+  questionType: "multiple_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un pictogramme"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - 🔵 est à gauche de 🔴
+    - 🟡 est à droite de 🟢
+    - 🔴 est le premier bloc
+    - 🟢 est entre 🔵 et 🔴
+  correctAnswers: [true, true, false, true]
+
+
+- uid: "aflesch-cp-math-donnees-003"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Lire un pictogramme"
+  text: |
+    Voici les jouets rangés sur l'étagère :
+    🧸 🚗 🪀 🪁
+
+    Quelles affirmations sont vraies ?
+  questionType: "multiple_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un pictogramme"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - 🚗 est entre 🧸 et 🪀
+    - 🪁 est le dernier jouet
+    - 🧸 est à droite de 🚗
+    - 🪀 est à gauche de 🪁
+  correctAnswers: [true, true, false, true]
+
+
+
+- uid: "aflesch-cp-math-donnees-004"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Lire un pictogramme"
+  text: |
+    Voici les fruits apportés par les enfants :
+    🍌 🍓 🍎 🍇
+
+    Quelles affirmations sont vraies ?
+  questionType: "multiple_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un pictogramme"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - 🍎 est à gauche de 🍇
+    - 🍓 est entre 🍌 et 🍎
+    - 🍇 est le premier fruit
+    - 🍌 est à gauche de tous les autres
+  correctAnswers: [true, true, false, true]
+
+
+- uid: "aflesch-cp-math-donnees-005"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Lire un pictogramme"
+  text: |
+    Voici les animaux vus au zoo :
+    🦁 🐘 🐵 🐧
+
+    Quelles affirmations sont vraies ?
+  questionType: "multiple_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un pictogramme"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - 🦁 est à droite de 🐘
+    - 🐧 est à droite de tous les autres
+    - 🐵 est entre 🐘 et 🐧
+    - 🐘 est le premier animal
+  correctAnswers: [false, true, true, false]

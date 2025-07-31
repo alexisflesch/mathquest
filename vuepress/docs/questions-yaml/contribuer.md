@@ -19,6 +19,8 @@ La structure des dossiers est organisée par **Niveau** (`CP`, `CE1`, ...), puis
 - Utilisez les clés en anglais (`uid`, `text`, `answerOptions`, etc.), mais les valeurs (énoncés, thèmes, etc.) peuvent être en français.
 - **L'`uid` doit être unique** : il doit commencer par le nom de l'auteur (ex : `dupont-6e-maths-fractions-001`). Ajoutez niveau, discipline, thème si besoin pour éviter toute collision.
 - Vous pouvez mettre autant de questions que vous voulez dans un même fichier YAML.
+- Faites-vous aider par un LLM ! En particulier si vous rencontrez des difficultés avec le texte sur plusieurs lignes, avec le LaTeX, la formulation des questions, etc.
+- **Attention**: les sauts de ligne dans le yaml seront conservés dans l'affichage final ! C'est un parti pris pour éviter l'utilisation de balises HTML et pour simplifier l'expérience utilisateur lors de la rédaction des questions.
 
 
 ## 2. Proposer une contribution
