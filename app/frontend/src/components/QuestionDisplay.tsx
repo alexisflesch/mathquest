@@ -224,7 +224,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                             <div className="font-medium fade-right-bottom-crop relative" style={{ minHeight: '1.8em', marginLeft: 0, flexGrow: 0, paddingLeft: 0 }}>
                                 {/* For both cases, use the same layout: a span with fade-right-bottom-crop, absolute for no-title, static for title */}
                                 <span
-                                    className="fade-right-bottom-crop"
+                                    className="fade-right-bottom-crop question-text-in-dashboards"
                                     style={{
                                         display: 'block',
                                         position: 'absolute',
@@ -329,7 +329,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     ].join(" ")}
                                 >
                                     <li
-                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700"
+                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 question-text-in-dashboards"
                                         style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
                                     >
                                         <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
@@ -387,10 +387,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                             ) : (
                                 <>
                                     <div
-                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2"
+                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2 question-text-in-dashboards"
                                         style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
                                     >
-                                        <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
+                                        <MathJaxWrapper>{question.text}</MathJaxWrapper>
                                     </div>
                                     <ul
                                         className={[

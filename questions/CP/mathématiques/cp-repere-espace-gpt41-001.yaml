@@ -54,3 +54,75 @@
   correctAnswers: [false, false, true]
 
 
+- uid: "aflesch-cp-math-geo-006"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Lecture de pictogramme simple"
+  text: |
+    Voici un tableau montrant le nombre de livres lus par des enfants :
+    📚📚📚 Clémence  
+    📚📚 Paul  
+    📚📚📚📚 Agathe
+
+    Qui a lu le plus de livres ?
+
+  questionType: "single_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un pictogramme"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Clémence"
+    - "Paul"
+    - "Agathe"
+    - "Ils en ont lu autant"
+  correctAnswers: [false, false, true, false]
+
+- uid: "aflesch-cp-math-geo-007"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Repérage gauche/droite"
+  text: |
+    Voici une rangée d’objets :  
+    🍎 🎒 🐻 ✏️  
+
+    Quel objet est à droite du sac à dos 🎒 ?
+
+  questionType: "single_choice"
+  themes: ["Géométrie"]
+  tags: ["repérer dans l'espace"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "La pomme 🍎"
+    - "L'ours 🐻"
+    - "Le crayon ✏️"
+    - "Rien"
+  correctAnswers: [false, true, false, false]
+
+
+- uid: "aflesch-cp-math-donnees-001"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  title: "Lire un pictogramme"
+  text: |
+    Voici le nombre de fruits cueillis par chaque enfant :
+    Clémence : 🍎🍎🍌  
+    Paul : 🍎🍌🍌  
+    Agathe : 🍎🍎🍎🍌
+
+    Sélectionne les affirmations vraies.
+  questionType: "multiple_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un pictogramme"]
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Clémence a cueilli 3 fruits"
+    - "Paul a cueilli 3 bananes"
+    - "Agathe a cueilli 4 pommes"
+    - "Agathe a cueilli plus de fruits que Paul"
+  correctAnswers: [true, false, false, true]

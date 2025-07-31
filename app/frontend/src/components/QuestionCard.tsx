@@ -132,7 +132,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
             )}
             {/* Question text */}
-            <div className="mb-4 text-xl font-semibold text-center w-full">
+            <div className="mb-4 text-xl font-semibold text-center w-full question-text-in-live-page">
                 <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
             </div>
             <ul className="flex flex-col w-full">
