@@ -8,6 +8,7 @@ import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
 import QuestionCard from '@/components/QuestionCard';
 import { Timer, ChevronDown, ChevronRight } from 'lucide-react';
 import QRCode from 'react-qr-code';
+import QrCodeWithLogo from "@components/QrCodeWithLogo";
 import ClassementPodium from '@/components/ClassementPodium';
 import ZoomControls from '@/components/ZoomControls';
 import type { TournamentQuestion } from '@shared/types';
@@ -82,7 +83,10 @@ const QuestionDisplay = React.memo(({
             <div className="card-body w-full h-full p-4 overflow-auto">
                 {!currentTournamentQuestion ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">
-                        <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
+                        <QrCodeWithLogo
+                            value={tournamentUrl}
+                            responsive={true}
+                        />
                         <div className="font-mono text-center mt-2 break-all text-base">{code}</div>
                     </div>
                 ) : (
@@ -167,7 +171,10 @@ const LeaderboardDisplay = React.memo(({
             <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-hidden">
                 {shouldShowQRCode ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">
-                        <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
+                        <QrCodeWithLogo
+                            value={tournamentUrl}
+                            responsive={true}
+                        />
                         <div className="font-mono text-center mt-2 break-all text-base">{code}</div>
                     </div>
                 ) : (
@@ -524,7 +531,10 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         <div className="card-body w-full h-full p-0 flex flex-col items-center justify-center">
                             <div className="w-full h-full flex flex-col items-center justify-center p-0">
                                 <div className="bg-white p-0 rounded-lg w-full flex items-center justify-center" style={{ maxHeight: '85%', aspectRatio: '1/1' }}>
-                                    <QRCode value={tournamentUrl} size={256} style={{ height: '100%', width: '100%', maxWidth: '100%', maxHeight: '100%', aspectRatio: '1/1' }} viewBox={`0 0 256 256`} />
+                                    <QrCodeWithLogo
+                                        value={tournamentUrl}
+                                        responsive={true}
+                                    />
                                 </div>
                                 <div className="text-center mt-2" style={{ maxHeight: '15%' }}>
                                     <div className="font-mono font-bold text-xl">{code}</div>
