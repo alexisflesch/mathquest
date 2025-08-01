@@ -339,7 +339,8 @@ async function runDeferredQuestionSequence(
             // Emit timer update
             const timerUpdatePayload = {
                 questionUid: question.uid,
-                timer: timer
+                timer: timer,
+                serverTime: Date.now()
             };
             io.to(playerRoom).emit('game_timer_updated', timerUpdatePayload);
 

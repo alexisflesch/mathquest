@@ -67,8 +67,12 @@ export interface DashboardQuestionChangedPayload {
  */
 export interface DashboardTimerUpdatedPayload {
     timer: GameTimerState;
-    questionUid?: string;
-    gameId?: string;
+    questionUid: string;
+    questionIndex: number;
+    totalQuestions: number;
+    answersLocked: boolean;
+    /** Backend timestamp at emission (ms since epoch, UTC) for sync */
+    serverTime: number;
 }
 /**
  * Dashboard answers lock status changed

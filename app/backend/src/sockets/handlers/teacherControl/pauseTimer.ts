@@ -48,11 +48,14 @@ function emitCanonicalTimerEvents(
         ? payloadBase.questionUid
         : (payloadBase.timer && typeof payloadBase.timer.questionUid === 'string' && payloadBase.timer.questionUid.length > 0
             ? payloadBase.timer.questionUid
-            : undefined);
+            : 'unknown'); // Ensure it's never undefined
     const canonicalPayload: DashboardTimerUpdatedPayload = {
         timer: toCanonicalTimer(payloadBase.timer),
         questionUid: canonicalQuestionUid,
-        gameId: payloadBase.gameId,
+        questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : 0,
+        totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 1,
+        answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
+        serverTime: Date.now()
     };
     const validation = dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
     if (!validation.success) {

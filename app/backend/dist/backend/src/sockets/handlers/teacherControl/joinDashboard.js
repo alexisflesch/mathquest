@@ -290,7 +290,8 @@ function joinDashboardHandler(io, socket) {
                 });
                 socket.emit(events_1.TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, {
                     timer: canonicalTimer,
-                    questionUid: controlState.currentQuestionUid
+                    questionUid: controlState.currentQuestionUid,
+                    serverTime: Date.now() + 10000 // Add artificial drift for testing
                 });
             }
             // Send initial participant count to the teacher

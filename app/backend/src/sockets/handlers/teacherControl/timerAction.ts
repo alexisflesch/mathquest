@@ -8,6 +8,7 @@ interface CanonicalTimerUpdatePayload {
     totalQuestions: number;
     answersLocked: boolean;
     gameId?: string;
+    serverTime: number; // Backend timestamp at emission
 }
 import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
@@ -115,7 +116,8 @@ function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, 
                 questionUid: expiredTimer.questionUid ?? undefined,
                 questionIndex,
                 totalQuestions,
-                answersLocked
+                answersLocked,
+                serverTime: Date.now()
             });
 
         } catch (error) {
@@ -205,6 +207,7 @@ function emitCanonicalTimerEvents(
         totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 0,
         answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
         gameId: payloadBase.gameId,
+        serverTime: Date.now()
     };
     const validation = dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
     if (!validation.success) {
@@ -843,7 +846,8 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 questionIndex: typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1,
                 totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0,
                 answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
-                gameId
+                gameId,
+                serverTime: Date.now()
             });
             logger.info({
                 action,

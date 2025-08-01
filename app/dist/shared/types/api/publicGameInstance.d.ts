@@ -24,8 +24,8 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
         gameTemplateId: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         gradeLevel: string;
-        themes: string[];
         discipline: string;
+        themes: string[];
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
@@ -33,8 +33,8 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
         gameTemplateId?: string | undefined;
     }, {
         gradeLevel: string;
-        themes: string[];
         discipline: string;
+        themes: string[];
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
@@ -45,12 +45,12 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
     status: string;
     accessCode: string;
     playMode: string;
-    name?: string | undefined;
     linkedQuizId?: string | null | undefined;
+    name?: string | undefined;
     practiceSettings?: {
         gradeLevel: string;
-        themes: string[];
         discipline: string;
+        themes: string[];
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
@@ -61,12 +61,12 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
     status: string;
     accessCode: string;
     playMode: string;
-    name?: string | undefined;
     linkedQuizId?: string | null | undefined;
+    name?: string | undefined;
     practiceSettings?: {
         gradeLevel: string;
-        themes: string[];
         discipline: string;
+        themes: string[];
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;

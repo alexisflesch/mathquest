@@ -109,6 +109,8 @@ export interface TimerUpdatePayload {
     questionUid?: string;
     /** Timer status */
     status?: TimerStatus;
+    /** Backend timestamp at emission (ms since epoch, UTC) for sync */
+    serverTime: number;
 }
 /**
  * Game timer update payload interface
@@ -119,6 +121,8 @@ export interface GameTimerUpdatePayload {
     timer: GameTimerState;
     /** Question UID associated with the timer */
     questionUid?: string;
+    /** Backend timestamp at emission (ms since epoch, UTC) for sync */
+    serverTime: number;
 }
 /**
  * Timer action payload interface

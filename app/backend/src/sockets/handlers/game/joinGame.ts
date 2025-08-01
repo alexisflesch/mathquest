@@ -430,7 +430,8 @@ export function joinGameHandler(
                                         if (canonicalTimer) {
                                             const timerUpdatePayload: GameTimerUpdatePayload = {
                                                 timer: canonicalTimer,
-                                                questionUid: canonicalTimer.questionUid
+                                                questionUid: canonicalTimer.questionUid,
+                                                serverTime: Date.now()
                                             };
                                             socket.emit(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any, timerUpdatePayload);
                                         }

@@ -26,19 +26,32 @@ import type {
 
 // Canonical helper: compute time left in ms given timerEndDateMs, now, and optional backend timeLeftMs
 /**
+ * Calculate remaining time using backend's canonical time for perfect synchronization
+ * @param timerEndDateMs Absolute end date (ms since epoch, UTC)
+ * @param serverTime Backend timestamp at emission (ms since epoch, UTC)
+ * @returns Remaining time in milliseconds
+ */
+function getRemainingTime(timerEndDateMs: number, serverTime: number): number {
+    const clientTime = Date.now();
+    const drift = serverTime - clientTime;
+    const correctedNow = clientTime + drift;
+    return Math.max(0, timerEndDateMs - correctedNow);
+}
+
+/**
  * Computes the canonical time left in ms for the timer, given the backend payload.
- * - If timerEndDateMs is a positive number and status is 'run', compute from now.
+ * - If timerEndDateMs is a positive number and status is 'run', compute from synchronized time.
  * - If status is 'pause' and backend timeLeftMs is provided, use it directly.
  * - If timerEndDateMs is 0 or negative, return 0.
  *
  * @param timerEndDateMs Absolute end date (ms since epoch, UTC)
- * @param now Current time (ms since epoch, UTC)
+ * @param serverTime Backend timestamp at emission (ms since epoch, UTC)
  * @param status Timer status ('run', 'pause', 'stop')
  * @param backendTimeLeftMs Optional backend-provided timeLeftMs (for pause)
  */
 function computeTimeLeftMs(
     timerEndDateMs: number,
-    now: number,
+    serverTime: number,
     status?: 'run' | 'pause' | 'stop',
     backendTimeLeftMs?: number | null
 ): number {
@@ -50,7 +63,7 @@ function computeTimeLeftMs(
         return 1;
     }
     if (typeof timerEndDateMs === 'number' && timerEndDateMs > 0) {
-        return Math.max(0, timerEndDateMs - now);
+        return getRemainingTime(timerEndDateMs, serverTime);
     }
     return 0;
 }
@@ -110,16 +123,23 @@ export interface SimpleTimerHook extends SimpleTimerActions {
  */
 export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     // Hydrate timer state from canonical timer (for initial game state)
-    const hydrateTimerState = (timer: GameTimerState | undefined) => {
+    const hydrateTimerState = (timer: GameTimerState | undefined, serverTime?: number) => {
         if (!timer || !timer.questionUid) return;
-        const now = Date.now();
+        const syncTime = serverTime || Date.now(); // Fallback to client time if serverTime not provided
+
+        // Update drift tracking if serverTime is provided
+        if (serverTime) {
+            const clientTime = Date.now();
+            latestDriftRef.current = serverTime - clientTime;
+        }
+
         const backendTimeLeftMs = (timer as any).timeLeftMs;
         const canonicalDurationMs = typeof (timer as any).durationMs === 'number'
             ? (timer as any).durationMs
             : 0;
         const computedTimeLeftMs = computeTimeLeftMs(
             timer.timerEndDateMs,
-            now,
+            syncTime,
             timer.status,
             backendTimeLeftMs
         );
@@ -167,6 +187,8 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     const [activeQuestionUid, setActiveQuestionUid] = useState<string | null>(null);
     // Local countdowns per question
     const localCountdownRefs = useRef<Record<string, NodeJS.Timeout | null>>({});
+    // Track latest server time drift for local countdown synchronization
+    const latestDriftRef = useRef<number>(0);
 
     // Socket connection state
     const isConnected = socket?.connected ?? false;
@@ -189,16 +211,23 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
 
         const handleTimerUpdate = (payload: GameTimerUpdatePayload) => {
             logger.info('[SimpleTimer][handleTimerUpdate] Timer update received', { payload });
-            const { timer } = payload;
+            const { timer, serverTime } = payload;
             if (!timer || !timer.questionUid) return;
-            const now = Date.now();
+            const syncTime = serverTime || Date.now(); // Fallback to client time if serverTime not provided
+
+            // Update drift tracking for local countdown synchronization
+            if (serverTime) {
+                const clientTime = Date.now();
+                latestDriftRef.current = serverTime - clientTime;
+            }
+
             const backendTimeLeftMs = (timer as any).timeLeftMs;
             const canonicalDurationMs = typeof (timer as any).durationMs === 'number'
                 ? (timer as any).durationMs
                 : (typeof (payload as any).durationMs === 'number' ? (payload as any).durationMs : 0);
             const computedTimeLeftMs = computeTimeLeftMs(
                 timer.timerEndDateMs,
-                now,
+                syncTime,
                 timer.status,
                 backendTimeLeftMs
             );
@@ -248,8 +277,9 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             currentTime: Date.now()
         });
         localCountdownRefs.current[questionUid] = setInterval(() => {
-            const now = Date.now();
-            const remaining = computeTimeLeftMs(timerEndDateMs, now);
+            const clientTime = Date.now();
+            const correctedNow = clientTime + latestDriftRef.current;
+            const remaining = Math.max(0, timerEndDateMs - correctedNow);
 
             // Only update state if the displayed time (in seconds) has changed
             setTimerStates(prev => {

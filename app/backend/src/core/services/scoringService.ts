@@ -437,7 +437,7 @@ export async function submitAnswerWithScoring(
                 // Store score in isolated session state, not global Redis leaderboard
                 const sessionStateKey = `deferred_session:${gameInstance.accessCode}:${userId}:${attemptCount}`;
                 await redisClient.hset(sessionStateKey, 'score', currentTotalScore.toString());
-                
+
                 logger.info({
                     gameInstanceId,
                     userId,

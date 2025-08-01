@@ -297,7 +297,8 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                 });
                 socket.emit(TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, {
                     timer: canonicalTimer,
-                    questionUid: controlState.currentQuestionUid
+                    questionUid: controlState.currentQuestionUid,
+                    serverTime: Date.now()
                 });
             }
 

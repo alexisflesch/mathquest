@@ -407,7 +407,8 @@ function emitCanonicalTimerEvents(
         questionUid: typeof payloadBase.questionUid === 'string' && payloadBase.questionUid ? payloadBase.questionUid : 'unknown',
         questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : 0,
         totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 1,
-        answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false
+        answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
+        serverTime: Date.now()
     };
     const validation = dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
     if (!validation.success) {
