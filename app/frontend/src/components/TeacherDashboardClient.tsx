@@ -187,22 +187,22 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         });
         // Listen for backend confirmation of showStats state (projection_show_stats is canonical)
         // Listen for backend-confirmed showStats state (projection_show_stats is canonical)
-    socket.on(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, (payload: { show: boolean }) => {
-        if (typeof payload?.show === 'boolean') {
-            setShowStats(payload.show);
-            logger.info('[DASHBOARD] Received showStats state from backend (projection_show_stats):', payload.show);
-            // Only show snackbar if teacher initiated the toggle
-            if (lastStatsToggleInitiatedByTeacher.current) {
-                setSnackbarMessage(payload.show ? 'Statistiques affichées' : 'Statistiques masquées');
-                setTimeout(() => setSnackbarMessage(null), 2500);
-                lastStatsToggleInitiatedByTeacher.current = false;
+        socket.on(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, (payload: { show: boolean }) => {
+            if (typeof payload?.show === 'boolean') {
+                setShowStats(payload.show);
+                logger.info('[DASHBOARD] Received showStats state from backend (projection_show_stats):', payload.show);
+                // Only show snackbar if teacher initiated the toggle
+                if (lastStatsToggleInitiatedByTeacher.current) {
+                    setSnackbarMessage(payload.show ? 'Statistiques affichées' : 'Statistiques masquées');
+                    setTimeout(() => setSnackbarMessage(null), 2500);
+                    lastStatsToggleInitiatedByTeacher.current = false;
+                }
+                // Always set suppression flag for initial state
+                if (!hasReceivedInitialStats.current) {
+                    hasReceivedInitialStats.current = true;
+                }
             }
-            // Always set suppression flag for initial state
-            if (!hasReceivedInitialStats.current) {
-                hasReceivedInitialStats.current = true;
-            }
-        }
-    });
+        });
         // Listen for backend confirmation of showCorrectAnswers state (trophy)
         socket.on(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, (payload: ShowCorrectAnswersPayload) => {
             const parsed = showCorrectAnswersPayloadSchema.safeParse(payload);
