@@ -16,7 +16,6 @@ import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
 import type { z } from 'zod';
 type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import { QUESTION_TYPES } from '@shared/types';
-
 const logger = createLogger('ProjectionPage');
 
 // Memoized timer display component to prevent unnecessary re-renders

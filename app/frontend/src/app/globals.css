@@ -1478,6 +1478,7 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 }
 
 
+/* New lines in question displays */
 .question-text-in-live-page {
   white-space: pre-line;
   text-align: left;
@@ -1486,4 +1487,7 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 
 .question-text-in-dashboards {
   white-space: pre-line;
+}
+
+
 }
