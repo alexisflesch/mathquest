@@ -8,6 +8,7 @@ import type { ErrorPayload } from '@shared/types/socketEvents';
 import { endGamePayloadSchema } from '@shared/types/socketEvents.zod';
 import { redisClient } from '@/config/redis';
 import { cleanupDeferredSessionsForGame } from '../deferredTournamentFlow';
+import { calculateLeaderboard, persistLeaderboardToGameInstance } from '../sharedLeaderboard';
 
 import { EndGamePayload } from './types';
 
@@ -179,6 +180,25 @@ export function endGameHandler(io: SocketIOServer, socket: Socket) {
                 dbStatus: updatedGameInstance?.status,
                 redisStatus: updatedState?.gameState?.status
             }, '[DIAGNOSTIC] Post-endGame status sync check');
+
+            // CRITICAL FIX: Persist final leaderboard to database BEFORE Redis cleanup
+            // This ensures scores are saved when teacher manually ends the quiz
+            try {
+                const finalLeaderboard = await calculateLeaderboard(accessCode);
+                await persistLeaderboardToGameInstance(accessCode, finalLeaderboard);
+                logger.info({
+                    accessCode,
+                    leaderboard: finalLeaderboard,
+                    context: 'manual_endGame'
+                }, '[QUIZ-SCORE-FIX] Final leaderboard persisted to database before Redis cleanup');
+            } catch (error) {
+                logger.error({
+                    accessCode,
+                    error,
+                    context: 'manual_endGame'
+                }, '[QUIZ-SCORE-FIX] Error persisting final leaderboard to database');
+                // Continue with cleanup even if persistence fails to avoid hanging state
+            }
 
             // Clean up all Redis data for this game (live and deferred sessions)
             await cleanupRedisGameData(accessCode, gameId, io);

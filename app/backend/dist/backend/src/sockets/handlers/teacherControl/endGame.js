@@ -11,6 +11,7 @@ const redisCleanup_1 = require("@/utils/redisCleanup");
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const deferredTournamentFlow_1 = require("../deferredTournamentFlow");
+const sharedLeaderboard_1 = require("../sharedLeaderboard");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('EndGameHandler');
 /**
@@ -159,6 +160,25 @@ function endGameHandler(io, socket) {
                 dbStatus: updatedGameInstance?.status,
                 redisStatus: updatedState?.gameState?.status
             }, '[DIAGNOSTIC] Post-endGame status sync check');
+            // CRITICAL FIX: Persist final leaderboard to database BEFORE Redis cleanup
+            // This ensures scores are saved when teacher manually ends the quiz
+            try {
+                const finalLeaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
+                await (0, sharedLeaderboard_1.persistLeaderboardToGameInstance)(accessCode, finalLeaderboard);
+                logger.info({
+                    accessCode,
+                    leaderboard: finalLeaderboard,
+                    context: 'manual_endGame'
+                }, '[QUIZ-SCORE-FIX] Final leaderboard persisted to database before Redis cleanup');
+            }
+            catch (error) {
+                logger.error({
+                    accessCode,
+                    error,
+                    context: 'manual_endGame'
+                }, '[QUIZ-SCORE-FIX] Error persisting final leaderboard to database');
+                // Continue with cleanup even if persistence fails to avoid hanging state
+            }
             // Clean up all Redis data for this game (live and deferred sessions)
             await cleanupRedisGameData(accessCode, gameId, io);
             // Clean up in-memory deferred session tracking
