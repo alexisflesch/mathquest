@@ -19,7 +19,7 @@ export const questionSchema = baseQuestionSchema.extend({
   author: z.string().optional(),
   explanation: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  isHidden: z.boolean().optional(), // Renamed from 'hidden'
+  excludedFrom: z.array(z.string()).optional(), // Array of play modes this question is excluded from
   durationMs: z.number({ required_error: "durationMs is required" }) // Canonical timer field
 });
 

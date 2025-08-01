@@ -37,7 +37,7 @@ export class QuestionService {
                     author: data.author || userId, // Default to userId if not specified
                     explanation: data.explanation,
                     tags: data.tags || [],
-                    isHidden: data.isHidden,
+                    excludedFrom: data.excludedFrom || [],
                     timeLimit: timeLimit
                 }
             });
@@ -148,7 +148,12 @@ export class QuestionService {
 
             // Always apply hidden filter (AND with other conditions)
             if (!includeHidden) {
-                where.isHidden = false;
+                // Exclude questions that are hidden from all modes
+                where.NOT = {
+                    excludedFrom: {
+                        hasEvery: ['quiz', 'tournament', 'practice']
+                    }
+                };
             }
 
             const [questions, total] = await Promise.all([
@@ -238,7 +243,11 @@ export class QuestionService {
     async getAvailableFilters(filterCriteria?: any) {
         try {
             const baseWhere: any = {
-                isHidden: false
+                NOT: {
+                    excludedFrom: {
+                        hasEvery: ['quiz', 'tournament', 'practice']
+                    }
+                }
             };
 
             // Build different where clauses for different filter types

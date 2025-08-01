@@ -291,7 +291,7 @@ function joinDashboardHandler(io, socket) {
                 socket.emit(events_1.TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, {
                     timer: canonicalTimer,
                     questionUid: controlState.currentQuestionUid,
-                    serverTime: Date.now() + 10000 // Add artificial drift for testing
+                    serverTime: Date.now()
                 });
             }
             // Send initial participant count to the teacher

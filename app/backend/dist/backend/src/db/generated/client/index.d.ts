@@ -4985,7 +4985,6 @@ export namespace Prisma {
     author: string | null
     explanation: string | null
     timeLimit: number | null
-    isHidden: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
     feedbackWaitTime: number | null
@@ -5002,7 +5001,6 @@ export namespace Prisma {
     author: string | null
     explanation: string | null
     timeLimit: number | null
-    isHidden: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
     feedbackWaitTime: number | null
@@ -5021,7 +5019,7 @@ export namespace Prisma {
     explanation: number
     tags: number
     timeLimit: number
-    isHidden: number
+    excludedFrom: number
     createdAt: number
     updatedAt: number
     answerOptions: number
@@ -5054,7 +5052,6 @@ export namespace Prisma {
     author?: true
     explanation?: true
     timeLimit?: true
-    isHidden?: true
     createdAt?: true
     updatedAt?: true
     feedbackWaitTime?: true
@@ -5071,7 +5068,6 @@ export namespace Prisma {
     author?: true
     explanation?: true
     timeLimit?: true
-    isHidden?: true
     createdAt?: true
     updatedAt?: true
     feedbackWaitTime?: true
@@ -5090,7 +5086,7 @@ export namespace Prisma {
     explanation?: true
     tags?: true
     timeLimit?: true
-    isHidden?: true
+    excludedFrom?: true
     createdAt?: true
     updatedAt?: true
     answerOptions?: true
@@ -5198,7 +5194,7 @@ export namespace Prisma {
     explanation: string | null
     tags: string[]
     timeLimit: number
-    isHidden: boolean | null
+    excludedFrom: string[]
     createdAt: Date
     updatedAt: Date
     answerOptions: string[]
@@ -5238,7 +5234,7 @@ export namespace Prisma {
     explanation?: boolean
     tags?: boolean
     timeLimit?: boolean
-    isHidden?: boolean
+    excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     answerOptions?: boolean
@@ -5261,7 +5257,7 @@ export namespace Prisma {
     explanation?: boolean
     tags?: boolean
     timeLimit?: boolean
-    isHidden?: boolean
+    excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     answerOptions?: boolean
@@ -5282,7 +5278,7 @@ export namespace Prisma {
     explanation?: boolean
     tags?: boolean
     timeLimit?: boolean
-    isHidden?: boolean
+    excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     answerOptions?: boolean
@@ -5303,7 +5299,7 @@ export namespace Prisma {
     explanation?: boolean
     tags?: boolean
     timeLimit?: boolean
-    isHidden?: boolean
+    excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     answerOptions?: boolean
@@ -5311,7 +5307,7 @@ export namespace Prisma {
     feedbackWaitTime?: boolean
   }
 
-  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "isHidden" | "createdAt" | "updatedAt" | "answerOptions" | "correctAnswers" | "feedbackWaitTime", ExtArgs["result"]["question"]>
+  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "excludedFrom" | "createdAt" | "updatedAt" | "answerOptions" | "correctAnswers" | "feedbackWaitTime", ExtArgs["result"]["question"]>
   export type QuestionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameTemplates?: boolean | Question$gameTemplatesArgs<ExtArgs>
     _count?: boolean | QuestionCountOutputTypeDefaultArgs<ExtArgs>
@@ -5337,7 +5333,7 @@ export namespace Prisma {
       explanation: string | null
       tags: string[]
       timeLimit: number
-      isHidden: boolean | null
+      excludedFrom: string[]
       createdAt: Date
       updatedAt: Date
       answerOptions: string[]
@@ -5779,7 +5775,7 @@ export namespace Prisma {
     readonly explanation: FieldRef<"Question", 'String'>
     readonly tags: FieldRef<"Question", 'String[]'>
     readonly timeLimit: FieldRef<"Question", 'Int'>
-    readonly isHidden: FieldRef<"Question", 'Boolean'>
+    readonly excludedFrom: FieldRef<"Question", 'String[]'>
     readonly createdAt: FieldRef<"Question", 'DateTime'>
     readonly updatedAt: FieldRef<"Question", 'DateTime'>
     readonly answerOptions: FieldRef<"Question", 'String[]'>
@@ -10980,7 +10976,7 @@ export namespace Prisma {
     explanation: 'explanation',
     tags: 'tags',
     timeLimit: 'timeLimit',
-    isHidden: 'isHidden',
+    excludedFrom: 'excludedFrom',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     answerOptions: 'answerOptions',
@@ -11157,16 +11153,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Boolean'
+   * Reference to a field of type 'Boolean[]'
    */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+  export type ListBooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean[]'>
     
 
 
   /**
-   * Reference to a field of type 'Boolean[]'
+   * Reference to a field of type 'Boolean'
    */
-  export type ListBooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean[]'>
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -11407,7 +11403,7 @@ export namespace Prisma {
     explanation?: StringNullableFilter<"Question"> | string | null
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntFilter<"Question"> | number
-    isHidden?: BoolNullableFilter<"Question"> | boolean | null
+    excludedFrom?: StringNullableListFilter<"Question">
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
     answerOptions?: StringNullableListFilter<"Question">
@@ -11429,7 +11425,7 @@ export namespace Prisma {
     explanation?: SortOrderInput | SortOrder
     tags?: SortOrder
     timeLimit?: SortOrder
-    isHidden?: SortOrderInput | SortOrder
+    excludedFrom?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     answerOptions?: SortOrder
@@ -11454,7 +11450,7 @@ export namespace Prisma {
     explanation?: StringNullableFilter<"Question"> | string | null
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntFilter<"Question"> | number
-    isHidden?: BoolNullableFilter<"Question"> | boolean | null
+    excludedFrom?: StringNullableListFilter<"Question">
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
     answerOptions?: StringNullableListFilter<"Question">
@@ -11476,7 +11472,7 @@ export namespace Prisma {
     explanation?: SortOrderInput | SortOrder
     tags?: SortOrder
     timeLimit?: SortOrder
-    isHidden?: SortOrderInput | SortOrder
+    excludedFrom?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     answerOptions?: SortOrder
@@ -11505,7 +11501,7 @@ export namespace Prisma {
     explanation?: StringNullableWithAggregatesFilter<"Question"> | string | null
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntWithAggregatesFilter<"Question"> | number
-    isHidden?: BoolNullableWithAggregatesFilter<"Question"> | boolean | null
+    excludedFrom?: StringNullableListFilter<"Question">
     createdAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
     answerOptions?: StringNullableListFilter<"Question">
@@ -12034,7 +12030,7 @@ export namespace Prisma {
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
     timeLimit: number
-    isHidden?: boolean | null
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
     answerOptions?: QuestionCreateanswerOptionsInput | string[]
@@ -12056,7 +12052,7 @@ export namespace Prisma {
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
     timeLimit: number
-    isHidden?: boolean | null
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
     answerOptions?: QuestionCreateanswerOptionsInput | string[]
@@ -12078,7 +12074,7 @@ export namespace Prisma {
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: IntFieldUpdateOperationsInput | number
-    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     answerOptions?: QuestionUpdateanswerOptionsInput | string[]
@@ -12100,7 +12096,7 @@ export namespace Prisma {
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: IntFieldUpdateOperationsInput | number
-    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     answerOptions?: QuestionUpdateanswerOptionsInput | string[]
@@ -12122,7 +12118,7 @@ export namespace Prisma {
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
     timeLimit: number
-    isHidden?: boolean | null
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
     answerOptions?: QuestionCreateanswerOptionsInput | string[]
@@ -12143,7 +12139,7 @@ export namespace Prisma {
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: IntFieldUpdateOperationsInput | number
-    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     answerOptions?: QuestionUpdateanswerOptionsInput | string[]
@@ -12164,7 +12160,7 @@ export namespace Prisma {
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: IntFieldUpdateOperationsInput | number
-    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     answerOptions?: QuestionUpdateanswerOptionsInput | string[]
@@ -12810,11 +12806,6 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type BoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
   export type BoolNullableListFilter<$PrismaModel = never> = {
     equals?: boolean[] | ListBooleanFieldRefInput<$PrismaModel> | null
     has?: boolean | BooleanFieldRefInput<$PrismaModel> | null
@@ -12846,7 +12837,7 @@ export namespace Prisma {
     explanation?: SortOrder
     tags?: SortOrder
     timeLimit?: SortOrder
-    isHidden?: SortOrder
+    excludedFrom?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     answerOptions?: SortOrder
@@ -12871,7 +12862,6 @@ export namespace Prisma {
     author?: SortOrder
     explanation?: SortOrder
     timeLimit?: SortOrder
-    isHidden?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     feedbackWaitTime?: SortOrder
@@ -12888,7 +12878,6 @@ export namespace Prisma {
     author?: SortOrder
     explanation?: SortOrder
     timeLimit?: SortOrder
-    isHidden?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     feedbackWaitTime?: SortOrder
@@ -12930,14 +12919,6 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type EnumPlayModeNullableFilter<$PrismaModel = never> = {
@@ -13496,6 +13477,10 @@ export namespace Prisma {
     set: string[]
   }
 
+  export type QuestionCreateexcludedFromInput = {
+    set: string[]
+  }
+
   export type QuestionCreateanswerOptionsInput = {
     set: string[]
   }
@@ -13544,8 +13529,9 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type NullableBoolFieldUpdateOperationsInput = {
-    set?: boolean | null
+  export type QuestionUpdateexcludedFromInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type QuestionUpdateanswerOptionsInput = {
@@ -13984,11 +13970,6 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
-  export type NestedBoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -14041,14 +14022,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumPlayModeNullableFilter<$PrismaModel = never> = {
@@ -14842,7 +14815,7 @@ export namespace Prisma {
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
     timeLimit: number
-    isHidden?: boolean | null
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
     answerOptions?: QuestionCreateanswerOptionsInput | string[]
@@ -14863,7 +14836,7 @@ export namespace Prisma {
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
     timeLimit: number
-    isHidden?: boolean | null
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
     answerOptions?: QuestionCreateanswerOptionsInput | string[]
@@ -14939,7 +14912,7 @@ export namespace Prisma {
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: IntFieldUpdateOperationsInput | number
-    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     answerOptions?: QuestionUpdateanswerOptionsInput | string[]
@@ -14960,7 +14933,7 @@ export namespace Prisma {
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: IntFieldUpdateOperationsInput | number
-    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     answerOptions?: QuestionUpdateanswerOptionsInput | string[]

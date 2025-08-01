@@ -20,7 +20,7 @@ exports.questionSchema = baseQuestionSchema.extend({
     author: zod_1.z.string().optional(),
     explanation: zod_1.z.string().optional(),
     tags: zod_1.z.array(zod_1.z.string()).optional(),
-    isHidden: zod_1.z.boolean().optional(), // Renamed from 'hidden'
+    excludedFrom: zod_1.z.array(zod_1.z.string()).optional(), // Array of play modes this question is excluded from
     durationMs: zod_1.z.number({ required_error: "durationMs is required" }) // Canonical timer field
 });
 // Schema for creating a question, essentially the same as questionSchema but without uid if it's auto-generated

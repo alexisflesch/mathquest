@@ -14,7 +14,7 @@ export declare const questionSchema: z.ZodObject<{
     author: z.ZodOptional<z.ZodString>;
     explanation: z.ZodOptional<z.ZodString>;
     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    isHidden: z.ZodOptional<z.ZodBoolean>;
+    excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     durationMs: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     text: string;
@@ -31,7 +31,7 @@ export declare const questionSchema: z.ZodObject<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    isHidden?: boolean | undefined;
+    excludedFrom?: string[] | undefined;
 }, {
     text: string;
     answerOptions: string[];
@@ -47,7 +47,7 @@ export declare const questionSchema: z.ZodObject<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    isHidden?: boolean | undefined;
+    excludedFrom?: string[] | undefined;
 }>;
 export type Question = z.infer<typeof questionSchema>;
 export declare const questionCreationSchema: z.ZodObject<Omit<{
@@ -65,7 +65,7 @@ export declare const questionCreationSchema: z.ZodObject<Omit<{
     author: z.ZodOptional<z.ZodString>;
     explanation: z.ZodOptional<z.ZodString>;
     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    isHidden: z.ZodOptional<z.ZodBoolean>;
+    excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     durationMs: z.ZodNumber;
 }, "uid">, "strip", z.ZodTypeAny, {
     text: string;
@@ -81,7 +81,7 @@ export declare const questionCreationSchema: z.ZodObject<Omit<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    isHidden?: boolean | undefined;
+    excludedFrom?: string[] | undefined;
 }, {
     text: string;
     answerOptions: string[];
@@ -96,6 +96,6 @@ export declare const questionCreationSchema: z.ZodObject<Omit<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    isHidden?: boolean | undefined;
+    excludedFrom?: string[] | undefined;
 }>;
 export type QuestionCreationData = z.infer<typeof questionCreationSchema>;

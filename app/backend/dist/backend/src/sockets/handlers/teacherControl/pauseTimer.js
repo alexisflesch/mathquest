@@ -40,7 +40,7 @@ function emitCanonicalTimerEvents(io, rooms, payloadBase) {
         questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : 0,
         totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 1,
         answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
-        serverTime: Date.now() + 10000 // Add artificial drift for testing
+        serverTime: Date.now()
     };
     const validation = socketEvents_zod_1.dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
     if (!validation.success) {

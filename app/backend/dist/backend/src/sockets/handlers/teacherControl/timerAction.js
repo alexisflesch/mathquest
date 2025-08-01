@@ -118,7 +118,7 @@ function startGameTimer(io, gameId, accessCode, timerEndDateMs, questionUid) {
                 questionIndex,
                 totalQuestions,
                 answersLocked,
-                serverTime: Date.now() + 10000 // Add artificial drift for testing
+                serverTime: Date.now()
             });
         }
         catch (error) {
@@ -195,7 +195,7 @@ function emitCanonicalTimerEvents(io, rooms, payloadBase) {
         totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 0,
         answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
         gameId: payloadBase.gameId,
-        serverTime: Date.now() + 10000 // Add artificial drift for testing
+        serverTime: Date.now()
     };
     const validation = socketEvents_zod_2.dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
     if (!validation.success) {
@@ -786,7 +786,7 @@ function timerActionHandler(io, socket) {
                 totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0,
                 answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
                 gameId,
-                serverTime: Date.now() + 10000 // Add artificial drift for testing
+                serverTime: Date.now()
             });
             logger.info({
                 action,

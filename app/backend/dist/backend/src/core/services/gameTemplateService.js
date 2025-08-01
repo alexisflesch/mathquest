@@ -28,7 +28,11 @@ class GameTemplateService {
                 gradeLevel: data.gradeLevel,
                 discipline: data.discipline,
                 themes: { hasSome: data.themes },
-                isHidden: false
+                NOT: {
+                    excludedFrom: {
+                        has: data.playMode
+                    }
+                }
             },
             orderBy: { updatedAt: 'desc' }, // fallback order
             take: data.nbOfQuestions

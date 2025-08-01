@@ -154,7 +154,7 @@ exports.Prisma.QuestionScalarFieldEnum = {
   explanation: 'explanation',
   tags: 'tags',
   timeLimit: 'timeLimit',
-  isHidden: 'isHidden',
+  excludedFrom: 'excludedFrom',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   answerOptions: 'answerOptions',

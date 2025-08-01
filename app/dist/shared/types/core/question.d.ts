@@ -46,8 +46,8 @@ export interface Question extends BaseQuestion {
     explanation?: string;
     /** Question author */
     author?: string;
-    /** Whether question is hidden */
-    isHidden?: boolean;
+    /** Array of play modes this question is excluded from */
+    excludedFrom?: string[];
     /** Creation timestamp */
     createdAt?: Date;
     /** Last update timestamp */
@@ -91,7 +91,8 @@ export interface QuestionCreationPayload {
     /** Canonical timer duration in milliseconds (required) */
     durationMs: number;
     author?: string;
-    isHidden?: boolean;
+    /** Array of play modes this question is excluded from */
+    excludedFrom?: string[];
 }
 /**
  * Question update payload

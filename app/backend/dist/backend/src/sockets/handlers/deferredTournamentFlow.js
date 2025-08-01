@@ -319,7 +319,7 @@ async function runDeferredQuestionSequence(io, socket, session) {
             const timerUpdatePayload = {
                 questionUid: question.uid,
                 timer: timer,
-                serverTime: Date.now() + 10000 // Add artificial drift for testing
+                serverTime: Date.now()
             };
             io.to(playerRoom).emit('game_timer_updated', timerUpdatePayload);
             // Track question start time for this user (include attempt count for deferred session isolation)

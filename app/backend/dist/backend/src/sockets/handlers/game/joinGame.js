@@ -406,7 +406,7 @@ function joinGameHandler(io, socket) {
                                             const timerUpdatePayload = {
                                                 timer: canonicalTimer,
                                                 questionUid: canonicalTimer.questionUid,
-                                                serverTime: Date.now() + 10000 // Add artificial drift for testing
+                                                serverTime: Date.now()
                                             };
                                             socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED, timerUpdatePayload);
                                         }

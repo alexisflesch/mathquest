@@ -257,11 +257,25 @@ def import_questions():
         # cur.execute('DELETE FROM questions') # DANGEREUX : supprime les liens en cascade vers GameTemplate !!
         # conn.commit()
         # Insérer les questions seulement après suppression
+        VALID_PLAYMODES = {"quiz", "practice", "tournament"}
         for q, yaml_path in all_questions:
+            # Validate excludedFrom
+            excluded_from = q.get('excludedFrom', [])
+            if isinstance(excluded_from, str):
+                excluded_from = [excluded_from]
+            if not isinstance(excluded_from, list):
+                excluded_from = []
+            invalid_modes = [mode for mode in excluded_from if mode not in VALID_PLAYMODES]
+            if invalid_modes:
+                msg = f"excludedFrom contient des valeurs invalides {invalid_modes} (uid={q.get('uid')}) dans {yaml_path}"
+                logging.error(msg)
+                all_errors.append(msg)
+                total_errors += 1
+                continue
             try:
                 cur.execute(
                     '''INSERT INTO questions
-                    (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, is_hidden, answer_options, correct_answers, created_at, updated_at)
+                    (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, answer_options, correct_answers, excluded_from, created_at, updated_at)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                     ON CONFLICT (uid) DO UPDATE SET
                     title = EXCLUDED.title,
@@ -275,9 +289,9 @@ def import_questions():
                     explanation = EXCLUDED.explanation,
                     tags = EXCLUDED.tags,
                     time_limit_seconds = EXCLUDED.time_limit_seconds,
-                    is_hidden = EXCLUDED.is_hidden,
                     answer_options = EXCLUDED.answer_options,
                     correct_answers = EXCLUDED.correct_answers,
+                    excluded_from = EXCLUDED.excluded_from,
                     updated_at = NOW()''',
                     [
                         q.get('uid'),
@@ -292,9 +306,9 @@ def import_questions():
                         q.get('explanation'),
                         q.get('tags'),
                         q.get('timeLimit'),
-                        q.get('isHidden', False),
                         q.get('answerOptions'),
-                        q.get('correctAnswers')
+                        q.get('correctAnswers'),
+                        excluded_from
                     ]
                 )
                 total_uploaded += 1

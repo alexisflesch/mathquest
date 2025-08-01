@@ -33,7 +33,7 @@ class QuestionService {
                     author: data.author || userId, // Default to userId if not specified
                     explanation: data.explanation,
                     tags: data.tags || [],
-                    isHidden: data.isHidden,
+                    excludedFrom: data.excludedFrom || [],
                     timeLimit: timeLimit
                 }
             });
@@ -109,7 +109,12 @@ class QuestionService {
             }
             // Always apply hidden filter (AND with other conditions)
             if (!includeHidden) {
-                where.isHidden = false;
+                // Exclude questions that are hidden from all modes
+                where.NOT = {
+                    excludedFrom: {
+                        hasEvery: ['quiz', 'tournament', 'practice']
+                    }
+                };
             }
             const [questions, total] = await Promise.all([
                 prisma_1.prisma.question.findMany({
@@ -190,7 +195,11 @@ class QuestionService {
     async getAvailableFilters(filterCriteria) {
         try {
             const baseWhere = {
-                isHidden: false
+                NOT: {
+                    excludedFrom: {
+                        hasEvery: ['quiz', 'tournament', 'practice']
+                    }
+                }
             };
             // Build different where clauses for different filter types
             const niveauxWhere = { ...baseWhere };
