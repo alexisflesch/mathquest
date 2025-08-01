@@ -2,21 +2,22 @@
  * Live Game Page - Handles Tournament, Quiz, and Self-Paced Modes
  * 
  * This unified page handles all three game modes that can be accessed via /live/[code]:
-        if (gameState.gameStatus === 'finished' && code) {
-            logger.info(`Game finished, redirecting to leaderboard in 3 seconds`);
-            const timer = setTimeout(() => {
-                logger.info(`Redirecting to leaderboard: /leaderboard/${code}`);
-                router.push(`/leaderboard/${code}`);
-            }, 3000); // Give user time to see final results
-            return () => clearTimeout(timer);
+if (gameState.gameStatus === 'finished' && code) {
+    logger.info(`Game finished, redirecting to leaderboard in 3 seconds`);
+    const timer = setTimeout(() => {
+        logger.info(`Redirecting to leaderboard: /leaderboard/${code}`);
+        router.push(`/leaderboard/${code}`);
+        }, 3000); // Give user time to see final results
+        return () => clearTimeout(timer);
         }rnament Mode (live/differed): Real-time competition with backend timing
- * 2. Quiz Mode: Teacher-controlled quiz sessions with feedback
- * 3. Self-Paced Mode: Individual practice with immediate feedback
- * 
- * Mode detection is performed by checking the tournament's linkedQuizId and gameState properties.
- */
+        * 2. Quiz Mode: Teacher-controlled quiz sessions with feedback
+        * 3. Self-Paced Mode: Individual practice with immediate feedback
+        * 
+        * Mode detection is performed by checking the tournament's linkedQuizId and gameState properties.
+        */
 
 "use client";
+import QrCodeWithLogo from '@/components/QrCodeWithLogo';
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from '@/components/AuthProvider';
@@ -26,6 +27,7 @@ import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
 import QuestionCard from '@/components/QuestionCard';
 import LeaderboardModal from '@/components/LeaderboardModal';
+import InfoModal from '@/components/SharedModal';
 import type { QuestionData } from '@shared/types/socketEvents';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
@@ -37,7 +39,7 @@ type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
-import { Trophy } from 'lucide-react';
+import { Trophy, Share2, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LeaderboardEntry } from '@shared/types/core/leaderboardEntry.zod';
 import type { GameParticipant } from '@shared/types/core/participant';
@@ -816,6 +818,7 @@ export default function LiveGamePage() {
     }, [snackbarOpen]); // Only depend on snackbarOpen
 
     // Show lobby UI if game is pending and user is connected
+    const [showQrModal, setShowQrModal] = useState(false);
     if (showLobby) {
         logger.info('[LOBBY] Rendering lobby with unified participant model', {
             gameStatus: gameState.gameStatus,
@@ -843,28 +846,94 @@ export default function LiveGamePage() {
             </div>
         ) : null;
 
+        // Share and QR buttons
+        const handleShare = () => {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Rejoindre la partie',
+                    text: `Rejoignez la partie sur MathQuest avec le code : ${code}`,
+                    url: window.location.href
+                }).catch(() => { });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+            }
+        };
+
+        const shareButton = (
+            <div className="flex gap-0 items-center">
+                <button
+                    className="p-2 rounded hover:bg-[color:var(--muted)] transition-colors"
+                    title="Partager le lien"
+                    onClick={handleShare}
+                >
+                    {/* Share icon from lucide-react */}
+                    <span className="sr-only">Partager</span>
+                    <Share2 size={20} />
+                </button>
+                <button
+                    className="p-2 rounded hover:bg-[color:var(--muted)] transition-colors"
+                    title="QR Code"
+                    onClick={() => setShowQrModal(true)}
+                >
+                    <span className="sr-only">QR Code</span>
+                    <QrCode size={20} />
+                </button>
+            </div>
+        );
+
         return (
-            <LobbyLayout
-                creator={lobbyState.creator ? (
-                    <>
-                        <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--secondary)" }}>
-                            {lobbyState.creator.avatarEmoji}
+            <>
+                <LobbyLayout
+                    creator={lobbyState.creator ? (
+                        <>
+                            <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--secondary)" }}>
+                                {lobbyState.creator.avatarEmoji}
+                            </div>
+                            <span className="font-bold text-lg truncate">{lobbyState.creator.username}</span>
+                        </>
+                    ) : <span>Chargement...</span>}
+                    code={null}
+                    shareButton={shareButton}
+                    participantsHeader={<div className="font-semibold text-lg">Participants connectés</div>}
+                    participantsList={lobbyState.participants.map((p, i) => (
+                        <div key={p.userId ? `${p.userId}-${i}` : i} className="flex flex-col items-center">
+                            <div className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--primary)" }}>{p.avatarEmoji}</div>
+                            <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
                         </div>
-                        <span className="font-bold text-lg truncate">{lobbyState.creator.username}</span>
-                    </>
-                ) : <span>Chargement...</span>}
-                code={<span className="text-lg font-mono font-bold tracking-widest bg-base-200 rounded px-2 py-0.5 mt-1">{code}</span>}
-                shareButton={null}
-                participantsHeader={<div className="font-semibold text-lg">Participants connectés</div>}
-                participantsList={lobbyState.participants.map((p, i) => (
-                    <div key={p.userId ? `${p.userId}-${i}` : i} className="flex flex-col items-center">
-                        <div className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--primary)" }}>{p.avatarEmoji}</div>
-                        <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
+                    ))}
+                    startButton={startButton}
+                    countdown={lobbyState.countdown !== null ? <div className="text-5xl font-extrabold text-primary mt-2 text-right w-full">{lobbyState.countdown}</div> : null}
+                />
+                {/* QR Modal */}
+                <InfoModal
+                    isOpen={showQrModal}
+                    onClose={() => setShowQrModal(false)}
+                    title={null}
+                    size="sm"
+                    showCloseButton={false}
+                >
+                    <div className="flex flex-col items-center justify-center gap-0 p-0">
+                        <div className="flex items-center justify-center w-full" style={{ minWidth: 220, minHeight: 220 }}>
+                            <QrCodeWithLogo
+                                value={window.location.href}
+                                size={220}
+                                logoWidth={45}
+                                logoHeight={45}
+                                responsive={false}
+                                style={{ width: 220, height: 220 }}
+                            />
+                        </div>
+                        <div className="flex justify-end w-full mt-4">
+                            <button
+                                className="px-4 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition min-w-[100px]"
+                                onClick={() => setShowQrModal(false)}
+                            >
+                                Fermer
+                            </button>
+                        </div>
                     </div>
-                ))}
-                startButton={startButton}
-                countdown={lobbyState.countdown !== null ? <div className="text-5xl font-extrabold text-primary mt-2 text-right w-full">{lobbyState.countdown}</div> : null}
-            />
+                </InfoModal>
+            </>
         );
     }
 
