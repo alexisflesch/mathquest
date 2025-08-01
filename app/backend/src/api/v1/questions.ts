@@ -3,7 +3,7 @@ import { QuestionService, QuestionCreationData, QuestionUpdateData } from '@/cor
 import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
-import { questionSchema, questionCreationSchema } from '../../../../shared/types/quiz/question.zod';
+import { questionSchema, questionCreationSchema, questionUpdateSchema } from '../../../../shared/types/quiz/question.zod';
 import type { Question } from '@shared/types/quiz/question';
 import type {
     QuestionCreationRequest,
@@ -56,13 +56,13 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), 
         }
         // Ensure `themes` defaults to an empty array if undefined
         // Ensure canonical durationMs is present (fallback to 30s if not provided)
-        const questionData: QuestionCreationData = {
+        const questionData = {
             ...parseResult.data,
             themes: parseResult.data.themes || [],
             durationMs: typeof parseResult.data.durationMs === 'number' ? parseResult.data.durationMs : 30000
         };
         // Pass canonical object (with durationMs) to service
-        const question = await getQuestionService().createQuestion(req.user.userId, questionData);
+        const question = await getQuestionService().createQuestion(questionData);
         res.status(201).json({ question });
     } catch (error) {
         logger.error({ error }, 'Error creating question');
@@ -308,9 +308,9 @@ router.put('/:uid', teacherAuth, validateRequestBody(UpdateQuestionRequestSchema
             return;
         }
 
-        // Zod validation for question update (partial allowed, using questionSchema.partial())
+        // Zod validation for question update (partial allowed, using questionUpdateSchema)
         // It's important that the input to updateQuestion matches QuestionUpdateData
-        const updateParseResult = questionSchema.partial().safeParse(req.body);
+        const updateParseResult = questionUpdateSchema.safeParse(req.body);
         if (!updateParseResult.success) {
             res.status(400).json({ error: 'Validation failed', details: updateParseResult.error.errors });
             return;
@@ -318,9 +318,15 @@ router.put('/:uid', teacherAuth, validateRequestBody(UpdateQuestionRequestSchema
 
         // Construct the updateData object carefully to match QuestionUpdateData
         const { uid: bodyUid, ...restOfBody } = updateParseResult.data;
+
+        // Convert null values to undefined to match TypeScript types
+        const cleanedData = Object.fromEntries(
+            Object.entries(restOfBody).map(([key, value]) => [key, value === null ? undefined : value])
+        );
+
         const updateData: QuestionUpdateData = {
             uid: req.params.uid,
-            ...restOfBody,
+            ...cleanedData,
         };
 
         const updatedQuestion = await getQuestionService().updateQuestion(updateData);

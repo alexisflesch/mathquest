@@ -310,26 +310,20 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: {
-                    uid: true,
-                    title: true,
-                    text: true,
-                    answerOptions: true,
-                    questionType: true,
-                    timeLimit: true,
-                    gradeLevel: true,
-                    discipline: true,
-                    themes: true
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
                 }
             });
             if (!question) {
                 throw new Error(`Question not found: ${questionUid}`);
             }
+            const answerOptions = question.multipleChoiceQuestion?.answerOptions || [];
             return {
                 uid: question.uid,
                 title: question.title || '',
                 text: question.text,
-                answerOptions: Array.isArray(question.answerOptions) ? question.answerOptions : [],
+                answerOptions: answerOptions,
                 questionType: question.questionType,
                 timeLimit: question.timeLimit || undefined,
                 gradeLevel: question.gradeLevel || '',
@@ -349,12 +343,15 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: { correctAnswers: true }
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
+                }
             });
             if (!question) {
                 throw new Error(`Question not found: ${questionUid}`);
             }
-            const correctAnswers = Array.isArray(question.correctAnswers) ? question.correctAnswers : [];
+            const correctAnswers = question.multipleChoiceQuestion?.correctAnswers || [];
             // Check if selected answers match correct answers
             const correctIndices = correctAnswers
                 .map((isCorrect, index) => isCorrect ? index : -1)
@@ -429,15 +426,18 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: { correctAnswers: true }
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
+                }
             });
-            if (!question || !question.correctAnswers) {
+            if (!question || !question.multipleChoiceQuestion?.correctAnswers) {
                 throw new Error(`Question ${questionUid} not found or has no correct answers`);
             }
             // Convert boolean array to indices array
             // correctAnswers is a boolean array where true indicates the correct answer
             const correctIndices = [];
-            question.correctAnswers.forEach((isCorrect, index) => {
+            question.multipleChoiceQuestion.correctAnswers.forEach((isCorrect, index) => {
                 if (isCorrect) {
                     correctIndices.push(index);
                 }
@@ -458,16 +458,16 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: {
-                    correctAnswers: true,
-                    explanation: true
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
                 }
             });
             if (!question) {
                 return null;
             }
             return {
-                correctAnswers: Array.isArray(question.correctAnswers) ? question.correctAnswers : [],
+                correctAnswers: question.multipleChoiceQuestion?.correctAnswers || [],
                 explanation: question.explanation || undefined
             };
         }

@@ -228,7 +228,11 @@ async function setCurrentQuestion(accessCode, questionIndex) {
         // Get question details from the database
         const questionUid = gameState.questionUids[questionIndex];
         const question = await prisma_1.prisma.question.findUnique({
-            where: { uid: questionUid }
+            where: { uid: questionUid },
+            include: {
+                multipleChoiceQuestion: true,
+                numericQuestion: true,
+            }
         });
         if (!question) {
             logger.warn({ accessCode, questionUid }, 'Question not found');
@@ -240,8 +244,10 @@ async function setCurrentQuestion(accessCode, questionIndex) {
         gameState.currentQuestionIndex = questionIndex;
         // Create a sanitized question data object for the client
         // Use the new schema fields but don't expose correct answers to players
-        // Create options from answerOptions
-        const options = question.answerOptions.map((content, index) => ({
+        // Extract type-specific data
+        const answerOptions = question.multipleChoiceQuestion?.answerOptions || [];
+        // Create options from answerOptions (for multiple choice questions)
+        const options = answerOptions.map((content, index) => ({
             id: index.toString(), // Use index as ID
             content
         }));
@@ -249,8 +255,8 @@ async function setCurrentQuestion(accessCode, questionIndex) {
             uid: question.uid,
             title: question.title || undefined,
             text: question.text,
-            answerOptions: question.answerOptions,
-            correctAnswers: new Array(question.answerOptions.length).fill(false), // Hide correct answers
+            answerOptions: answerOptions,
+            correctAnswers: new Array(answerOptions.length).fill(false), // Hide correct answers
             questionType: question.questionType,
             timeLimit: (question.timeLimit || 30) * (gameState.settings.timeMultiplier || 1)
         };
@@ -454,7 +460,11 @@ async function calculateScores(accessCode, questionUid) {
     }, '[CRITICAL] Legacy calculateScores called! This is deprecated and must not be used.');
     try {
         const question = await prisma_1.prisma.question.findUnique({
-            where: { uid: questionUid }
+            where: { uid: questionUid },
+            include: {
+                multipleChoiceQuestion: true,
+                numericQuestion: true,
+            }
         });
         if (!question) {
             logger.warn({ accessCode, questionUid }, 'Question not found for scoring');
@@ -468,28 +478,28 @@ async function calculateScores(accessCode, questionUid) {
             return true; // No participants, so no scores to calculate, not an error.
         }
         let correctAnswerValues = [];
-        // Correctly determine correctAnswerValues based on question.questionType and question.correctAnswers
-        // This logic needs to be robust for different question types.
-        if (question.questionType === questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER || question.questionType === 'single_correct') {
-            const correctIndex = question.correctAnswers.findIndex(ca => ca === true);
-            if (correctIndex !== -1 && question.answerOptions[correctIndex] !== undefined) {
-                correctAnswerValues = [question.answerOptions[correctIndex]];
+        // Correctly determine correctAnswerValues based on question.questionType and polymorphic data
+        if (question.questionType === 'numeric' && question.numericQuestion) {
+            // For numeric questions, the correct answer is the numeric value
+            correctAnswerValues = [question.numericQuestion.correctAnswer];
+        }
+        else if (question.multipleChoiceQuestion) {
+            // For multiple choice questions, extract from polymorphic relation
+            const answerOptions = question.multipleChoiceQuestion.answerOptions;
+            const correctAnswers = question.multipleChoiceQuestion.correctAnswers;
+            if (question.questionType === questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER || question.questionType === 'single_correct') {
+                const correctIndex = correctAnswers.findIndex((ca) => ca === true);
+                if (correctIndex !== -1 && answerOptions[correctIndex] !== undefined) {
+                    correctAnswerValues = [answerOptions[correctIndex]];
+                }
             }
-        }
-        else if (question.questionType === 'multiple_choice_multiple_answers') {
-            correctAnswerValues = question.answerOptions.filter((_, index) => question.correctAnswers[index] === true);
-        }
-        else if (question.questionType === 'number') {
-            // Assuming correctAnswers for number type stores the number itself or an index
-            // For this example, let's assume correctAnswers[0] is the correct numeric string if answerOptions are not direct numbers
-            const correctIndex = question.correctAnswers.findIndex(ca => ca === true);
-            if (correctIndex !== -1 && question.answerOptions[correctIndex] !== undefined) {
-                correctAnswerValues = [question.answerOptions[correctIndex]]; // Store the string value
+            else if (question.questionType === 'multiple_choice_multiple_answers') {
+                correctAnswerValues = answerOptions.filter((_, index) => correctAnswers[index] === true);
             }
-        }
-        else {
-            // Fallback or other types
-            correctAnswerValues = question.answerOptions.filter((_, index) => question.correctAnswers[index] === true);
+            else {
+                // Fallback for other multiple choice types
+                correctAnswerValues = answerOptions.filter((_, index) => correctAnswers[index] === true);
+            }
         }
         if (correctAnswerValues.length === 0) {
             logger.warn({ accessCode, questionUid, questionType: question.questionType }, 'No correct answers defined for question during scoring. No points will be awarded for this question.');
@@ -524,36 +534,40 @@ async function calculateScores(accessCode, questionUid) {
                     const correctAnswersSet = new Set(correctAnswerValues);
                     isCorrect = submittedAnswersSet.size === correctAnswersSet.size && [...submittedAnswersSet].every(val => correctAnswersSet.has(val));
                 }
-                else if (question.questionType === 'number') {
-                    // For number questions, direct comparison of the value
-                    // Ensure both are treated as strings for comparison if that's how they are stored
-                    isCorrect = correctAnswerValues.includes(String(submittedAnswer));
+                else if (question.questionType === 'numeric') {
+                    // For numeric questions, use the scoring service for tolerance checking
+                    isCorrect = correctAnswerValues.some(correctValue => {
+                        const tolerance = question.numericQuestion?.tolerance || 0;
+                        const numericAnswer = typeof submittedAnswer === 'number' ? submittedAnswer : parseFloat(submittedAnswer);
+                        return !isNaN(numericAnswer) && Math.abs(numericAnswer - correctValue) <= tolerance;
+                    });
                 }
                 else { // single_correct, multiple_choice_single_answer
-                    if (typeof submittedAnswer === 'number' && submittedAnswer >= 0 && submittedAnswer < question.answerOptions.length) {
-                        const submittedOptionValue = question.answerOptions[submittedAnswer];
+                    const answerOptions = question.multipleChoiceQuestion?.answerOptions || [];
+                    if (typeof submittedAnswer === 'number' && submittedAnswer >= 0 && submittedAnswer < answerOptions.length) {
+                        const submittedOptionValue = answerOptions[submittedAnswer];
                         isCorrect = correctAnswerValues.includes(submittedOptionValue);
                     }
                     else if (typeof submittedAnswer === 'string') {
                         // Accept string answers matching the correct value
-                        // For now, we'll use a default reasonable time or try to calculate from timestamp
-                        actualTimeSpent = question.timeLimit || 30; // Default to question time limit
+                        isCorrect = correctAnswerValues.includes(submittedAnswer);
                     }
-                    else {
-                        // Convert to seconds if it was in milliseconds
-                        actualTimeSpent = answerData.timeSpent > 1000 ? answerData.timeSpent / 1000 : answerData.timeSpent;
-                    }
-                    // Calculate points: base score 1000, minus time penalty, minimum 100 points
-                    if (answerData.timeSpent !== undefined) {
-                        actualTimeSpent = answerData.timeSpent > 1000 ? answerData.timeSpent / 1000 : answerData.timeSpent;
-                    }
-                    else {
-                        actualTimeSpent = question.timeLimit || 30;
-                    }
+                }
+                // Calculate timing and points
+                if (answerData.timeSpent !== undefined) {
+                    actualTimeSpent = answerData.timeSpent > 1000 ? answerData.timeSpent / 1000 : answerData.timeSpent;
+                }
+                else {
+                    actualTimeSpent = question.timeLimit || 30;
+                }
+                if (isCorrect) {
                     const timePenalty = Math.floor(actualTimeSpent * 10);
                     points = Math.max(100, 1000 - timePenalty);
-                    logger.debug({ accessCode, userId, questionUid, actualTimeSpent, timePenalty, points }, 'Score calculation details');
                 }
+                else {
+                    points = 0;
+                }
+                logger.debug({ accessCode, userId, questionUid, actualTimeSpent, points, isCorrect }, 'Score calculation details');
                 participant.score = (participant.score || 0) + points;
                 participant.lastAnswerAt = answerData.timestamp || Date.now();
                 await redis_1.redisClient.hset(participantsKey, userId, JSON.stringify(participant));

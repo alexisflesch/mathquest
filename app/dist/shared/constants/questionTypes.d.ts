@@ -17,6 +17,8 @@ export declare const QUESTION_TYPES: {
     readonly MULTIPLE_CHOICE: "multiple_choice";
     /** Multiple choice with single answer - canonical type */
     readonly MULTIPLE_CHOICE_SINGLE_ANSWER: "multiple_choice_single_answer";
+    /** Numeric question - new polymorphic type */
+    readonly NUMERIC: "numeric";
     /** Multiple choice - alternative English form */
     readonly MULTIPLE_CHOICE_EN: "multiple_choice";
 };

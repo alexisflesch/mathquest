@@ -23,17 +23,6 @@ export interface BaseQuestion {
     durationMs: number;
     /** Feedback wait time in milliseconds */
     feedbackWaitTime?: number | null;
-}
-
-/**
- * Extended question interface
- * Question with comprehensive metadata and content
- */
-export interface Question extends BaseQuestion {
-    /** Answer options for multiple choice questions */
-    answerOptions: string[];
-    /** Boolean array indicating correct answers */
-    correctAnswers: boolean[];
     /** Educational grade level */
     gradeLevel?: string;
     /** Subject/discipline */
@@ -57,52 +46,87 @@ export interface Question extends BaseQuestion {
 }
 
 /**
+ * Numeric question data
+ * Type-specific data for numeric questions
+ */
+export interface NumericQuestionData {
+    correctAnswer: number;
+    tolerance?: number;
+    unit?: string;
+}
+
+/**
+ * Multiple choice question data
+ * Type-specific data for multiple choice questions
+ */
+export interface MultipleChoiceQuestionData {
+    answerOptions: string[];
+    correctAnswers: boolean[];
+}
+
+/**
+ * Polymorphic question interface
+ * Question with type-specific data included
+ */
+export interface Question extends BaseQuestion {
+    // Polymorphic data - only one will be populated
+    multipleChoiceQuestion?: MultipleChoiceQuestionData;
+    numericQuestion?: NumericQuestionData;
+
+    // Legacy fields for backward compatibility
+    answerOptions?: string[];
+    correctAnswers?: boolean[];
+}
+
+/**
  * Question for client display
  * Question data optimized for frontend rendering
  */
 export interface ClientQuestion extends BaseQuestion {
-    /** Answer options */
-    answerOptions: string[];
-    /** Correct answers (may be hidden for students) */
-    correctAnswers: boolean[];
+    // Polymorphic data - only one will be populated
+    multipleChoiceQuestion?: MultipleChoiceQuestionData;
+    numericQuestion?: NumericQuestionData;
+
+    // Legacy fields for backward compatibility
+    answerOptions?: string[];
+    correctAnswers?: boolean[];
+
     /** Current question index in sequence */
     currentQuestionIndex?: number;
     /** Total questions in sequence */
     totalQuestions?: number;
-    /** Display metadata */
-    gradeLevel?: string;
-    discipline?: string;
-    themes?: string[];
-    explanation?: string;
 }
 
 /**
- * Question creation payload
- * Data required to create a new question
+ * Question creation payload for multiple choice questions
  */
-export interface QuestionCreationPayload {
-    title?: string;
-    text: string;
+export interface MultipleChoiceQuestionCreationPayload extends BaseQuestion {
+    questionType: 'multiple_choice' | 'single_choice' | 'multiple_choice_single_answer';
     answerOptions: string[];
     correctAnswers: boolean[];
-    questionType: string;
-    discipline: string;
-    themes: string[];
-    gradeLevel?: string;
-    difficulty?: number;
-    explanation?: string;
-    tags?: string[];
-    /** Canonical timer duration in milliseconds (required) */
-    durationMs: number;
-    author?: string;
-    /** Array of play modes this question is excluded from */
-    excludedFrom?: string[];
 }
+
+/**
+ * Question creation payload for numeric questions
+ */
+export interface NumericQuestionCreationPayload extends BaseQuestion {
+    questionType: 'numeric';
+    numericData: NumericQuestionData;
+}
+
+/**
+ * Union type for question creation
+ */
+export type QuestionCreationPayload = MultipleChoiceQuestionCreationPayload | NumericQuestionCreationPayload;
 
 /**
  * Question update payload
  * Data for updating an existing question
  */
-export interface QuestionUpdatePayload extends Partial<QuestionCreationPayload> {
+export interface QuestionUpdatePayload extends Partial<Omit<BaseQuestion, 'uid'>> {
     uid: string;
+    // Type-specific updates
+    answerOptions?: string[];
+    correctAnswers?: boolean[];
+    numericData?: NumericQuestionData;
 }

@@ -235,7 +235,14 @@ function registerGameHandlers(io, socket) {
                     gameTemplate: {
                         include: {
                             questions: {
-                                include: { question: true },
+                                include: {
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true,
+                                        }
+                                    }
+                                },
                                 orderBy: { sequence: 'asc' }
                             }
                         }

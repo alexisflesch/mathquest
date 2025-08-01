@@ -13,14 +13,14 @@ import { GameTimerState } from '../core/timer';
 export interface FilteredQuestion {
     uid: string;
     text: string;             // The question text
-    questionType: string;     // Question type (single_choice, multiple_choice, etc.) - CANONICAL FIELD NAME
-    answerOptions: string[];  // Answer options - CANONICAL FIELD NAME
+    questionType: string;     // Question type (multiple-choice, numeric, etc.) - CANONICAL FIELD NAME
+    answerOptions?: string[]; // Answer options for multiple choice questions - CANONICAL FIELD NAME
     // Additional properties required by frontend components (non-sensitive)
     timeLimit?: number;         // Time limit for this question
     gradeLevel?: string;        // Grade level of the question
     difficulty?: number;        // Difficulty rating
     themes?: string[];          // Question themes/categories
-    // Note: correctAnswers and explanation are intentionally excluded for security
+    // Note: correctAnswers, correctAnswer, tolerance and explanation are intentionally excluded for security
 }
 
 /**
@@ -41,7 +41,7 @@ export interface LiveQuestionPayload {
 
 /**
  * Filters a database question object to only include data safe to send to clients.
- * Uses the canonical database format with answerOptions.
+ * Handles both polymorphic and legacy question formats.
  * 
  * @param questionObject - The question object from the database (Prisma format)
  * @returns FilteredQuestion - The question data safe for client emission  
@@ -51,16 +51,33 @@ export function filterQuestionForClient(questionObject: any): FilteredQuestion {
         throw new Error('Cannot filter null or undefined question object');
     }
 
-    return {
+    const baseQuestion = {
         uid: questionObject.uid,
         questionType: questionObject.questionType || questionObject.defaultMode,
         text: questionObject.text,
-        answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility
         timeLimit: questionObject.timeLimit,
         gradeLevel: questionObject.gradeLevel,
         difficulty: questionObject.difficulty,
         themes: questionObject.themes,
-        // Note: correctAnswers and explanation are intentionally excluded for security
     };
+
+    // Handle polymorphic structure: extract answerOptions from multipleChoiceQuestion
+    if (questionObject.multipleChoiceQuestion?.answerOptions) {
+        return {
+            ...baseQuestion,
+            answerOptions: questionObject.multipleChoiceQuestion.answerOptions,
+        };
+    }
+
+    // Handle legacy structure: answerOptions directly on question
+    if (questionObject.answerOptions) {
+        return {
+            ...baseQuestion,
+            answerOptions: questionObject.answerOptions,
+        };
+    }
+
+    // For numeric questions or questions without answer options
+    return baseQuestion;
 }

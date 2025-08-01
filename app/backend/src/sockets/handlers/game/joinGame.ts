@@ -388,7 +388,14 @@ export function joinGameHandler(
                                     gameTemplate: {
                                         include: {
                                             questions: {
-                                                include: { question: true },
+                                                include: {
+                                                    question: {
+                                                        include: {
+                                                            multipleChoiceQuestion: true,
+                                                            numericQuestion: true,
+                                                        }
+                                                    }
+                                                },
                                                 orderBy: { sequence: 'asc' }
                                             }
                                         }
@@ -492,7 +499,14 @@ export function joinGameHandler(
                         gameTemplate: {
                             include: {
                                 questions: {
-                                    include: { question: true },
+                                    include: {
+                                        question: {
+                                            include: {
+                                                multipleChoiceQuestion: true,
+                                                numericQuestion: true,
+                                            }
+                                        }
+                                    },
                                     orderBy: { sequence: 'asc' }
                                 }
                             }

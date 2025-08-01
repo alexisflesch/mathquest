@@ -51,12 +51,28 @@ function calculateAnswerScore(isCorrect, serverTimeSpent, question) {
 }
 /**
  * Check if the answer is correct for a given question
- * @param question Question object with correctAnswers
+ * @param question Question object with correctAnswers, correctAnswer, tolerance, and questionType
  * @param answer User's submitted answer
  * @returns Whether the answer is correct
  */
 function checkAnswerCorrectness(question, answer) {
-    if (!question || !question.correctAnswers)
+    if (!question)
+        return false;
+    // Numeric questions: check with tolerance
+    if (question.questionType === 'numeric' && question.correctAnswer !== undefined) {
+        if (typeof answer !== 'number') {
+            // Try to parse as number
+            const parsedAnswer = parseFloat(answer);
+            if (isNaN(parsedAnswer))
+                return false;
+            answer = parsedAnswer;
+        }
+        const tolerance = question.tolerance || 0;
+        const difference = Math.abs(answer - question.correctAnswer);
+        return difference <= tolerance;
+    }
+    // Multiple choice questions: use correctAnswers array
+    if (!question.correctAnswers)
         return false;
     // Multiple choice (multiple answers): answer is array of indices, correctAnswers is boolean array
     if (Array.isArray(question.correctAnswers) && Array.isArray(answer)) {

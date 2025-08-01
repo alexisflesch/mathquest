@@ -135,19 +135,47 @@ exports.notificationPayloadSchema = zod_1.z.object({
 });
 // === CANONICAL SPLIT: Student vs. Teacher Question Payloads ===
 // Student: never receives correctAnswers or explanation
-exports.questionDataForStudentSchema = zod_1.z.object({
+const rawQuestionDataForStudentSchema = zod_1.z.object({
     uid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),
     title: zod_1.z.string().min(1).optional(),
     text: zod_1.z.string().min(1, { message: "Question text cannot be empty." }),
-    answerOptions: zod_1.z.array(zod_1.z.string().min(1)).min(1, { message: "At least one answer option is required." }),
     questionType: zod_1.z.string().min(1, { message: "Question type cannot be empty." }),
     timeLimit: zod_1.z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }),
     currentQuestionIndex: zod_1.z.number().int({ message: "Question index must be an integer." }).nonnegative({ message: "Question index cannot be negative." }).optional(),
     totalQuestions: zod_1.z.number().int({ message: "Total questions must be an integer." }).positive({ message: "Total questions must be positive." }).optional(),
+    // Polymorphic question data (student doesn't get correct answers)
+    multipleChoiceQuestion: zod_1.z.object({
+        answerOptions: zod_1.z.array(zod_1.z.string().min(1)).min(1, { message: "At least one answer option is required." })
+    }).optional(),
+    numericQuestion: zod_1.z.object({
+        unit: zod_1.z.string().optional()
+    }).optional(),
+    // Legacy fields for backward compatibility
+    answerOptions: zod_1.z.array(zod_1.z.string().min(1)).optional()
+});
+exports.questionDataForStudentSchema = rawQuestionDataForStudentSchema.refine((data) => {
+    // For multiple choice questions, ensure answer options exist
+    if (data.questionType === 'multipleChoice') {
+        return !!(data.multipleChoiceQuestion || data.answerOptions);
+    }
+    return true;
+}, {
+    message: "Multiple choice questions must have answer options"
 });
 // Teacher/Projection: includes correctAnswers and explanation
-exports.questionDataForTeacherSchema = exports.questionDataForStudentSchema.extend({
-    correctAnswers: zod_1.z.array(zod_1.z.boolean()),
+exports.questionDataForTeacherSchema = rawQuestionDataForStudentSchema.extend({
+    // Polymorphic question data with correct answers for teachers
+    multipleChoiceQuestion: zod_1.z.object({
+        answerOptions: zod_1.z.array(zod_1.z.string().min(1)).min(1, { message: "At least one answer option is required." }),
+        correctAnswers: zod_1.z.array(zod_1.z.boolean())
+    }).optional(),
+    numericQuestion: zod_1.z.object({
+        correctAnswer: zod_1.z.number(),
+        tolerance: zod_1.z.number().optional(),
+        unit: zod_1.z.string().optional()
+    }).optional(),
+    // Legacy fields for backward compatibility
+    correctAnswers: zod_1.z.array(zod_1.z.boolean()).optional(),
     explanation: zod_1.z.string().optional(),
 });
 // For legacy/compatibility: REMOVE after migration

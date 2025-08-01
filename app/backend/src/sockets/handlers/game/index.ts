@@ -201,7 +201,14 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
                     gameTemplate: {
                         include: {
                             questions: {
-                                include: { question: true },
+                                include: {
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true,
+                                        }
+                                    }
+                                },
                                 orderBy: { sequence: 'asc' }
                             }
                         }

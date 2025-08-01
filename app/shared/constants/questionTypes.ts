@@ -21,6 +21,9 @@ export const QUESTION_TYPES = {
     /** Multiple choice with single answer - canonical type */
     MULTIPLE_CHOICE_SINGLE_ANSWER: 'multiple_choice_single_answer',
 
+    /** Numeric question - new polymorphic type */
+    NUMERIC: 'numeric',
+
     /** Multiple choice - alternative English form */
     MULTIPLE_CHOICE_EN: 'multiple_choice'
 } as const;

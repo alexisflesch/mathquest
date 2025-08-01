@@ -9,15 +9,65 @@ import { TimerField } from './TimerDisplayAndEdit';
 const logger = createLogger('QuestionDisplay');
 
 // Helper function to convert modern question format to display format
-function getAnswersForDisplay(question: QuestionDisplayProps['question']) {
-    if (!question.answerOptions || !question.correctAnswers) {
-        return [];
-    }
-
-    return question.answerOptions.map((text, index) => ({
-        text,
-        correct: question.correctAnswers?.[index] || false
+function getAnswersForDisplay(question: any): any[] {
+  console.log('[getAnswersForDisplay] Input question:', question);
+  console.log('[getAnswersForDisplay] question.numericQuestion:', question.numericQuestion);
+  console.log('[getAnswersForDisplay] question.numericQuestion type:', typeof question.numericQuestion);
+  console.log('[getAnswersForDisplay] question.numericQuestion truthiness:', !!question.numericQuestion);
+  
+  // Handle polymorphic questions
+  if (question.numericQuestion) {
+    console.log('[getAnswersForDisplay] Processing numeric question:', question.numericQuestion);
+    const correctAnswer = question.numericQuestion.correctAnswer;
+    const unit = question.numericQuestion.unit;
+    const answerText = unit ? `${correctAnswer} ${unit}` : String(correctAnswer);
+    return [{ text: answerText, correct: true }];
+  } else if (question.multipleChoiceQuestion) {
+    console.log('[getAnswersForDisplay] Processing multiple choice question:', question.multipleChoiceQuestion);
+    const answerOptions = question.multipleChoiceQuestion.answerOptions || [];
+    const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
+    return answerOptions.map((option: string) => ({
+      text: option,
+      correct: correctAnswers.includes(option)
     }));
+  } else {
+    console.log('[getAnswersForDisplay] Using legacy answerOptions/correctAnswers');
+    console.log('[getAnswersForDisplay] question.questionType:', question.questionType);
+    // Legacy format fallback
+    const answerOptions = question.answerOptions || [];
+    const correctAnswers = question.correctAnswers || [];
+    return answerOptions.map((option: string) => ({
+      text: option,
+      correct: correctAnswers.includes(option)
+    }));
+  }
+}// Helper function to get answer options from polymorphic question
+function getAnswerOptions(question: QuestionDisplayProps['question']): string[] {
+    if (question.multipleChoiceQuestion) {
+        return question.multipleChoiceQuestion.answerOptions;
+    }
+    // Legacy fallback
+    if (question.answerOptions) {
+        return question.answerOptions;
+    }
+    return [];
+}
+
+// Helper function to get correct answers from polymorphic question
+function getCorrectAnswers(question: QuestionDisplayProps['question']): boolean[] {
+    if (question.multipleChoiceQuestion) {
+        return question.multipleChoiceQuestion.correctAnswers;
+    }
+    // Legacy fallback
+    if (question.correctAnswers) {
+        return question.correctAnswers;
+    }
+    return [];
+}
+
+// Helper function to check if question has multiple choice data
+function hasMultipleChoiceData(question: QuestionDisplayProps['question']): boolean {
+    return !!(question.multipleChoiceQuestion || (question.answerOptions && question.correctAnswers));
 }
 
 import type { Question } from '@shared/types/core/question';
@@ -83,13 +133,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onCheckboxChange, // NEW: destructure onCheckboxChange
     onRevealLeaderboard, // Canonical leaderboard reveal
 }) => {
-    // // Debug: Log the question data received
-    // logger.info('[DEBUG QuestionDisplay] Received question:', question);
-    // const answersForDisplay = getAnswersForDisplay(question);
-    // logger.info('[DEBUG QuestionDisplay] Question answerOptions:', question.answerOptions);
-    // logger.info('[DEBUG QuestionDisplay] Question correctAnswers:', question.correctAnswers);
-    // logger.info('[DEBUG QuestionDisplay] Computed answers for display:', answersForDisplay);
-    // logger.info('[DEBUG QuestionDisplay] Question text:', question.text);
+    // Get answers for display (handles both multiple choice and numeric questions)
+    const answersForDisplay = getAnswersForDisplay(question);
+    
+    // Debug logging for numeric questions
+    if (question.questionType === 'numeric') {
+        console.log('[QuestionDisplay] Numeric question detected:', {
+            uid: question.uid,
+            questionType: question.questionType,
+            numericQuestion: question.numericQuestion,
+            answersForDisplay: answersForDisplay,
+            answersLength: answersForDisplay.length
+        });
+    }
 
     // Détermine l'état effectif des boutons play/pause
     const effectiveIsRunning = timerStatus === 'run';
@@ -334,8 +390,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     >
                                         <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
                                     </li>
-                                    {Array.isArray(question.answerOptions) && question.answerOptions.length > 0
-                                        ? question.answerOptions.map((answerText, idx) => (
+                                    {answersForDisplay.length > 0
+                                        ? answersForDisplay.map(({ text: answerText, correct }, idx) => (
                                             <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                 <div className="flex gap-2 items-center relative z-10 w-full">
                                                     {/* Percentage before icon, rounded to nearest integer */}
@@ -345,7 +401,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                         </span>
                                                     )}
                                                     <span className="answer-icon flex items-center">
-                                                        {question.correctAnswers && question.correctAnswers[idx] ? (
+                                                        {correct ? (
                                                             <Check size={18} strokeWidth={3} className="text-primary" />
                                                         ) : (
                                                             <X size={18} strokeWidth={3} className="text-secondary" />
@@ -398,8 +454,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                             isOpen ? "no-top-border" : ""
                                         ].join(" ")}
                                     >
-                                        {Array.isArray(question.answerOptions) && question.answerOptions.length > 0
-                                            ? question.answerOptions.map((answerText, idx) => (
+                                        {answersForDisplay.length > 0
+                                            ? answersForDisplay.map(({ text: answerText, correct }, idx) => (
                                                 <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                     <div className="flex gap-2 items-center relative z-10 w-full">
                                                         {/* Percentage before icon, rounded to nearest integer */}
@@ -409,7 +465,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                             </span>
                                                         )}
                                                         <span className="answer-icon flex items-center">
-                                                            {question.correctAnswers && question.correctAnswers[idx] ? (
+                                                            {correct ? (
                                                                 <Check size={18} strokeWidth={3} className="text-primary" />
                                                             ) : (
                                                                 <X size={18} strokeWidth={3} className="text-secondary" />
@@ -476,8 +532,10 @@ export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
     if (prevProps.question.text !== nextProps.question.text) return false;
     if (prevProps.question.durationMs !== nextProps.question.durationMs) return false;
 
-    // Compare answers array length and content
-    if (prevProps.question.answerOptions?.length !== nextProps.question.answerOptions?.length) return false;
+    // Compare answers array length and content for polymorphic questions
+    const prevAnswerOptions = getAnswerOptions(prevProps.question);
+    const nextAnswerOptions = getAnswerOptions(nextProps.question);
+    if (prevAnswerOptions.length !== nextAnswerOptions.length) return false;
 
     // Compare stats array for meaningful changes
     if (prevProps.stats?.length !== nextProps.stats?.length) return false;

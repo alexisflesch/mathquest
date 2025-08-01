@@ -176,7 +176,10 @@ const QuestionDisplay = React.memo(({
     gameStatus,
     connecting,
     connected,
-    currentQuestionUid
+    currentQuestionUid,
+    numericAnswer,
+    setNumericAnswer,
+    handleNumericSubmit
 }: {
     currentQuestion: QuestionDataForStudent | null;
     questionIndex: number;
@@ -196,6 +199,9 @@ const QuestionDisplay = React.memo(({
     connecting: boolean;
     connected: boolean;
     currentQuestionUid: string | undefined;
+    numericAnswer?: string;
+    setNumericAnswer?: (value: string) => void;
+    handleNumericSubmit?: () => void;
 }) => {
     // Re-render logging for QuestionDisplay
     const renderCount = useRef(0);
@@ -228,6 +234,9 @@ const QuestionDisplay = React.memo(({
                 isQuizMode={isQuizMode}
                 correctAnswers={correctAnswers}
                 readonly={readonly}
+                numericAnswer={numericAnswer}
+                setNumericAnswer={setNumericAnswer}
+                handleNumericSubmit={handleNumericSubmit}
             />
         );
     }
@@ -463,6 +472,7 @@ export default function LiveGamePage() {
     // Local UI state
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+    const [numericAnswer, setNumericAnswer] = useState<string>(''); // State for numeric questions
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState<string>("");
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
@@ -682,6 +692,13 @@ export default function LiveGamePage() {
         return gameState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
     }, [gameState.currentQuestion?.questionType]);
 
+    // Reset answers when question changes
+    useEffect(() => {
+        setSelectedAnswer(null);
+        setSelectedAnswers([]);
+        setNumericAnswer('');
+    }, [gameState.currentQuestion?.uid]);
+
     // Handle single choice answer submission
     const handleSingleChoice = useCallback((idx: number) => {
         if (gameState.gameStatus !== 'active') return;
@@ -724,6 +741,44 @@ export default function LiveGamePage() {
 
         submitAnswer(gameState.currentQuestion.uid, selectedAnswers, clientTimestamp);
     }, [gameState.gameStatus, gameState.currentQuestion, selectedAnswers, gameMode, submitAnswer]);
+
+    // Handle numeric question answer submission
+    const handleNumericSubmit = useCallback(() => {
+        if (gameState.gameStatus !== 'active' || !numericAnswer.trim()) {
+            if (!numericAnswer.trim()) {
+                setSnackbarMessage("Veuillez entrer une réponse numérique.");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+            }
+            return;
+        }
+
+        if (!gameState.currentQuestion) return;
+
+        const clientTimestamp = Date.now();
+        logger.debug('Submitting numeric answer', {
+            questionUid: gameState.currentQuestion.uid,
+            answer: numericAnswer,
+            clientTimestamp,
+            gameMode
+        });
+
+        // Convert to number for submission
+        const numericValue = parseFloat(numericAnswer);
+        if (isNaN(numericValue)) {
+            setSnackbarMessage("Veuillez entrer un nombre valide.");
+            setSnackbarType("error");
+            setSnackbarOpen(true);
+            return;
+        }
+
+        submitAnswer(gameState.currentQuestion.uid, numericValue, clientTimestamp);
+    }, [gameState.gameStatus, gameState.currentQuestion, numericAnswer, gameMode, submitAnswer]);
+
+    // Wrapper function to handle both string and number inputs for numeric answer
+    const handleNumericAnswerChange = useCallback((value: string | number) => {
+        setNumericAnswer(String(value));
+    }, []);
 
     // Handle next question request (for practice mode)
     const handleRequestNextQuestion = useCallback(() => {
@@ -982,6 +1037,9 @@ export default function LiveGamePage() {
                         connecting={connecting}
                         connected={connected}
                         currentQuestionUid={currentQuestionUid}
+                        numericAnswer={numericAnswer}
+                        setNumericAnswer={setNumericAnswer}
+                        handleNumericSubmit={handleNumericSubmit}
                     />
                 </MathJaxWrapper>
 

@@ -88,7 +88,12 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
             include: {
                 questions: {
                     include: {
-                        question: true // Include the full question details
+                        question: {
+                            include: {
+                                multipleChoiceQuestion: true,
+                                numericQuestion: true
+                            }
+                        }
                     },
                     orderBy: {
                         sequence: 'asc' // Ensure questions are in correct order

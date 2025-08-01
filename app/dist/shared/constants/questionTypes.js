@@ -21,6 +21,8 @@ exports.QUESTION_TYPES = {
     MULTIPLE_CHOICE: 'multiple_choice',
     /** Multiple choice with single answer - canonical type */
     MULTIPLE_CHOICE_SINGLE_ANSWER: 'multiple_choice_single_answer',
+    /** Numeric question - new polymorphic type */
+    NUMERIC: 'numeric',
     /** Multiple choice - alternative English form */
     MULTIPLE_CHOICE_EN: 'multiple_choice'
 };

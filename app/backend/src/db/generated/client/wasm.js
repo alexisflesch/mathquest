@@ -155,11 +155,23 @@ exports.Prisma.QuestionScalarFieldEnum = {
   tags: 'tags',
   timeLimit: 'timeLimit',
   excludedFrom: 'excludedFrom',
+  isHidden: 'isHidden',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  answerOptions: 'answerOptions',
-  correctAnswers: 'correctAnswers',
   feedbackWaitTime: 'feedbackWaitTime'
+};
+
+exports.Prisma.MultipleChoiceQuestionScalarFieldEnum = {
+  questionUid: 'questionUid',
+  answerOptions: 'answerOptions',
+  correctAnswers: 'correctAnswers'
+};
+
+exports.Prisma.NumericQuestionScalarFieldEnum = {
+  questionUid: 'questionUid',
+  correctAnswer: 'correctAnswer',
+  tolerance: 'tolerance',
+  unit: 'unit'
 };
 
 exports.Prisma.GameTemplateScalarFieldEnum = {
@@ -262,6 +274,8 @@ exports.Prisma.ModelName = {
   TeacherProfile: 'TeacherProfile',
   StudentProfile: 'StudentProfile',
   Question: 'Question',
+  MultipleChoiceQuestion: 'MultipleChoiceQuestion',
+  NumericQuestion: 'NumericQuestion',
   GameTemplate: 'GameTemplate',
   QuestionsInGameTemplate: 'QuestionsInGameTemplate',
   GameInstance: 'GameInstance',

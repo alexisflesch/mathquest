@@ -430,12 +430,35 @@ exports.PracticeQuestionDataSchema = zod_1.z.object({
     uid: zod_1.z.string().min(1, "Question UID is required"),
     title: zod_1.z.string().min(1, "Question title is required"),
     text: zod_1.z.string().min(1, "Question text is required"),
-    answerOptions: zod_1.z.array(zod_1.z.string()).min(2, "At least 2 answer options required"),
     questionType: zod_1.z.string().min(1, "Question type is required"),
     timeLimit: zod_1.z.number().int().min(1),
     gradeLevel: zod_1.z.string().min(1, "Grade level is required"),
     discipline: zod_1.z.string().min(1, "Discipline is required"),
-    themes: zod_1.z.array(zod_1.z.string()).min(1, "At least one theme is required")
+    themes: zod_1.z.array(zod_1.z.string()).min(1, "At least one theme is required"),
+    // Polymorphic question data
+    multipleChoiceQuestion: zod_1.z.object({
+        answerOptions: zod_1.z.array(zod_1.z.string()).min(2, "At least 2 answer options required"),
+        correctAnswers: zod_1.z.array(zod_1.z.boolean())
+    }).optional(),
+    numericQuestion: zod_1.z.object({
+        correctAnswer: zod_1.z.number(),
+        tolerance: zod_1.z.number().optional(),
+        unit: zod_1.z.string().optional()
+    }).optional(),
+    // Legacy fields for backward compatibility
+    answerOptions: zod_1.z.array(zod_1.z.string()).optional(),
+    correctAnswers: zod_1.z.array(zod_1.z.boolean()).optional()
+}).refine((data) => {
+    // Ensure appropriate question type data exists
+    if (data.questionType === 'multipleChoice') {
+        return !!(data.multipleChoiceQuestion || data.answerOptions);
+    }
+    if (data.questionType === 'numeric') {
+        return !!data.numericQuestion;
+    }
+    return true;
+}, {
+    message: "Question must have appropriate type-specific data for its question type"
 });
 // Practice Statistics Schema
 exports.PracticeStatisticsSchema = zod_1.z.object({

@@ -581,12 +581,37 @@ export const PracticeQuestionDataSchema = z.object({
     uid: z.string().min(1, "Question UID is required"),
     title: z.string().min(1, "Question title is required"),
     text: z.string().min(1, "Question text is required"),
-    answerOptions: z.array(z.string()).min(2, "At least 2 answer options required"),
     questionType: z.string().min(1, "Question type is required"),
     timeLimit: z.number().int().min(1),
     gradeLevel: z.string().min(1, "Grade level is required"),
     discipline: z.string().min(1, "Discipline is required"),
-    themes: z.array(z.string()).min(1, "At least one theme is required")
+    themes: z.array(z.string()).min(1, "At least one theme is required"),
+
+    // Polymorphic question data
+    multipleChoiceQuestion: z.object({
+        answerOptions: z.array(z.string()).min(2, "At least 2 answer options required"),
+        correctAnswers: z.array(z.boolean())
+    }).optional(),
+    numericQuestion: z.object({
+        correctAnswer: z.number(),
+        tolerance: z.number().optional(),
+        unit: z.string().optional()
+    }).optional(),
+
+    // Legacy fields for backward compatibility
+    answerOptions: z.array(z.string()).optional(),
+    correctAnswers: z.array(z.boolean()).optional()
+}).refine((data) => {
+    // Ensure appropriate question type data exists
+    if (data.questionType === 'multipleChoice') {
+        return !!(data.multipleChoiceQuestion || data.answerOptions);
+    }
+    if (data.questionType === 'numeric') {
+        return !!data.numericQuestion;
+    }
+    return true;
+}, {
+    message: "Question must have appropriate type-specific data for its question type"
 });
 
 // Practice Statistics Schema

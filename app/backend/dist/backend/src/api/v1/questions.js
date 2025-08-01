@@ -52,7 +52,7 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
             durationMs: typeof parseResult.data.durationMs === 'number' ? parseResult.data.durationMs : 30000
         };
         // Pass canonical object (with durationMs) to service
-        const question = await getQuestionService().createQuestion(req.user.userId, questionData);
+        const question = await getQuestionService().createQuestion(questionData);
         res.status(201).json({ question });
     }
     catch (error) {
@@ -275,18 +275,20 @@ router.put('/:uid', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(sc
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
-        // Zod validation for question update (partial allowed, using questionSchema.partial())
+        // Zod validation for question update (partial allowed, using questionUpdateSchema)
         // It's important that the input to updateQuestion matches QuestionUpdateData
-        const updateParseResult = question_zod_1.questionSchema.partial().safeParse(req.body);
+        const updateParseResult = question_zod_1.questionUpdateSchema.safeParse(req.body);
         if (!updateParseResult.success) {
             res.status(400).json({ error: 'Validation failed', details: updateParseResult.error.errors });
             return;
         }
         // Construct the updateData object carefully to match QuestionUpdateData
         const { uid: bodyUid, ...restOfBody } = updateParseResult.data;
+        // Convert null values to undefined to match TypeScript types
+        const cleanedData = Object.fromEntries(Object.entries(restOfBody).map(([key, value]) => [key, value === null ? undefined : value]));
         const updateData = {
             uid: req.params.uid,
-            ...restOfBody,
+            ...cleanedData,
         };
         const updatedQuestion = await getQuestionService().updateQuestion(updateData);
         res.status(200).json({ question: updatedQuestion });

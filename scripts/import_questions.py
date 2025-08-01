@@ -60,14 +60,18 @@ def get_conn():
 def clear_db():
     conn = get_conn()
     cur = conn.cursor()
-    logging.info('Clearing the game_participants and game_instances tables...')
+    logging.info('Clearing the game_participants, game_instances, and polymorphic question tables...')
     cur.execute('DELETE FROM game_participants')
     cur.execute('DELETE FROM game_instances') 
     cur.execute('DELETE FROM game_templates')
+    # Clear polymorphic question tables (will cascade from questions table due to foreign keys)
+    cur.execute('DELETE FROM multiple_choice_questions')
+    cur.execute('DELETE FROM numeric_questions')
+    cur.execute('DELETE FROM questions')
     conn.commit()
     cur.close()
     conn.close()
-    logging.info('Tables game_participants, game_instances, and game_templates cleared.')
+    logging.info('Tables game_participants, game_instances, game_templates, and question tables cleared.')
 
 def import_questions():
 
@@ -163,8 +167,41 @@ def import_questions():
                         return
                     # Pour chaque question, valider la nomenclature
                     for idx, q in enumerate(questions):
-                        required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel", "author", "timeLimit"]
-                        missing = [field for field in required_fields if field not in q or q[field] in [None, "", []]]
+                        required_fields = ["uid", "text", "questionType", "discipline", "themes", "difficulty", "gradeLevel", "author", "timeLimit"]
+                        missing = [field for field in required_fields if field not in q or q[field] in [None, ""]]
+                        # Special handling for themes - allow empty list but not missing
+                        if "themes" not in q:
+                            missing.append("themes")
+                        elif q["themes"] is None or (isinstance(q["themes"], list) and len(q["themes"]) == 0):
+                            missing.append("themes")
+                        
+                        # Question type specific validation
+                        question_type = q.get("questionType")
+                        if question_type in ["multipleChoice", "multiple_choice", "single_choice"]:
+                            # Multiple choice requires answerOptions and correctAnswers
+                            mc_fields = ["answerOptions", "correctAnswers"]
+                            mc_missing = [field for field in mc_fields if field not in q or q[field] in [None, ""] or (isinstance(q[field], list) and len(q[field]) == 0)]
+                            missing.extend(mc_missing)
+                        elif question_type == "numeric":
+                            # Numeric requires correctAnswer and optionally tolerance/unit
+                            if "correctAnswer" not in q or q["correctAnswer"] is None:
+                                missing.append("correctAnswer")
+                            # Validate correctAnswer is a number
+                            if "correctAnswer" in q and q["correctAnswer"] is not None:
+                                try:
+                                    float(q["correctAnswer"])
+                                except (ValueError, TypeError):
+                                    msg = f"correctAnswer must be a number for numeric question (uid={q.get('uid')}) dans {yaml_path}"
+                                    print_colored('ERROR', msg)
+                                    all_errors.append(msg)
+                                    total_errors += 1
+                                    return
+                        else:
+                            msg = f"Unknown questionType '{q.get('questionType')}' for question (uid={q.get('uid')}) dans {yaml_path}"
+                            print_colored('ERROR', msg)
+                            all_errors.append(msg)
+                            total_errors += 1
+                            return
                         invalid_time_limit = False
                         if "timeLimit" in q:
                             try:
@@ -174,14 +211,12 @@ def import_questions():
                             except Exception:
                                 invalid_time_limit = True
 
-                        # --- Ignore numeric questions, show warning ---
-                        if q.get("questionType") == "numeric":
-                            msg = f"Question de type 'numeric' ignorée (uid={q.get('uid')}) dans {yaml_path} : non supportée pour le moment."
-                            if verbose:
-                                print_colored('WARNING', msg)
-                            all_warnings.append(msg)
-                            total_warnings += 1
-                            continue
+                        if missing or invalid_time_limit:
+                            msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants ou timeLimit invalide : {missing if missing else ''}{' (timeLimit must be a positive integer)' if invalid_time_limit else ''}"
+                            print_colored('ERROR', msg)
+                            all_errors.append(msg)
+                            total_errors += 1
+                            return
 
                         # --- Validation stricte nomenclature ---
                         # 1. Discipline
@@ -219,12 +254,6 @@ def import_questions():
                                     all_errors.append(msg)
                                     total_errors += 1
                                     return
-                        if missing or invalid_time_limit:
-                            msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants ou timeLimit invalide : {missing if missing else ''}{' (timeLimit must be a positive integer)' if invalid_time_limit else ''}"
-                            print_colored('ERROR', msg)
-                            all_errors.append(msg)
-                            total_errors += 1
-                            return
                         if not q.get("title"):
                             msg = f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}"
                             if verbose:
@@ -273,10 +302,16 @@ def import_questions():
                 total_errors += 1
                 continue
             try:
+                # Normalize question type
+                question_type = q.get('questionType')
+                if question_type in ['multiple_choice', 'single_choice']:
+                    question_type = 'multipleChoice'
+                
+                # Insert or update the main question record
                 cur.execute(
                     '''INSERT INTO questions
-                    (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, answer_options, correct_answers, excluded_from, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                    (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, excluded_from, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                     ON CONFLICT (uid) DO UPDATE SET
                     title = EXCLUDED.title,
                     question_text = EXCLUDED.question_text,
@@ -289,15 +324,13 @@ def import_questions():
                     explanation = EXCLUDED.explanation,
                     tags = EXCLUDED.tags,
                     time_limit_seconds = EXCLUDED.time_limit_seconds,
-                    answer_options = EXCLUDED.answer_options,
-                    correct_answers = EXCLUDED.correct_answers,
                     excluded_from = EXCLUDED.excluded_from,
                     updated_at = NOW()''',
                     [
                         q.get('uid'),
                         q.get('title'),
                         q.get('text'),
-                        q.get('questionType'),
+                        question_type,  # Use normalized type
                         q.get('discipline'),
                         q.get('themes'),
                         q.get('difficulty'),
@@ -306,11 +339,46 @@ def import_questions():
                         q.get('explanation'),
                         q.get('tags'),
                         q.get('timeLimit'),
-                        q.get('answerOptions'),
-                        q.get('correctAnswers'),
                         excluded_from
                     ]
                 )
+                
+                # Insert into the appropriate polymorphic table
+                if question_type == 'multipleChoice':
+                    # Insert or update multiple choice question data
+                    cur.execute(
+                        '''INSERT INTO multiple_choice_questions
+                        (question_uid, answer_options, correct_answers)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT (question_uid) DO UPDATE SET
+                        answer_options = EXCLUDED.answer_options,
+                        correct_answers = EXCLUDED.correct_answers''',
+                        [
+                            q.get('uid'),
+                            q.get('answerOptions'),
+                            q.get('correctAnswers')
+                        ]
+                    )
+                elif question_type == 'numeric':
+                    # Insert or update numeric question data
+                    tolerance = q.get('tolerance', 0)
+                    unit = q.get('unit')
+                    cur.execute(
+                        '''INSERT INTO numeric_questions
+                        (question_uid, correct_answer, tolerance, unit)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (question_uid) DO UPDATE SET
+                        correct_answer = EXCLUDED.correct_answer,
+                        tolerance = EXCLUDED.tolerance,
+                        unit = EXCLUDED.unit''',
+                        [
+                            q.get('uid'),
+                            float(q.get('correctAnswer')),
+                            float(tolerance) if tolerance is not None else 0,
+                            unit
+                        ]
+                    )
+                
                 total_uploaded += 1
             except Exception as e:
                 msg = f"Erreur lors de l'import de la question (uid={q.get('uid')}) dans {yaml_path} : {e}"
@@ -321,6 +389,11 @@ def import_questions():
         print_colored('INFO', 'Cleaning obsolete questions...')
         question_uids = [q.get('uid') for q, _ in all_questions]  # ← FIX ICI
         cur.execute('DELETE FROM questions WHERE uid != ALL(%s)', (question_uids,))
+        
+        # Clean up orphaned polymorphic question records
+        print_colored('INFO', 'Cleaning orphaned polymorphic question records...')
+        cur.execute('DELETE FROM multiple_choice_questions WHERE question_uid NOT IN (SELECT uid FROM questions WHERE question_type = %s)', ('multipleChoice',))
+        cur.execute('DELETE FROM numeric_questions WHERE question_uid NOT IN (SELECT uid FROM questions WHERE question_type = %s)', ('numeric',))
         conn.commit()
         cur.close()
         conn.close()

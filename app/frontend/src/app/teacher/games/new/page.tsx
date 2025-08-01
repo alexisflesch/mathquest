@@ -240,10 +240,19 @@ export default function CreateActivityPage() {
             const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as any[];
 
             const transformedQuestions: Question[] = newQuestionsFromApi
-                .filter((q: any) =>
-                    typeof q.text === 'string' && q.text.trim() !== '' &&
-                    (Array.isArray(q.answers) || Array.isArray(q.answerOptions))
-                )
+                .filter((q: any) => {
+                    // Updated filter to handle polymorphic questions
+                    const hasText = typeof q.text === 'string' && q.text.trim() !== '';
+                    const hasQuestionData =
+                        // Multiple choice: has answerOptions (legacy) or multipleChoiceQuestion
+                        (Array.isArray(q.answerOptions) || q.multipleChoiceQuestion?.answerOptions) ||
+                        // Numeric: has correctAnswer (legacy) or numericQuestion
+                        (typeof q.correctAnswer === 'number' || q.numericQuestion?.correctAnswer) ||
+                        // Legacy format with answers array
+                        Array.isArray(q.answers);
+
+                    return hasText && hasQuestionData;
+                })
                 .map((q: any) => {
                     // Convert API format to canonical Question format
                     let answerOptions: string[] = [];
@@ -253,19 +262,26 @@ export default function CreateActivityPage() {
                         // Legacy format with {text, correct} objects
                         answerOptions = q.answers.map((a: any) => a.text || a.texte || '');
                         correctAnswers = q.answers.map((a: any) => Boolean(a.correct));
+                    } else if (q.multipleChoiceQuestion) {
+                        // New polymorphic format - multiple choice question
+                        answerOptions = q.multipleChoiceQuestion.answerOptions || [];
+                        correctAnswers = q.multipleChoiceQuestion.correctAnswers || [];
                     } else if (Array.isArray(q.answerOptions)) {
-                        // Database format with separate arrays
+                        // Legacy flattened format with separate arrays
                         answerOptions = q.answerOptions;
                         correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [];
                     }
 
-                    return {
+                    const transformedQuestion = {
                         uid: q.uid,
                         title: q.title || q.titre,
                         text: q.text || q.question,
                         questionType: q.questionType || q.defaultMode || QUESTION_TYPES.SINGLE_CHOICE,
                         answerOptions,
                         correctAnswers,
+                        // Add polymorphic fields for new format
+                        multipleChoiceQuestion: q.multipleChoiceQuestion,
+                        numericQuestion: q.numericQuestion,
                         gradeLevel: q.gradeLevel,
                         discipline: q.discipline || q.category || q.subject,
                         themes: q.themes,
@@ -276,6 +292,17 @@ export default function CreateActivityPage() {
                         difficulty: q.difficulty || q.difficulte,
                         author: q.author || q.auteur,
                     } satisfies Question;
+
+                    // Debug logging for numeric questions
+                    if (q.questionType === 'numeric') {
+                        console.log('[CreateActivityPage] Transformed numeric question:', {
+                            uid: q.uid,
+                            original: q,
+                            transformed: transformedQuestion
+                        });
+                    }
+
+                    return transformedQuestion;
                 });
 
             if (reset) {

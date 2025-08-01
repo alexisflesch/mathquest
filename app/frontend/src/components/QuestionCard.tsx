@@ -43,6 +43,10 @@ interface QuestionCardProps {
     correctAnswers?: boolean[]; // Changed to accept boolean array directly
     stats?: StatsData; // Optional stats prop for question statistics
     showStats?: boolean; // Whether to display the stats
+    // Numeric question props
+    numericAnswer?: number | string; // Current numeric answer value
+    setNumericAnswer?: (value: string) => void; // Handler for numeric input - simplified to string only
+    handleNumericSubmit?: () => void; // Handler for numeric question submission
 }
 
 // Helper to get the question type (for multiple choice detection)
@@ -100,12 +104,21 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     correctAnswers = [],
     stats,
     showStats = false,
+    numericAnswer = '',
+    setNumericAnswer,
+    handleNumericSubmit,
 }) => {
     // Use shared type helpers for type detection
     const isMultipleChoiceQuestion = React.useMemo(() => {
         if (!currentQuestion) return false;
         const t = getQuestionType(currentQuestion);
         return t === QUESTION_TYPES.MULTIPLE_CHOICE;
+    }, [currentQuestion]);
+
+    const isNumericQuestion = React.useMemo(() => {
+        if (!currentQuestion) return false;
+        const t = getQuestionType(currentQuestion);
+        return t === QUESTION_TYPES.NUMERIC;
     }, [currentQuestion]);
 
     // Use either the passed prop or our computed value
@@ -135,103 +148,142 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             <div className="mb-4 text-xl font-semibold text-center w-full question-text-in-live-page">
                 <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
             </div>
-            <ul className="flex flex-col w-full">
-                {answersToDisplay.map((answerText: string, idx: number) => {
-                    const isSelected = effectiveIsMultipleChoice
-                        ? selectedAnswers.includes(idx)
-                        : selectedAnswer === idx;
-                    const isCorrect = correctAnswers && correctAnswers[idx] === true;
-                    const showGood = readonly && isCorrect;
-                    const showWrong = readonly && isSelected && !isCorrect;
-                    let statPercent: number | null = null;
-                    if (showStats && stats && Array.isArray(stats.stats) && typeof stats.stats[idx] === 'number') {
-                        statPercent = stats.stats[idx];
-                    } else {
-                        statPercent = null;
-                    }
-                    return (
-                        <li
-                            key={idx}
-                            className={idx !== answersToDisplay.length - 1 ? "mb-2" : ""}
-                            style={{ position: 'relative' }}
+
+            {/* Conditional rendering based on question type */}
+            {isNumericQuestion ? (
+                // Numeric question input
+                <div className="w-full max-w-md">
+                    <div className="mb-4">
+                        <label htmlFor="numeric-answer" className="block text-sm font-medium text-gray-700 mb-2">
+                            Votre réponse :
+                        </label>
+                        <input
+                            id="numeric-answer"
+                            type="number"
+                            inputMode="decimal"
+                            value={numericAnswer}
+                            onChange={(e) => setNumericAnswer?.(e.target.value)}
+                            placeholder="Entrez votre réponse numérique"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                            disabled={readonly}
+                            aria-disabled={readonly}
+                            step="any"
+                            autoFocus={!readonly}
+                        />
+                    </div>
+                    {!readonly && (
+                        <button
+                            className="btn btn-primary w-full"
+                            onClick={handleNumericSubmit}
+                            disabled={readonly || !numericAnswer}
+                            aria-disabled={readonly || !numericAnswer}
                         >
-                            <button
-                                className={[
-                                    "btn-answer w-full text-left transition-colors",
-                                    "tqcard-answer",
-                                    isSelected ? "tqcard-answer-selected" : "tqcard-answer-unselected"
-                                ].join(" ")}
-                                onClick={() => {
-                                    if (readonly) return;
-                                    if (effectiveIsMultipleChoice) {
-                                        setSelectedAnswers((prev) =>
-                                            prev.includes(idx)
-                                                ? prev.filter((i) => i !== idx)
-                                                : [...prev, idx]
-                                        );
-                                    } else {
-                                        handleSingleChoice(idx);
-                                    }
-                                }}
-                                disabled={false}
-                                aria-disabled={readonly}
-                                tabIndex={readonly ? -1 : 0}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}
-                            >
-                                {/* Histogram bar as background */}
-                                {showStats && statPercent !== null && (
-                                    <div
-                                        className="histogram-bar-bg"
-                                        style={{
-                                            position: 'absolute',
-                                            left: 0,
-                                            top: 0,
-                                            bottom: 0,
-                                            width: `${statPercent}%`,
-                                            background: 'var(--bar-stat, #b3e5fc)',
-                                            // Remove border radius for square corners
-                                            zIndex: 0,
-                                            pointerEvents: 'none',
-                                            transition: 'width 0.3s',
+                            Valider
+                        </button>
+                    )}
+                </div>
+            ) : (
+                // Multiple choice questions
+                <>
+                    <ul className="flex flex-col w-full">
+                        {answersToDisplay.map((answerText: string, idx: number) => {
+                            const isSelected = effectiveIsMultipleChoice
+                                ? selectedAnswers.includes(idx)
+                                : selectedAnswer === idx;
+                            const isCorrect = correctAnswers && correctAnswers[idx] === true;
+                            const showGood = readonly && isCorrect;
+                            const showWrong = readonly && isSelected && !isCorrect;
+                            let statPercent: number | null = null;
+                            if (showStats && stats && Array.isArray(stats.stats) && typeof stats.stats[idx] === 'number') {
+                                statPercent = stats.stats[idx];
+                            } else {
+                                statPercent = null;
+                            }
+                            return (
+                                <li
+                                    key={idx}
+                                    className={idx !== answersToDisplay.length - 1 ? "mb-2" : ""}
+                                    style={{ position: 'relative' }}
+                                >
+                                    <button
+                                        className={[
+                                            "btn-answer w-full text-left transition-colors",
+                                            "tqcard-answer",
+                                            isSelected ? "tqcard-answer-selected" : "tqcard-answer-unselected"
+                                        ].join(" ")}
+                                        onClick={() => {
+                                            if (readonly) return;
+                                            if (effectiveIsMultipleChoice) {
+                                                setSelectedAnswers((prev) =>
+                                                    prev.includes(idx)
+                                                        ? prev.filter((i) => i !== idx)
+                                                        : [...prev, idx]
+                                                );
+                                            } else {
+                                                handleSingleChoice(idx);
+                                            }
                                         }}
-                                    />
-                                )}
-                                {/* Button content above the bar */}
-                                <span style={{ display: 'inline-flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                                    <MathJaxWrapper>{answerText}</MathJaxWrapper>
-                                </span>
-                                {/* Right-aligned percentage and icon */}
-                                <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1 }}>
-                                    {showStats && statPercent !== null && (
-                                        <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
-                                            {statPercent.toFixed(1)}%
+                                        disabled={false}
+                                        aria-disabled={readonly}
+                                        tabIndex={readonly ? -1 : 0}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}
+                                    >
+                                        {/* Histogram bar as background */}
+                                        {showStats && statPercent !== null && (
+                                            <div
+                                                className="histogram-bar-bg"
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    top: 0,
+                                                    bottom: 0,
+                                                    width: `${statPercent}%`,
+                                                    background: 'var(--bar-stat, #b3e5fc)',
+                                                    // Remove border radius for square corners
+                                                    zIndex: 0,
+                                                    pointerEvents: 'none',
+                                                    transition: 'width 0.3s',
+                                                }}
+                                            />
+                                        )}
+                                        {/* Button content above the bar */}
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+                                            <MathJaxWrapper>{answerText}</MathJaxWrapper>
                                         </span>
-                                    )}
-                                    {showGood && (
-                                        <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                            <GoodAnswer size={18} iconColor="currentColor" />
+                                        {/* Right-aligned percentage and icon */}
+                                        <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1 }}>
+                                            {showStats && statPercent !== null && (
+                                                <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
+                                                    {statPercent.toFixed(1)}%
+                                                </span>
+                                            )}
+                                            {showGood && (
+                                                <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
+                                                    <GoodAnswer size={18} iconColor="currentColor" />
+                                                </span>
+                                            )}
+                                            {showWrong && (
+                                                <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
+                                                    <WrongAnswer size={18} iconColor="currentColor" />
+                                                </span>
+                                            )}
                                         </span>
-                                    )}
-                                    {showWrong && (
-                                        <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                            <WrongAnswer size={18} iconColor="currentColor" />
-                                        </span>
-                                    )}
-                                </span>
-                            </button>
-                        </li>
-                    );
-                })}
-            </ul>
-            {effectiveIsMultipleChoice && !readonly && (
-                <button
-                    className="btn btn-primary mt-2 self-end"
-                    onClick={handleSubmitMultiple}
-                    disabled={readonly || selectedAnswers.length === 0}
-                    aria-disabled={readonly || selectedAnswers.length === 0}
-                >
-                    Valider
-                </button>
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                    {effectiveIsMultipleChoice && !readonly && (
+                        <button
+                            className="btn btn-primary mt-2 self-end"
+                            onClick={handleSubmitMultiple}
+                            disabled={readonly || selectedAnswers.length === 0}
+                            aria-disabled={readonly || selectedAnswers.length === 0}
+                        >
+                            Valider
+                        </button>
+                    )}
+                </>
             )}
         </div>
     );

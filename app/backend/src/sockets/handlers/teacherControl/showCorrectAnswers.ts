@@ -41,7 +41,14 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
                         gameTemplate: {
                             include: {
                                 questions: {
-                                    include: { question: true },
+                                    include: {
+                                        question: {
+                                            include: {
+                                                multipleChoiceQuestion: true,
+                                                numericQuestion: true,
+                                            }
+                                        }
+                                    },
                                     orderBy: { sequence: 'asc' }
                                 }
                             }
@@ -55,7 +62,14 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
                         gameTemplate: {
                             include: {
                                 questions: {
-                                    include: { question: true },
+                                    include: {
+                                        question: {
+                                            include: {
+                                                multipleChoiceQuestion: true,
+                                                numericQuestion: true,
+                                            }
+                                        }
+                                    },
                                     orderBy: { sequence: 'asc' }
                                 }
                             }
@@ -131,19 +145,30 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
                 logger.error({ err }, 'Failed to fetch terminated questions from Redis');
             }
 
+            // Prepare correct answers payload based on question type
+            let correctAnswers: (string | number | boolean)[] = [];
+            let answerOptions: string[] = [];
+
+            if (question.questionType === 'multipleChoice' && question.multipleChoiceQuestion) {
+                correctAnswers = question.multipleChoiceQuestion.correctAnswers;
+                answerOptions = question.multipleChoiceQuestion.answerOptions;
+            } else if (question.questionType === 'numeric' && question.numericQuestion) {
+                correctAnswers = [question.numericQuestion.correctAnswer];
+            }
+
             // Prepare correct answers payload for students and dashboard
             const correctAnswersPayload = {
                 questionUid: question.uid,
-                correctAnswers: question.correctAnswers || [],
+                correctAnswers: correctAnswers,
                 terminatedQuestions
             };
 
             // Prepare projection-specific payload with additional context
             const projectionCorrectAnswersPayload = {
                 questionUid: question.uid,
-                correctAnswers: question.correctAnswers || [],
+                correctAnswers: correctAnswers,
                 questionText: question.text,
-                answerOptions: question.answerOptions,
+                answerOptions: answerOptions,
                 timestamp: Date.now()
             };
 
@@ -154,7 +179,7 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
             logger.info({
                 gameRoom,
                 questionUid: question.uid,
-                correctAnswers: question.correctAnswers
+                correctAnswers: correctAnswers
             }, 'Emitted correct answers to students');
 
             // Emit to projection room for display
@@ -206,119 +231,128 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
                 event: SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS
             }, '[TROPHY_DEBUG] Emitted show_correct_answers to dashboard room (after Redis update, optimistic)');
 
-            // Automatic progression logic - handle feedback timing and next question
-            const handleAutomaticProgression = async () => {
-                try {
-                    // Two separate timing concerns:
-                    // 1. Time to show correct answers before proceeding (1.5s for all modes)
-                    const correctAnswersDisplayTime = getCorrectAnswersDisplayTime(gameInstance.playMode);
-                    
-                    // 2. Feedback display duration (from question or default to 5s)
-                    const feedbackDisplayTime = getFeedbackDisplayTime(question.feedbackWaitTime);
+            // Automatic progression logic - ONLY for tournament mode
+            // In quiz mode, the teacher controls question progression manually
+            if (gameInstance.playMode === 'tournament') {
+                const handleAutomaticProgression = async () => {
+                    try {
+                        // Two separate timing concerns:
+                        // 1. Time to show correct answers before proceeding (1.5s for all modes)
+                        const correctAnswersDisplayTime = getCorrectAnswersDisplayTime(gameInstance.playMode);
 
-                    logger.info({
-                        questionUid: question.uid,
-                        correctAnswersDisplayTime,
-                        feedbackDisplayTime,
-                        playMode: gameInstance.playMode,
-                        questionFeedbackWaitTime: question.feedbackWaitTime
-                    }, '[TROPHY_DEBUG] Starting automatic progression with proper timing constants');
-
-                    // Wait for correct answers display duration
-                    await new Promise((resolve) => setTimeout(resolve, correctAnswersDisplayTime * 1000));
-
-                    // Emit feedback event if there's an explanation
-                    if (question.explanation) {
-                        const feedbackPayload = {
-                            questionUid: question.uid,
-                            feedbackRemaining: feedbackDisplayTime,
-                            explanation: question.explanation
-                        };
-
-                        io.to(gameRoom).emit('feedback', feedbackPayload);
-                        logger.info({
-                            accessCode: gameInstance.accessCode,
-                            questionUid: question.uid,
-                            hasExplanation: true,
-                            feedbackDisplayTime
-                        }, '[TROPHY_DEBUG] Emitted feedback with explanation');
-
-                        // Wait for feedback display duration
-                        await new Promise((resolve) => setTimeout(resolve, feedbackDisplayTime * 1000));
-                    }
-
-                    // Check if there's a next question to auto-advance to
-                    const currentIndex = gameState?.currentQuestionIndex ?? -1;
-                    const allQuestions = gameInstance.gameTemplate.questions;
-
-                    if (currentIndex >= 0 && currentIndex < allQuestions.length - 1) {
-                        // There is a next question - auto advance
-                        const nextIndex = currentIndex + 1;
-                        const nextQuestion = allQuestions[nextIndex];
+                        // 2. Feedback display duration (from question or default to 5s)
+                        const feedbackDisplayTime = getFeedbackDisplayTime(question.feedbackWaitTime);
 
                         logger.info({
-                            accessCode: gameInstance.accessCode,
-                            currentIndex,
-                            nextIndex,
-                            nextQuestionUid: nextQuestion.question.uid
-                        }, '[TROPHY_DEBUG] Auto-advancing to next question');
+                            questionUid: question.uid,
+                            correctAnswersDisplayTime,
+                            feedbackDisplayTime,
+                            playMode: gameInstance.playMode,
+                            questionFeedbackWaitTime: question.feedbackWaitTime
+                        }, '[TROPHY_DEBUG] Starting automatic progression with proper timing constants (tournament mode only)');
 
-                        // Update game state to next question
-                        const { updateGameState, getFullGameState } = await import('@/core/services/gameStateService');
-                        const currentFullState = await getFullGameState(gameInstance.accessCode);
-                        if (currentFullState && currentFullState.gameState) {
-                            const updatedGameState = {
-                                ...currentFullState.gameState,
-                                currentQuestionIndex: nextIndex
+                        // Wait for correct answers display duration
+                        await new Promise((resolve) => setTimeout(resolve, correctAnswersDisplayTime * 1000));
+
+                        // Emit feedback event if there's an explanation
+                        if (question.explanation) {
+                            const feedbackPayload = {
+                                questionUid: question.uid,
+                                feedbackRemaining: feedbackDisplayTime,
+                                explanation: question.explanation
                             };
-                            await updateGameState(gameInstance.accessCode, updatedGameState);
-                        }
 
-                        // Use emitQuestionHandler to emit the next question to all players
-                        const { emitQuestionHandler } = await import('../game/emitQuestionHandler');
-
-                        // Create a temporary socket for the emission (teacher initiating)
-                        const emitQuestion = emitQuestionHandler(io, socket);
-
-                        // Emit to all participants in the game
-                        const participants = await prisma.gameParticipant.findMany({
-                            where: { gameInstanceId: gameInstance.id },
-                            include: { user: true }
-                        });
-
-                        for (const participant of participants) {
-                            await emitQuestion({
+                            io.to(gameRoom).emit('feedback', feedbackPayload);
+                            logger.info({
                                 accessCode: gameInstance.accessCode,
-                                userId: participant.userId,
-                                questionUid: nextQuestion.question.uid
-                            });
+                                questionUid: question.uid,
+                                hasExplanation: true,
+                                feedbackDisplayTime
+                            }, '[TROPHY_DEBUG] Emitted feedback with explanation');
+
+                            // Wait for feedback display duration
+                            await new Promise((resolve) => setTimeout(resolve, feedbackDisplayTime * 1000));
                         }
 
-                        logger.info({
-                            accessCode: gameInstance.accessCode,
-                            nextQuestionUid: nextQuestion.question.uid,
-                            participantCount: participants.length
-                        }, '[TROPHY_DEBUG] Successfully emitted next question to all participants');
+                        // Check if there's a next question to auto-advance to
+                        const currentIndex = gameState?.currentQuestionIndex ?? -1;
+                        const allQuestions = gameInstance.gameTemplate.questions;
 
-                    } else {
-                        logger.info({
+                        if (currentIndex >= 0 && currentIndex < allQuestions.length - 1) {
+                            // There is a next question - auto advance
+                            const nextIndex = currentIndex + 1;
+                            const nextQuestion = allQuestions[nextIndex];
+
+                            logger.info({
+                                accessCode: gameInstance.accessCode,
+                                currentIndex,
+                                nextIndex,
+                                nextQuestionUid: nextQuestion.question.uid
+                            }, '[TROPHY_DEBUG] Auto-advancing to next question (tournament mode)');
+
+                            // Update game state to next question
+                            const { updateGameState, getFullGameState } = await import('@/core/services/gameStateService');
+                            const currentFullState = await getFullGameState(gameInstance.accessCode);
+                            if (currentFullState && currentFullState.gameState) {
+                                const updatedGameState = {
+                                    ...currentFullState.gameState,
+                                    currentQuestionIndex: nextIndex
+                                };
+                                await updateGameState(gameInstance.accessCode, updatedGameState);
+                            }
+
+                            // Use emitQuestionHandler to emit the next question to all players
+                            const { emitQuestionHandler } = await import('../game/emitQuestionHandler');
+
+                            // Create a temporary socket for the emission (teacher initiating)
+                            const emitQuestion = emitQuestionHandler(io, socket);
+
+                            // Emit to all participants in the game
+                            const participants = await prisma.gameParticipant.findMany({
+                                where: { gameInstanceId: gameInstance.id },
+                                include: { user: true }
+                            });
+
+                            for (const participant of participants) {
+                                await emitQuestion({
+                                    accessCode: gameInstance.accessCode,
+                                    userId: participant.userId,
+                                    questionUid: nextQuestion.question.uid
+                                });
+                            }
+
+                            logger.info({
+                                accessCode: gameInstance.accessCode,
+                                nextQuestionUid: nextQuestion.question.uid,
+                                participantCount: participants.length
+                            }, '[TROPHY_DEBUG] Successfully emitted next question to all participants (tournament mode)');
+
+                        } else {
+                            logger.info({
+                                accessCode: gameInstance.accessCode,
+                                currentIndex,
+                                totalQuestions: allQuestions.length
+                            }, '[TROPHY_DEBUG] No next question available - game completed or staying on current question (tournament mode)');
+                        }
+
+                    } catch (error) {
+                        logger.error({
                             accessCode: gameInstance.accessCode,
-                            currentIndex,
-                            totalQuestions: allQuestions.length
-                        }, '[TROPHY_DEBUG] No next question available - game completed or staying on current question');
+                            questionUid: question.uid,
+                            error
+                        }, '[TROPHY_DEBUG] Error in automatic progression (tournament mode)');
                     }
+                };
 
-                } catch (error) {
-                    logger.error({
-                        accessCode: gameInstance.accessCode,
-                        questionUid: question.uid,
-                        error
-                    }, '[TROPHY_DEBUG] Error in automatic progression');
-                }
-            };
-
-            // Start automatic progression in background (don't await to avoid blocking response)
-            handleAutomaticProgression();
+                // Start automatic progression in background (don't await to avoid blocking response)
+                handleAutomaticProgression();
+            } else {
+                logger.info({
+                    accessCode: gameInstance.accessCode,
+                    playMode: gameInstance.playMode,
+                    questionUid: question.uid
+                }, '[TROPHY_DEBUG] Skipping automatic progression - quiz mode requires manual teacher control');
+            }
 
             logger.info({
                 socketId: socket.id,

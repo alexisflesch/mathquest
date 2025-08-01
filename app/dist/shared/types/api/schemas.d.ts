@@ -127,8 +127,8 @@ export declare const CreateGameRequestSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     playMode: "quiz" | "tournament" | "practice" | "class";
-    status?: "pending" | "completed" | undefined;
     discipline?: string | undefined;
+    status?: "pending" | "completed" | undefined;
     themes?: string[] | undefined;
     gradeLevel?: string | undefined;
     gameTemplateId?: string | undefined;
@@ -140,8 +140,8 @@ export declare const CreateGameRequestSchema: z.ZodObject<{
 }, {
     name: string;
     playMode: "quiz" | "tournament" | "practice" | "class";
-    status?: "pending" | "completed" | undefined;
     discipline?: string | undefined;
+    status?: "pending" | "completed" | undefined;
     themes?: string[] | undefined;
     gradeLevel?: string | undefined;
     gameTemplateId?: string | undefined;
@@ -258,11 +258,11 @@ export declare const CreateQuestionRequestSchema: z.ZodObject<{
     discipline: string;
     themes: string[];
     tags: string[];
-    defaultMode: string;
     correctAnswer: string;
+    defaultMode: string;
     title?: string | undefined;
-    answerOptions?: string[] | undefined;
     gradeLevel?: string | undefined;
+    answerOptions?: string[] | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
@@ -271,13 +271,13 @@ export declare const CreateQuestionRequestSchema: z.ZodObject<{
 }, {
     text: string;
     discipline: string;
-    defaultMode: string;
     correctAnswer: string;
+    defaultMode: string;
     title?: string | undefined;
-    answerOptions?: string[] | undefined;
     themes?: string[] | undefined;
     gradeLevel?: string | undefined;
     tags?: string[] | undefined;
+    answerOptions?: string[] | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
@@ -302,13 +302,13 @@ export declare const UpdateQuestionRequestSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     title?: string | undefined;
     text?: string | undefined;
-    answerOptions?: string[] | undefined;
     discipline?: string | undefined;
     themes?: string[] | undefined;
     gradeLevel?: string | undefined;
     tags?: string[] | undefined;
-    defaultMode?: string | undefined;
+    answerOptions?: string[] | undefined;
     correctAnswer?: string | undefined;
+    defaultMode?: string | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
@@ -317,13 +317,13 @@ export declare const UpdateQuestionRequestSchema: z.ZodObject<{
 }, {
     title?: string | undefined;
     text?: string | undefined;
-    answerOptions?: string[] | undefined;
     discipline?: string | undefined;
     themes?: string[] | undefined;
     gradeLevel?: string | undefined;
     tags?: string[] | undefined;
-    defaultMode?: string | undefined;
+    answerOptions?: string[] | undefined;
     correctAnswer?: string | undefined;
+    defaultMode?: string | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
@@ -931,231 +931,540 @@ export declare const GameInstancesByTemplateResponseSchema: z.ZodObject<{
     gameInstances: any[];
 }>;
 export declare const QuestionCreationResponseSchema: z.ZodObject<{
-    question: z.ZodObject<{
+    question: z.ZodEffects<z.ZodObject<{
         uid: z.ZodOptional<z.ZodString>;
-    } & {
-        title: z.ZodOptional<z.ZodString>;
+        title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         text: z.ZodString;
-        answerOptions: z.ZodArray<z.ZodString, "many">;
-        correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
         questionType: z.ZodString;
         discipline: z.ZodString;
         themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         difficulty: z.ZodOptional<z.ZodNumber>;
         gradeLevel: z.ZodOptional<z.ZodString>;
-        author: z.ZodOptional<z.ZodString>;
-        explanation: z.ZodOptional<z.ZodString>;
+        author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         durationMs: z.ZodNumber;
+    } & {
+        multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+            answerOptions: z.ZodArray<z.ZodString, "many">;
+            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+        }, "strip", z.ZodTypeAny, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }>>;
+        numericQuestion: z.ZodOptional<z.ZodObject<{
+            correctAnswer: z.ZodNumber;
+            tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+            unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }>>;
+        answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
     }, "strip", z.ZodTypeAny, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }>, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     question: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     };
 }, {
     question: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     };
 }>;
 export declare const QuestionResponseSchema: z.ZodObject<{
-    question: z.ZodObject<{
+    question: z.ZodEffects<z.ZodObject<{
         uid: z.ZodOptional<z.ZodString>;
-    } & {
-        title: z.ZodOptional<z.ZodString>;
+        title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         text: z.ZodString;
-        answerOptions: z.ZodArray<z.ZodString, "many">;
-        correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
         questionType: z.ZodString;
         discipline: z.ZodString;
         themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         difficulty: z.ZodOptional<z.ZodNumber>;
         gradeLevel: z.ZodOptional<z.ZodString>;
-        author: z.ZodOptional<z.ZodString>;
-        explanation: z.ZodOptional<z.ZodString>;
+        author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         durationMs: z.ZodNumber;
+    } & {
+        multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+            answerOptions: z.ZodArray<z.ZodString, "many">;
+            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+        }, "strip", z.ZodTypeAny, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }>>;
+        numericQuestion: z.ZodOptional<z.ZodObject<{
+            correctAnswer: z.ZodNumber;
+            tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+            unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }>>;
+        answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
     }, "strip", z.ZodTypeAny, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }>, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     question: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     };
 }, {
     question: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     };
 }>;
 export declare const QuestionsResponseSchema: z.ZodObject<{
-    questions: z.ZodArray<z.ZodObject<{
+    questions: z.ZodArray<z.ZodEffects<z.ZodObject<{
         uid: z.ZodOptional<z.ZodString>;
-    } & {
-        title: z.ZodOptional<z.ZodString>;
+        title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         text: z.ZodString;
-        answerOptions: z.ZodArray<z.ZodString, "many">;
-        correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
         questionType: z.ZodString;
         discipline: z.ZodString;
         themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         difficulty: z.ZodOptional<z.ZodNumber>;
         gradeLevel: z.ZodOptional<z.ZodString>;
-        author: z.ZodOptional<z.ZodString>;
-        explanation: z.ZodOptional<z.ZodString>;
+        author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         durationMs: z.ZodNumber;
+    } & {
+        multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+            answerOptions: z.ZodArray<z.ZodString, "many">;
+            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+        }, "strip", z.ZodTypeAny, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }>>;
+        numericQuestion: z.ZodOptional<z.ZodObject<{
+            correctAnswer: z.ZodNumber;
+            tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+            unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }>>;
+        answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
     }, "strip", z.ZodTypeAny, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }>, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }>, "many">;
     total: z.ZodNumber;
     page: z.ZodNumber;
@@ -1164,20 +1473,29 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     questions: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }[];
     total: number;
     page: number;
@@ -1186,20 +1504,29 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
 }, {
     questions: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }[];
     total: number;
     page: number;
@@ -1250,55 +1577,146 @@ export declare const GameTemplateResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -1315,20 +1733,29 @@ export declare const GameTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -1345,20 +1772,29 @@ export declare const GameTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -1377,20 +1813,29 @@ export declare const GameTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -1409,20 +1854,29 @@ export declare const GameTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -1440,55 +1894,146 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -1505,20 +2050,29 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -1535,20 +2089,29 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>, "many">;
@@ -1583,20 +2146,29 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }[];
@@ -1621,20 +2193,29 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }[];
@@ -1658,55 +2239,146 @@ export declare const GameTemplateCreationResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -1723,20 +2395,29 @@ export declare const GameTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -1753,20 +2434,29 @@ export declare const GameTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -1785,20 +2475,29 @@ export declare const GameTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -1817,20 +2516,29 @@ export declare const GameTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -1849,55 +2557,146 @@ export declare const GameTemplateUpdateResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -1914,20 +2713,29 @@ export declare const GameTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -1944,20 +2752,29 @@ export declare const GameTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -1977,20 +2794,29 @@ export declare const GameTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2010,20 +2836,29 @@ export declare const GameTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2041,55 +2876,146 @@ export declare const QuizTemplateResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -2106,20 +3032,29 @@ export declare const QuizTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -2136,20 +3071,29 @@ export declare const QuizTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -2168,20 +3112,29 @@ export declare const QuizTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2200,20 +3153,29 @@ export declare const QuizTemplateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2231,55 +3193,146 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -2296,20 +3349,29 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -2326,20 +3388,29 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>, "many">;
@@ -2366,20 +3437,29 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }[];
@@ -2402,20 +3482,29 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }[];
@@ -2433,55 +3522,146 @@ export declare const QuizCreationResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -2498,20 +3678,29 @@ export declare const QuizCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -2528,20 +3717,29 @@ export declare const QuizCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -2560,20 +3758,29 @@ export declare const QuizCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2592,20 +3799,29 @@ export declare const QuizCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2623,55 +3839,146 @@ export declare const QuizTemplateCreationResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -2688,20 +3995,29 @@ export declare const QuizTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -2718,20 +4034,29 @@ export declare const QuizTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -2750,20 +4075,29 @@ export declare const QuizTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2782,20 +4116,29 @@ export declare const QuizTemplateCreationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2813,55 +4156,146 @@ export declare const QuizTemplateUpdateResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -2878,20 +4312,29 @@ export declare const QuizTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -2908,20 +4351,29 @@ export declare const QuizTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -2940,20 +4392,29 @@ export declare const QuizTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -2972,20 +4433,29 @@ export declare const QuizTemplateUpdateResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -3010,55 +4480,146 @@ export declare const QuizTemplateQuestionResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -3075,20 +4636,29 @@ export declare const QuizTemplateQuestionResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -3105,20 +4675,29 @@ export declare const QuizTemplateQuestionResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>;
@@ -3137,20 +4716,29 @@ export declare const QuizTemplateQuestionResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -3169,20 +4757,29 @@ export declare const QuizTemplateQuestionResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     };
@@ -3200,55 +4797,146 @@ export declare const QuizListResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -3265,20 +4953,29 @@ export declare const QuizListResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -3295,20 +4992,29 @@ export declare const QuizListResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>, "many">;
@@ -3335,20 +5041,29 @@ export declare const QuizListResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }[];
@@ -3371,74 +5086,174 @@ export declare const QuizListResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }[];
 }>;
 export declare const TeacherQuizQuestionsResponseSchema: z.ZodObject<{
-    questions: z.ZodArray<z.ZodObject<{
+    questions: z.ZodArray<z.ZodEffects<z.ZodObject<{
         uid: z.ZodOptional<z.ZodString>;
-    } & {
-        title: z.ZodOptional<z.ZodString>;
+        title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         text: z.ZodString;
-        answerOptions: z.ZodArray<z.ZodString, "many">;
-        correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
         questionType: z.ZodString;
         discipline: z.ZodString;
         themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         difficulty: z.ZodOptional<z.ZodNumber>;
         gradeLevel: z.ZodOptional<z.ZodString>;
-        author: z.ZodOptional<z.ZodString>;
-        explanation: z.ZodOptional<z.ZodString>;
+        author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         durationMs: z.ZodNumber;
+    } & {
+        multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+            answerOptions: z.ZodArray<z.ZodString, "many">;
+            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+        }, "strip", z.ZodTypeAny, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }>>;
+        numericQuestion: z.ZodOptional<z.ZodObject<{
+            correctAnswer: z.ZodNumber;
+            tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+            unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }, {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        }>>;
+        answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
     }, "strip", z.ZodTypeAny, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }, {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }>, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
+    }, {
+        text: string;
+        questionType: string;
+        discipline: string;
+        durationMs: number;
+        uid?: string | undefined;
+        title?: string | null | undefined;
+        themes?: string[] | undefined;
+        difficulty?: number | undefined;
+        gradeLevel?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
+        tags?: string[] | undefined;
+        excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }>, "many">;
     meta: z.ZodObject<{
         total: z.ZodNumber;
@@ -3459,20 +5274,29 @@ export declare const TeacherQuizQuestionsResponseSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     questions: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }[];
     meta: {
         total: number;
@@ -3483,20 +5307,29 @@ export declare const TeacherQuizQuestionsResponseSchema: z.ZodObject<{
 }, {
     questions: {
         text: string;
-        answerOptions: string[];
-        correctAnswers: boolean[];
         questionType: string;
         discipline: string;
         durationMs: number;
         uid?: string | undefined;
-        title?: string | undefined;
+        title?: string | null | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
-        author?: string | undefined;
-        explanation?: string | undefined;
+        author?: string | null | undefined;
+        explanation?: string | null | undefined;
         tags?: string[] | undefined;
         excludedFrom?: string[] | undefined;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | null | undefined;
+            unit?: string | null | undefined;
+        } | undefined;
     }[];
     meta: {
         total: number;
@@ -3526,55 +5359,146 @@ export declare const TournamentVerificationResponseSchema: z.ZodObject<{
         updatedAt: z.ZodDate;
         creatorId: z.ZodString;
         creator: z.ZodOptional<z.ZodAny>;
-        questions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        questions: z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodObject<{
             uid: z.ZodOptional<z.ZodString>;
-        } & {
-            title: z.ZodOptional<z.ZodString>;
+            title: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
-            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
             questionType: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             difficulty: z.ZodOptional<z.ZodNumber>;
             gradeLevel: z.ZodOptional<z.ZodString>;
-            author: z.ZodOptional<z.ZodString>;
-            explanation: z.ZodOptional<z.ZodString>;
+            author: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            explanation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             excludedFrom: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             durationMs: z.ZodNumber;
+        } & {
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+                unit: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }, {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }>, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
+        }, {
+            text: string;
+            questionType: string;
+            discipline: string;
+            durationMs: number;
+            uid?: string | undefined;
+            title?: string | null | undefined;
+            themes?: string[] | undefined;
+            difficulty?: number | undefined;
+            gradeLevel?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
+            tags?: string[] | undefined;
+            excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
@@ -3591,20 +5515,29 @@ export declare const TournamentVerificationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }, {
@@ -3621,20 +5554,29 @@ export declare const TournamentVerificationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     }>>;
@@ -3654,20 +5596,29 @@ export declare const TournamentVerificationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     } | undefined;
@@ -3687,20 +5638,29 @@ export declare const TournamentVerificationResponseSchema: z.ZodObject<{
         gameInstances?: any[] | undefined;
         questions?: {
             text: string;
-            answerOptions: string[];
-            correctAnswers: boolean[];
             questionType: string;
             discipline: string;
             durationMs: number;
             uid?: string | undefined;
-            title?: string | undefined;
+            title?: string | null | undefined;
             themes?: string[] | undefined;
             difficulty?: number | undefined;
             gradeLevel?: string | undefined;
-            author?: string | undefined;
-            explanation?: string | undefined;
+            author?: string | null | undefined;
+            explanation?: string | null | undefined;
             tags?: string[] | undefined;
             excludedFrom?: string[] | undefined;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | null | undefined;
+                unit?: string | null | undefined;
+            } | undefined;
         }[] | undefined;
         creator?: any;
     } | undefined;
@@ -4074,36 +6034,120 @@ export declare const PracticeAnswerSchema: z.ZodObject<{
     timeSpentMs: number;
     attemptNumber: number;
 }>;
-export declare const PracticeQuestionDataSchema: z.ZodObject<{
+export declare const PracticeQuestionDataSchema: z.ZodEffects<z.ZodObject<{
     uid: z.ZodString;
     title: z.ZodString;
     text: z.ZodString;
-    answerOptions: z.ZodArray<z.ZodString, "many">;
     questionType: z.ZodString;
     timeLimit: z.ZodNumber;
     gradeLevel: z.ZodString;
     discipline: z.ZodString;
     themes: z.ZodArray<z.ZodString, "many">;
+    multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+        answerOptions: z.ZodArray<z.ZodString, "many">;
+        correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+    }, "strip", z.ZodTypeAny, {
+        answerOptions: string[];
+        correctAnswers: boolean[];
+    }, {
+        answerOptions: string[];
+        correctAnswers: boolean[];
+    }>>;
+    numericQuestion: z.ZodOptional<z.ZodObject<{
+        correctAnswer: z.ZodNumber;
+        tolerance: z.ZodOptional<z.ZodNumber>;
+        unit: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        correctAnswer: number;
+        tolerance?: number | undefined;
+        unit?: string | undefined;
+    }, {
+        correctAnswer: number;
+        tolerance?: number | undefined;
+        unit?: string | undefined;
+    }>>;
+    answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
 }, "strip", z.ZodTypeAny, {
     uid: string;
     title: string;
     text: string;
-    answerOptions: string[];
     questionType: string;
     discipline: string;
     themes: string[];
     gradeLevel: string;
     timeLimit: number;
+    answerOptions?: string[] | undefined;
+    correctAnswers?: boolean[] | undefined;
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+        correctAnswers: boolean[];
+    } | undefined;
+    numericQuestion?: {
+        correctAnswer: number;
+        tolerance?: number | undefined;
+        unit?: string | undefined;
+    } | undefined;
 }, {
     uid: string;
     title: string;
     text: string;
-    answerOptions: string[];
     questionType: string;
     discipline: string;
     themes: string[];
     gradeLevel: string;
     timeLimit: number;
+    answerOptions?: string[] | undefined;
+    correctAnswers?: boolean[] | undefined;
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+        correctAnswers: boolean[];
+    } | undefined;
+    numericQuestion?: {
+        correctAnswer: number;
+        tolerance?: number | undefined;
+        unit?: string | undefined;
+    } | undefined;
+}>, {
+    uid: string;
+    title: string;
+    text: string;
+    questionType: string;
+    discipline: string;
+    themes: string[];
+    gradeLevel: string;
+    timeLimit: number;
+    answerOptions?: string[] | undefined;
+    correctAnswers?: boolean[] | undefined;
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+        correctAnswers: boolean[];
+    } | undefined;
+    numericQuestion?: {
+        correctAnswer: number;
+        tolerance?: number | undefined;
+        unit?: string | undefined;
+    } | undefined;
+}, {
+    uid: string;
+    title: string;
+    text: string;
+    questionType: string;
+    discipline: string;
+    themes: string[];
+    gradeLevel: string;
+    timeLimit: number;
+    answerOptions?: string[] | undefined;
+    correctAnswers?: boolean[] | undefined;
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+        correctAnswers: boolean[];
+    } | undefined;
+    numericQuestion?: {
+        correctAnswer: number;
+        tolerance?: number | undefined;
+        unit?: string | undefined;
+    } | undefined;
 }>;
 export declare const PracticeStatisticsSchema: z.ZodObject<{
     questionsAttempted: z.ZodNumber;
@@ -4161,36 +6205,120 @@ export declare const PracticeSessionSchema: z.ZodObject<{
     status: z.ZodEnum<["active", "completed", "abandoned"]>;
     questionPool: z.ZodArray<z.ZodString, "many">;
     currentQuestionIndex: z.ZodNumber;
-    currentQuestion: z.ZodOptional<z.ZodObject<{
+    currentQuestion: z.ZodOptional<z.ZodEffects<z.ZodObject<{
         uid: z.ZodString;
         title: z.ZodString;
         text: z.ZodString;
-        answerOptions: z.ZodArray<z.ZodString, "many">;
         questionType: z.ZodString;
         timeLimit: z.ZodNumber;
         gradeLevel: z.ZodString;
         discipline: z.ZodString;
         themes: z.ZodArray<z.ZodString, "many">;
+        multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+            answerOptions: z.ZodArray<z.ZodString, "many">;
+            correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+        }, "strip", z.ZodTypeAny, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }, {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        }>>;
+        numericQuestion: z.ZodOptional<z.ZodObject<{
+            correctAnswer: z.ZodNumber;
+            tolerance: z.ZodOptional<z.ZodNumber>;
+            unit: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        }, {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        }>>;
+        answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
     }, "strip", z.ZodTypeAny, {
         uid: string;
         title: string;
         text: string;
-        answerOptions: string[];
         questionType: string;
         discipline: string;
         themes: string[];
         gradeLevel: string;
         timeLimit: number;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        } | undefined;
     }, {
         uid: string;
         title: string;
         text: string;
-        answerOptions: string[];
         questionType: string;
         discipline: string;
         themes: string[];
         gradeLevel: string;
         timeLimit: number;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        } | undefined;
+    }>, {
+        uid: string;
+        title: string;
+        text: string;
+        questionType: string;
+        discipline: string;
+        themes: string[];
+        gradeLevel: string;
+        timeLimit: number;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        } | undefined;
+    }, {
+        uid: string;
+        title: string;
+        text: string;
+        questionType: string;
+        discipline: string;
+        themes: string[];
+        gradeLevel: string;
+        timeLimit: number;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        } | undefined;
     }>>;
     answers: z.ZodArray<z.ZodObject<{
         questionUid: z.ZodString;
@@ -4281,12 +6409,22 @@ export declare const PracticeSessionSchema: z.ZodObject<{
         uid: string;
         title: string;
         text: string;
-        answerOptions: string[];
         questionType: string;
         discipline: string;
         themes: string[];
         gradeLevel: string;
         timeLimit: number;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        } | undefined;
     } | undefined;
     startedAt?: Date | undefined;
     completedAt?: Date | undefined;
@@ -4328,12 +6466,22 @@ export declare const PracticeSessionSchema: z.ZodObject<{
         uid: string;
         title: string;
         text: string;
-        answerOptions: string[];
         questionType: string;
         discipline: string;
         themes: string[];
         gradeLevel: string;
         timeLimit: number;
+        answerOptions?: string[] | undefined;
+        correctAnswers?: boolean[] | undefined;
+        multipleChoiceQuestion?: {
+            answerOptions: string[];
+            correctAnswers: boolean[];
+        } | undefined;
+        numericQuestion?: {
+            correctAnswer: number;
+            tolerance?: number | undefined;
+            unit?: string | undefined;
+        } | undefined;
     } | undefined;
     startedAt?: Date | undefined;
     completedAt?: Date | undefined;
@@ -4420,36 +6568,120 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
         status: z.ZodEnum<["active", "completed", "abandoned"]>;
         questionPool: z.ZodArray<z.ZodString, "many">;
         currentQuestionIndex: z.ZodNumber;
-        currentQuestion: z.ZodOptional<z.ZodObject<{
+        currentQuestion: z.ZodOptional<z.ZodEffects<z.ZodObject<{
             uid: z.ZodString;
             title: z.ZodString;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
             questionType: z.ZodString;
             timeLimit: z.ZodNumber;
             gradeLevel: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNumber>;
+                unit: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }>, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
             questionUid: z.ZodString;
@@ -4540,12 +6772,22 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -4587,12 +6829,22 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -4639,12 +6891,22 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -4690,12 +6952,22 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -4991,36 +7263,120 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
         status: z.ZodEnum<["active", "completed", "abandoned"]>;
         questionPool: z.ZodArray<z.ZodString, "many">;
         currentQuestionIndex: z.ZodNumber;
-        currentQuestion: z.ZodOptional<z.ZodObject<{
+        currentQuestion: z.ZodOptional<z.ZodEffects<z.ZodObject<{
             uid: z.ZodString;
             title: z.ZodString;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
             questionType: z.ZodString;
             timeLimit: z.ZodNumber;
             gradeLevel: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNumber>;
+                unit: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }>, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
             questionUid: z.ZodString;
@@ -5111,12 +7467,22 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5158,12 +7524,22 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5212,12 +7588,22 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5264,12 +7650,22 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5308,36 +7704,120 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
         status: z.ZodEnum<["active", "completed", "abandoned"]>;
         questionPool: z.ZodArray<z.ZodString, "many">;
         currentQuestionIndex: z.ZodNumber;
-        currentQuestion: z.ZodOptional<z.ZodObject<{
+        currentQuestion: z.ZodOptional<z.ZodEffects<z.ZodObject<{
             uid: z.ZodString;
             title: z.ZodString;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
             questionType: z.ZodString;
             timeLimit: z.ZodNumber;
             gradeLevel: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNumber>;
+                unit: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }>, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
             questionUid: z.ZodString;
@@ -5428,12 +7908,22 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5475,12 +7965,22 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5529,12 +8029,22 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5581,12 +8091,22 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5625,36 +8145,120 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
         status: z.ZodEnum<["active", "completed", "abandoned"]>;
         questionPool: z.ZodArray<z.ZodString, "many">;
         currentQuestionIndex: z.ZodNumber;
-        currentQuestion: z.ZodOptional<z.ZodObject<{
+        currentQuestion: z.ZodOptional<z.ZodEffects<z.ZodObject<{
             uid: z.ZodString;
             title: z.ZodString;
             text: z.ZodString;
-            answerOptions: z.ZodArray<z.ZodString, "many">;
             questionType: z.ZodString;
             timeLimit: z.ZodNumber;
             gradeLevel: z.ZodString;
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
+            multipleChoiceQuestion: z.ZodOptional<z.ZodObject<{
+                answerOptions: z.ZodArray<z.ZodString, "many">;
+                correctAnswers: z.ZodArray<z.ZodBoolean, "many">;
+            }, "strip", z.ZodTypeAny, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }, {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            }>>;
+            numericQuestion: z.ZodOptional<z.ZodObject<{
+                correctAnswer: z.ZodNumber;
+                tolerance: z.ZodOptional<z.ZodNumber>;
+                unit: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }, {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            }>>;
+            answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
         }, "strip", z.ZodTypeAny, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }, {
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }>, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
+        }, {
+            uid: string;
+            title: string;
+            text: string;
+            questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
             questionUid: z.ZodString;
@@ -5745,12 +8349,22 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5792,12 +8406,22 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5862,12 +8486,22 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;
@@ -5920,12 +8554,22 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             uid: string;
             title: string;
             text: string;
-            answerOptions: string[];
             questionType: string;
             discipline: string;
             themes: string[];
             gradeLevel: string;
             timeLimit: number;
+            answerOptions?: string[] | undefined;
+            correctAnswers?: boolean[] | undefined;
+            multipleChoiceQuestion?: {
+                answerOptions: string[];
+                correctAnswers: boolean[];
+            } | undefined;
+            numericQuestion?: {
+                correctAnswer: number;
+                tolerance?: number | undefined;
+                unit?: string | undefined;
+            } | undefined;
         } | undefined;
         startedAt?: Date | undefined;
         completedAt?: Date | undefined;

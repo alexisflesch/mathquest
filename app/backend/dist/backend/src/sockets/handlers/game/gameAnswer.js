@@ -343,12 +343,31 @@ function gameAnswerHandler(io, socket, context) {
                 // --- Practice and Deferred Mode Feedback Logic ---
                 if (gameInstance.playMode === 'practice') {
                     // Practice mode: send correctAnswers and feedback immediately
-                    const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
+                    const question = await prisma_1.prisma.question.findUnique({
+                        where: { uid: questionUid },
+                        include: {
+                            multipleChoiceQuestion: true,
+                            numericQuestion: true,
+                        }
+                    });
+                    // Extract correct answer data based on question type
+                    let correctAnswersData;
+                    if (question?.questionType === 'numeric' && question.numericQuestion) {
+                        correctAnswersData = {
+                            correctAnswer: question.numericQuestion.correctAnswer,
+                            tolerance: question.numericQuestion.tolerance,
+                        };
+                    }
+                    else if (question?.questionType === 'multiple-choice' && question.multipleChoiceQuestion) {
+                        correctAnswersData = {
+                            correctAnswers: question.multipleChoiceQuestion.correctAnswers,
+                        };
+                    }
                     socket.emit(events_1.SOCKET_EVENTS.GAME.ANSWER_RECEIVED, {
                         questionUid,
                         timeSpent,
                         correct: isCorrect,
-                        correctAnswers: question && Array.isArray(question.correctAnswers) ? question.correctAnswers : undefined,
+                        ...correctAnswersData,
                         explanation: question?.explanation || undefined
                     });
                     // For practice mode, we don't automatically send the next question

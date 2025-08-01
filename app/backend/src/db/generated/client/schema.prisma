@@ -37,27 +37,52 @@ model StudentProfile {
 }
 
 model Question {
-  uid              String                    @id @default(uuid())
+  uid              String   @id @default(uuid())
   title            String?
-  text             String                    @map("question_text")
-  questionType     String                    @map("question_type")
+  text             String   @map("question_text")
+  questionType     String   @map("question_type")
   discipline       String
   themes           String[]
   difficulty       Int?
-  gradeLevel       String?                   @map("grade_level")
+  gradeLevel       String?  @map("grade_level")
   author           String?
   explanation      String?
   tags             String[]
-  timeLimit        Int                       @map("time_limit_seconds")
-  excludedFrom     String[]                  @default([]) @map("excluded_from")
-  createdAt        DateTime                  @default(now()) @map("created_at")
-  updatedAt        DateTime                  @updatedAt @map("updated_at")
-  answerOptions    String[]                  @map("answer_options")
-  correctAnswers   Boolean[]                 @default([]) @map("correct_answers")
+  timeLimit        Int      @map("time_limit_seconds")
+  excludedFrom     String[] @default([]) @map("excluded_from")
+  isHidden         Boolean? @default(false) @map("is_hidden")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
   feedbackWaitTime Int?
-  gameTemplates    QuestionsInGameTemplate[]
+
+  // Polymorphic relations - only one will be populated per question
+  multipleChoiceQuestion MultipleChoiceQuestion?
+  numericQuestion        NumericQuestion?
+
+  gameTemplates QuestionsInGameTemplate[]
 
   @@map("questions")
+}
+
+model MultipleChoiceQuestion {
+  questionUid    String    @id @map("question_uid")
+  answerOptions  String[]  @map("answer_options")
+  correctAnswers Boolean[] @map("correct_answers")
+
+  question Question @relation(fields: [questionUid], references: [uid], onDelete: Cascade)
+
+  @@map("multiple_choice_questions")
+}
+
+model NumericQuestion {
+  questionUid   String  @id @map("question_uid")
+  correctAnswer Float   @map("correct_answer")
+  tolerance     Float?  @default(0) @map("tolerance")
+  unit          String? @map("unit")
+
+  question Question @relation(fields: [questionUid], references: [uid], onDelete: Cascade)
+
+  @@map("numeric_questions")
 }
 
 model GameTemplate {
