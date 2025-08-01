@@ -35,6 +35,7 @@ function getRemainingTime(timerEndDateMs: number, serverTime: number): number {
     const clientTime = Date.now();
     const drift = serverTime - clientTime;
     const correctedNow = clientTime + drift;
+    logger.info('[SimpleTimer][Drift] serverTime:', serverTime, 'clientTime:', clientTime, 'drift:', drift, 'correctedNow:', correctedNow, 'timerEndDateMs:', timerEndDateMs, 'compensatedTimeLeftMs:', Math.max(0, timerEndDateMs - correctedNow));
     return Math.max(0, timerEndDateMs - correctedNow);
 }
 
@@ -57,14 +58,17 @@ function computeTimeLeftMs(
 ): number {
     if (status === 'pause') {
         if (typeof backendTimeLeftMs === 'number' && backendTimeLeftMs > 0) {
+            logger.info('[SimpleTimer][Pause] Using backendTimeLeftMs:', backendTimeLeftMs);
             return backendTimeLeftMs;
         }
-        // If paused but backendTimeLeftMs is missing or not positive, return 1 to avoid UI showing 0
+        logger.info('[SimpleTimer][Pause] backendTimeLeftMs missing or not positive, returning 1ms');
         return 1;
     }
     if (typeof timerEndDateMs === 'number' && timerEndDateMs > 0) {
+        logger.info('[SimpleTimer][Run] Calculating time left with timerEndDateMs:', timerEndDateMs, 'serverTime:', serverTime);
         return getRemainingTime(timerEndDateMs, serverTime);
     }
+    logger.info('[SimpleTimer][Stop] timerEndDateMs not positive, returning 0ms');
     return 0;
 }
 
@@ -131,6 +135,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
         if (serverTime) {
             const clientTime = Date.now();
             latestDriftRef.current = serverTime - clientTime;
+            logger.info('[SimpleTimer][Drift] Updated latestDriftRef:', latestDriftRef.current, 'serverTime:', serverTime, 'clientTime:', clientTime);
         }
 
         const backendTimeLeftMs = (timer as any).timeLeftMs;
@@ -219,6 +224,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             if (serverTime) {
                 const clientTime = Date.now();
                 latestDriftRef.current = serverTime - clientTime;
+                logger.info('[SimpleTimer][Drift] Updated latestDriftRef (socket event):', latestDriftRef.current, 'serverTime:', serverTime, 'clientTime:', clientTime);
             }
 
             const backendTimeLeftMs = (timer as any).timeLeftMs;
