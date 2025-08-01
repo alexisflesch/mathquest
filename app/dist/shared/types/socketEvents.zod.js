@@ -207,6 +207,7 @@ exports.gameJoinedPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),
     participant: exports.participantDataSchema,
     gameStatus: zod_1.z.enum(['pending', 'active', 'completed', 'archived']),
+    gameMode: zod_1.z.enum(['tournament', 'quiz', 'practice', 'class']),
     differedAvailableFrom: zod_1.z.string().datetime({ message: "Invalid datetime string for differedAvailableFrom. Must be an ISO string." }).optional(),
     differedAvailableTo: zod_1.z.string().datetime({ message: "Invalid datetime string for differedAvailableTo. Must be an ISO string." }).optional(),
 });
@@ -236,6 +237,7 @@ exports.gameStateUpdatePayloadSchema = zod_1.z.object({
     totalQuestions: zod_1.z.number().int().positive().optional(),
     timer: zod_1.z.number().int().nonnegative().optional(),
     participants: zod_1.z.array(exports.participantDataSchema).optional(),
+    gameMode: zod_1.z.enum(['tournament', 'quiz', 'practice', 'class']).optional(),
 }).catchall(zod_1.z.any()); // Allow additional properties for flexibility
 // Answer received payload schema
 exports.answerReceivedPayloadSchema = zod_1.z.object({
