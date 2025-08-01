@@ -99,14 +99,21 @@ Based on code review, the issues seem to be in the deferred tournament flow:
 - [ ] Update LeaderboardFAB component to check for meaningful scores
 - [ ] Test that FAB only shows when there are actual scores > 0
 
-### Phase 4: Fix Score Update Emission ✅ **WORKING**
+### Phase 4: Fix Score Update Emission ✅ **COMPLETED** 
 - [x] Added leaderboard emission to deferred tournament flow after each question ends
 - [x] Implementation: Added `emitLeaderboardFromSnapshot` call in `deferredTournamentFlow.ts`
 - [x] **CONFIRMED**: Leaderboard updates are now being sent and received by frontend
 - [x] **MAJOR ISSUE FOUND**: Deferred sessions are NOT isolated - they use shared Redis keys!
-- [ ] **CRITICAL**: Fix Redis key isolation for deferred sessions
-- [ ] Deferred should use keys like: `deferred_participants:${accessCode}:${userId}:${attemptCount}`
-- [ ] Current issue: Uses `mathquest:game:participants:3166` (shared) instead of isolated keys
+- [x] **FIXED**: Implemented Redis key isolation for deferred sessions
+- [x] **FIXED**: Deferred sessions now use session state for score tracking instead of global leaderboard
+- [x] **FIXED**: Score updates in deferred mode use `deferred_session:${accessCode}:${userId}:${attemptCount}` Redis key
+
+### Phase 5: Deferred Session Isolation ✅ **COMPLETED**
+- [x] **Fixed scoringService.ts**: Updated to store deferred scores in session state instead of global leaderboard
+- [x] **Fixed deferredTournamentFlow.ts**: Updated to read scores from session state instead of global Redis leaderboard
+- [x] **Fixed Redis cleanup**: Session state keys already included in cleanup utilities
+- [x] **Session initialization**: Added score initialization to 0 at session start
+- [x] **TypeScript compilation**: All changes compile successfully
 
 ### Phase 6: Complete Redis Cleanup ✅ **COMPLETED**
 
@@ -116,6 +123,7 @@ Based on code review, the issues seem to be in the deferred tournament flow:
 - ✅ Fixed Redis key pattern inconsistencies in deferred sessions
 - ✅ Added timing constants and automatic progression  
 - ✅ Fixed deferred tournament timing to use 1.5s for correct answers display
+- ✅ **UPDATED gameInstance deletion to include deferred session keys**
 
 #### Completed Work
 - [x] Create shared Redis cleanup utility (`cleanupGameRedisKeys`)
@@ -126,6 +134,8 @@ Based on code review, the issues seem to be in the deferred tournament flow:
 - [x] Updated endGame.ts to use shared cleanup utility  
 - [x] Updated deferredTournamentFlow.ts to use deferred-specific cleanup
 - [x] Added manual cleanup scripts for maintenance
+- [x] **Updated deleteAllGameInstanceRedisKeys.ts to use comprehensive cleanup utility**
+- [x] **Updated gameInstanceService.ts to call Redis cleanup when deleting instances**
 - [x] TypeScript compilation validated successfully
 
 #### Key Pattern Fixes
@@ -135,8 +145,14 @@ Based on code review, the issues seem to be in the deferred tournament flow:
 #### Implementation Details
 - **General cleanup**: `cleanupGameRedisKeys(accessCode, context)` for live games and teacher-initiated cleanup
 - **Deferred cleanup**: `cleanupDeferredSessionRedisKeys(accessCode, userId, attemptCount, context)` for individual deferred sessions
+- **GameInstance deletion**: `deleteAllGameInstanceRedisKeys(accessCode)` now uses comprehensive cleanup utility
 - **Manual cleanup**: `npm run cleanup:redis -- <accessCode>` for maintenance
 - **Test utilities**: Test scripts for validating cleanup behavior
+
+#### Key Integration Points
+- **gameTemplateService.ts**: Calls `deleteAllGameInstanceRedisKeys` when force-deleting templates
+- **gameInstanceService.ts**: Calls `deleteAllGameInstanceRedisKeys` when deleting individual instances
+- **deleteAllGameInstanceRedisKeys.ts**: Updated to use `cleanupGameRedisKeys` utility for comprehensive coverage
 
 #### Key Patterns Now Covered
 ```
@@ -181,9 +197,57 @@ mathquest:deferred:timer:${accessCode}:${userId}:${attemptCount}:*
    - Check score updates properly
    - Check FAB appears when score > 0
 
-## Notes
+## Summary of Fixes Implemented ✅
 
-- Deferred mode creates individual "tournament" sessions for each player
-- Each player should see themselves as the only one in the leaderboard
-- Scoring system creates a "new tournament" just for the deferred session
-- Room structure: `deferred_${accessCode}_${userId}` for individual players
+### Core Issues Resolved:
+
+1. **❌ Global Leaderboard Pollution**: 
+   - **Problem**: Deferred sessions were writing to and reading from the global Redis leaderboard (`mathquest:game:leaderboard:${accessCode}`)
+   - **Solution**: Modified `scoringService.ts` to store deferred scores in isolated session state (`deferred_session:${accessCode}:${userId}:${attemptCount}`)
+
+2. **❌ Incorrect Score Source**:
+   - **Problem**: Deferred leaderboard emission was reading from global Redis leaderboard
+   - **Solution**: Modified `deferredTournamentFlow.ts` to read scores from session state instead
+
+3. **❌ Missing Score Initialization**:
+   - **Problem**: Session state score was not initialized at session start
+   - **Solution**: Added score initialization to 0 when creating deferred session state
+
+### Technical Implementation:
+
+1. **scoringService.ts Changes**:
+   ```typescript
+   if (isDeferred) {
+       // Store score in isolated session state, not global Redis leaderboard
+       const sessionStateKey = `deferred_session:${gameInstance.accessCode}:${userId}:${attemptCount}`;
+       await redisClient.hset(sessionStateKey, 'score', currentTotalScore.toString());
+   } else {
+       // Update Redis leaderboard ZSET with new total score (live mode only)
+       const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
+       await redisClient.zadd(leaderboardKey, currentTotalScore, userId);
+   }
+   ```
+
+2. **deferredTournamentFlow.ts Changes**:
+   ```typescript
+   // Get the session state score (isolated from global leaderboard)
+   const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
+   const sessionData = await redisClient.hgetall(sessionStateKey);
+   const currentScore = sessionData?.score ? parseFloat(sessionData.score) : 0;
+   ```
+
+3. **Session Initialization**:
+   ```typescript
+   // Initialize session score to 0 (isolated from global leaderboard)
+   await redisClient.hset(sessionStateKey, 'score', '0');
+   ```
+
+### Benefits:
+
+- ✅ **Complete Isolation**: Deferred sessions no longer pollute or read from live tournament leaderboards
+- ✅ **Correct Scoring**: Each deferred session maintains its own score independently
+- ✅ **Clean Architecture**: Clear separation between live and deferred scoring logic
+- ✅ **Proper Cleanup**: Session state keys are already included in Redis cleanup utilities
+- ✅ **Type Safety**: All changes compile successfully with TypeScript
+
+---

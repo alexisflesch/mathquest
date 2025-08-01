@@ -147,6 +147,18 @@ export async function startDeferredTournamentSession(
         socket.data.deferredAttemptCount = attemptCount;
         const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
         await gameStateService.updateGameState(sessionStateKey, playerGameState);
+
+        // Initialize session score to 0 (isolated from global leaderboard)
+        await redisClient.hset(sessionStateKey, 'score', '0');
+
+        logger.info({
+            accessCode,
+            userId,
+            attemptCount,
+            sessionStateKey,
+            note: 'Initialized deferred session with score 0'
+        }, '[DEFERRED] Session state initialized');
+
         // Set session as active in Redis
         const { setDeferredSessionActive } = await import('@/core/services/gameParticipant/deferredTimerUtils');
         await setDeferredSessionActive({ accessCode, userId, attemptCount });
@@ -363,7 +375,7 @@ async function runDeferredQuestionSequence(
             // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
             // This prevents students from determining answer correctness during submission
             try {
-                // DEFERRED SESSION FIX: Send single-user leaderboard with Redis score (live score during session)
+                // DEFERRED SESSION FIX: Send single-user leaderboard using session state (isolated score)
                 // Get current participant data from database
                 const gameInstance = await prisma.gameInstance.findUnique({
                     where: { accessCode },
@@ -386,16 +398,16 @@ async function runDeferredQuestionSequence(
                 });
 
                 if (participant) {
-                    // Get the live score from Redis (during game session)
-                    const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
-                    const redisScore = await redisClient.zscore(leaderboardKey, userId);
-                    const currentScore = redisScore !== null ? parseFloat(redisScore) : 0;
+                    // Get the session state score (isolated from global leaderboard)
+                    const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
+                    const sessionData = await redisClient.hgetall(sessionStateKey);
+                    const currentScore = sessionData?.score ? parseFloat(sessionData.score) : 0;
 
                     // Create a single-entry leaderboard with just this user's data
                     const singleUserLeaderboard = [{
                         userId: participant.userId,
                         username: participant.user?.username || 'Unknown',
-                        score: currentScore, // Use Redis score (live session score)
+                        score: currentScore, // Use session score (isolated from global leaderboard)
                         avatarEmoji: participant.user?.avatarEmoji || '🐼',
                         rank: 1 // Always rank 1 since it's just them
                     }];
@@ -407,13 +419,13 @@ async function runDeferredQuestionSequence(
                         accessCode,
                         userId,
                         score: currentScore,
-                        redisScore,
+                        sessionStateKey,
                         username: participant.user?.username,
                         event: 'leaderboard_update',
                         questionUid: question.uid,
                         timing: 'after_question_end',
                         playerRoom
-                    }, '[DEFERRED] Sent single-user leaderboard after question end');
+                    }, '[DEFERRED] Sent single-user leaderboard after question end (using session state)');
                 } else {
                     logger.warn({
                         accessCode,

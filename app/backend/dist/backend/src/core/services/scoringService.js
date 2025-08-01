@@ -387,11 +387,27 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
                 await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
                 // [LOG REMOVED] Noisy log for Redis participant update
             }
-            // Update Redis leaderboard ZSET with new total score
-            const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
-            // [LOG REMOVED] Noisy log for leaderboard ZSET update
-            await redis_1.redisClient.zadd(leaderboardKey, currentTotalScore, userId);
-            // [LOG REMOVED] Noisy log for leaderboard ZSET update
+            if (isDeferred) {
+                // 🔒 DEFERRED MODE FIX: Update session state instead of global leaderboard
+                // Store score in isolated session state, not global Redis leaderboard
+                const sessionStateKey = `deferred_session:${gameInstance.accessCode}:${userId}:${attemptCount}`;
+                await redis_1.redisClient.hset(sessionStateKey, 'score', currentTotalScore.toString());
+                logger.info({
+                    gameInstanceId,
+                    userId,
+                    sessionStateKey,
+                    currentTotalScore,
+                    attemptCount,
+                    note: 'Updated deferred session score (isolated from global leaderboard)'
+                }, '[DEFERRED] Score updated in session state');
+            }
+            else {
+                // Update Redis leaderboard ZSET with new total score (live mode only)
+                const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
+                // [LOG REMOVED] Noisy log for leaderboard ZSET update
+                await redis_1.redisClient.zadd(leaderboardKey, currentTotalScore, userId);
+                // [LOG REMOVED] Noisy log for leaderboard ZSET update
+            }
         }
         logger.info({ gameInstanceId, userId, scoreDelta, totalScore: currentTotalScore }, '[LOG] Final score result for answer submission');
         logger.info({

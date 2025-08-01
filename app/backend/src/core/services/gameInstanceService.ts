@@ -495,9 +495,15 @@ export class GameInstanceService {
                 throw new Error('You do not have permission to delete this game instance');
             }
 
+            // Clean up Redis keys before deleting the database record
+            if (existing.accessCode) {
+                const { deleteAllGameInstanceRedisKeys } = await import('./deleteAllGameInstanceRedisKeys');
+                await deleteAllGameInstanceRedisKeys(existing.accessCode);
+            }
+
             await prisma.gameInstance.delete({ where: { id: instanceId } });
 
-            logger.info({ instanceId, userId }, 'Game instance deleted successfully');
+            logger.info({ instanceId, userId, accessCode: existing.accessCode }, 'Game instance and associated Redis keys deleted successfully');
         } catch (error) {
             logger.error({ error, instanceId, userId }, 'Error deleting game instance');
             throw error;
