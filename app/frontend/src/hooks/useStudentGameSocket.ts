@@ -290,7 +290,8 @@ export function useStudentGameSocket({
             setGameState(prev => ({
                 ...prev,
                 connectedToRoom: true,
-                gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
+                gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending',
+                gameMode: payload.gameMode
             }));
         }, isGameJoinedPayload, SOCKET_EVENTS.GAME.GAME_JOINED));
         socket.on(
@@ -346,7 +347,8 @@ export function useStudentGameSocket({
                     data.status === 'waiting' ? 'pending' :
                         data.status === 'finished' ? 'completed' :
                             data.status as 'active' | 'paused'
-                ) : prev.gameStatus
+                ) : prev.gameStatus,
+                gameMode: data.gameMode ?? prev.gameMode
                 // Don't update timer - use our timer system instead
                 // Keep existing phase and feedbackRemaining values
             }));

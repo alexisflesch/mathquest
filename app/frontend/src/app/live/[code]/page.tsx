@@ -666,7 +666,8 @@ export default function LiveGamePage() {
             case 'practice':
                 return 'practice';
             case 'quiz':
-            case 'class': // Map class mode to quiz for component compatibility
+            case 'class' // Map class mode to quiz for component compatibility
+                :
                 return 'quiz';
             case 'tournament':
             default:
@@ -825,19 +826,21 @@ export default function LiveGamePage() {
         // Determine if current user is the creator
         const isCreator = lobbyState.creator && lobbyState.creator.userId === userId;
 
-        // Render the start button only for the creator
-        const startButton = isCreator && !startClicked ? (
-            <button
-                className="btn btn-primary btn-lg w-full mt-4"
-                onClick={() => {
-                    if (socket) {
-                        socket.emit('start_tournament', { accessCode: typeof code === 'string' ? code : String(code) });
-                        setStartClicked(true);
-                    }
-                }}
-            >
-                Démarrer le tournoi
-            </button>
+        // Render the start button only for the creator and tournament mode
+        const startButton = isCreator && gameState.gameMode === 'tournament' && !startClicked ? (
+            <div className="flex justify-end w-full mt-4">
+                <button
+                    className="btn btn-primary btn-lg px-6"
+                    onClick={() => {
+                        if (socket) {
+                            socket.emit('start_tournament', { accessCode: typeof code === 'string' ? code : String(code) });
+                            setStartClicked(true);
+                        }
+                    }}
+                >
+                    Démarrer
+                </button>
+            </div>
         ) : null;
 
         return (

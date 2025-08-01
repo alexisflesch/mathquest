@@ -240,6 +240,7 @@ export const gameJoinedPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
   participant: participantDataSchema,
   gameStatus: z.enum(['pending', 'active', 'completed', 'archived']),
+  gameMode: z.enum(['tournament', 'quiz', 'practice', 'class']),
   differedAvailableFrom: z.string().datetime({ message: "Invalid datetime string for differedAvailableFrom. Must be an ISO string." }).optional(),
   differedAvailableTo: z.string().datetime({ message: "Invalid datetime string for differedAvailableTo. Must be an ISO string." }).optional(),
 });
@@ -273,6 +274,7 @@ export const gameStateUpdatePayloadSchema = z.object({
   totalQuestions: z.number().int().positive().optional(),
   timer: z.number().int().nonnegative().optional(),
   participants: z.array(participantDataSchema).optional(),
+  gameMode: z.enum(['tournament', 'quiz', 'practice', 'class']).optional(),
 }).catchall(z.any()); // Allow additional properties for flexibility
 
 // Answer received payload schema

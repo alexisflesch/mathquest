@@ -77,11 +77,12 @@ function joinGameHandler(io, socket) {
             const practiceRoomName = `practice_${userId}`;
             await socket.join(practiceRoomName);
             socket.data.currentGameRoom = practiceRoomName;
-            logger.debug({ practiceRoomName, socketId: socket.id }, 'Player joined practice room'); // Send successful join response for practice mode
+            logger.debug({ practiceRoomName, socketId: socket.id }, 'Player joined practice room');
+            // Send successful join response for practice mode
             const gameJoinedPayload = {
                 accessCode: 'PRACTICE',
                 gameStatus: 'active', // Practice mode is immediately active
-                // Practice mode is not deferred - always fresh session
+                gameMode: 'practice',
                 participant: {
                     id: userId,
                     userId: userId, // Same as id for practice mode
@@ -292,6 +293,7 @@ function joinGameHandler(io, socket) {
                     online: true,
                 },
                 gameStatus: gameInstance.status,
+                gameMode: gameInstance.playMode,
                 // Include deferred status based on game completion and availability
                 differedAvailableFrom: gameInstance.differedAvailableFrom?.toISOString(),
                 differedAvailableTo: gameInstance.differedAvailableTo?.toISOString(),
