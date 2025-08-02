@@ -18,6 +18,16 @@ function filterQuestionForClient(questionObject) {
     if (!questionObject) {
         throw new Error('Cannot filter null or undefined question object');
     }
+    // DIAGNOSTIC: Log the entire question object to debug polymorphic structure
+    console.log(`[DIAGNOSTIC] filterQuestionForClient called for question ${questionObject.uid}:`, {
+        uid: questionObject.uid,
+        questionType: questionObject.questionType,
+        hasMultipleChoiceQuestion: !!questionObject.multipleChoiceQuestion,
+        hasNumericQuestion: !!questionObject.numericQuestion,
+        multipleChoiceQuestionData: questionObject.multipleChoiceQuestion,
+        numericQuestionData: questionObject.numericQuestion,
+        fullQuestionObject: JSON.stringify(questionObject, null, 2)
+    });
     const baseQuestion = {
         uid: questionObject.uid,
         questionType: questionObject.questionType || questionObject.defaultMode,
@@ -32,6 +42,12 @@ function filterQuestionForClient(questionObject) {
         questionObject.questionType === 'singleChoice' || questionObject.defaultMode === 'singleChoice') {
         const answerOptions = questionObject.multipleChoiceQuestion?.answerOptions;
         if (!answerOptions) {
+            console.error(`[DIAGNOSTIC] Missing answer options for question ${questionObject.uid}:`, {
+                questionType: questionObject.questionType,
+                defaultMode: questionObject.defaultMode,
+                multipleChoiceQuestion: questionObject.multipleChoiceQuestion,
+                hasMultipleChoiceQuestion: !!questionObject.multipleChoiceQuestion
+            });
             throw new Error(`Multiple/single choice question ${questionObject.uid} is missing answer options`);
         }
         return {

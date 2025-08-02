@@ -155,10 +155,10 @@ exports.Prisma.QuestionScalarFieldEnum = {
   tags: 'tags',
   timeLimit: 'timeLimit',
   excludedFrom: 'excludedFrom',
-  isHidden: 'isHidden',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  feedbackWaitTime: 'feedbackWaitTime'
+  feedbackWaitTime: 'feedbackWaitTime',
+  isHidden: 'isHidden'
 };
 
 exports.Prisma.MultipleChoiceQuestionScalarFieldEnum = {

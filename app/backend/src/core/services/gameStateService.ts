@@ -279,6 +279,7 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
             content
         }));
 
+        const calculatedTimeLimit = (question.timeLimit || 30) * (gameState.settings.timeMultiplier || 1);
         const questionData = {
             uid: question.uid,
             title: question.title || undefined,
@@ -286,13 +287,13 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
             answerOptions: answerOptions,
             correctAnswers: new Array(answerOptions.length).fill(false), // Hide correct answers
             questionType: question.questionType,
-            timeLimit: (question.timeLimit || 30) * (gameState.settings.timeMultiplier || 1)
+            timeLimit: calculatedTimeLimit
         };
 
         gameState.questionData = questionData;
 
-        // Canonical timer system:
-        await canonicalTimerService.startTimer(accessCode, questionUid, gameState.gameMode as any, isDeferred);
+        // Canonical timer system: pass calculated duration to ensure consistency
+        await canonicalTimerService.startTimer(accessCode, questionUid, gameState.gameMode as any, isDeferred, undefined, undefined, calculatedTimeLimit * 1000);
 
         // Initialize answer collection for this question
         await redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionUid}`);

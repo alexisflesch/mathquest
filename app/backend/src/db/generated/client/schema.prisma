@@ -37,29 +37,26 @@ model StudentProfile {
 }
 
 model Question {
-  uid              String   @id @default(uuid())
-  title            String?
-  text             String   @map("question_text")
-  questionType     String   @map("question_type")
-  discipline       String
-  themes           String[]
-  difficulty       Int?
-  gradeLevel       String?  @map("grade_level")
-  author           String?
-  explanation      String?
-  tags             String[]
-  timeLimit        Int      @map("time_limit_seconds")
-  excludedFrom     String[] @default([]) @map("excluded_from")
-  isHidden         Boolean? @default(false) @map("is_hidden")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-  feedbackWaitTime Int?
-
-  // Polymorphic relations - only one will be populated per question
+  uid                    String                    @id @default(uuid())
+  title                  String?
+  text                   String                    @map("question_text")
+  questionType           String                    @map("question_type")
+  discipline             String
+  themes                 String[]
+  difficulty             Int?
+  gradeLevel             String?                   @map("grade_level")
+  author                 String?
+  explanation            String?
+  tags                   String[]
+  timeLimit              Int                       @map("time_limit_seconds")
+  excludedFrom           String[]                  @default([]) @map("excluded_from")
+  createdAt              DateTime                  @default(now()) @map("created_at")
+  updatedAt              DateTime                  @updatedAt @map("updated_at")
+  feedbackWaitTime       Int?
+  isHidden               Boolean?                  @default(false) @map("is_hidden")
   multipleChoiceQuestion MultipleChoiceQuestion?
   numericQuestion        NumericQuestion?
-
-  gameTemplates QuestionsInGameTemplate[]
+  gameTemplates          QuestionsInGameTemplate[]
 
   @@map("questions")
 }
@@ -68,19 +65,17 @@ model MultipleChoiceQuestion {
   questionUid    String    @id @map("question_uid")
   answerOptions  String[]  @map("answer_options")
   correctAnswers Boolean[] @map("correct_answers")
-
-  question Question @relation(fields: [questionUid], references: [uid], onDelete: Cascade)
+  question       Question  @relation(fields: [questionUid], references: [uid], onDelete: Cascade)
 
   @@map("multiple_choice_questions")
 }
 
 model NumericQuestion {
-  questionUid   String  @id @map("question_uid")
-  correctAnswer Float   @map("correct_answer")
-  tolerance     Float?  @default(0) @map("tolerance")
-  unit          String? @map("unit")
-
-  question Question @relation(fields: [questionUid], references: [uid], onDelete: Cascade)
+  questionUid   String   @id @map("question_uid")
+  correctAnswer Float    @map("correct_answer")
+  tolerance     Float?   @default(0) @map("tolerance")
+  unit          String?  @map("unit")
+  question      Question @relation(fields: [questionUid], references: [uid], onDelete: Cascade)
 
   @@map("numeric_questions")
 }
@@ -141,28 +136,19 @@ model GameInstance {
 }
 
 model GameParticipant {
-  id             String @id @default(uuid())
-  gameInstanceId String @map("game_instance_id")
-  userId         String @map("user_id")
+  id             String            @id @default(uuid())
+  gameInstanceId String            @map("game_instance_id")
+  userId         String            @map("user_id")
+  liveScore      Int               @default(0) @map("live_score")
+  deferredScore  Int               @default(0) @map("deferred_score")
+  nbAttempts     Int               @default(0) @map("nb_attempts")
+  status         ParticipantStatus @default(PENDING) @map("status")
+  joinedAt       DateTime          @default(now()) @map("joined_at")
+  lastActiveAt   DateTime?         @map("last_active_at")
+  completedAt    DateTime?         @map("completed_at")
+  gameInstance   GameInstance      @relation(fields: [gameInstanceId], references: [id], onDelete: Cascade)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Unified scoring system - one participant record per user/game
-  liveScore     Int @default(0) @map("live_score")
-  deferredScore Int @default(0) @map("deferred_score")
-  nbAttempts    Int @default(0) @map("nb_attempts")
-
-  // Status tracking
-  status ParticipantStatus @default(PENDING) @map("status")
-
-  // Timestamps
-  joinedAt     DateTime  @default(now()) @map("joined_at")
-  lastActiveAt DateTime? @map("last_active_at")
-  completedAt  DateTime? @map("completed_at")
-
-  // Relations
-  gameInstance GameInstance @relation(fields: [gameInstanceId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // UNIQUE CONSTRAINT: One participant record per user per game (eliminates duplicates!)
   @@unique([gameInstanceId, userId])
   @@map("game_participants")
 }

@@ -1,7 +1,7 @@
 "use strict";
 // Shared game flow logic for quiz and tournament modes
 // Place all core progression, timer, answer reveal, feedback, and leaderboard logic here
-// This module should be imported by both quiz and tournament handlers
+// This module should be imported by both quiz and tourname
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -40,7 +40,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runGameFlow = runGameFlow;
-const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const redisCleanup_1 = require("@/utils/redisCleanup");
@@ -133,33 +132,58 @@ async function runGameFlow(io, accessCode, questions, options) {
             // Validate with Zod before emitting
             const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
             if (!parseResult.success) {
-                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+                logger.error({
+                    errors: parseResult.error.errors,
+                    canonicalPayload,
+                    questionUid: questions[i].uid,
+                    questionType: questions[i].questionType,
+                    timeLimit: questions[i].timeLimit,
+                    filteredQuestion
+                }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting - THIS IS THE CAUSE OF TIMER ISSUES');
+                // This validation failure prevents the question from being sent to frontend!
+                throw new Error(`Question payload validation failed for ${questions[i].uid}: ${JSON.stringify(parseResult.error.errors)}`);
             }
             else {
                 io.to([liveRoom, projectionRoom]).emit('game_question', canonicalPayload);
                 logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to live and projection rooms');
             }
+            logger.info({ accessCode }, '[DEBUG] About to call emitQuestion for all sockets in room');
             // Fetch all sockets in the room
             const roomName = `game_${accessCode}`;
             const socketsInRoom = await io.in(roomName).fetchSockets();
             // Map userIds to real Socket instances (not RemoteSocket)
             const allSockets = Array.from(io.sockets.sockets.values());
+            logger.info({ accessCode, socketsInRoomCount: socketsInRoom.length, allSocketsCount: allSockets.length }, '[DEBUG] Socket counts before emitQuestion loop');
             for (const remoteSocket of socketsInRoom) {
                 const userId = remoteSocket.data.userId;
-                if (!userId)
+                if (!userId) {
+                    logger.warn({ accessCode, socketId: remoteSocket.id }, '[DEBUG] Socket has no userId, skipping');
                     continue;
+                }
                 // Find a real Socket instance for this userId
                 const realSocket = allSockets.find(s => s.data && s.data.userId === userId);
                 if (realSocket) {
-                    const emitQuestion = (0, emitQuestionHandler_1.emitQuestionHandler)(io, realSocket);
-                    await emitQuestion({
-                        accessCode,
-                        userId,
-                        questionUid: questions[i].uid
-                    });
+                    try {
+                        logger.info({ accessCode, userId }, '[DEBUG] About to call emitQuestion for user');
+                        const emitQuestion = (0, emitQuestionHandler_1.emitQuestionHandler)(io, realSocket);
+                        await emitQuestion({
+                            accessCode,
+                            userId,
+                            questionUid: questions[i].uid
+                        });
+                        logger.info({ accessCode, userId }, '[DEBUG] emitQuestion completed successfully for user');
+                    }
+                    catch (emitQuestionError) {
+                        logger.error({ accessCode, userId, error: emitQuestionError }, '[DEBUG] Error in emitQuestion for user');
+                        throw emitQuestionError;
+                    }
+                }
+                else {
+                    logger.warn({ accessCode, userId }, '[DEBUG] Could not find real socket for userId');
                 }
             }
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
+            logger.info({ accessCode }, '[DEBUG] About to track question start times');
             // Track question start time for all users currently in the room for server-side timing
             try {
                 const roomName = `game_${accessCode}`;
@@ -188,36 +212,73 @@ async function runGameFlow(io, accessCode, questions, options) {
                     error
                 }, 'Failed to track question start times for users');
             }
-            // --- Ensure canonical timer is started for quiz and tournament (for late joiners) ---
-            if (options.playMode === 'quiz' || options.playMode === 'tournament') {
-                const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
-                await canonicalTimerService.resetTimer(accessCode, questions[i].uid, options.playMode, false);
-                await canonicalTimerService.startTimer(accessCode, questions[i].uid, options.playMode, false);
-            }
+            // --- Timer is already started in emitQuestionHandler, no need to start again ---
+            // Note: Removed redundant timer start that was causing conflicts
+            logger.info({ accessCode }, '[DEBUG] About to emit timer events');
             // Emit timer update to start frontend countdown
-            const canonicalTimer = toCanonicalTimer({ ...timer, questionUid: typeof questions[i].uid === 'string' && questions[i].uid.length > 0 ? questions[i].uid : '' });
-            emitCanonicalTimerEvents(io, [
-                { room: `game_${accessCode}`, event: 'game_timer_updated', extra: {} },
-                { room: liveRoom, event: 'game_timer_updated', extra: {} },
-                { room: projectionRoom, event: 'game_timer_updated', extra: {} }
-            ], {
-                accessCode,
-                timer: canonicalTimer,
-                questionUid: canonicalTimer.questionUid,
-                questionIndex: i,
-                totalQuestions: questions.length,
-                answersLocked: currentState?.gameState?.answersLocked
-            });
-            options.onQuestionStart?.(i);
-            await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
+            try {
+                logger.info({ accessCode, timer }, '[DEBUG] Creating canonical timer from timer object');
+                const canonicalTimer = toCanonicalTimer({ ...timer, questionUid: typeof questions[i].uid === 'string' && questions[i].uid.length > 0 ? questions[i].uid : '' });
+                logger.info({ accessCode, canonicalTimer }, '[DEBUG] Canonical timer created successfully');
+                logger.info({ accessCode, currentStateAnswersLocked: currentState?.gameState?.answersLocked }, '[DEBUG] About to call emitCanonicalTimerEvents');
+                emitCanonicalTimerEvents(io, [
+                    { room: `game_${accessCode}`, event: 'game_timer_updated', extra: {} },
+                    { room: liveRoom, event: 'game_timer_updated', extra: {} },
+                    { room: projectionRoom, event: 'game_timer_updated', extra: {} }
+                ], {
+                    accessCode,
+                    timer: canonicalTimer,
+                    questionUid: canonicalTimer.questionUid,
+                    questionIndex: i,
+                    totalQuestions: questions.length,
+                    answersLocked: currentState?.gameState?.answersLocked
+                });
+                logger.info({ accessCode }, '[DEBUG] emitCanonicalTimerEvents call completed');
+            }
+            catch (timerError) {
+                const errorMessage = timerError instanceof Error ? timerError.message : 'Unknown error';
+                const errorStack = timerError instanceof Error ? timerError.stack : 'No stack trace';
+                logger.error({ accessCode, error: timerError, errorMessage, errorStack }, '[DEBUG] Error in timer events emission - DETAILED');
+                throw timerError;
+            }
+            logger.info({ accessCode }, '[DEBUG] Timer events emitted, about to call onQuestionStart');
+            try {
+                options.onQuestionStart?.(i);
+                logger.info({ accessCode }, '[DEBUG] onQuestionStart called successfully, about to wait for timer');
+            }
+            catch (onQuestionStartError) {
+                logger.error({ accessCode, error: onQuestionStartError }, '[DEBUG] Error in onQuestionStart callback');
+                throw onQuestionStartError;
+            }
+            logger.info({ accessCode, timerDuration: questions[i].timeLimit * 1000 }, '[DEBUG] Starting timer wait');
+            try {
+                await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
+                logger.info({ accessCode }, '[DEBUG] Timer wait completed successfully');
+            }
+            catch (timerWaitError) {
+                logger.error({ accessCode, error: timerWaitError }, '[DEBUG] Error during timer wait');
+                throw timerWaitError;
+            }
             logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionUid: questions[i].uid }, '[DEBUG] Emitting correct_answers');
+            // Extract correct answers based on question type (polymorphic structure)
+            let correctAnswers = [];
+            if ((questions[i].questionType === 'multipleChoice' || questions[i].questionType === 'singleChoice') && questions[i].multipleChoiceQuestion) {
+                correctAnswers = questions[i].multipleChoiceQuestion.correctAnswers || [];
+            }
+            else if (questions[i].questionType === 'numeric' && questions[i].numericQuestion) {
+                correctAnswers = [questions[i].numericQuestion.correctAnswer];
+            }
+            else {
+                // Fallback to legacy structure for backward compatibility
+                correctAnswers = questions[i].correctAnswers || [];
+            }
             // Send correct answers with the event (not filtered out like in game_question)
             const correctAnswersPayload = {
                 questionUid: questions[i].uid,
-                correctAnswers: questions[i].correctAnswers || []
+                correctAnswers: correctAnswers
             };
             io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
-            logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: questions[i].correctAnswers }, '[TRACE] Emitted correct_answers');
+            logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: correctAnswers }, '[TRACE] Emitted correct_answers');
             options.onQuestionEnd?.(i);
             // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
             // This prevents students from determining answer correctness during submission
@@ -346,7 +407,18 @@ async function runGameFlow(io, accessCode, questions, options) {
         options.onGameEnd?.();
     }
     catch (error) {
-        logger.error({ accessCode, error }, '[SharedGameFlow] Error in game flow');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+        const errorName = error instanceof Error ? error.name : 'Unknown error type';
+        logger.error({
+            accessCode,
+            error,
+            errorMessage,
+            errorStack,
+            errorName,
+            errorType: typeof error,
+            errorConstructor: error?.constructor?.name
+        }, '[SharedGameFlow] DETAILED Error in game flow');
     }
     finally {
         // Clean up running game flow tracking
@@ -377,7 +449,13 @@ function emitCanonicalTimerEvents(io, rooms, payloadBase) {
     };
     const validation = socketEvents_zod_1.dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
     if (!validation.success) {
-        logger.error({ error: validation.error.format(), payload: canonicalPayload }, '[TIMER] Invalid canonical timer payload, not emitting');
+        logger.error({
+            error: validation.error.format(),
+            payload: canonicalPayload,
+            payloadTimer: canonicalPayload.timer,
+            validationErrors: validation.error.errors
+        }, '[TIMER] Invalid canonical timer payload, not emitting - THIS IS LIKELY THE CAUSE OF THE GAME FLOW ERROR');
+        // Don't throw here, just return to prevent emission
         return;
     }
     for (const { room, event, extra } of rooms) {

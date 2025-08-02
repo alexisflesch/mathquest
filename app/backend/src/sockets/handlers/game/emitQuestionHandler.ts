@@ -49,11 +49,18 @@ export function emitQuestionHandler(
             socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
             return;
         }
-        // 3. Get all questions
+        // 3. Get all questions with polymorphic relations
         const allQuestions = await prisma.questionsInGameTemplate.findMany({
             where: { gameTemplateId: gameInstance.gameTemplateId },
             orderBy: { sequence: 'asc' },
-            include: { question: true }
+            include: {
+                question: {
+                    include: {
+                        multipleChoiceQuestion: true,
+                        numericQuestion: true
+                    }
+                }
+            }
         });
         let targetQuestion = null;
         if (questionUid) {

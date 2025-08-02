@@ -251,6 +251,7 @@ async function setCurrentQuestion(accessCode, questionIndex) {
             id: index.toString(), // Use index as ID
             content
         }));
+        const calculatedTimeLimit = (question.timeLimit || 30) * (gameState.settings.timeMultiplier || 1);
         const questionData = {
             uid: question.uid,
             title: question.title || undefined,
@@ -258,11 +259,11 @@ async function setCurrentQuestion(accessCode, questionIndex) {
             answerOptions: answerOptions,
             correctAnswers: new Array(answerOptions.length).fill(false), // Hide correct answers
             questionType: question.questionType,
-            timeLimit: (question.timeLimit || 30) * (gameState.settings.timeMultiplier || 1)
+            timeLimit: calculatedTimeLimit
         };
         gameState.questionData = questionData;
-        // Canonical timer system:
-        await canonicalTimerService.startTimer(accessCode, questionUid, gameState.gameMode, isDeferred);
+        // Canonical timer system: pass calculated duration to ensure consistency
+        await canonicalTimerService.startTimer(accessCode, questionUid, gameState.gameMode, isDeferred, undefined, undefined, calculatedTimeLimit * 1000);
         // Initialize answer collection for this question
         await redis_1.redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionUid}`);
         // Clear projection display state for new question

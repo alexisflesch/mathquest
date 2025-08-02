@@ -203,7 +203,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                     e.target.style.borderColor = 'var(--gray-300)';
                                 }}
                                 onKeyDown={e => {
-                                    if (e.key === 'Enter' && !readonly && typeof numericAnswer === 'string' ? numericAnswer.trim() : numericAnswer) {
+                                    if (
+                                        e.key === 'Enter' &&
+                                        !readonly &&
+                                        (typeof numericAnswer === 'string' ? numericAnswer.trim() : numericAnswer)
+                                    ) {
+                                        e.preventDefault();
                                         handleNumericSubmit?.();
                                     }
                                 }}

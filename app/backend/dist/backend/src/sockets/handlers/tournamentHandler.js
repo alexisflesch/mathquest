@@ -95,8 +95,70 @@ function tournamentHandler(io, socket) {
             socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Game configuration error: Missing template or no questions.' });
             return;
         }
+        // Log the entire gameInstance structure to debug relation loading
+        logger.info({
+            accessCode,
+            gameTemplateId: gameInstance.gameTemplate?.id,
+            questionsCount: gameInstance.gameTemplate?.questions?.length,
+            firstQuestionSample: gameInstance.gameTemplate?.questions?.[0] ? {
+                sequence: gameInstance.gameTemplate.questions[0].sequence,
+                questionUid: gameInstance.gameTemplate.questions[0].question?.uid,
+                questionType: gameInstance.gameTemplate.questions[0].question?.questionType,
+                hasMultipleChoiceQuestion: !!gameInstance.gameTemplate.questions[0].question?.multipleChoiceQuestion,
+                hasNumericQuestion: !!gameInstance.gameTemplate.questions[0].question?.numericQuestion,
+                multipleChoiceQuestionData: gameInstance.gameTemplate.questions[0].question?.multipleChoiceQuestion,
+                numericQuestionData: gameInstance.gameTemplate.questions[0].question?.numericQuestion
+            } : null
+        }, '[TOURNAMENT_DEBUG] GameInstance structure before question extraction');
         const actualQuestions = gameInstance.gameTemplate.questions
-            .map(gtq => gtq.question)
+            .map(gtq => {
+            // Ensure polymorphic relations are preserved in question objects
+            const question = gtq.question;
+            if (!question)
+                return null;
+            // Log each question's polymorphic data availability
+            logger.info({
+                accessCode,
+                questionUid: question.uid,
+                questionType: question.questionType,
+                hasMultipleChoiceQuestion: !!question.multipleChoiceQuestion,
+                hasNumericQuestion: !!question.numericQuestion,
+                multipleChoiceQuestionData: question.multipleChoiceQuestion,
+                numericQuestionData: question.numericQuestion
+            }, '[TOURNAMENT_DEBUG] Question polymorphic data before extraction');
+            // EXPLICIT preservation of polymorphic relations
+            const preservedQuestion = {
+                // Base question fields
+                uid: question.uid,
+                title: question.title,
+                text: question.text,
+                questionType: question.questionType,
+                discipline: question.discipline,
+                themes: question.themes,
+                difficulty: question.difficulty,
+                gradeLevel: question.gradeLevel,
+                author: question.author,
+                explanation: question.explanation,
+                tags: question.tags,
+                timeLimit: question.timeLimit,
+                excludedFrom: question.excludedFrom,
+                createdAt: question.createdAt,
+                updatedAt: question.updatedAt,
+                feedbackWaitTime: question.feedbackWaitTime,
+                isHidden: question.isHidden,
+                // EXPLICITLY preserve polymorphic relations
+                multipleChoiceQuestion: question.multipleChoiceQuestion,
+                numericQuestion: question.numericQuestion
+            };
+            logger.info({
+                accessCode,
+                questionUid: question.uid,
+                preservedHasMultipleChoice: !!preservedQuestion.multipleChoiceQuestion,
+                preservedHasNumeric: !!preservedQuestion.numericQuestion,
+                preservedMultipleChoiceData: preservedQuestion.multipleChoiceQuestion
+            }, '[TOURNAMENT_DEBUG] Question after explicit preservation');
+            return preservedQuestion;
+        })
             .filter(q => q != null); // Ensure question objects are not null
         if (actualQuestions.length === 0) {
             logger.error({ accessCode, gameInstanceId: gameInstance.id }, '[TournamentHandler] No valid questions found after mapping.');
