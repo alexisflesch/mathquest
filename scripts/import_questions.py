@@ -177,8 +177,13 @@ def import_questions():
                         
                         # Question type specific validation
                         question_type = q.get("questionType")
-                        if question_type in ["multipleChoice", "multiple_choice", "single_choice"]:
-                            # Multiple choice requires answerOptions and correctAnswers
+                        # Normalize question type for validation
+                        if question_type == "multiple_choice":
+                            question_type = "multipleChoice"
+                        elif question_type == "single_choice":
+                            question_type = "singleChoice"
+                        # Validation for multipleChoice and singleChoice
+                        if question_type in ["multipleChoice", "singleChoice"]:
                             mc_fields = ["answerOptions", "correctAnswers"]
                             mc_missing = [field for field in mc_fields if field not in q or q[field] in [None, ""] or (isinstance(q[field], list) and len(q[field]) == 0)]
                             missing.extend(mc_missing)
@@ -302,11 +307,13 @@ def import_questions():
                 total_errors += 1
                 continue
             try:
-                # Normalize question type
+                # Normalize question type for DB
                 question_type = q.get('questionType')
-                if question_type in ['multiple_choice', 'single_choice']:
+                if question_type == 'multiple_choice':
                     question_type = 'multipleChoice'
-                
+                elif question_type == 'single_choice':
+                    question_type = 'singleChoice'
+
                 # Insert or update the main question record
                 cur.execute(
                     '''INSERT INTO questions
@@ -342,10 +349,10 @@ def import_questions():
                         excluded_from
                     ]
                 )
-                
+
                 # Insert into the appropriate polymorphic table
-                if question_type == 'multipleChoice':
-                    # Insert or update multiple choice question data
+                if question_type in ['multipleChoice', 'singleChoice']:
+                    # Insert or update multiple choice question data (singleChoice is a subset)
                     cur.execute(
                         '''INSERT INTO multiple_choice_questions
                         (question_uid, answer_options, correct_answers)
@@ -378,7 +385,7 @@ def import_questions():
                             unit
                         ]
                     )
-                
+
                 total_uploaded += 1
             except Exception as e:
                 msg = f"Erreur lors de l'import de la question (uid={q.get('uid')}) dans {yaml_path} : {e}"
@@ -392,7 +399,7 @@ def import_questions():
         
         # Clean up orphaned polymorphic question records
         print_colored('INFO', 'Cleaning orphaned polymorphic question records...')
-        cur.execute('DELETE FROM multiple_choice_questions WHERE question_uid NOT IN (SELECT uid FROM questions WHERE question_type = %s)', ('multipleChoice',))
+        cur.execute('DELETE FROM multiple_choice_questions WHERE question_uid NOT IN (SELECT uid FROM questions WHERE question_type IN (%s, %s))', ('multipleChoice', 'singleChoice'))
         cur.execute('DELETE FROM numeric_questions WHERE question_uid NOT IN (SELECT uid FROM questions WHERE question_type = %s)', ('numeric',))
         conn.commit()
         cur.close()

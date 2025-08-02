@@ -72,15 +72,15 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     name: 'Frequency'
                 }] as any,
                 layout: {
-                    title: 'Stem Plot',
+                    title: { text: 'Stem Plot' },
                     xaxis: {
-                        title: 'Values',
+                        title: { text: 'Values' },
                         tickmode: 'array',
                         tickvals: uniqueValues,
                         ticktext: uniqueValues.map(v => v.toString())
                     },
                     yaxis: {
-                        title: 'Frequency',
+                        title: { text: 'Frequency' },
                         rangemode: 'tozero'
                     }
                 }
@@ -96,10 +96,10 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     name: 'Frequency'
                 }] as any,
                 layout: {
-                    title: 'Histogram',
-                    xaxis: { title: 'Values' },
+                    title: { text: 'Histogram' },
+                    xaxis: { title: { text: 'Values' } },
                     yaxis: {
-                        title: 'Frequency',
+                        title: { text: 'Frequency' },
                         rangemode: 'tozero'
                     }
                 }
