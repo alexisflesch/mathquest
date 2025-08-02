@@ -90,10 +90,10 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                         type: 'scatter',
                         mode: 'markers',
                         marker: {
-                            size: 10,
+                            size: 8,
                             color: navbarColor,
                             symbol: 'circle',
-                            line: { width: 2, color: navbarColor }
+                            line: { width: 1, color: navbarColor }
                         },
                         name: 'Frequency',
                         showlegend: false,
@@ -102,7 +102,7 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                 layout: {
                     // No title
                     xaxis: {
-                        title: { text: 'Réponses' },
+                        title: { text: 'Réponses', standoff: 10 },
                         tickmode: "array" as const,
                         tickvals: uniqueValues,
                         ticktext: uniqueValues.map(v => v.toString())
@@ -116,6 +116,18 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
         } else {
             // Histogram
             const navbarColor = getNavbarColor();
+            // Get light-foreground color from CSS variable
+            let lightForeground = '#f3f4f6';
+            if (typeof window !== 'undefined') {
+                const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--light-foreground');
+                if (cssVar) lightForeground = cssVar.trim();
+            }
+            // Get grid color from CSS variable
+            let gridColor = '#ebf0f5';
+            if (typeof window !== 'undefined') {
+                const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--muted');
+                if (cssVar) gridColor = cssVar.trim();
+            }
             return {
                 type: 'histogram',
                 plotData: [{
@@ -125,16 +137,20 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     name: 'Frequency',
                     marker: {
                         color: navbarColor,
-                        line: { color: navbarColor, width: 1 },
+                        line: { color: lightForeground, width: 1 },
                         opacity: 0.85
                     }
                 }] as any,
                 layout: {
                     // No title
-                    xaxis: { title: { text: 'Réponses' } },
+                    xaxis: {
+                        title: { text: 'Réponses', standoff: 10 }, // Move up with standoff
+                        gridcolor: gridColor
+                    },
                     yaxis: {
                         // No label
-                        rangemode: "tozero" as const
+                        rangemode: "tozero" as const,
+                        gridcolor: gridColor
                     }
                 }
             };
