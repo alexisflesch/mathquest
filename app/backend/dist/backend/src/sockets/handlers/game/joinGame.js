@@ -69,6 +69,16 @@ function joinGameHandler(io, socket) {
             return;
         }
         const { accessCode, userId, username, avatarEmoji } = parseResult.data;
+        // 🐛 DEBUG: Log username/cookieId to track leaderboard bug
+        logger.info({
+            accessCode,
+            userId,
+            username,
+            avatarEmoji,
+            socketId: socket.id,
+            userAgent: socket.request.headers['user-agent'],
+            marker: '[USERNAME_DEBUG]'
+        }, '🐛 [USERNAME_DEBUG] Received join_game payload - tracking username vs cookieId issue');
         // Special handling for practice mode
         if (accessCode === 'PRACTICE') {
             logger.info({ userId, username, avatarEmoji }, 'Joining practice mode');
@@ -226,6 +236,15 @@ function joinGameHandler(io, socket) {
                 online: true,
                 socketId: socket.id // Track current socket ID
             };
+            // 🐛 DEBUG: Log participant data being stored in Redis to track leaderboard bug
+            logger.info({
+                accessCode,
+                userId,
+                usernameFromPayload: username,
+                usernameInParticipantData: participantDataForRedis.username,
+                participantDataForRedis,
+                marker: '[PARTICIPANT_REDIS_DEBUG]'
+            }, '🐛 [PARTICIPANT_REDIS_DEBUG] About to store participant data in Redis - tracking username vs cookieId issue');
             // For live games (not deferred), assign join-order bonus for better projection UX
             if (!isDeferred && (gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament')) {
                 const joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, userId);

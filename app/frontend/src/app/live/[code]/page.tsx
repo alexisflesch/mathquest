@@ -379,6 +379,18 @@ export default function LiveGamePage() {
     const username: string | null = userProfile.username ?? null;
     const avatarEmoji = userProfile.avatar;
 
+    // 🐛 DEBUG: Track userProfile state to identify username vs cookieId issues
+    useEffect(() => {
+        logger.info('🐛 [USER_PROFILE_DEBUG] UserProfile state in live page', {
+            userProfile,
+            userId,
+            username,
+            avatarEmoji,
+            cookieId: userProfile.cookieId,
+            marker: '[LIVE_PAGE_USER_DEBUG]'
+        });
+    }, [userProfile, userId, username, avatarEmoji]);
+
     // Enhanced socket hook integration
     const {
         socket,

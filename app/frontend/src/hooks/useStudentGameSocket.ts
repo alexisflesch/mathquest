@@ -525,6 +525,17 @@ export function useStudentGameSocket({
             socketConnected: socket.connected
         });
 
+        // 🐛 DEBUG: Add debugging to track username vs cookieId issue
+        const cookieId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('🐛 [USERNAME_DEBUG] Frontend join game payload construction', {
+            accessCode,
+            userId,
+            username,
+            avatarEmoji,
+            cookieId,
+            marker: '[FRONTEND_USERNAME_DEBUG]'
+        });
+
         const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼' };
 
         // Validate payload before emitting

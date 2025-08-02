@@ -50,6 +50,16 @@ export async function calculateLeaderboard(accessCode: string) {
         Object.entries(participantsRaw).forEach(([userId, json]) => {
             try {
                 const parsed = JSON.parse(json as string);
+
+                // 🐛 DEBUG: Log participant metadata to track username vs cookieId issue
+                logger.info({
+                    accessCode,
+                    userId,
+                    parsedUsername: parsed.username,
+                    parsedData: parsed,
+                    marker: '[LEADERBOARD_METADATA_DEBUG]'
+                }, '🐛 [LEADERBOARD_METADATA_DEBUG] Parsing participant metadata from Redis - tracking username vs cookieId issue');
+
                 participantsMetadata.set(userId, {
                     username: parsed.username,
                     avatarEmoji: parsed.avatarEmoji
