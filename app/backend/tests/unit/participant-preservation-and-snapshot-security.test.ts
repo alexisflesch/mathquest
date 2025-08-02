@@ -69,11 +69,11 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
     beforeEach(() => {
         // Reset all mocks
         jest.clearAllMocks();
-        
+
         // Mock the io methods that will be called by the broadcast functions
         io.to = jest.fn().mockReturnThis();
         io.emit = jest.fn();
-        
+
         // Create mock socket
         mockSocket = {
             id: 'test-socket-123',
@@ -113,7 +113,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
 
             redisClient.hvals.mockResolvedValue([]); // no other sockets for this user
             redisClient.zscore.mockResolvedValue('0.009'); // user has join-order bonus score
-            
+
             // Mock Prisma participant lookup
             prisma.gameParticipant.findFirst.mockResolvedValue({
                 id: 'participant-id',
@@ -131,13 +131,13 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                 'test-user-789',
                 expect.stringContaining('"online":false')
             );
-            
+
             // Verify: User should NOT be removed from participants
             expect(redisClient.hdel).not.toHaveBeenCalledWith(
                 'mathquest:game:participants:TEST123',
                 'test-user-789'
             );
-            
+
             // Verify: User should NOT be deleted from database
             expect(prisma.gameParticipant.delete).not.toHaveBeenCalled();
         });
@@ -156,7 +156,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
 
             redisClient.hvals.mockResolvedValue([]);
             redisClient.zscore.mockResolvedValue(null); // user has NO score
-            
+
             // Mock Prisma participant lookup (called twice in disconnect handler)
             prisma.gameParticipant.findFirst
                 .mockResolvedValueOnce({
@@ -169,7 +169,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                     userId: 'test-user-789',
                     status: 'PENDING'
                 });
-            
+
             prisma.gameParticipant.delete.mockResolvedValue({});
 
             // Call the ACTUAL disconnect handler
@@ -181,7 +181,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                 'mathquest:game:participants:TEST123',
                 'test-user-789'
             );
-            
+
             // Verify: User should be deleted from database
             expect(prisma.gameParticipant.delete).toHaveBeenCalledWith({
                 where: { id: 'participant-id' }
@@ -210,7 +210,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
 
             redisClient.hvals.mockResolvedValue([]);
             redisClient.zscore.mockResolvedValue('0'); // score is 0 but user is ACTIVE
-            
+
             prisma.gameParticipant.findFirst.mockResolvedValue({
                 id: 'participant-id',
                 userId: 'test-user-789',
@@ -227,7 +227,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                 'test-user-789',
                 expect.stringContaining('"online":false')
             );
-            
+
             // Verify: ACTIVE user should NOT be removed
             expect(redisClient.hdel).not.toHaveBeenCalledWith(
                 'mathquest:game:participants:TEST123',
@@ -253,7 +253,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
 
             // Verify: Snapshot service was called (not live leaderboard)
             expect(getLeaderboardSnapshot).toHaveBeenCalledWith('TEST123');
-            
+
             // Verify: Projection room received snapshot data
             expect(io.to).toHaveBeenCalledWith('projection_test-game-456');
             expect(io.emit).toHaveBeenCalledWith(
@@ -277,7 +277,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
             const mockSnapshot = [
                 { userId: 'user1', username: 'Student1', score: 0.01, rank: 1 }
             ];
-            
+
             // Mock live data (for teachers)
             const mockLiveData = [
                 { userId: 'user1', username: 'Student1', score: 150, rank: 1 } // much higher live score
@@ -344,7 +344,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
 
             redisClient.hvals.mockResolvedValue([]);
             redisClient.zscore.mockResolvedValue('0.009'); // Has join-order bonus (this was the problem!)
-            
+
             prisma.gameParticipant.findFirst.mockResolvedValue({
                 id: 'clemence-participant-id',
                 userId: 'clemence-user-id',
@@ -371,7 +371,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                 'clemence-user-id',
                 expect.stringContaining('"online":false')
             );
-            
+
             // Verify: Clémence should NOT disappear from leaderboard
             expect(redisClient.hdel).not.toHaveBeenCalledWith(
                 'mathquest:game:participants:TEST123',
@@ -388,7 +388,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                 { userId: 'josephine-id', username: 'Joséphine', score: 0.009, rank: 1 }, // old snapshot
                 { userId: 'maxime-id', username: 'Maxime', score: 0.01, rank: 2 }
             ];
-            
+
             getLeaderboardSnapshot.mockResolvedValue(mockSnapshotWithJosephine);
 
             // Call the ACTUAL projection broadcast (this would have leaked live scores before)
@@ -396,7 +396,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
 
             // Verify: Projection uses snapshot service, not live leaderboard
             expect(getLeaderboardSnapshot).toHaveBeenCalledWith('TEST123');
-            
+
             // Verify: Joséphine shows snapshot score on projection, NOT live score
             expect(io.emit).toHaveBeenCalledWith(
                 'projection_leaderboard_update',
@@ -409,7 +409,7 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                     ])
                 })
             );
-            
+
             // Verify: NOT called with live score of 980
             expect(io.emit).not.toHaveBeenCalledWith(
                 'projection_leaderboard_update',

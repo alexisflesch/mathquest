@@ -61,17 +61,19 @@ async function broadcastLeaderboardToProjection(io, accessCode, gameId) {
         gameId
     }, '🎯 [PROJECTION-BROADCAST] Starting leaderboard broadcast to projection room');
     try {
-        // Calculate current leaderboard including join-order bonuses
-        logger.debug({ accessCode }, '🔍 [PROJECTION-BROADCAST] Calculating leaderboard from Redis');
-        const leaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
-        // DEBUG: Add detailed logging of Redis leaderboard data
+        // 🔒 SECURITY FIX: Projection should use snapshot data to prevent live score leakage
+        // Only teacher trophy click should show live data to projection
+        logger.debug({ accessCode }, '🔍 [PROJECTION-BROADCAST] Getting leaderboard from snapshot');
+        const { getLeaderboardSnapshot } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/leaderboardSnapshotService')));
+        const leaderboard = await getLeaderboardSnapshot(accessCode);
+        // DEBUG: Add detailed logging of snapshot data
         logger.info({
             accessCode,
             gameId,
             leaderboardCount: leaderboard.length,
             topPlayers: leaderboard.slice(0, 3).map(p => ({ username: p.username, score: p.score })),
-            fullLeaderboard: leaderboard.map(p => ({ username: p.username, score: p.score, userId: p.userId }))
-        }, '📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard calculated from Redis');
+            dataSource: 'snapshot'
+        }, '📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard from snapshot (secure)');
         logger.info({
             accessCode,
             gameId,
@@ -149,7 +151,9 @@ async function broadcastLeaderboardToAllRooms(io, accessCode, gameId, options = 
         let projectionLeaderboard = [];
         if (includeGameRoom) {
             // For game room (students), use snapshot to prevent live score leakage
-            const { getLeaderboardSnapshot } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/leaderboardSnapshotService')));
+            const { getLeaderboardSnapshot, syncSnapshotWithLiveData } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/leaderboardSnapshotService')));
+            // CRITICAL: Sync snapshot with current live data first
+            await syncSnapshotWithLiveData(accessCode);
             studentLeaderboard = await getLeaderboardSnapshot(accessCode);
             if (studentLeaderboard.length > 0) {
                 const gameRoom = `game_${accessCode}`;
