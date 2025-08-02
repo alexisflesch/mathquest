@@ -810,9 +810,9 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                         try {
                             const projectionState = await gameStateService.getProjectionDisplayState(accessCode);
                             if (projectionState?.showStats) {
-                                logger.info({ accessCode, targetQuestionUid, showStats: projectionState.showStats }, 
+                                logger.info({ accessCode, targetQuestionUid, showStats: projectionState.showStats },
                                     '[TIMER_ACTION] Stats are shown, updating for new question');
-                                
+
                                 const newStats = await getAnswerStats(accessCode, targetQuestionUid);
                                 await gameStateService.updateProjectionDisplayState(accessCode, {
                                     showStats: true,
@@ -835,19 +835,19 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                                 const validation = ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
                                 if (validation.success) {
                                     io.to(projectionRoom).emit('projection_show_stats', validation.data);
-                                    logger.info({ accessCode, targetQuestionUid, statsPayload: validation.data }, 
+                                    logger.info({ accessCode, targetQuestionUid, statsPayload: validation.data },
                                         '[TIMER_ACTION] Updated and emitted validated stats for new question');
                                 } else {
-                                    logger.error({ 
-                                        accessCode, 
-                                        targetQuestionUid, 
-                                        error: validation.error.format(), 
-                                        payload: statsPayload 
+                                    logger.error({
+                                        accessCode,
+                                        targetQuestionUid,
+                                        error: validation.error.format(),
+                                        payload: statsPayload
                                     }, '[TIMER_ACTION] Invalid stats payload, not emitting');
                                 }
                             }
                         } catch (error) {
-                            logger.error({ error, accessCode, targetQuestionUid }, 
+                            logger.error({ error, accessCode, targetQuestionUid },
                                 '[TIMER_ACTION] Error updating stats for new question');
                         }
                     } else {
