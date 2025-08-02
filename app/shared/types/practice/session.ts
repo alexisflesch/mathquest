@@ -65,8 +65,6 @@ export interface PracticeQuestionData {
     title: string;
     /** Question text/prompt */
     text: string;
-    /** Available answer options */
-    answerOptions: string[];
     /** Question type classification */
     questionType: string;
     /** Time limit for this question in seconds (optional) */
@@ -77,6 +75,17 @@ export interface PracticeQuestionData {
     themes: string[];
     /** Current question index in the session (0-based) */
     questionIndex?: number;
+
+    // Polymorphic question data (student version - no correct answers)
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+    };
+    numericQuestion?: {
+        unit?: string;
+    };
+
+    // Legacy field for backward compatibility
+    answerOptions?: string[];
 }
 
 /**

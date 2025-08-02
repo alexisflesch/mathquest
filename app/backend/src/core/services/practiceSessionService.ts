@@ -34,6 +34,10 @@ interface SubmitAnswerRequest {
 interface SubmitAnswerResult {
     isCorrect: boolean;
     correctAnswers: number[];
+    numericCorrectAnswer?: {
+        correctAnswer: number;
+        tolerance?: number;
+    };
     explanation?: string;
     pointsEarned: number;
     updatedSession: PracticeSession;
@@ -190,6 +194,7 @@ export class PracticeSessionService {
             // Validate answer and get correct answers for feedback
             const isCorrect = await this.validateAnswer(session.currentQuestion.uid, answerData.selectedAnswers);
             const correctAnswers = await this.getCorrectAnswers(session.currentQuestion.uid);
+            const numericCorrectAnswer = await this.getNumericCorrectAnswer(session.currentQuestion.uid);
 
             // Create answer record
             const answer: PracticeAnswer = {
@@ -243,6 +248,7 @@ export class PracticeSessionService {
             const result: SubmitAnswerResult = {
                 isCorrect,
                 correctAnswers,
+                numericCorrectAnswer: numericCorrectAnswer || undefined,
                 explanation: undefined, // Can be added later from question data
                 pointsEarned: isCorrect ? 10 : 0, // Simple scoring system
                 updatedSession: session
@@ -382,18 +388,34 @@ export class PracticeSessionService {
                 throw new Error(`Question not found: ${questionUid}`);
             }
 
-            const answerOptions = question.multipleChoiceQuestion?.answerOptions || [];
-            return {
+            // Build the polymorphic structure
+            const result: PracticeQuestionData = {
                 uid: question.uid,
                 title: question.title || '',
                 text: question.text,
-                answerOptions: answerOptions,
                 questionType: question.questionType,
                 timeLimit: question.timeLimit || undefined,
                 gradeLevel: question.gradeLevel || '',
                 discipline: question.discipline || '',
                 themes: Array.isArray(question.themes) ? question.themes as string[] : []
             };
+
+            // Add polymorphic question data based on type
+            if (question.multipleChoiceQuestion) {
+                result.multipleChoiceQuestion = {
+                    answerOptions: question.multipleChoiceQuestion.answerOptions
+                };
+                // Legacy fallback for backward compatibility
+                result.answerOptions = question.multipleChoiceQuestion.answerOptions;
+            }
+
+            if (question.numericQuestion) {
+                result.numericQuestion = {
+                    unit: question.numericQuestion.unit || undefined
+                };
+            }
+
+            return result;
         } catch (error) {
             logger.error({ questionUid, error }, 'Failed to get question data');
             throw error;
@@ -528,6 +550,35 @@ export class PracticeSessionService {
         } catch (error) {
             logger.error({ questionUid, error }, 'Failed to get correct answers');
             return [];
+        }
+    }
+
+    /**
+     * Get numeric question correct answer data
+     */
+    private async getNumericCorrectAnswer(questionUid: string): Promise<{
+        correctAnswer: number;
+        tolerance?: number;
+    } | null> {
+        try {
+            const question = await prisma.question.findUnique({
+                where: { uid: questionUid },
+                include: {
+                    numericQuestion: true,
+                }
+            });
+
+            if (!question || !question.numericQuestion) {
+                return null;
+            }
+
+            return {
+                correctAnswer: question.numericQuestion.correctAnswer,
+                tolerance: question.numericQuestion.tolerance || undefined
+            };
+        } catch (error) {
+            logger.error({ questionUid, error }, 'Failed to get numeric correct answer');
+            return null;
         }
     }
 

@@ -72,6 +72,9 @@ export default function PracticeSessionWithAccessCodePage() {
     const [snackbarMessage, setSnackbarMessage] = useState<string>("");
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
 
+    // Numeric question state
+    const [numericAnswer, setNumericAnswer] = useState<string>('');
+
     // Feedback overlay state (exactly like live page)
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
     const [feedbackText, setFeedbackText] = useState<string>("");
@@ -175,6 +178,7 @@ export default function PracticeSessionWithAccessCodePage() {
     useEffect(() => {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
+        setNumericAnswer('');
         setSnackbarOpen(false);
         setShowFeedbackOverlay(false);
     }, [currentQuestionUid]);
@@ -221,6 +225,29 @@ export default function PracticeSessionWithAccessCodePage() {
         submitAnswer(practiceState.currentQuestion.uid, selectedAnswers, clientTimestamp);
     };
 
+    // Handle numeric answer submission
+    const handleNumericSubmit = () => {
+        if (!practiceState.currentQuestion || !numericAnswer.trim()) return;
+
+        const numericValue = parseFloat(numericAnswer);
+        if (isNaN(numericValue)) {
+            setSnackbarMessage("Veuillez entrer un nombre valide.");
+            setSnackbarType("error");
+            setSnackbarOpen(true);
+            return;
+        }
+
+        const clientTimestamp = Date.now();
+        logger.debug('Submitting numeric answer', {
+            questionUid: practiceState.currentQuestion.uid,
+            answer: numericValue,
+            clientTimestamp
+        });
+
+        // For numeric questions, submit the numeric value as the first (and only) answer
+        submitAnswer(practiceState.currentQuestion.uid, [numericValue], clientTimestamp);
+    };
+
     // Handle next question request (exactly like live page)
     const handleRequestNextQuestion = async () => {
         if (!practiceState.currentQuestion) return;
@@ -244,13 +271,27 @@ export default function PracticeSessionWithAccessCodePage() {
     // Use canonical QuestionDataForStudent directly for QuestionCard
     const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
         if (!practiceState.currentQuestion) return null;
-        return {
+
+        const baseQuestion = {
             uid: practiceState.currentQuestion.uid,
             text: practiceState.currentQuestion.text,
             questionType: practiceState.currentQuestion.questionType,
-            answerOptions: practiceState.currentQuestion.answerOptions || [],
             timeLimit: practiceState.currentQuestion.timeLimit ?? 30 // fallback to 30s if missing
         };
+
+        // Use polymorphic structure for the question data
+        const result: QuestionDataForStudent = {
+            ...baseQuestion,
+            multipleChoiceQuestion: practiceState.currentQuestion.multipleChoiceQuestion,
+            numericQuestion: practiceState.currentQuestion.numericQuestion
+        };
+
+        // Add legacy fallback for backward compatibility
+        if (practiceState.currentQuestion.answerOptions) {
+            result.answerOptions = practiceState.currentQuestion.answerOptions;
+        }
+
+        return result;
     }, [practiceState.currentQuestion]);
 
     // Determine if component should be readonly (showing answers like live page)
@@ -450,10 +491,16 @@ export default function PracticeSessionWithAccessCodePage() {
                             isQuizMode={false} // Set to false to show question title like live page in practice mode
                             readonly={isReadonly}
                             correctAnswers={practiceState.lastFeedback && practiceState.currentQuestion ?
-                                practiceState.currentQuestion.answerOptions.map((_, answerIdx) =>
-                                    practiceState.lastFeedback?.correctAnswers[answerIdx] || false
-                                ) : undefined
+                                (practiceState.currentQuestion.multipleChoiceQuestion?.answerOptions ||
+                                    practiceState.currentQuestion.answerOptions || []).map((_, answerIdx) =>
+                                        practiceState.lastFeedback?.correctAnswers[answerIdx] || false
+                                    ) : undefined
                             }
+                            // Numeric question props
+                            numericAnswer={numericAnswer}
+                            setNumericAnswer={setNumericAnswer}
+                            handleNumericSubmit={handleNumericSubmit}
+                            numericCorrectAnswer={practiceState.lastFeedback?.numericCorrectAnswer}
                         />
                     ) : (
                         <div className="text-center text-lg text-gray-500 p-8">
@@ -469,25 +516,16 @@ export default function PracticeSessionWithAccessCodePage() {
                     <div className="mt-4">
                         <div className="flex justify-between items-center">
                             {/* Left side: Explanation button - always available after answering */}
-                            {practiceState.hasAnswered && practiceState.currentQuestion ? (
+                            {practiceState.hasAnswered && practiceState.currentQuestion && practiceState.lastFeedback?.explanation ? (
                                 <button
                                     className="btn btn-outline btn-sm flex items-center gap-2"
-                                    onClick={() => {
-                                        // If we already have explanation, show it
-                                        if (practiceState.lastFeedback?.explanation) {
-                                            setShowFeedbackOverlay(true);
-                                        } else if (practiceState.currentQuestion) {
-                                            // Otherwise request explanation from server
-                                            requestFeedback(practiceState.currentQuestion.uid);
-                                        }
-                                    }}
-                                    title={practiceState.lastFeedback?.explanation ? "Explication" : "Pas d'explication disponible"}
-                                    disabled={!practiceState.lastFeedback?.explanation}
+                                    onClick={() => setShowFeedbackOverlay(true)}
+                                    title="Explication"
                                 >
                                     <MessageCircle size={16} />
                                 </button>
                             ) : (
-                                <div></div> // Empty div to maintain spacing
+                                <div></div>
                             )}
 
                             {/* Right side: Next question or home button */}
@@ -497,7 +535,7 @@ export default function PracticeSessionWithAccessCodePage() {
                                     onClick={handleRequestNextQuestion}
                                     disabled={!practiceState.currentQuestion}
                                 >
-                                    Suivant →
+                                    Suivant
                                 </button>
                             ) : (
                                 <button

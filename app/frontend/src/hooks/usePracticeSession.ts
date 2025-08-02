@@ -82,6 +82,10 @@ export interface PracticeSessionState {
     lastFeedback: {
         isCorrect: boolean;
         correctAnswers: boolean[];
+        numericCorrectAnswer?: {
+            correctAnswer: number;
+            tolerance?: number;
+        };
         explanation?: string;
         canRetry: boolean;
         statistics: {
@@ -212,6 +216,7 @@ export function usePracticeSession({
             lastFeedback: {
                 isCorrect: payload.isCorrect,
                 correctAnswers: payload.correctAnswers,
+                numericCorrectAnswer: payload.numericCorrectAnswer,
                 explanation: payload.explanation,
                 canRetry: payload.canRetry,
                 statistics: payload.statistics

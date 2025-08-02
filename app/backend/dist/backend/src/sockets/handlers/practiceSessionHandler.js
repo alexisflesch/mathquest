@@ -202,6 +202,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     questionUid: payload.questionUid,
                     isCorrect: result.isCorrect,
                     correctAnswers: questionDetails?.correctAnswers || [],
+                    numericCorrectAnswer: result.numericCorrectAnswer,
                     explanation: questionDetails?.explanation,
                     canRetry: result.updatedSession.settings.allowRetry,
                     statistics: {

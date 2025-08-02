@@ -175,60 +175,55 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             {isNumericQuestion ? (
                 // Numeric question - hide input completely in projection mode
                 !projectionMode && (
-                    <div className="w-full max-w-md">
-                        <div className="mb-4">
-                            <label htmlFor="numeric-answer" className="block text-sm font-medium text-gray-700 mb-2">
-                                Votre réponse :
-                            </label>
-                            <div className="relative">
-                                <input
-                                    id="numeric-answer"
-                                    type="number"
-                                    inputMode="decimal"
-                                    value={numericAnswer}
-                                    onChange={(e) => setNumericAnswer?.(e.target.value)}
-                                    placeholder="Entrez votre réponse numérique"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg pr-10"
-                                    disabled={readonly}
-                                    aria-disabled={readonly}
-                                    step="any"
-                                    autoFocus={!readonly}
-                                />
-                                {/* Visual feedback for numeric answers when correct answers are shown */}
-                                {readonly && numericCorrectAnswer && numericAnswer && (
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                        {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
-                                            <GoodAnswer />
-                                        ) : (
-                                            <WrongAnswer />
-                                        )}
-                                    </div>
+                    <div className="w-full">
+                        <input
+                            id="numeric-answer"
+                            type="number"
+                            inputMode="decimal"
+                            value={numericAnswer}
+                            onChange={(e) => setNumericAnswer?.(e.target.value)}
+                            placeholder="Votre réponse"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                            disabled={readonly}
+                            aria-disabled={readonly}
+                            step="any"
+                            autoFocus={!readonly}
+                        />
+                        {!readonly && (
+                            <div className="mt-4 flex justify-end">
+                                <button
+                                    onClick={handleNumericSubmit}
+                                    className="btn btn-primary btn-sm"
+                                    disabled={typeof numericAnswer === 'string' ? !numericAnswer.trim() : !numericAnswer}
+                                    style={{ minWidth: 90 }}
+                                >
+                                    Valider
+                                </button>
+                            </div>
+                        )}
+                        {/* Visual feedback for numeric answers when correct answers are shown */}
+                        {readonly && numericCorrectAnswer && numericAnswer && (
+                            <div className="pl-2">
+                                {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
+                                    <GoodAnswer />
+                                ) : (
+                                    <WrongAnswer />
                                 )}
                             </div>
-                            {/* Show correct answer info when in readonly mode */}
-                            {readonly && numericCorrectAnswer && (
-                                <div className="mt-2 text-sm text-gray-600">
-                                    <div className="flex items-center space-x-2">
-                                        <span className="font-medium text-green-600">Réponse correcte :</span>
-                                        <span>{numericCorrectAnswer.correctAnswer}</span>
-                                        {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
-                                            <span className="text-gray-500">
-                                                (±{numericCorrectAnswer.tolerance})
-                                            </span>
-                                        )}
-                                    </div>
+                        )}
+                        {/* Show correct answer info when in readonly mode */}
+                        {readonly && numericCorrectAnswer && (
+                            <div className="mt-2 text-sm text-gray-600">
+                                <div className="flex items-center space-x-2">
+                                    <span className="font-medium text-green-600">Réponse correcte :</span>
+                                    <span>{numericCorrectAnswer.correctAnswer}</span>
+                                    {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
+                                        <span className="text-gray-500">
+                                            (±{numericCorrectAnswer.tolerance})
+                                        </span>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                        {!readonly && (
-                            <button
-                                className="btn btn-primary w-full"
-                                onClick={handleNumericSubmit}
-                                disabled={readonly || !numericAnswer}
-                                aria-disabled={readonly || !numericAnswer}
-                            >
-                                Valider
-                            </button>
+                            </div>
                         )}
                     </div>
                 )

@@ -145,6 +145,7 @@ class PracticeSessionService {
             // Validate answer and get correct answers for feedback
             const isCorrect = await this.validateAnswer(session.currentQuestion.uid, answerData.selectedAnswers);
             const correctAnswers = await this.getCorrectAnswers(session.currentQuestion.uid);
+            const numericCorrectAnswer = await this.getNumericCorrectAnswer(session.currentQuestion.uid);
             // Create answer record
             const answer = {
                 questionUid: session.currentQuestion.uid,
@@ -193,6 +194,7 @@ class PracticeSessionService {
             const result = {
                 isCorrect,
                 correctAnswers,
+                numericCorrectAnswer: numericCorrectAnswer || undefined,
                 explanation: undefined, // Can be added later from question data
                 pointsEarned: isCorrect ? 10 : 0, // Simple scoring system
                 updatedSession: session
@@ -318,18 +320,31 @@ class PracticeSessionService {
             if (!question) {
                 throw new Error(`Question not found: ${questionUid}`);
             }
-            const answerOptions = question.multipleChoiceQuestion?.answerOptions || [];
-            return {
+            // Build the polymorphic structure
+            const result = {
                 uid: question.uid,
                 title: question.title || '',
                 text: question.text,
-                answerOptions: answerOptions,
                 questionType: question.questionType,
                 timeLimit: question.timeLimit || undefined,
                 gradeLevel: question.gradeLevel || '',
                 discipline: question.discipline || '',
                 themes: Array.isArray(question.themes) ? question.themes : []
             };
+            // Add polymorphic question data based on type
+            if (question.multipleChoiceQuestion) {
+                result.multipleChoiceQuestion = {
+                    answerOptions: question.multipleChoiceQuestion.answerOptions
+                };
+                // Legacy fallback for backward compatibility
+                result.answerOptions = question.multipleChoiceQuestion.answerOptions;
+            }
+            if (question.numericQuestion) {
+                result.numericQuestion = {
+                    unit: question.numericQuestion.unit || undefined
+                };
+            }
+            return result;
         }
         catch (error) {
             logger.error({ questionUid, error }, 'Failed to get question data');
@@ -447,6 +462,30 @@ class PracticeSessionService {
         catch (error) {
             logger.error({ questionUid, error }, 'Failed to get correct answers');
             return [];
+        }
+    }
+    /**
+     * Get numeric question correct answer data
+     */
+    async getNumericCorrectAnswer(questionUid) {
+        try {
+            const question = await prisma_1.prisma.question.findUnique({
+                where: { uid: questionUid },
+                include: {
+                    numericQuestion: true,
+                }
+            });
+            if (!question || !question.numericQuestion) {
+                return null;
+            }
+            return {
+                correctAnswer: question.numericQuestion.correctAnswer,
+                tolerance: question.numericQuestion.tolerance || undefined
+            };
+        }
+        catch (error) {
+            logger.error({ questionUid, error }, 'Failed to get numeric correct answer');
+            return null;
         }
     }
     /**
