@@ -157,6 +157,9 @@ export function usePracticeSession({
         completionSummary: null
     });
 
+    // Local tracking for frontend-computed statistics
+    const [localAnswers, setLocalAnswers] = useState<Array<{ questionUid: string; isCorrect: boolean; timeSpent: number }>>([]);
+
     // Update state helper
     const updateState = useCallback((updates: Partial<PracticeSessionState>) => {
         setState(prev => ({ ...prev, ...updates }));

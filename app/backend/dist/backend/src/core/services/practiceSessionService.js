@@ -366,24 +366,41 @@ class PracticeSessionService {
             if (!question) {
                 throw new Error(`Question not found: ${questionUid}`);
             }
-            const correctAnswers = question.multipleChoiceQuestion?.correctAnswers || [];
-            // Check if selected answers match correct answers
-            const correctIndices = correctAnswers
-                .map((isCorrect, index) => isCorrect ? index : -1)
-                .filter((index) => index !== -1);
-            // Compare arrays (order doesn't matter for multiple choice)
-            const selectedSet = new Set(selectedAnswers);
-            const correctSet = new Set(correctIndices);
-            if (selectedSet.size !== correctSet.size) {
-                return false;
+            // Handle numeric questions
+            if (question.numericQuestion && question.questionType === 'numeric') {
+                if (selectedAnswers.length !== 1) {
+                    return false; // Numeric questions should have exactly one answer
+                }
+                const userAnswer = selectedAnswers[0];
+                const correctAnswer = question.numericQuestion.correctAnswer;
+                const tolerance = question.numericQuestion.tolerance || 0;
+                const difference = Math.abs(userAnswer - correctAnswer);
+                return difference <= tolerance;
             }
-            // Convert Set to Array for iteration
-            for (const correct of Array.from(correctSet)) {
-                if (!selectedSet.has(correct)) {
+            // Handle multiple choice questions
+            if (question.multipleChoiceQuestion) {
+                const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
+                // Check if selected answers match correct answers
+                const correctIndices = correctAnswers
+                    .map((isCorrect, index) => isCorrect ? index : -1)
+                    .filter((index) => index !== -1);
+                // Compare arrays (order doesn't matter for multiple choice)
+                const selectedSet = new Set(selectedAnswers);
+                const correctSet = new Set(correctIndices);
+                if (selectedSet.size !== correctSet.size) {
                     return false;
                 }
+                // Convert Set to Array for iteration
+                for (const correct of Array.from(correctSet)) {
+                    if (!selectedSet.has(correct)) {
+                        return false;
+                    }
+                }
+                return true;
             }
-            return true;
+            // Unknown question type or missing data
+            logger.warn({ questionUid, questionType: question.questionType }, 'Unknown question type or missing validation data');
+            return false;
         }
         catch (error) {
             logger.error({ questionUid, selectedAnswers, error }, 'Failed to validate answer');
