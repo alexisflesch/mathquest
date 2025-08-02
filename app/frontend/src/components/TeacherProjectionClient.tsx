@@ -37,7 +37,7 @@ const TimerDisplay = React.memo(({ timeLeftMs }: { timeLeftMs: number | null }) 
 });
 TimerDisplay.displayName = 'TimerDisplay';
 
-// Memoized Question component
+// Question component with optimized re-rendering
 const QuestionDisplay = React.memo(({
     currentTournamentQuestion,
     currentQuestionUid,
@@ -65,12 +65,24 @@ const QuestionDisplay = React.memo(({
     code: string;
     bringToFront: (id: string) => void;
 }) => {
+    // Remove debugging logs - issue was memoization blocking React re-renders
+    // console.log('🔍 QuestionDisplay render with props:', {
+    //     showStats,
+    //     currentStats,
+    //     currentStatsStringified: JSON.stringify(currentStats),
+    //     currentStatsReference: currentStats,
+    //     isNumericQuestion: currentTournamentQuestion?.questionType === QUESTION_TYPES.NUMERIC
+    // });
+
     const currentQuestion = currentTournamentQuestion;
     const isNumericQuestion = currentQuestion?.questionType === QUESTION_TYPES.NUMERIC;
 
-    // Extract stats for multiple choice questions (existing logic)
-    let statsToShow: any = undefined;
-    if (showStats && currentQuestion?.multipleChoiceQuestion?.answerOptions) {
+    // Extract stats for multiple choice questions using useMemo to handle updates
+    const statsToShow = useMemo(() => {
+        if (!showStats || !currentQuestion?.multipleChoiceQuestion?.answerOptions) {
+            return undefined;
+        }
+        
         const answerOptions = currentQuestion.multipleChoiceQuestion.answerOptions;
         const numOptions = answerOptions.length;
         if (numOptions > 0) {
@@ -81,9 +93,10 @@ const QuestionDisplay = React.memo(({
                 statsArray.push(value);
             }
             // Backend already sends percentage values, no need to scale
-            statsToShow = { stats: statsArray, totalAnswers: currentStats?.totalUsers || 0 };
+            return { stats: statsArray, totalAnswers: currentStats?.totalUsers || 0 };
         }
-    }
+        return undefined;
+    }, [showStats, currentQuestion?.multipleChoiceQuestion?.answerOptions, currentStats]);
 
     return (
         <div
@@ -133,7 +146,7 @@ const QuestionDisplay = React.memo(({
                         >
                             <div style={{ flex: '0 0 auto', width: '100%' }}>
                                 <QuestionCard
-                                    key={questionKey}
+                                    key={`${questionKey}-${currentQuestionUid}-${showStats ? 'stats' : 'nostats'}`}
                                     currentQuestion={currentTournamentQuestion}
                                     questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex((uid: string) => uid === currentQuestionUid) ?? 0 : 0}
                                     totalQuestions={gameState?.questionUids.length ?? 0}
@@ -174,6 +187,21 @@ const QuestionDisplay = React.memo(({
                 )}
             </div>
         </div>
+    );
+}, (prevProps, nextProps) => {
+    // Custom comparison: only re-render if meaningful props change
+    // This prevents re-rendering when only object references change but content is the same
+    return (
+        prevProps.currentTournamentQuestion === nextProps.currentTournamentQuestion &&
+        prevProps.currentQuestionUid === nextProps.currentQuestionUid &&
+        prevProps.questionKey === nextProps.questionKey &&
+        prevProps.showStats === nextProps.showStats &&
+        prevProps.zoomFactors.question === nextProps.zoomFactors.question &&
+        prevProps.correctAnswersData === nextProps.correctAnswersData &&
+        prevProps.tournamentUrl === nextProps.tournamentUrl &&
+        prevProps.code === nextProps.code &&
+        // Deep compare currentStats to avoid unnecessary re-renders
+        JSON.stringify(prevProps.currentStats) === JSON.stringify(nextProps.currentStats)
     );
 });
 QuestionDisplay.displayName = 'QuestionDisplay';
