@@ -51,6 +51,7 @@ const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const sharedLeaderboard_1 = require("./sharedLeaderboard");
 const leaderboardSnapshotService_1 = require("@/core/services/gameParticipant/leaderboardSnapshotService");
 const gameTimings_1 = require("@shared/constants/gameTimings");
+const socketEvents_zod_2 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('SharedGameFlow');
 // Track running game flows to prevent duplicates
 const runningGameFlows = new Set();
@@ -262,23 +263,49 @@ async function runGameFlow(io, accessCode, questions, options) {
             logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionUid: questions[i].uid }, '[DEBUG] Emitting correct_answers');
             // Extract correct answers based on question type (polymorphic structure)
             let correctAnswers = [];
+            let numericAnswer;
             if ((questions[i].questionType === 'multipleChoice' || questions[i].questionType === 'singleChoice') && questions[i].multipleChoiceQuestion) {
                 correctAnswers = questions[i].multipleChoiceQuestion.correctAnswers || [];
             }
             else if (questions[i].questionType === 'numeric' && questions[i].numericQuestion) {
-                correctAnswers = [questions[i].numericQuestion.correctAnswer];
+                // For numeric questions, DON'T include correctAnswers array - only use numericAnswer
+                numericAnswer = {
+                    correctAnswer: questions[i].numericQuestion.correctAnswer,
+                    tolerance: questions[i].numericQuestion.tolerance || 0
+                };
             }
             else {
                 // Fallback to legacy structure for backward compatibility
                 correctAnswers = questions[i].correctAnswers || [];
             }
             // Send correct answers with the event (not filtered out like in game_question)
+            // For multiple choice: include correctAnswers array
+            // For numeric: include numericAnswer object only
             const correctAnswersPayload = {
                 questionUid: questions[i].uid,
-                correctAnswers: correctAnswers
+                ...(correctAnswers.length > 0 && { correctAnswers }),
+                ...(numericAnswer && { numericAnswer })
             };
-            io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
-            logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: correctAnswers }, '[TRACE] Emitted correct_answers');
+            // Validate the payload using the canonical schema
+            const correctAnswersParseResult = socketEvents_zod_2.correctAnswersPayloadSchema.safeParse(correctAnswersPayload);
+            if (!correctAnswersParseResult.success) {
+                logger.error({
+                    errors: correctAnswersParseResult.error.errors,
+                    payload: correctAnswersPayload,
+                    questionUid: questions[i].uid
+                }, '[SHARED_GAME_FLOW] Invalid correct_answers payload, skipping emission');
+            }
+            else {
+                io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersParseResult.data);
+                logger.info({
+                    accessCode,
+                    event: 'correct_answers',
+                    questionUid: questions[i].uid,
+                    questionType: questions[i].questionType,
+                    correctAnswers: correctAnswers.length > 0 ? correctAnswers : undefined,
+                    numericAnswer: numericAnswer
+                }, '[TRACE] Emitted canonical correct_answers with validation');
+            }
             options.onQuestionEnd?.(i);
             // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
             // This prevents students from determining answer correctness during submission

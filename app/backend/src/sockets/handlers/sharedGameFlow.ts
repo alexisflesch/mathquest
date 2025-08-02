@@ -18,6 +18,8 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { calculateLeaderboard, persistLeaderboardToGameInstance } from './sharedLeaderboard';
 import { syncSnapshotWithLiveData, emitLeaderboardFromSnapshot } from '@/core/services/gameParticipant/leaderboardSnapshotService';
 import { getCorrectAnswersDisplayTime, getFeedbackDisplayTime } from '@shared/constants/gameTimings';
+import { correctAnswersPayloadSchema } from '@shared/types/socketEvents.zod';
+import type { z } from 'zod';
 
 const logger = createLogger('SharedGameFlow');
 
@@ -259,23 +261,50 @@ export async function runGameFlow(
             logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionUid: questions[i].uid }, '[DEBUG] Emitting correct_answers');
 
             // Extract correct answers based on question type (polymorphic structure)
-            let correctAnswers: (string | number | boolean)[] = [];
+            let correctAnswers: boolean[] = [];
+            let numericAnswer: { correctAnswer: number; tolerance?: number } | undefined;
+
             if ((questions[i].questionType === 'multipleChoice' || questions[i].questionType === 'singleChoice') && questions[i].multipleChoiceQuestion) {
                 correctAnswers = questions[i].multipleChoiceQuestion.correctAnswers || [];
             } else if (questions[i].questionType === 'numeric' && questions[i].numericQuestion) {
-                correctAnswers = [questions[i].numericQuestion.correctAnswer];
+                // For numeric questions, DON'T include correctAnswers array - only use numericAnswer
+                numericAnswer = {
+                    correctAnswer: questions[i].numericQuestion.correctAnswer,
+                    tolerance: questions[i].numericQuestion.tolerance || 0
+                };
             } else {
                 // Fallback to legacy structure for backward compatibility
                 correctAnswers = questions[i].correctAnswers || [];
             }
 
             // Send correct answers with the event (not filtered out like in game_question)
-            const correctAnswersPayload = {
+            // For multiple choice: include correctAnswers array
+            // For numeric: include numericAnswer object only
+            const correctAnswersPayload: z.infer<typeof correctAnswersPayloadSchema> = {
                 questionUid: questions[i].uid,
-                correctAnswers: correctAnswers
+                ...(correctAnswers.length > 0 && { correctAnswers }),
+                ...(numericAnswer && { numericAnswer })
             };
-            io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
-            logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: correctAnswers }, '[TRACE] Emitted correct_answers');
+
+            // Validate the payload using the canonical schema
+            const correctAnswersParseResult = correctAnswersPayloadSchema.safeParse(correctAnswersPayload);
+            if (!correctAnswersParseResult.success) {
+                logger.error({
+                    errors: correctAnswersParseResult.error.errors,
+                    payload: correctAnswersPayload,
+                    questionUid: questions[i].uid
+                }, '[SHARED_GAME_FLOW] Invalid correct_answers payload, skipping emission');
+            } else {
+                io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersParseResult.data);
+                logger.info({
+                    accessCode,
+                    event: 'correct_answers',
+                    questionUid: questions[i].uid,
+                    questionType: questions[i].questionType,
+                    correctAnswers: correctAnswers.length > 0 ? correctAnswers : undefined,
+                    numericAnswer: numericAnswer
+                }, '[TRACE] Emitted canonical correct_answers with validation');
+            }
             options.onQuestionEnd?.(i);
 
             // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
