@@ -94,8 +94,9 @@ const getQuestionTextToRender = (payload: CanonicalQuestionCard | null): string 
 const getAnswersToRender = (payload: CanonicalQuestionCard | null): string[] => {
     if (!payload) return [];
     try {
-        if (Array.isArray(payload.answerOptions)) {
-            return payload.answerOptions;
+        // Use the polymorphic structure
+        if (payload.multipleChoiceQuestion?.answerOptions && Array.isArray(payload.multipleChoiceQuestion.answerOptions)) {
+            return payload.multipleChoiceQuestion.answerOptions;
         }
         return [];
     } catch (error) {

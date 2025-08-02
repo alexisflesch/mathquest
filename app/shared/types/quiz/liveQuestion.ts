@@ -13,10 +13,18 @@ import { GameTimerState } from '../core/timer';
 export interface FilteredQuestion {
     uid: string;
     text: string;             // The question text
-    questionType: string;     // Question type (multiple-choice, numeric, etc.) - CANONICAL FIELD NAME
-    answerOptions?: string[]; // Answer options for multiple choice questions - CANONICAL FIELD NAME
+    questionType: string;     // Question type (multiple-choice, numeric, etc.)
+    timeLimit: number;        // Time limit for this question (MANDATORY)
+
+    // Polymorphic question data (student doesn't get correct answers)
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+    };
+    numericQuestion?: {
+        unit?: string;
+    };
+
     // Additional properties required by frontend components (non-sensitive)
-    timeLimit?: number;         // Time limit for this question
     gradeLevel?: string;        // Grade level of the question
     difficulty?: number;        // Difficulty rating
     themes?: string[];          // Question themes/categories
@@ -55,29 +63,43 @@ export function filterQuestionForClient(questionObject: any): FilteredQuestion {
         uid: questionObject.uid,
         questionType: questionObject.questionType || questionObject.defaultMode,
         text: questionObject.text,
-        // Additional properties for frontend compatibility
-        timeLimit: questionObject.timeLimit,
+        timeLimit: questionObject.timeLimit, // MANDATORY
         gradeLevel: questionObject.gradeLevel,
         difficulty: questionObject.difficulty,
         themes: questionObject.themes,
     };
 
-    // Handle polymorphic structure: extract answerOptions from multipleChoiceQuestion
-    if (questionObject.multipleChoiceQuestion?.answerOptions) {
+    // Handle multiple choice questions
+    if (questionObject.questionType === 'multipleChoice' || questionObject.defaultMode === 'multipleChoice') {
+        const answerOptions = questionObject.multipleChoiceQuestion?.answerOptions;
+
+        if (!answerOptions) {
+            throw new Error(`Multiple choice question ${questionObject.uid} is missing answer options`);
+        }
+
         return {
             ...baseQuestion,
-            answerOptions: questionObject.multipleChoiceQuestion.answerOptions,
+            multipleChoiceQuestion: {
+                answerOptions: answerOptions
+            }
         };
     }
 
-    // Handle legacy structure: answerOptions directly on question
-    if (questionObject.answerOptions) {
-        return {
+    // Handle numeric questions
+    if (questionObject.questionType === 'numeric' || questionObject.defaultMode === 'numeric') {
+        const unit = questionObject.numericQuestion?.unit;
+
+        const result = {
             ...baseQuestion,
-            answerOptions: questionObject.answerOptions,
+            numericQuestion: {
+                // Convert null to undefined for Zod compatibility
+                ...(unit !== null && unit !== undefined ? { unit } : {})
+            }
         };
+
+        return result;
     }
 
-    // For numeric questions or questions without answer options
+    // For other question types
     return baseQuestion;
 }

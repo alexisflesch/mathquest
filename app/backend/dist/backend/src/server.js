@@ -22,6 +22,7 @@ if (dotenvResult.error) {
 // Register module aliases for path mapping
 require("module-alias/register");
 const express_1 = __importDefault(require("express"));
+const os_1 = __importDefault(require("os"));
 const http_1 = __importDefault(require("http"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
@@ -74,9 +75,44 @@ if (process.env.NODE_ENV !== 'test') {
 // Only start the server if this file is run directly (not imported as a module)
 // This helps prevent port conflicts during testing
 if (process.env.NODE_ENV !== 'test') {
+    function isPrivateIp(ip) {
+        return (ip.startsWith('10.') ||
+            ip.startsWith('192.168.') ||
+            (ip.startsWith('172.') && (() => {
+                const n = Number(ip.split('.')[1]);
+                return n >= 16 && n <= 31;
+            })()));
+    }
+    function getLocalIp() {
+        const interfaces = os_1.default.networkInterfaces();
+        const preferred = ['wlan', 'wifi', 'eth', 'en', 'Ethernet', 'Wi-Fi'];
+        // Prefer WiFi/Ethernet interfaces with private IP
+        for (const pref of preferred) {
+            for (const name of Object.keys(interfaces)) {
+                if (name.toLowerCase().includes(pref)) {
+                    for (const iface of interfaces[name] || []) {
+                        if (iface.family === 'IPv4' && !iface.internal && isPrivateIp(iface.address)) {
+                            return iface.address;
+                        }
+                    }
+                }
+            }
+        }
+        // Fallback: any private IPv4
+        for (const name of Object.keys(interfaces)) {
+            for (const iface of interfaces[name] || []) {
+                if (iface.family === 'IPv4' && !iface.internal && isPrivateIp(iface.address)) {
+                    return iface.address;
+                }
+            }
+        }
+        return 'localhost';
+    }
     server.listen(Number(port), '0.0.0.0', () => {
         logger.info(`Backend server listening on port ${port}`);
         logger.info(`Backend process.cwd(): ${process.cwd()}`);
+        const localIp = getLocalIp();
+        logger.info(`Access from your local network: http://${localIp}:${port}`);
         logger.error('Forced error log at startup (should appear in error.log and combined.log)');
         logger.info('Forced info log at startup (should appear in combined.log)');
     });

@@ -258,18 +258,10 @@ export default function CreateActivityPage() {
                     let answerOptions: string[] = [];
                     let correctAnswers: boolean[] = [];
 
-                    if (Array.isArray(q.answers)) {
-                        // Legacy format with {text, correct} objects
-                        answerOptions = q.answers.map((a: any) => a.text || a.texte || '');
-                        correctAnswers = q.answers.map((a: any) => Boolean(a.correct));
-                    } else if (q.multipleChoiceQuestion) {
-                        // New polymorphic format - multiple choice question
+                    if (q.multipleChoiceQuestion) {
+                        // Polymorphic format - multiple choice question
                         answerOptions = q.multipleChoiceQuestion.answerOptions || [];
                         correctAnswers = q.multipleChoiceQuestion.correctAnswers || [];
-                    } else if (Array.isArray(q.answerOptions)) {
-                        // Legacy flattened format with separate arrays
-                        answerOptions = q.answerOptions;
-                        correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [];
                     }
 
                     const transformedQuestion = {

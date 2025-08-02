@@ -10,45 +10,34 @@ const logger = createLogger('QuestionDisplay');
 
 // Helper function to convert modern question format to display format
 function getAnswersForDisplay(question: any): any[] {
-  console.log('[getAnswersForDisplay] Input question:', question);
-  console.log('[getAnswersForDisplay] question.numericQuestion:', question.numericQuestion);
-  console.log('[getAnswersForDisplay] question.numericQuestion type:', typeof question.numericQuestion);
-  console.log('[getAnswersForDisplay] question.numericQuestion truthiness:', !!question.numericQuestion);
-  
-  // Handle polymorphic questions
-  if (question.numericQuestion) {
-    console.log('[getAnswersForDisplay] Processing numeric question:', question.numericQuestion);
-    const correctAnswer = question.numericQuestion.correctAnswer;
-    const unit = question.numericQuestion.unit;
-    const answerText = unit ? `${correctAnswer} ${unit}` : String(correctAnswer);
-    return [{ text: answerText, correct: true }];
-  } else if (question.multipleChoiceQuestion) {
-    console.log('[getAnswersForDisplay] Processing multiple choice question:', question.multipleChoiceQuestion);
-    const answerOptions = question.multipleChoiceQuestion.answerOptions || [];
-    const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
-    return answerOptions.map((option: string) => ({
-      text: option,
-      correct: correctAnswers.includes(option)
-    }));
-  } else {
-    console.log('[getAnswersForDisplay] Using legacy answerOptions/correctAnswers');
-    console.log('[getAnswersForDisplay] question.questionType:', question.questionType);
-    // Legacy format fallback
-    const answerOptions = question.answerOptions || [];
-    const correctAnswers = question.correctAnswers || [];
-    return answerOptions.map((option: string) => ({
-      text: option,
-      correct: correctAnswers.includes(option)
-    }));
-  }
+    console.log('[getAnswersForDisplay] Input question:', question);
+    console.log('[getAnswersForDisplay] question.numericQuestion:', question.numericQuestion);
+    console.log('[getAnswersForDisplay] question.numericQuestion type:', typeof question.numericQuestion);
+    console.log('[getAnswersForDisplay] question.numericQuestion truthiness:', !!question.numericQuestion);
+
+    // Handle polymorphic questions
+    if (question.numericQuestion) {
+        console.log('[getAnswersForDisplay] Processing numeric question:', question.numericQuestion);
+        const correctAnswer = question.numericQuestion.correctAnswer;
+        const unit = question.numericQuestion.unit;
+        const answerText = unit ? `${correctAnswer} ${unit}` : String(correctAnswer);
+        return [{ text: answerText, correct: true }];
+    } else if (question.multipleChoiceQuestion) {
+        console.log('[getAnswersForDisplay] Processing multiple choice question:', question.multipleChoiceQuestion);
+        const answerOptions = question.multipleChoiceQuestion.answerOptions || [];
+        const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
+        return answerOptions.map((option: string, index: number) => ({
+            text: option,
+            correct: correctAnswers[index] === true
+        }));
+    } else {
+        console.log('[getAnswersForDisplay] No polymorphic question data found');
+        return [];
+    }
 }// Helper function to get answer options from polymorphic question
 function getAnswerOptions(question: QuestionDisplayProps['question']): string[] {
     if (question.multipleChoiceQuestion) {
         return question.multipleChoiceQuestion.answerOptions;
-    }
-    // Legacy fallback
-    if (question.answerOptions) {
-        return question.answerOptions;
     }
     return [];
 }
@@ -58,16 +47,12 @@ function getCorrectAnswers(question: QuestionDisplayProps['question']): boolean[
     if (question.multipleChoiceQuestion) {
         return question.multipleChoiceQuestion.correctAnswers;
     }
-    // Legacy fallback
-    if (question.correctAnswers) {
-        return question.correctAnswers;
-    }
     return [];
 }
 
 // Helper function to check if question has multiple choice data
 function hasMultipleChoiceData(question: QuestionDisplayProps['question']): boolean {
-    return !!(question.multipleChoiceQuestion || (question.answerOptions && question.correctAnswers));
+    return !!(question.multipleChoiceQuestion);
 }
 
 import type { Question } from '@shared/types/core/question';
@@ -135,7 +120,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 }) => {
     // Get answers for display (handles both multiple choice and numeric questions)
     const answersForDisplay = getAnswersForDisplay(question);
-    
+
     // Debug logging for numeric questions
     if (question.questionType === 'numeric') {
         console.log('[QuestionDisplay] Numeric question detected:', {

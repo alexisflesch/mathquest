@@ -137,7 +137,12 @@ export class GameInstanceService {
                         include: {
                             questions: {
                                 include: {
-                                    question: true // Include the actual Question data
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true
+                                        }
+                                    }
                                 },
                                 orderBy: {
                                     sequence: 'asc' // Ensure questions are ordered by sequence
@@ -224,7 +229,12 @@ export class GameInstanceService {
                         include: {
                             questions: {
                                 include: {
-                                    question: true // Include the actual Question data
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true
+                                        }
+                                    }
                                 },
                                 orderBy: {
                                     sequence: 'asc' // Ensure questions are ordered by sequence

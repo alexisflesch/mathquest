@@ -245,6 +245,11 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     correct_answers: (payload: {
         questionUid: string;
         correctAnswers?: boolean[];
+        numericAnswer?: {
+            correctAnswer: number;
+            tolerance?: number;
+        };
+        terminatedQuestions?: Record<string, boolean>;
     }) => void;
     feedback: (payload: {
         questionUid: string;

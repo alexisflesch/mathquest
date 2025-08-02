@@ -156,7 +156,12 @@ class GameInstanceService {
                         include: {
                             questions: {
                                 include: {
-                                    question: true // Include the actual Question data
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true
+                                        }
+                                    }
                                 },
                                 orderBy: {
                                     sequence: 'asc' // Ensure questions are ordered by sequence
@@ -242,7 +247,12 @@ class GameInstanceService {
                         include: {
                             questions: {
                                 include: {
-                                    question: true // Include the actual Question data
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true
+                                        }
+                                    }
                                 },
                                 orderBy: {
                                     sequence: 'asc' // Ensure questions are ordered by sequence

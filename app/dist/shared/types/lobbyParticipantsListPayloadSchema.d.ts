@@ -12,26 +12,26 @@ export declare const lobbyParticipantsListPayloadSchema: z.ZodObject<{
         socketId: z.ZodOptional<z.ZodString>;
         attemptCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }>, "many">;
     creator: z.ZodObject<{
@@ -39,48 +39,48 @@ export declare const lobbyParticipantsListPayloadSchema: z.ZodObject<{
         username: z.ZodString;
         avatarEmoji: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         avatarEmoji: string;
     }, {
-        username: string;
         userId: string;
+        username: string;
         avatarEmoji: string;
     }>;
 }, "strip", z.ZodTypeAny, {
-    creator: {
-        username: string;
-        userId: string;
-        avatarEmoji: string;
-    };
     participants: {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }[];
+    creator: {
+        userId: string;
+        username: string;
+        avatarEmoji: string;
+    };
 }, {
-    creator: {
-        username: string;
-        userId: string;
-        avatarEmoji: string;
-    };
     participants: {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }[];
+    creator: {
+        userId: string;
+        username: string;
+        avatarEmoji: string;
+    };
 }>;

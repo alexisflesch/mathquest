@@ -87,10 +87,15 @@ export function requestNextQuestionHandler(
             const allQuestions = await prisma.questionsInGameTemplate.findMany({
                 where: { gameTemplateId: gameInstance.gameTemplateId },
                 orderBy: { sequence: 'asc' },
-                include: { question: true }
-            });
-
-            // Find the next question after the current one
+                include: {
+                    question: {
+                        include: {
+                            multipleChoiceQuestion: true,
+                            numericQuestion: true
+                        }
+                    }
+                }
+            });            // Find the next question after the current one
             let nextQuestionUid = undefined;
             if (currentQuestionUid) {
                 const currentIndex = allQuestions.findIndex(q => q.questionUid === currentQuestionUid);

@@ -248,7 +248,12 @@ export function useStudentGameSocket({
 
         // Connection event handlers
         s.on('connect', () => {
-            logger.info(`Student socket connected: ${s.id}`);
+            logger.info(`🔌 [CONNECTION] Student socket connected: ${s.id}`, {
+                socketId: s.id,
+                accessCode,
+                userId,
+                username
+            });
             setConnected(true);
             setConnecting(false);
             logger.debug('Clearing error state on socket connect');
@@ -292,6 +297,15 @@ export function useStudentGameSocket({
     useEffect(() => {
         if (!socket) return;
         socket.on(SOCKET_EVENTS.GAME.GAME_JOINED as any, createSafeEventHandler<GameJoinedPayload>((payload) => {
+            logger.info('🎮 [GAME JOIN] Successfully joined game', {
+                accessCode: payload.accessCode,
+                gameStatus: payload.gameStatus,
+                gameMode: payload.gameMode,
+                participantId: payload.participant.id,
+                participantUserId: payload.participant.userId,
+                participantUsername: payload.participant.username
+            });
+
             setGameState(prev => ({
                 ...prev,
                 connectedToRoom: true,
@@ -302,13 +316,35 @@ export function useStudentGameSocket({
         socket.on(
             SOCKET_EVENTS.GAME.GAME_QUESTION as any,
             createSafeEventHandler<QuestionDataForStudent>((payload) => {
-                logger.info('Received canonical game_question', payload);
+                logger.info('🔄 [QUESTION UPDATE] Received game_question event', {
+                    event: 'game_question',
+                    socketId: socket.id,
+                    payload: {
+                        uid: payload.uid,
+                        questionType: payload.questionType,
+                        currentQuestionIndex: payload.currentQuestionIndex,
+                        totalQuestions: payload.totalQuestions,
+                        text: payload.text?.substring(0, 100) + '...',
+                        hasAnswerOptions: !!payload.answerOptions?.length,
+                        hasMultipleChoiceQuestion: !!payload.multipleChoiceQuestion,
+                        hasNumericQuestion: !!payload.numericQuestion
+                    }
+                });
+
                 // Validate at runtime with Zod
                 const parseResult = questionDataForStudentSchema.safeParse(payload);
                 if (!parseResult.success) {
-                    logger.error({ errors: parseResult.error.errors, payload }, '[MODERNIZATION] Invalid GAME_QUESTION payload received on frontend');
+                    logger.error({
+                        errors: parseResult.error.errors,
+                        payload,
+                        payloadKeys: Object.keys(payload),
+                        schema: 'questionDataForStudentSchema'
+                    }, '❌ [VALIDATION ERROR] Invalid GAME_QUESTION payload received on frontend');
                     return;
                 }
+
+                logger.info('✅ [VALIDATION SUCCESS] Payload validation passed, updating game state');
+
                 setGameState(prev => {
                     const newState = {
                         ...prev,
@@ -323,11 +359,15 @@ export function useStudentGameSocket({
                         numericAnswer: null,
                         connectedToRoom: true
                     };
-                    logger.info('=== QUESTION STATE UPDATED ===', {
-                        questionUid: payload.uid,
-                        questionIndex: payload.currentQuestionIndex ?? 0,
+                    logger.info('🎯 [STATE UPDATE] Question state updated successfully', {
+                        previousQuestionUid: prev.currentQuestion?.uid,
+                        newQuestionUid: payload.uid,
+                        previousQuestionIndex: prev.questionIndex,
+                        newQuestionIndex: payload.currentQuestionIndex ?? 0,
                         totalQuestions: payload.totalQuestions ?? 0,
-                        questionText: payload.text.substring(0, 50) + '...'
+                        questionType: payload.questionType,
+                        questionText: payload.text?.substring(0, 50) + '...',
+                        stateChanged: prev.currentQuestion?.uid !== payload.uid
                     });
                     return newState;
                 });
@@ -469,20 +509,31 @@ export function useStudentGameSocket({
     // --- Action Functions ---
     const joinGame = useCallback(() => {
         if (!socket || !accessCode || !userId || !username) {
-            logger.warn("Cannot join game: missing socket or parameters");
+            logger.warn("❌ [JOIN GAME] Cannot join game: missing socket or parameters", {
+                hasSocket: !!socket,
+                accessCode,
+                userId,
+                username
+            });
             return;
         }
 
-        logger.info(`Joining game ${accessCode}`, { userId, username });
+        logger.info(`🎯 [JOIN GAME] Attempting to join game ${accessCode}`, {
+            userId,
+            username,
+            socketId: socket.id,
+            socketConnected: socket.connected
+        });
 
         const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼' };
 
         // Validate payload before emitting
         try {
             const validatedPayload = joinGamePayloadSchema.parse(payload);
+            logger.info('✅ [JOIN GAME] Payload validated, emitting join_game event', validatedPayload);
             socket.emit('join_game', validatedPayload);
         } catch (error) {
-            logger.error('Invalid join_game payload:', error);
+            logger.error('❌ [JOIN GAME] Invalid join_game payload:', error);
         }
     }, [socket, accessCode, userId, username, avatarEmoji]);
 

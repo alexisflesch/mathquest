@@ -247,7 +247,13 @@ exports.requestNextQuestionPayloadSchema = zod_1.z.object({
 // Canonical event payload schemas (for tournament-style events)
 exports.correctAnswersPayloadSchema = zod_1.z.object({
     questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),
+    // For multiple choice questions
     correctAnswers: zod_1.z.array(zod_1.z.boolean()).optional(),
+    // For numeric questions
+    numericAnswer: zod_1.z.object({
+        correctAnswer: zod_1.z.number(),
+        tolerance: zod_1.z.number().optional()
+    }).optional(),
     /**
      * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
      */

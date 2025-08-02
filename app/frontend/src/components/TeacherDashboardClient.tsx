@@ -32,8 +32,11 @@ const logger = createLogger('TeacherDashboard');
 
 function mapToCanonicalQuestion(q: any): Question {
     const questionData = q.question || q;
-    const answerOptions = questionData.answerOptions || [];
-    const correctAnswers = questionData.correctAnswers || [];
+
+    // Support polymorphic structure for answer options
+    const answerOptions = questionData.multipleChoiceQuestion?.answerOptions || [];
+    const correctAnswers = questionData.multipleChoiceQuestion?.correctAnswers || [];
+
     // Canonical: always use durationMs in ms, never timeLimit
     const durationMs = questionData.durationMs ?? q.durationMs;
 

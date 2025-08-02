@@ -117,11 +117,10 @@ async function runGameFlow(io, accessCode, questions, options) {
             // Modernized: Canonical, flat payload for game_question
             const { questionDataForStudentSchema } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/socketEvents.zod')));
             let filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(questions[i]);
-            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-            if (filteredQuestion.timeLimit == null) {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { timeLimit, ...rest } = filteredQuestion;
-                filteredQuestion = rest;
+            // Ensure timeLimit is present and valid (schema requires positive integer)
+            if (filteredQuestion.timeLimit == null || filteredQuestion.timeLimit <= 0) {
+                logger.warn(`Question ${questions[i].uid} has invalid timeLimit: ${filteredQuestion.timeLimit}, using default 30s`);
+                filteredQuestion.timeLimit = 30; // Default to 30 seconds
             }
             const canonicalPayload = {
                 ...filteredQuestion,

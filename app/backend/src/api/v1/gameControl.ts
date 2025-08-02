@@ -139,6 +139,7 @@ router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestio
                         uid: updatedGameState.questionData.uid,
                         text: updatedGameState.questionData.text,
                         questionType: updatedGameState.questionData.questionType,
+                        timeLimit: updatedGameState.questionData.timeLimit || 30, // Add mandatory timeLimit
                         answerOptions: updatedGameState.questionData.answerOptions
                     },
                     timer: canonicalTimer, // [MODERNIZATION] Canonical timer state

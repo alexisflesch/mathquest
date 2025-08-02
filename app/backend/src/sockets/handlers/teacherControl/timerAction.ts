@@ -756,7 +756,11 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
 
                         // Get the question data to send to players (without correct answers)
                         const question = await prisma.question.findUnique({
-                            where: { uid: targetQuestionUid }
+                            where: { uid: targetQuestionUid },
+                            include: {
+                                multipleChoiceQuestion: true,
+                                numericQuestion: true
+                            }
                         });
 
                         // Declare liveRoom and projectionRoom before use
@@ -764,12 +768,13 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                         const projectionRoom = `projection_${gameId}`;
 
                         if (question) {
-                            // Modernization: Use canonical, flat payload for game_question
+                            // Filter question and ensure timeLimit is valid
                             let filteredQuestion = filterQuestionForClient(question);
-                            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-                            if (filteredQuestion.timeLimit == null) {
-                                const { timeLimit, ...rest } = filteredQuestion;
-                                filteredQuestion = rest;
+
+                            // Ensure timeLimit is present and valid (schema requires positive integer)
+                            if (filteredQuestion.timeLimit == null || filteredQuestion.timeLimit <= 0) {
+                                logger.warn(`Question ${question.uid} has invalid timeLimit: ${filteredQuestion.timeLimit}, using default 30s`);
+                                filteredQuestion.timeLimit = 30; // Default to 30 seconds
                             }
                             const canonicalPayload = {
                                 ...filteredQuestion,

@@ -297,9 +297,10 @@ async function runDeferredQuestionSequence(io, socket, session) {
                 currentQuestionIndex: i,
                 totalQuestions: questions.length
             };
-            if (canonicalPayload.timeLimit == null) {
-                const { timeLimit, ...rest } = canonicalPayload;
-                canonicalPayload = rest;
+            // Ensure timeLimit is present and valid (schema requires positive integer)
+            if (canonicalPayload.timeLimit == null || canonicalPayload.timeLimit <= 0) {
+                logger.warn(`Question ${question.uid} has invalid timeLimit: ${canonicalPayload.timeLimit}, using default 30s`);
+                canonicalPayload.timeLimit = 30; // Default to 30 seconds
             }
             const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
             if (!parseResult.success) {

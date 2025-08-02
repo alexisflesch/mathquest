@@ -408,10 +408,11 @@ export function joinGameHandler(
                                 if (currentQuestion) {
                                     const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
                                     let filteredQuestion = filterQuestionForClient(currentQuestion);
-                                    if (filteredQuestion.timeLimit == null) {
-                                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                        const { timeLimit, ...rest } = filteredQuestion;
-                                        filteredQuestion = rest;
+
+                                    // Ensure timeLimit is present and valid (schema requires positive integer)
+                                    if (filteredQuestion.timeLimit == null || filteredQuestion.timeLimit <= 0) {
+                                        logger.warn(`Question ${currentQuestion.uid} has invalid timeLimit: ${filteredQuestion.timeLimit}, using default 30s`);
+                                        filteredQuestion.timeLimit = 30; // Default to 30 seconds
                                     }
                                     const questionPayload = {
                                         ...filteredQuestion,
