@@ -112,7 +112,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         if (!socket.socket) return;
         const handleInitialStatsState = (payload: { showStats: boolean; currentStats: Record<string, number>; statsQuestionUid: string | null; timestamp?: number }) => {
             console.log('🟢 [PROJECTION] Received PROJECTION_STATS_STATE:', payload);
-            
+
             // Only update if we're not currently showing stats, to avoid overwriting live updates
             if (!showStats) {
                 setShowStats(!!payload.showStats);

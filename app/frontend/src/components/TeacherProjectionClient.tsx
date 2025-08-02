@@ -82,7 +82,7 @@ const QuestionDisplay = React.memo(({
         if (!showStats || !currentQuestion?.multipleChoiceQuestion?.answerOptions) {
             return undefined;
         }
-        
+
         const answerOptions = currentQuestion.multipleChoiceQuestion.answerOptions;
         const numOptions = answerOptions.length;
         if (numOptions > 0) {
