@@ -210,7 +210,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                             />
                             {/* Visual feedback for numeric answers when correct answers are shown - positioned inside input field */}
                             {readonly && numericCorrectAnswer && numericAnswer && (
-                                <div 
+                                <div
                                     className="absolute inset-y-0 right-0 flex items-center pr-3"
                                     style={{ pointerEvents: 'none' }}
                                 >

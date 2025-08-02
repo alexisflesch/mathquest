@@ -369,13 +369,16 @@ function StudentCreateTournamentPageInner() {
                                 placeholder="Thèmes"
                                 disabled={availableThemes.length === 0}
                             />
-                            <button
-                                className="btn btn-primary btn-lg mt-2"
-                                disabled={themes.length === 0}
-                                onClick={() => setStep(4)}
-                            >
-                                Valider les thèmes
-                            </button>
+                            <div className="flex justify-end w-full">
+                                <button
+                                    className="btn btn-primary btn-sm mt-2"
+                                    disabled={themes.length === 0}
+                                    onClick={() => setStep(4)}
+                                    style={{ minWidth: 90 }}
+                                >
+                                    Valider
+                                </button>
+                            </div>
                         </div>
                     )}
                     {/* Step 4: Number of Questions */}
@@ -408,12 +411,15 @@ function StudentCreateTournamentPageInner() {
                                     </button>
                                 ))}
                             </div>
-                            <button
-                                className="btn btn-primary btn-lg mt-2"
-                                onClick={() => setStep(5)}
-                            >
-                                Valider
-                            </button>
+                            <div className="flex justify-end w-full">
+                                <button
+                                    className="btn btn-primary btn-sm mt-2"
+                                    onClick={() => setStep(5)}
+                                    style={{ minWidth: 90 }}
+                                >
+                                    Valider
+                                </button>
+                            </div>
                         </div>
                     )}
                     {/* Step 5: Confirmation */}
@@ -440,13 +446,16 @@ function StudentCreateTournamentPageInner() {
                                     ? "Mode entraînement : vous allez être redirigé vers une session d'entraînement personnalisée."
                                     : "Le tournoi est prêt ! Vous allez être redirigé vers le lobby, où vous pourrez récupérer le lien à partager."}
                             </div>
-                            <button
-                                className="btn btn-primary w-fit self-center mt-4"
-                                disabled={!canCreate || loading}
-                                onClick={handleCreateTournament}
-                            >
-                                {loading ? 'Création...' : isTraining ? 'Commencer l\'entraînement' : 'Continuer'}
-                            </button>
+                            <div className="flex justify-end w-full mt-4">
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    disabled={!canCreate || loading}
+                                    onClick={handleCreateTournament}
+                                    style={{ minWidth: 120 }}
+                                >
+                                    {loading ? 'Création...' : isTraining ? 'Commencer l\'entraînement' : 'Continuer'}
+                                </button>
+                            </div>
                             {/* The tournament code and copy button are no longer shown after creation */}
                             {/* 
                             {created && tournamentCode && (
