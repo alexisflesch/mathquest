@@ -165,7 +165,7 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
 
     socket.on(GAME_EVENTS.REQUEST_PARTICIPANTS, requestParticipantsHandler(io, socket));
     socket.on(GAME_EVENTS.REQUEST_NEXT_QUESTION, requestNextQuestionHandler(io, socket));
-    socket.on('disconnect', disconnectHandler(io, socket));
+    // Note: Disconnect handler is now registered in connectionHandlers.ts to avoid conflicts
 
     // Direct handler for start_game in practice mode
     socket.on(GAME_EVENTS.START_GAME, async (payload: any) => {

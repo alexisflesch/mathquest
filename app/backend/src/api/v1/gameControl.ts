@@ -241,9 +241,21 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
                 };
                 io.to([liveRoom, projectionRoom]).emit('question_ended', payload);
             }
-            // Send leaderboard update to both live and projection
+            // 🔒 SECURITY FIX: Send leaderboard update using snapshot for students, live for projection
             if (fullGameState.leaderboard.length > 0) {
-                io.to([liveRoom, projectionRoom]).emit('leaderboard_update', {
+                // Import snapshot service
+                const { getLeaderboardSnapshot } = await import('@/core/services/gameParticipant/leaderboardSnapshotService');
+
+                // Send snapshot to students (live room) to prevent score cheating
+                const studentSnapshot = await getLeaderboardSnapshot(accessCode);
+                if (studentSnapshot.length > 0) {
+                    io.to(liveRoom).emit('leaderboard_update', {
+                        leaderboard: studentSnapshot
+                    });
+                }
+
+                // Send live data to projection room (teachers need current state)
+                io.to(projectionRoom).emit('leaderboard_update', {
                     leaderboard: fullGameState.leaderboard
                 });
             }

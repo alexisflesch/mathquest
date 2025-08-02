@@ -41,7 +41,6 @@ exports.registerGameHandlers = registerGameHandlers;
 const joinGame_1 = require("./joinGame");
 const gameAnswer_1 = require("./gameAnswer");
 const requestParticipants_1 = require("./requestParticipants");
-const disconnect_1 = require("./disconnect");
 const requestNextQuestion_1 = require("./requestNextQuestion");
 const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
@@ -204,7 +203,7 @@ function registerGameHandlers(io, socket) {
     });
     socket.on(events_1.GAME_EVENTS.REQUEST_PARTICIPANTS, (0, requestParticipants_1.requestParticipantsHandler)(io, socket));
     socket.on(events_1.GAME_EVENTS.REQUEST_NEXT_QUESTION, (0, requestNextQuestion_1.requestNextQuestionHandler)(io, socket));
-    socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));
+    // Note: Disconnect handler is now registered in connectionHandlers.ts to avoid conflicts
     // Direct handler for start_game in practice mode
     socket.on(events_1.GAME_EVENTS.START_GAME, async (payload) => {
         // Runtime validation with Zod

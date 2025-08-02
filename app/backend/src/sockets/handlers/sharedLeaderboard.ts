@@ -100,11 +100,24 @@ export async function calculateLeaderboard(accessCode: string) {
 
                 leaderboard.push(leaderboardEntry);
             } else {
+                // User in leaderboard but missing participant metadata (likely disconnected ACTIVE user)
+                // Include them with fallback data to preserve leaderboard continuity
+                const leaderboardEntry = {
+                    userId,
+                    username: `User-${userId.substring(0, 8)}`, // Fallback username
+                    avatarEmoji: '👤', // Default emoji
+                    score
+                };
+
                 logger.warn({
                     accessCode,
                     userId,
-                    score
-                }, '⚠️ [LEADERBOARD-CALC] No metadata found for user in leaderboard');
+                    score,
+                    leaderboardEntry,
+                    note: 'LEADERBOARD-PRESERVATION: User missing metadata but preserved in leaderboard'
+                }, '⚠️ [LEADERBOARD-CALC] No metadata found for user in leaderboard - using fallback data to preserve leaderboard');
+
+                leaderboard.push(leaderboardEntry);
             }
         }
 

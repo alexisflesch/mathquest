@@ -5,6 +5,39 @@
  * Handles broadcasting leaderboard updates to projection rooms
  * when students join games, ensuring immediate leaderboard population for better UX.
  */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -110,32 +143,43 @@ async function broadcastLeaderboardToProjection(io, accessCode, gameId) {
 async function broadcastLeaderboardToAllRooms(io, accessCode, gameId, options = {}) {
     try {
         const { includeGameRoom = true, includeProjectionRoom = true, includeDashboardRoom = false, limitToTopN = 20 } = options;
-        // Calculate current leaderboard
-        const fullLeaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
-        if (fullLeaderboard.length === 0) {
-            logger.debug({ accessCode, gameId }, 'No participants yet, skipping leaderboard broadcast');
-            return;
-        }
-        const limitedLeaderboard = fullLeaderboard.slice(0, limitToTopN);
-        // Broadcast to game room (students see leaderboard updates)
+        // 🔒 SECURITY FIX: Use snapshot for student emissions, live data for others
+        // Students should only see snapshot data to prevent live score cheating
+        let studentLeaderboard = [];
+        let projectionLeaderboard = [];
         if (includeGameRoom) {
-            const gameRoom = `game_${accessCode}`;
-            io.to(gameRoom).emit(events_1.SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE, {
-                leaderboard: limitedLeaderboard
-            });
-            logger.debug({
-                accessCode,
-                gameRoom,
-                playerCount: limitedLeaderboard.length
-            }, 'Broadcasted leaderboard to game room');
+            // For game room (students), use snapshot to prevent live score leakage
+            const { getLeaderboardSnapshot } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/leaderboardSnapshotService')));
+            studentLeaderboard = await getLeaderboardSnapshot(accessCode);
+            if (studentLeaderboard.length > 0) {
+                const gameRoom = `game_${accessCode}`;
+                const limitedStudentLeaderboard = studentLeaderboard.slice(0, limitToTopN);
+                io.to(gameRoom).emit(events_1.SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE, {
+                    leaderboard: limitedStudentLeaderboard
+                });
+                logger.debug({
+                    accessCode,
+                    gameRoom,
+                    playerCount: limitedStudentLeaderboard.length,
+                    dataSource: 'snapshot'
+                }, '[SECURITY] Broadcasted leaderboard to game room from snapshot');
+            }
+            else {
+                logger.debug({ accessCode }, 'No snapshot data available, skipping game room broadcast');
+            }
+        }
+        // For projection/dashboard, calculate fresh data (teachers need current state)
+        if (includeProjectionRoom || includeDashboardRoom) {
+            projectionLeaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
         }
         // Broadcast to projection room (teacher projection display)
-        if (includeProjectionRoom) {
+        if (includeProjectionRoom && projectionLeaderboard.length > 0) {
             await broadcastLeaderboardToProjection(io, accessCode, gameId);
         }
         // Broadcast to dashboard room (teacher control panel)
-        if (includeDashboardRoom) {
+        if (includeDashboardRoom && projectionLeaderboard.length > 0) {
             const dashboardRoom = `dashboard_${gameId}`;
+            const limitedLeaderboard = projectionLeaderboard.slice(0, limitToTopN);
             io.to(dashboardRoom).emit('leaderboard_update', {
                 leaderboard: limitedLeaderboard,
                 accessCode,
@@ -145,8 +189,9 @@ async function broadcastLeaderboardToAllRooms(io, accessCode, gameId, options = 
                 accessCode,
                 gameId,
                 dashboardRoom,
-                playerCount: limitedLeaderboard.length
-            }, 'Broadcasted leaderboard to dashboard room');
+                playerCount: limitedLeaderboard.length,
+                dataSource: 'live'
+            }, 'Broadcasted leaderboard to dashboard room from live data');
         }
     }
     catch (error) {
