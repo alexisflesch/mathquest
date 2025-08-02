@@ -179,7 +179,8 @@ const QuestionDisplay = React.memo(({
     currentQuestionUid,
     numericAnswer,
     setNumericAnswer,
-    handleNumericSubmit
+    handleNumericSubmit,
+    numericCorrectAnswer
 }: {
     currentQuestion: QuestionDataForStudent | null;
     questionIndex: number;
@@ -202,6 +203,10 @@ const QuestionDisplay = React.memo(({
     numericAnswer?: string;
     setNumericAnswer?: (value: string) => void;
     handleNumericSubmit?: () => void;
+    numericCorrectAnswer?: {
+        correctAnswer: number;
+        tolerance?: number;
+    } | null;
 }) => {
     // Re-render logging for QuestionDisplay
     const renderCount = useRef(0);
@@ -237,6 +242,7 @@ const QuestionDisplay = React.memo(({
                 numericAnswer={numericAnswer}
                 setNumericAnswer={setNumericAnswer}
                 handleNumericSubmit={handleNumericSubmit}
+                numericCorrectAnswer={numericCorrectAnswer}
             />
         );
     }
@@ -855,6 +861,11 @@ export default function LiveGamePage() {
         return gameState.phase === 'show_answers' && gameState.correctAnswers ? gameState.correctAnswers : undefined;
     }, [gameState.phase, gameState.correctAnswers]);
 
+    // Extract numeric answer data for visual feedback
+    const numericCorrectAnswer = useMemo(() => {
+        return gameState.phase === 'show_answers' && gameState.numericAnswer ? gameState.numericAnswer : null;
+    }, [gameState.phase, gameState.numericAnswer]);
+
     // Auto-hide snackbar after 2 seconds
     useEffect(() => {
         console.log('🔥 [AUTO-HIDE DEBUG] Auto-hide effect triggered:', { snackbarOpen });
@@ -1040,6 +1051,7 @@ export default function LiveGamePage() {
                         numericAnswer={numericAnswer}
                         setNumericAnswer={setNumericAnswer}
                         handleNumericSubmit={handleNumericSubmit}
+                        numericCorrectAnswer={numericCorrectAnswer}
                     />
                 </MathJaxWrapper>
 

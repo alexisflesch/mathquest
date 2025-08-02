@@ -58,6 +58,88 @@ function calculateAnswerScore(isCorrect, serverTimeSpent, question) {
 function checkAnswerCorrectness(question, answer) {
     if (!question)
         return false;
+    // Debug: Log the complete question structure
+    logger.info({
+        questionUid: question.uid,
+        questionTitle: question.title,
+        hasNumericQuestion: !!question.numericQuestion,
+        hasMultipleChoiceQuestion: !!question.multipleChoiceQuestion,
+        numericQuestionData: question.numericQuestion,
+        multipleChoiceQuestionData: question.multipleChoiceQuestion,
+        submittedAnswer: answer,
+        submittedAnswerType: typeof answer
+    }, '[DEBUG] Question structure and answer for correctness check');
+    // Numeric questions: check with tolerance (polymorphic structure)
+    if (question.numericQuestion) {
+        const numericQuestion = question.numericQuestion;
+        logger.info({
+            questionUid: question.uid,
+            correctAnswer: numericQuestion.correctAnswer,
+            tolerance: numericQuestion.tolerance,
+            submittedAnswer: answer,
+            submittedAnswerType: typeof answer
+        }, '[DEBUG] Numeric question correctness check details');
+        if (numericQuestion.correctAnswer === undefined) {
+            logger.warn({
+                questionUid: question.uid,
+                numericQuestion
+            }, '[DEBUG] Numeric question has undefined correctAnswer');
+            return false;
+        }
+        if (typeof answer !== 'number') {
+            // Try to parse as number
+            const parsedAnswer = parseFloat(answer);
+            if (isNaN(parsedAnswer)) {
+                logger.warn({
+                    questionUid: question.uid,
+                    originalAnswer: answer,
+                    parsedAnswer
+                }, '[DEBUG] Could not parse answer as number');
+                return false;
+            }
+            answer = parsedAnswer;
+        }
+        const tolerance = numericQuestion.tolerance || 0;
+        const difference = Math.abs(answer - numericQuestion.correctAnswer);
+        const isWithinTolerance = difference <= tolerance;
+        logger.info({
+            questionUid: question.uid,
+            correctAnswer: numericQuestion.correctAnswer,
+            submittedAnswer: answer,
+            tolerance,
+            difference,
+            isWithinTolerance
+        }, '[DEBUG] Numeric answer tolerance check result');
+        return isWithinTolerance;
+    }
+    // Multiple choice questions: use correctAnswers array (polymorphic structure)
+    if (question.multipleChoiceQuestion) {
+        const multipleChoiceQuestion = question.multipleChoiceQuestion;
+        if (!multipleChoiceQuestion.correctAnswers)
+            return false;
+        // Multiple choice (multiple answers): answer is array of indices, correctAnswers is boolean array
+        if (Array.isArray(multipleChoiceQuestion.correctAnswers) && Array.isArray(answer)) {
+            // Check that all and only correct indices are selected
+            const correctIndices = multipleChoiceQuestion.correctAnswers
+                .map((v, i) => v ? i : -1)
+                .filter((i) => i !== -1);
+            // Sort both arrays for comparison
+            const submitted = [...answer].sort();
+            const correct = [...correctIndices].sort();
+            return (submitted.length === correct.length &&
+                submitted.every((v, i) => v === correct[i]));
+        }
+        // Multiple choice (single answer): answer is index, correctAnswers is boolean array
+        if (Array.isArray(multipleChoiceQuestion.correctAnswers) && typeof answer === 'number') {
+            return multipleChoiceQuestion.correctAnswers[answer] === true;
+        }
+        // Fallback: direct comparison for other types
+        if (multipleChoiceQuestion.correctAnswers) {
+            return multipleChoiceQuestion.correctAnswers === answer;
+        }
+        return false;
+    }
+    // Legacy fallback for old flat structure (should not be used with polymorphic data)
     // Numeric questions: check with tolerance
     if (question.questionType === 'numeric' && question.correctAnswer !== undefined) {
         if (typeof answer !== 'number') {
@@ -270,7 +352,11 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
         // Different answer or first submission - proceed with scoring
         logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid }, '[LOG] Proceeding to fetch question for scoring');
         const question = await prisma_1.prisma.question.findUnique({
-            where: { uid: answerData.questionUid }
+            where: { uid: answerData.questionUid },
+            include: {
+                multipleChoiceQuestion: true,
+                numericQuestion: true
+            }
         });
         if (!question) {
             logger.error({ gameInstanceId, userId, questionUid: answerData.questionUid }, '[ERROR] Question not found');

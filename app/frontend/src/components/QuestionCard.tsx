@@ -12,6 +12,19 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('QuestionCard');
 
+// Utility function to check if a numeric answer is correct
+const isNumericAnswerCorrect = (
+    userAnswer: number | string,
+    correctData: { correctAnswer: number; tolerance?: number }
+): boolean => {
+    const parsedUserAnswer = typeof userAnswer === 'string' ? parseFloat(userAnswer) : userAnswer;
+    if (isNaN(parsedUserAnswer)) return false;
+
+    const tolerance = correctData.tolerance || 0;
+    const difference = Math.abs(parsedUserAnswer - correctData.correctAnswer);
+    return difference <= tolerance;
+};
+
 // NOTE: TournamentQuestion interface is now imported from shared types
 // This local definition has been replaced by the canonical shared type
 
@@ -47,6 +60,11 @@ interface QuestionCardProps {
     numericAnswer?: number | string; // Current numeric answer value
     setNumericAnswer?: (value: string) => void; // Handler for numeric input - simplified to string only
     handleNumericSubmit?: () => void; // Handler for numeric question submission
+    // Numeric answer correctness data (for show_answers phase)
+    numericCorrectAnswer?: {
+        correctAnswer: number;
+        tolerance?: number;
+    } | null;
 }
 
 // Helper to get the question type (for multiple choice detection)
@@ -107,6 +125,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     numericAnswer = '',
     setNumericAnswer,
     handleNumericSubmit,
+    numericCorrectAnswer,
 }) => {
     // Use shared type helpers for type detection
     const isMultipleChoiceQuestion = React.useMemo(() => {
@@ -157,19 +176,45 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                         <label htmlFor="numeric-answer" className="block text-sm font-medium text-gray-700 mb-2">
                             Votre réponse :
                         </label>
-                        <input
-                            id="numeric-answer"
-                            type="number"
-                            inputMode="decimal"
-                            value={numericAnswer}
-                            onChange={(e) => setNumericAnswer?.(e.target.value)}
-                            placeholder="Entrez votre réponse numérique"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                            disabled={readonly}
-                            aria-disabled={readonly}
-                            step="any"
-                            autoFocus={!readonly}
-                        />
+                        <div className="relative">
+                            <input
+                                id="numeric-answer"
+                                type="number"
+                                inputMode="decimal"
+                                value={numericAnswer}
+                                onChange={(e) => setNumericAnswer?.(e.target.value)}
+                                placeholder="Entrez votre réponse numérique"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg pr-10"
+                                disabled={readonly}
+                                aria-disabled={readonly}
+                                step="any"
+                                autoFocus={!readonly}
+                            />
+                            {/* Visual feedback for numeric answers when correct answers are shown */}
+                            {readonly && numericCorrectAnswer && numericAnswer && (
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
+                                        <GoodAnswer />
+                                    ) : (
+                                        <WrongAnswer />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        {/* Show correct answer info when in readonly mode */}
+                        {readonly && numericCorrectAnswer && (
+                            <div className="mt-2 text-sm text-gray-600">
+                                <div className="flex items-center space-x-2">
+                                    <span className="font-medium text-green-600">Réponse correcte :</span>
+                                    <span>{numericCorrectAnswer.correctAnswer}</span>
+                                    {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
+                                        <span className="text-gray-500">
+                                            (±{numericCorrectAnswer.tolerance})
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     {!readonly && (
                         <button

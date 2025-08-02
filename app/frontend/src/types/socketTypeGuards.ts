@@ -574,6 +574,11 @@ export function isGameEndedPayload(data: unknown): data is GameEndedPayload {
 export interface CorrectAnswersPayload {
     questionUid?: string;
     correctAnswers?: boolean[];
+    numericAnswer?: {
+        correctAnswer: number;
+        tolerance?: number;
+    };
+    terminatedQuestions?: Record<string, boolean>;
 }
 
 export function isCorrectAnswersPayload(data: unknown): data is CorrectAnswersPayload {
@@ -581,7 +586,17 @@ export function isCorrectAnswersPayload(data: unknown): data is CorrectAnswersPa
 
     const c = data as Record<string, unknown>;
     return typeof c.questionUid === 'string' &&
-        (c.correctAnswers === undefined || Array.isArray(c.correctAnswers));
+        (c.correctAnswers === undefined || Array.isArray(c.correctAnswers)) &&
+        (c.numericAnswer === undefined || (
+            typeof c.numericAnswer === 'object' &&
+            c.numericAnswer !== null &&
+            typeof (c.numericAnswer as any).correctAnswer === 'number' &&
+            ((c.numericAnswer as any).tolerance === undefined || typeof (c.numericAnswer as any).tolerance === 'number')
+        )) &&
+        (c.terminatedQuestions === undefined || (
+            typeof c.terminatedQuestions === 'object' &&
+            c.terminatedQuestions !== null
+        ));
 }
 
 // --- Live Question Type Guard ---

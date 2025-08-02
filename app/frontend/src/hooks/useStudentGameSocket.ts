@@ -109,6 +109,10 @@ export interface StudentGameUIState {
     phase: 'question' | 'feedback' | 'show_answers';
     feedbackRemaining: number | null;
     correctAnswers: boolean[] | null;
+    numericAnswer?: {
+        correctAnswer: number;
+        tolerance?: number;
+    } | null;
     lastAnswerFeedback?: AnswerReceived | null;
 
     // Canonical leaderboard state (shared type)
@@ -170,6 +174,7 @@ export function useStudentGameSocket({
         phase: 'question',
         feedbackRemaining: null,
         correctAnswers: null,
+        numericAnswer: null,
         leaderboard: [],
         gameMode: 'tournament', // Default to tournament mode
         linkedQuizId: null,
@@ -315,6 +320,7 @@ export function useStudentGameSocket({
                         phase: 'question' as const,
                         feedbackRemaining: null,
                         correctAnswers: null,
+                        numericAnswer: null,
                         connectedToRoom: true
                     };
                     logger.info('=== QUESTION STATE UPDATED ===', {
@@ -386,13 +392,16 @@ export function useStudentGameSocket({
             setGameState(prev => {
                 logger.info('=== SETTING SHOW ANSWERS PHASE ===', {
                     newCorrectAnswers: payload.correctAnswers,
-                    hasNewCorrectAnswers: !!payload.correctAnswers
+                    hasNewCorrectAnswers: !!payload.correctAnswers,
+                    numericAnswer: payload.numericAnswer,
+                    hasNumericAnswer: !!payload.numericAnswer
                 });
 
                 return {
                     ...prev,
                     phase: 'show_answers',
-                    correctAnswers: payload.correctAnswers || prev.correctAnswers
+                    correctAnswers: payload.correctAnswers || prev.correctAnswers,
+                    numericAnswer: payload.numericAnswer || prev.numericAnswer
                 };
             });
         }, isCorrectAnswersPayload, 'correct_answers'));

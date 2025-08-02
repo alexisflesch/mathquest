@@ -169,17 +169,23 @@ function showCorrectAnswersHandler(io, socket) {
             // Prepare correct answers payload based on question type
             let correctAnswers = [];
             let answerOptions = [];
+            let numericAnswer;
             if (question.questionType === 'multipleChoice' && question.multipleChoiceQuestion) {
                 correctAnswers = question.multipleChoiceQuestion.correctAnswers;
                 answerOptions = question.multipleChoiceQuestion.answerOptions;
             }
             else if (question.questionType === 'numeric' && question.numericQuestion) {
                 correctAnswers = [question.numericQuestion.correctAnswer];
+                numericAnswer = {
+                    correctAnswer: question.numericQuestion.correctAnswer,
+                    tolerance: question.numericQuestion.tolerance || 0
+                };
             }
             // Prepare correct answers payload for students and dashboard
             const correctAnswersPayload = {
                 questionUid: question.uid,
                 correctAnswers: correctAnswers,
+                numericAnswer: numericAnswer,
                 terminatedQuestions
             };
             // Prepare projection-specific payload with additional context

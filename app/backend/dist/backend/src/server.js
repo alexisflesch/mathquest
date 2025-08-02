@@ -74,7 +74,7 @@ if (process.env.NODE_ENV !== 'test') {
 // Only start the server if this file is run directly (not imported as a module)
 // This helps prevent port conflicts during testing
 if (process.env.NODE_ENV !== 'test') {
-    server.listen(port, () => {
+    server.listen(Number(port), '0.0.0.0', () => {
         logger.info(`Backend server listening on port ${port}`);
         logger.info(`Backend process.cwd(): ${process.cwd()}`);
         logger.error('Forced error log at startup (should appear in error.log and combined.log)');

@@ -286,7 +286,13 @@ export const requestNextQuestionPayloadSchema = z.object({
 // Canonical event payload schemas (for tournament-style events)
 export const correctAnswersPayloadSchema = z.object({
   questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
+  // For multiple choice questions
   correctAnswers: z.array(z.boolean()).optional(),
+  // For numeric questions
+  numericAnswer: z.object({
+    correctAnswer: z.number(),
+    tolerance: z.number().optional()
+  }).optional(),
   /**
    * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
    */
