@@ -176,7 +176,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 // Numeric question - hide input completely in projection mode
                 !projectionMode && (
                     <div className="w-full flex flex-col">
-                        <div className="flex items-center w-full">
+                        <div className="relative w-full">
                             <input
                                 id="numeric-answer"
                                 type="number"
@@ -184,14 +184,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                 value={numericAnswer}
                                 onChange={(e) => setNumericAnswer?.(e.target.value)}
                                 placeholder="Votre réponse"
-                                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 text-lg flex-grow"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 text-lg"
                                 disabled={readonly}
                                 aria-disabled={readonly}
                                 step="any"
                                 autoFocus={!readonly}
                                 style={{
-                                    marginRight: readonly && numericCorrectAnswer ? 12 : 0,
-                                    minWidth: 0,
+                                    paddingRight: readonly && numericCorrectAnswer && numericAnswer ? 40 : 12,
                                     borderColor: 'var(--gray-300)',
                                     boxShadow: 'none',
                                 }}
@@ -209,15 +208,18 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                     }
                                 }}
                             />
-                            {/* Visual feedback for numeric answers when correct answers are shown */}
+                            {/* Visual feedback for numeric answers when correct answers are shown - positioned inside input field */}
                             {readonly && numericCorrectAnswer && numericAnswer && (
-                                <span className="pl-2 flex items-center">
+                                <div 
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                                    style={{ pointerEvents: 'none' }}
+                                >
                                     {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
-                                        <GoodAnswer size={22} iconColor="var(--success)" />
+                                        <GoodAnswer size={20} iconColor="var(--success)" />
                                     ) : (
-                                        <WrongAnswer size={22} iconColor="var(--alert)" />
+                                        <WrongAnswer size={20} iconColor="var(--alert)" />
                                     )}
-                                </span>
+                                </div>
                             )}
                         </div>
                         {!readonly && (
