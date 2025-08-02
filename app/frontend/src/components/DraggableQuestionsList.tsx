@@ -53,7 +53,7 @@ interface DraggableQuestionsListProps {
     onTimerAction?: (info: { status: 'run' | 'pause' | 'stop'; questionUid: string; timeLeftMs: number }) => void;
     onImmediateUpdateActiveTimer?: (newTime: number) => void;
     disabled?: boolean;
-    getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
+    getStatsForQuestion?: (uid: string) => { type: 'multipleChoice'; data: number[] } | { type: 'numeric'; data: number[] } | undefined; // Provide stats for each question
     expandedUids: Set<string>; // NEW: expanded question UIDs
     onToggleExpand: (uid: string) => void; // NEW: toggle handler
     getTimerState?: (questionUid: string) => {

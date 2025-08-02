@@ -4,6 +4,7 @@ import { formatTime } from "@/utils"; // Assure-toi que ce chemin est correct
 import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce chemin est correct
 import { createLogger } from '@/clientLogger';
 import { TimerField } from './TimerDisplayAndEdit';
+import StatisticsChart from '@/components/StatisticsChart';
 
 // Create a logger for this component
 const logger = createLogger('QuestionDisplay');
@@ -84,7 +85,7 @@ export interface QuestionDisplayProps {
     showResultsDisabled?: boolean; // Désactive le bouton Trophy
     correctAnswers?: number[]; // NEW: indices des réponses correctes à afficher (ex: [1,2])
     onStatsToggle?: (isDisplayed: boolean) => void; // NEW: callback for stats toggle
-    stats?: number[]; // NEW: answer stats (count per answer)
+    stats?: { type: 'multipleChoice'; data: number[] } | { type: 'numeric'; data: number[] }; // NEW: answer stats with type discrimination
     // Checkbox props for selection
     showCheckbox?: boolean; // Show checkbox for selection
     checked?: boolean; // Checkbox state
@@ -217,10 +218,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const [isStatsDisplayed, setIsStatsDisplayed] = useState(false);
 
     // Compute stats bar widths
-    // The server already sends stats as percentages (0-100)
+    // The server already sends stats as percentages (0-100) for multiple choice
     const getBarWidth = (idx: number) => {
-        if (!stats || typeof stats[idx] !== 'number') return 0;
-        return stats[idx]; // Already a percentage
+        if (!stats || stats.type !== 'multipleChoice' || typeof stats.data[idx] !== 'number') return 0;
+        return stats.data[idx]; // Already a percentage
     };
 
     // // Handler for ChartBarBig click
@@ -371,7 +372,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                             {question.title ? ( // Modifié: question.titre -> question.title
                                 <ul
                                     className={[
-                                        "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
+                                        "ml-0 mt-0 flex flex-col",
+                                        stats && stats.type === 'numeric' ? "gap-1" : "gap-2",
+                                        "answers-list p-3 rounded-b-xl rounded-t-none",
                                         isOpen ? "no-top-border" : ""
                                     ].join(" ")}
                                 >
@@ -386,7 +389,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                             <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                 <div className="flex gap-2 items-center relative z-10 w-full">
                                                     {/* Percentage before icon, rounded to nearest integer */}
-                                                    {typeof stats !== 'undefined' && (
+                                                    {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                         <span className="font-semibold text-xs text-couleur-global-neutral-700" style={{ minWidth: 32, textAlign: 'right' }}>
                                                             {Math.round(getBarWidth(idx))}%
                                                         </span>
@@ -399,7 +402,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                         )}
                                                     </span>
                                                     {/* Histogram bar as background, but starting after the icon */}
-                                                    {typeof stats !== 'undefined' && (
+                                                    {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                         <div
                                                             className="absolute left-0 top-1/2 -translate-y-1/2 rounded z-0"
                                                             style={{
@@ -421,7 +424,32 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                 </div>
                                             </li>
                                         ))
-                                        : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
+                                        : (
+                                            // Show StatisticsChart for numeric questions, otherwise show no answers message
+                                            stats && stats.type === 'numeric' ? (
+                                                <li className="flex justify-center">
+                                                    <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                        <StatisticsChart
+                                                            data={stats.data}
+                                                            layout="left"
+                                                        />
+                                                    </div>
+                                                </li>
+                                            ) : (
+                                                <li className="italic text-muted-foreground">Aucune réponse définie</li>
+                                            )
+                                        )}
+                                    {/* Show StatisticsChart for numeric questions after answers */}
+                                    {stats && stats.type === 'numeric' && answersForDisplay.length > 0 && (
+                                        <li className="flex justify-center">
+                                            <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                <StatisticsChart
+                                                    data={stats.data}
+                                                    layout="left"
+                                                />
+                                            </div>
+                                        </li>
+                                    )}
                                     {!hideExplanation && question.explanation && ( // Conditionally show explanation
                                         <div
                                             className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
@@ -450,7 +478,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                 <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                     <div className="flex gap-2 items-center relative z-10 w-full">
                                                         {/* Percentage before icon, rounded to nearest integer */}
-                                                        {typeof stats !== 'undefined' && (
+                                                        {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                             <span className="font-semibold text-xs text-couleur-global-neutral-700" style={{ minWidth: 32, textAlign: 'right' }}>
                                                                 {Math.round(getBarWidth(idx))}%
                                                             </span>
@@ -463,7 +491,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                             )}
                                                         </span>
                                                         {/* Histogram bar as background, but starting after the icon */}
-                                                        {typeof stats !== 'undefined' && (
+                                                        {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                             <div
                                                                 className="absolute left-0 top-1/2 -translate-y-1/2 rounded z-0"
                                                                 style={{
@@ -485,7 +513,32 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                     </div>
                                                 </li>
                                             ))
-                                            : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
+                                            : (
+                                                // Show StatisticsChart for numeric questions, otherwise show no answers message
+                                                stats && stats.type === 'numeric' ? (
+                                                    <li className="flex justify-center">
+                                                        <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                            <StatisticsChart
+                                                                data={stats.data}
+                                                                layout="left"
+                                                            />
+                                                        </div>
+                                                    </li>
+                                                ) : (
+                                                    <li className="italic text-muted-foreground">Aucune réponse définie</li>
+                                                )
+                                            )}
+                                        {/* Show StatisticsChart for numeric questions after answers */}
+                                        {stats && stats.type === 'numeric' && answersForDisplay.length > 0 && (
+                                            <li className="flex justify-center mt-4">
+                                                <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                    <StatisticsChart
+                                                        data={stats.data}
+                                                        layout="left"
+                                                    />
+                                                </div>
+                                            </li>
+                                        )}
                                         {!hideExplanation && question.explanation && ( // Conditionally show explanation
                                             <div
                                                 className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
@@ -529,10 +582,12 @@ export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
     if (prevAnswerOptions.length !== nextAnswerOptions.length) return false;
 
     // Compare stats array for meaningful changes
-    if (prevProps.stats?.length !== nextProps.stats?.length) return false;
+    if (prevProps.stats?.type !== nextProps.stats?.type) return false;
+
     if (prevProps.stats && nextProps.stats) {
-        for (let i = 0; i < prevProps.stats.length; i++) {
-            if (prevProps.stats[i] !== nextProps.stats[i]) return false;
+        if (prevProps.stats.data.length !== nextProps.stats.data.length) return false;
+        for (let i = 0; i < prevProps.stats.data.length; i++) {
+            if (prevProps.stats.data[i] !== nextProps.stats.data[i]) return false;
         }
     }
 

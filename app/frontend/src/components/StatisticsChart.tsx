@@ -4,11 +4,12 @@ import { BarChart3, ChartNoAxesColumn, Settings2, RotateCcw, EyeOff, Eye } from 
 
 interface StatisticsChartProps {
     data: number[];
+    layout?: 'top' | 'left'; // New prop for button layout
 }
 
 type ChartType = 'auto' | 'stem' | 'histogram';
 
-const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
+const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' }) => {
     const plotRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -219,10 +220,10 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
     if (!chartData) return null;
 
     return (
-        <div ref={containerRef} className="w-full h-full flex flex-col" style={{ height: '100%', background: 'transparent' }}>
-            {/* Controls always visible at top */}
-            <div className="flex flex-wrap items-center" style={{ background: 'transparent' }}>
-                <div className="flex gap-1 border rounded-lg p-1" style={{ background: 'transparent' }}>
+        <div ref={containerRef} className={`w-full h-full flex ${layout === 'left' ? 'flex-row' : 'flex-col'}`} style={{ height: '100%', background: 'transparent' }}>
+            {/* Controls - position based on layout prop */}
+            <div className={`flex ${layout === 'left' ? 'flex-col justify-center mr-2' : 'flex-wrap justify-center'} ${layout === 'left' ? 'items-start' : 'items-center'}`} style={{ background: 'transparent' }}>
+                <div className={`flex gap-1 border rounded-lg p-1 ${layout === 'left' ? 'flex-col' : ''}`} style={{ background: 'transparent' }}>
                     <button
                         onClick={() => setChartType('auto')}
                         className={`px-3 py-2 text-sm rounded flex items-center justify-center transition-colors ${chartType === 'auto'
@@ -230,7 +231,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                             : 'text-gray-600 hover:bg-gray-100'
                             }`}
                         style={chartType === 'auto' ? { background: 'var(--navbar)' } : {}}
-                        aria-label="Auto"
+                        aria-label="Automatique"
+                        title="Automatique"
                     >
                         <Settings2 size={20} />
                     </button>
@@ -241,7 +243,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                             : 'text-gray-600 hover:bg-gray-100'
                             }`}
                         style={chartType === 'stem' ? { background: 'var(--navbar)' } : {}}
-                        aria-label="Stem"
+                        aria-label="Diagramme en bâtons"
+                        title="Diagramme en bâtons"
                     >
                         <ChartNoAxesColumn size={20} />
                     </button>
@@ -252,7 +255,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                             : 'text-gray-600 hover:bg-gray-100'
                             }`}
                         style={chartType === 'histogram' ? { background: 'var(--navbar)' } : {}}
-                        aria-label="Histogram"
+                        aria-label="Histogramme"
+                        title="Histogramme"
                     >
                         <BarChart3 size={20} />
                     </button>
@@ -265,7 +269,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                                 : 'text-gray-600 hover:bg-gray-100'
                                 }`}
                             style={hideOutliers ? { background: 'var(--secondary)', color: 'white' } : {}}
-                            aria-label={hideOutliers ? 'Show Outliers' : 'Hide Outliers'}
+                            aria-label={hideOutliers ? 'Afficher les données aberrantes' : 'Masquer les données aberrantes'}
+                            title={hideOutliers ? 'Afficher les données aberrantes' : 'Masquer les données aberrantes'}
                         >
                             {hideOutliers ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>

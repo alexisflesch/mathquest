@@ -30,7 +30,7 @@ export interface SortableQuestionProps {
     liveStatus?: 'run' | 'pause' | 'stop';
     onImmediateUpdateActiveTimer?: (newTime: number) => void; // Gardé pour la synchro active
     disabled?: boolean;
-    stats?: number[]; // Accepts number[] for per-question stats bar
+    stats?: { type: 'multipleChoice'; data: number[] } | { type: 'numeric'; data: number[] }; // Accepts stats for per-question display
     durationMs: number; // Canonical duration from parent
     onResume?: (uid: string) => void;
     // Modernization: allow extra className for question state

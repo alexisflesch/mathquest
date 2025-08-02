@@ -451,29 +451,42 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     }, [quizState]);
 
     // Memoized stats calculation function
-    const getStatsForQuestion = useCallback((uid: string) => {
+    const getStatsForQuestion = useCallback((uid: string): { type: 'multipleChoice'; data: number[] } | { type: 'numeric'; data: number[] } | undefined => {
         const stats = answerStats[uid];
         if (stats && typeof stats === 'object') {
             const question = questions.find(q => q.uid === uid);
-            const numOptions = question?.answerOptions?.length || 0;
-            if (numOptions === 0) return undefined;
 
             // Handle new polymorphic stats format with type discrimination
-            let statsObj: Record<string, number>;
-            if ('type' in stats && stats.type === 'multipleChoice') {
-                // New format: { type: 'multipleChoice', stats: {...}, totalUsers: number }
-                statsObj = stats.stats || {};
-            } else {
-                // Legacy format: plain object
-                statsObj = stats as Record<string, number>;
-            }
+            if ('type' in stats) {
+                if (stats.type === 'multipleChoice') {
+                    // Multiple choice stats: return percentage array
+                    const numOptions = question?.answerOptions?.length || 0;
+                    if (numOptions === 0) return undefined;
 
-            const percentageArray: number[] = [];
-            for (let i = 0; i < numOptions; i++) {
-                const percentage = statsObj[i.toString()] || 0;
-                percentageArray.push(percentage);
+                    const statsObj = stats.stats || {};
+                    const percentageArray: number[] = [];
+                    for (let i = 0; i < numOptions; i++) {
+                        const percentage = statsObj[i.toString()] || 0;
+                        percentageArray.push(percentage);
+                    }
+                    return { type: 'multipleChoice' as const, data: percentageArray };
+                } else if (stats.type === 'numeric') {
+                    // Numeric stats: return values array for StatisticsChart
+                    return { type: 'numeric' as const, data: stats.values || [] };
+                }
+            } else {
+                // Legacy format: assume multiple choice
+                const numOptions = question?.answerOptions?.length || 0;
+                if (numOptions === 0) return undefined;
+
+                const statsObj = stats as Record<string, number>;
+                const percentageArray: number[] = [];
+                for (let i = 0; i < numOptions; i++) {
+                    const percentage = statsObj[i.toString()] || 0;
+                    percentageArray.push(percentage);
+                }
+                return { type: 'multipleChoice' as const, data: percentageArray };
             }
-            return percentageArray;
         }
         return undefined;
     }, [answerStats, questions]);
