@@ -175,20 +175,51 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             {isNumericQuestion ? (
                 // Numeric question - hide input completely in projection mode
                 !projectionMode && (
-                    <div className="w-full">
-                        <input
-                            id="numeric-answer"
-                            type="number"
-                            inputMode="decimal"
-                            value={numericAnswer}
-                            onChange={(e) => setNumericAnswer?.(e.target.value)}
-                            placeholder="Votre réponse"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                            disabled={readonly}
-                            aria-disabled={readonly}
-                            step="any"
-                            autoFocus={!readonly}
-                        />
+                    <div className="w-full flex flex-col">
+                        <div className="flex items-center w-full">
+                            <input
+                                id="numeric-answer"
+                                type="number"
+                                inputMode="decimal"
+                                value={numericAnswer}
+                                onChange={(e) => setNumericAnswer?.(e.target.value)}
+                                placeholder="Votre réponse"
+                                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 text-lg flex-grow"
+                                disabled={readonly}
+                                aria-disabled={readonly}
+                                step="any"
+                                autoFocus={!readonly}
+                                style={{
+                                    marginRight: readonly && numericCorrectAnswer ? 12 : 0,
+                                    minWidth: 0,
+                                    borderColor: 'var(--gray-300)',
+                                    boxShadow: 'none',
+                                }}
+                                onFocus={e => {
+                                    e.target.style.boxShadow = '0 0 0 2px var(--primary)';
+                                    e.target.style.borderColor = 'var(--primary)';
+                                }}
+                                onBlur={e => {
+                                    e.target.style.boxShadow = 'none';
+                                    e.target.style.borderColor = 'var(--gray-300)';
+                                }}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && !readonly && typeof numericAnswer === 'string' ? numericAnswer.trim() : numericAnswer) {
+                                        handleNumericSubmit?.();
+                                    }
+                                }}
+                            />
+                            {/* Visual feedback for numeric answers when correct answers are shown */}
+                            {readonly && numericCorrectAnswer && numericAnswer && (
+                                <span className="pl-2 flex items-center">
+                                    {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
+                                        <GoodAnswer size={22} iconColor="var(--success)" />
+                                    ) : (
+                                        <WrongAnswer size={22} iconColor="var(--alert)" />
+                                    )}
+                                </span>
+                            )}
+                        </div>
                         {!readonly && (
                             <div className="mt-4 flex justify-end">
                                 <button
@@ -201,22 +232,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                 </button>
                             </div>
                         )}
-                        {/* Visual feedback for numeric answers when correct answers are shown */}
-                        {readonly && numericCorrectAnswer && numericAnswer && (
-                            <div className="pl-2">
-                                {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
-                                    <GoodAnswer />
-                                ) : (
-                                    <WrongAnswer />
-                                )}
-                            </div>
-                        )}
                         {/* Show correct answer info when in readonly mode */}
                         {readonly && numericCorrectAnswer && (
                             <div className="mt-2 text-sm text-gray-600">
                                 <div className="flex items-center space-x-2">
-                                    <span className="font-medium text-green-600">Réponse correcte :</span>
-                                    <span>{numericCorrectAnswer.correctAnswer}</span>
+                                    <span className="font-medium" style={{ color: 'var(--success)' }}>Réponse correcte :</span>
+                                    <span style={{ color: 'var(--success)', fontWeight: 600 }}>{numericCorrectAnswer.correctAnswer}</span>
                                     {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
                                         <span className="text-gray-500">
                                             (±{numericCorrectAnswer.tolerance})
