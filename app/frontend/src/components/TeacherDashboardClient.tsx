@@ -450,18 +450,24 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         return {};
     }, [quizState]);
 
-    const mappedQuestions = useMemo(() => {
-        return questions.map(mapToCanonicalQuestion);
-    }, [questions]);
-
     // Memoized stats calculation function
     const getStatsForQuestion = useCallback((uid: string) => {
         const stats = answerStats[uid];
         if (stats && typeof stats === 'object') {
-            const question = mappedQuestions.find(q => q.uid === uid);
+            const question = questions.find(q => q.uid === uid);
             const numOptions = question?.answerOptions?.length || 0;
             if (numOptions === 0) return undefined;
-            const statsObj = stats as Record<string, number>;
+
+            // Handle new polymorphic stats format with type discrimination
+            let statsObj: Record<string, number>;
+            if ('type' in stats && stats.type === 'multipleChoice') {
+                // New format: { type: 'multipleChoice', stats: {...}, totalUsers: number }
+                statsObj = stats.stats || {};
+            } else {
+                // Legacy format: plain object
+                statsObj = stats as Record<string, number>;
+            }
+
             const percentageArray: number[] = [];
             for (let i = 0; i < numOptions; i++) {
                 const percentage = statsObj[i.toString()] || 0;
@@ -470,7 +476,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             return percentageArray;
         }
         return undefined;
-    }, [answerStats, mappedQuestions]);
+    }, [answerStats, questions]);
 
     const handleSelect = useCallback((uid: string) => {
         setQuestionActiveUid(uid);
@@ -770,7 +776,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             quizId={code}
                             currentTournamentCode={gameId}
                             quizSocket={quizSocket}
-                            questions={mappedQuestions}
+                            questions={questions}
                             currentQuestionIdx={quizState?.currentQuestionidx}
                             isChronoRunning={quizState?.chrono?.running}
                             isQuizEnded={quizState?.ended}
@@ -794,6 +800,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             getTimerState={getCanonicalTimerForQuestion}
                             // Pass terminatedQuestions to DraggableQuestionsList
                             terminatedQuestions={terminatedQuestions}
+                            // NEW: Teacher dashboard behavior
+                            hideExplanation={true}
+                            keepTitleWhenExpanded={true}
                         />
                     </section>
                 )}

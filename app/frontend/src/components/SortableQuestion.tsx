@@ -35,6 +35,9 @@ export interface SortableQuestionProps {
     onResume?: (uid: string) => void;
     // Modernization: allow extra className for question state
     className?: string;
+    // NEW: Control behavior props
+    hideExplanation?: boolean; // Hide explanation/justification section
+    keepTitleWhenExpanded?: boolean; // Keep title visible when expanded (only hide fake titles)
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -70,7 +73,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs, className }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs, className, hideExplanation, keepTitleWhenExpanded }: SortableQuestionProps) => {
     // ...existing code...
 
     // ...existing code...
@@ -421,6 +424,8 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         onEditTimer={onEditTimer} // Pass down for test button
                         showSet44sButton={false} // Only set true in teacher dashboard context
                         stats={stats}
+                        hideExplanation={hideExplanation}
+                        keepTitleWhenExpanded={keepTitleWhenExpanded}
                     />
                 )}
                 {/* Affiche les réponses si en mode édition ET si elles sont ouvertes */}

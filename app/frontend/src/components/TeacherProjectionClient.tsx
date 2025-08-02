@@ -76,18 +76,12 @@ const QuestionDisplay = React.memo(({
         if (numOptions > 0) {
             const extractedStats = extractMultipleChoiceStats(currentStats);
             let statsArray: number[] = [];
-            let totalAnswers = 0;
             for (let i = 0; i < numOptions; i++) {
-                const count = extractedStats[i.toString()] || 0;
-                statsArray.push(count);
-                totalAnswers += count;
+                const value = extractedStats[i.toString()] || 0;
+                statsArray.push(value);
             }
-            if (totalAnswers > 0) {
-                statsArray = statsArray.map(count => (count / totalAnswers) * 100);
-            } else {
-                statsArray = Array(numOptions).fill(0);
-            }
-            statsToShow = { stats: statsArray, totalAnswers };
+            // Backend already sends percentage values, no need to scale
+            statsToShow = { stats: statsArray, totalAnswers: currentStats?.totalUsers || 0 };
         }
     }
 

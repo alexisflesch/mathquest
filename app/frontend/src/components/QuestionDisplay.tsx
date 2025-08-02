@@ -89,6 +89,9 @@ export interface QuestionDisplayProps {
     showCheckbox?: boolean; // Show checkbox for selection
     checked?: boolean; // Checkbox state
     onCheckboxChange?: (checked: boolean) => void; // Checkbox change handler
+    // NEW: Control behavior props
+    hideExplanation?: boolean; // Hide explanation/justification section
+    keepTitleWhenExpanded?: boolean; // Keep title visible when expanded (only hide fake titles)
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -117,6 +120,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     checked = false, // NEW: destructure checked
     onCheckboxChange, // NEW: destructure onCheckboxChange
     onRevealLeaderboard, // Canonical leaderboard reveal
+    hideExplanation = false, // NEW: destructure hideExplanation
+    keepTitleWhenExpanded = false, // NEW: destructure keepTitleWhenExpanded
 }) => {
     // Get answers for display (handles both multiple choice and numeric questions)
     const answersForDisplay = getAnswersForDisplay(question);
@@ -274,7 +279,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         top: 0,
                                         zIndex: 2,
                                         transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
-                                        transform: isOpen ? 'translateY(120px)' : 'translateY(0)',
+                                        // Only hide title when expanded if it's a fake title (no real title) and keepTitleWhenExpanded is false
+                                        transform: (isOpen && !question.title && !keepTitleWhenExpanded) ? 'translateY(120px)' : 'translateY(0)',
                                         fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
                                     }}
                                 >
@@ -416,7 +422,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                             </li>
                                         ))
                                         : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                                    {question.explanation && ( // Modifié: question.justification -> question.explanation
+                                    {!hideExplanation && question.explanation && ( // Conditionally show explanation
                                         <div
                                             className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                             style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
@@ -480,7 +486,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                 </li>
                                             ))
                                             : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                                        {question.explanation && ( // Modifié: question.justification -> question.explanation
+                                        {!hideExplanation && question.explanation && ( // Conditionally show explanation
                                             <div
                                                 className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                                 style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}

@@ -64,9 +64,13 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
         const participantStatus = gameInstance.status === 'pending' ? ParticipantStatus.PENDING : ParticipantStatus.ACTIVE;
 
         // Upsert user
-        await prisma.user.upsert({
+        const updatedUser = await prisma.user.upsert({
             where: { id: userId },
-            update: {},
+            update: {
+                // 🐛 FIX: Update username if provided to ensure consistency between Redis and database
+                ...(username ? { username } : {}),
+                ...(avatarEmoji ? { avatarEmoji } : {})
+            },
             create: {
                 id: userId,
                 username: username || `guest-${userId.substring(0, 8)}`,
@@ -181,8 +185,8 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
             if (joinOrderBonus > 0) {
                 const leaderboardUser: Omit<LeaderboardEntry, 'rank'> = {
                     userId,
-                    username: username || `guest-${userId.substring(0, 8)}`,
-                    avatarEmoji: avatarEmoji || undefined,
+                    username: updatedUser.username, // 🐛 FIX: Use actual username from database instead of fallback
+                    avatarEmoji: updatedUser.avatarEmoji || undefined,
                     score: joinOrderBonus,
                     attemptCount: participant.nbAttempts,
                     participationId: participant.id
