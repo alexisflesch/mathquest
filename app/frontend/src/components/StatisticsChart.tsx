@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 import { BarChart3, ChartNoAxesColumn, Settings2, RotateCcw, EyeOff, Eye } from 'lucide-react';
 
@@ -9,6 +9,9 @@ interface StatisticsChartProps {
 type ChartType = 'auto' | 'stem' | 'histogram';
 
 const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
+    const plotRef = useRef<any>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+
     // Resolve CSS variable for --navbar color
     const getNavbarColor = () => {
         if (typeof window !== 'undefined') {
@@ -18,6 +21,54 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
     };
     const [chartType, setChartType] = useState<ChartType>('auto');
     const [hideOutliers, setHideOutliers] = useState(false);
+
+    // Force resize when container dimensions change
+    useEffect(() => {
+        const resizeChart = () => {
+            if (plotRef.current && plotRef.current.el) {
+                // Use Plotly's relayout method to force a complete redraw
+                const plotElement = plotRef.current.el;
+                if (window.Plotly && window.Plotly.relayout) {
+                    window.Plotly.relayout(plotElement, {
+                        'xaxis.autorange': true,
+                        'yaxis.autorange': true
+                    });
+                }
+                // Also try the resize method
+                if (window.Plotly && window.Plotly.Plots && window.Plotly.Plots.resize) {
+                    window.Plotly.Plots.resize(plotElement);
+                }
+            }
+        };
+
+        // Use ResizeObserver to detect container size changes
+        if (containerRef.current) {
+            const resizeObserver = new ResizeObserver((entries) => {
+                // Small delay to ensure DOM has updated
+                setTimeout(resizeChart, 50);
+            });
+
+            resizeObserver.observe(containerRef.current);
+
+            return () => {
+                resizeObserver.disconnect();
+            };
+        }
+
+        // Return empty cleanup function if no container
+        return () => { };
+    }, []);
+
+    // Additional effect to force resize when data changes (to ensure proper initial sizing)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (plotRef.current && plotRef.current.el && window.Plotly && window.Plotly.Plots) {
+                window.Plotly.Plots.resize(plotRef.current.el);
+            }
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [data, chartType]);
 
     const processedData = useMemo(() => {
         if (data.length === 0) return { values: [], hasOutliers: false, outlierIndices: [] };
@@ -168,7 +219,7 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
     if (!chartData) return null;
 
     return (
-        <div className="w-full h-full flex flex-col" style={{ height: '100%', background: 'transparent' }}>
+        <div ref={containerRef} className="w-full h-full flex flex-col" style={{ height: '100%', background: 'transparent' }}>
             {/* Controls always visible at top */}
             <div className="flex flex-wrap items-center" style={{ background: 'transparent' }}>
                 <div className="flex gap-1 border rounded-lg p-1" style={{ background: 'transparent' }}>
@@ -224,6 +275,7 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
             {/* Chart fills remaining space, no scrollbar */}
             <div className="flex-grow w-full" style={{ height: '100%', overflow: 'hidden', background: 'transparent' }}>
                 <Plot
+                    ref={plotRef}
                     data={chartData.plotData}
                     layout={{
                         ...chartData.layout,

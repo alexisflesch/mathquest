@@ -415,6 +415,48 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                         questionUid: gameQuestionPayload.uid
                     });
                     io.to(projectionRoom).emit(SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
+
+                    // --- MODERNIZATION: Check if stats are currently shown and update them for the new question ---
+                    try {
+                        const projectionDisplayState = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
+                        if (projectionDisplayState && projectionDisplayState.showStats) {
+                            logger.info({
+                                accessCode: gameInstance.accessCode,
+                                questionUid,
+                                showStats: projectionDisplayState.showStats
+                            }, '[STATS_UPDATE] Stats are currently shown, updating for new question');
+
+                            // Get stats for the new question
+                            const { getAnswerStats } = await import('./helpers');
+                            const answerStats = await getAnswerStats(gameInstance.accessCode, questionUid);
+
+                            // Emit updated stats to projection
+                            const { PROJECTOR_EVENTS } = await import('@shared/types/socket/events');
+                            const projectionStatsPayload = {
+                                show: true,
+                                stats: answerStats || {},
+                                questionUid: questionUid,
+                                timestamp: Date.now()
+                            };
+
+                            io.to(projectionRoom).emit(PROJECTOR_EVENTS.PROJECTION_SHOW_STATS, projectionStatsPayload);
+                            logger.info({
+                                projectionStatsPayload,
+                                questionUid
+                            }, '[STATS_UPDATE] Emitted updated stats for new question');
+                        } else {
+                            logger.debug({
+                                accessCode: gameInstance.accessCode,
+                                showStats: projectionDisplayState?.showStats
+                            }, '[STATS_UPDATE] Stats not currently shown, no update needed');
+                        }
+                    } catch (statsError) {
+                        logger.error({
+                            error: statsError,
+                            questionUid,
+                            accessCode: gameInstance.accessCode
+                        }, '[STATS_UPDATE] Error updating stats for new question');
+                    }
                 }
             }
 

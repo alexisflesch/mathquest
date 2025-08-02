@@ -52,6 +52,7 @@ interface QuestionCardProps {
     answered: boolean;
     isQuizMode?: boolean; // Whether to show question numbers
     readonly?: boolean;   // New prop to make the component display-only
+    projectionMode?: boolean; // New prop for projection page - hides input fields completely
     zoomFactor?: number;  // Kept for compatibility but no longer used // MODIFIED: Translated comment
     correctAnswers?: boolean[]; // Changed to accept boolean array directly
     stats?: StatsData; // Optional stats prop for question statistics
@@ -119,6 +120,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     answered,
     isQuizMode = true,
     readonly = false,
+    projectionMode = false,
     zoomFactor = 1,
     correctAnswers = [],
     stats,
@@ -171,63 +173,65 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 
             {/* Conditional rendering based on question type */}
             {isNumericQuestion ? (
-                // Numeric question input
-                <div className="w-full max-w-md">
-                    <div className="mb-4">
-                        <label htmlFor="numeric-answer" className="block text-sm font-medium text-gray-700 mb-2">
-                            Votre réponse :
-                        </label>
-                        <div className="relative">
-                            <input
-                                id="numeric-answer"
-                                type="number"
-                                inputMode="decimal"
-                                value={numericAnswer}
-                                onChange={(e) => setNumericAnswer?.(e.target.value)}
-                                placeholder="Entrez votre réponse numérique"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg pr-10"
-                                disabled={readonly}
-                                aria-disabled={readonly}
-                                step="any"
-                                autoFocus={!readonly}
-                            />
-                            {/* Visual feedback for numeric answers when correct answers are shown */}
-                            {readonly && numericCorrectAnswer && numericAnswer && (
-                                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                    {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
-                                        <GoodAnswer />
-                                    ) : (
-                                        <WrongAnswer />
-                                    )}
+                // Numeric question - hide input completely in projection mode
+                !projectionMode && (
+                    <div className="w-full max-w-md">
+                        <div className="mb-4">
+                            <label htmlFor="numeric-answer" className="block text-sm font-medium text-gray-700 mb-2">
+                                Votre réponse :
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="numeric-answer"
+                                    type="number"
+                                    inputMode="decimal"
+                                    value={numericAnswer}
+                                    onChange={(e) => setNumericAnswer?.(e.target.value)}
+                                    placeholder="Entrez votre réponse numérique"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg pr-10"
+                                    disabled={readonly}
+                                    aria-disabled={readonly}
+                                    step="any"
+                                    autoFocus={!readonly}
+                                />
+                                {/* Visual feedback for numeric answers when correct answers are shown */}
+                                {readonly && numericCorrectAnswer && numericAnswer && (
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
+                                            <GoodAnswer />
+                                        ) : (
+                                            <WrongAnswer />
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            {/* Show correct answer info when in readonly mode */}
+                            {readonly && numericCorrectAnswer && (
+                                <div className="mt-2 text-sm text-gray-600">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="font-medium text-green-600">Réponse correcte :</span>
+                                        <span>{numericCorrectAnswer.correctAnswer}</span>
+                                        {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
+                                            <span className="text-gray-500">
+                                                (±{numericCorrectAnswer.tolerance})
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
-                        {/* Show correct answer info when in readonly mode */}
-                        {readonly && numericCorrectAnswer && (
-                            <div className="mt-2 text-sm text-gray-600">
-                                <div className="flex items-center space-x-2">
-                                    <span className="font-medium text-green-600">Réponse correcte :</span>
-                                    <span>{numericCorrectAnswer.correctAnswer}</span>
-                                    {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
-                                        <span className="text-gray-500">
-                                            (±{numericCorrectAnswer.tolerance})
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                        {!readonly && (
+                            <button
+                                className="btn btn-primary w-full"
+                                onClick={handleNumericSubmit}
+                                disabled={readonly || !numericAnswer}
+                                aria-disabled={readonly || !numericAnswer}
+                            >
+                                Valider
+                            </button>
                         )}
                     </div>
-                    {!readonly && (
-                        <button
-                            className="btn btn-primary w-full"
-                            onClick={handleNumericSubmit}
-                            disabled={readonly || !numericAnswer}
-                            aria-disabled={readonly || !numericAnswer}
-                        >
-                            Valider
-                        </button>
-                    )}
-                </div>
+                )
             ) : (
                 // Multiple choice questions
                 <>

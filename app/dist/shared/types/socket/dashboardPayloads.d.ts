@@ -98,7 +98,15 @@ export interface DashboardParticipantUpdatePayload {
  */
 export interface DashboardAnswerStatsUpdatePayload {
     questionUid: string;
-    stats: Record<string, number>;
+    stats: Record<string, number> | {
+        type: 'multipleChoice';
+        stats: Record<string, number>;
+        totalUsers: number;
+    } | {
+        type: 'numeric';
+        values: number[];
+        totalAnswers: number;
+    };
 }
 /**
  * Dashboard joined confirmation

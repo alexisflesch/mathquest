@@ -18,6 +18,17 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { gameControlStatePayloadSchema, type GameControlStatePayload } from '@shared/types/socketEvents.zod.dashboard';
 import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
 import { io, Socket } from 'socket.io-client';
+
+// Answer stats can be legacy format or new format with type discrimination
+type AnswerStats = Record<string, number> | {
+    type: 'multipleChoice';
+    stats: Record<string, number>;
+    totalUsers: number;
+} | {
+    type: 'numeric';
+    values: number[];
+    totalAnswers: number;
+};
 import { SOCKET_CONFIG } from '@/config';
 import { computeTimeLeftMs } from '../utils/computeTimeLeftMs';
 import { makeApiRequest } from '@/config/api';
@@ -133,7 +144,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
     const [quizState, setQuizState] = useState<any>(null);
     const [connectedCount, setConnectedCount] = useState(0);
-    const [answerStats, setAnswerStats] = useState<Record<string, Record<string, number>>>({});
+    const [answerStats, setAnswerStats] = useState<Record<string, AnswerStats>>({});
 
     // Fetch game data
     useEffect(() => {

@@ -38,6 +38,26 @@ function formatTimerMs(timeLeftMs: number | null) {
 
 type StatsData = { stats: number[]; totalAnswers: number };
 
+// Helper function to extract stats from the new union type
+function extractMultipleChoiceStats(currentStats: any): Record<string, number> {
+    if (!currentStats || typeof currentStats !== 'object') {
+        return {};
+    }
+
+    // If it's the new format with type discrimination
+    if (currentStats.type === 'multipleChoice') {
+        return currentStats.stats || {};
+    }
+
+    // If it's the legacy format (plain object) or new numeric format, return as-is for legacy compatibility
+    if (currentStats.type === 'numeric') {
+        return {}; // Numeric questions don't have option-based stats
+    }
+
+    // Legacy format - return as-is
+    return currentStats;
+}
+
 export default function TeacherProjectionClient({ code, gameId }: { code: string, gameId: string }) {
     // Use the canonical projection quiz socket hook
     const {
@@ -139,9 +159,10 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
     let numOptions = 0;
     if (currentTournamentQuestion && Array.isArray(currentTournamentQuestion.answerOptions)) {
         numOptions = currentTournamentQuestion.answerOptions.length;
-        if (numOptions > 0 && currentStats && typeof currentStats === 'object') {
+        if (numOptions > 0) {
+            const extractedStats = extractMultipleChoiceStats(currentStats);
             for (let i = 0; i < numOptions; i++) {
-                const count = currentStats[i.toString()] || 0;
+                const count = extractedStats[i.toString()] || 0;
                 statsArray.push(count);
                 totalAnswers += count;
             }

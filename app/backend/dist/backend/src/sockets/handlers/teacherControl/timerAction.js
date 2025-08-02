@@ -46,6 +46,8 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_2 = require("@shared/types/socketEvents.zod");
+const helpers_1 = require("./helpers");
+const projectionShowStats_1 = require("@shared/types/socket/projectionShowStats");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('TimerActionHandler');
 // Redis key prefix for game state
@@ -747,6 +749,46 @@ function timerActionHandler(io, socket) {
                         // Use canonical event constant for dashboard_question_changed
                         io.to(dashboardRoom).emit(events_1.TEACHER_EVENTS.DASHBOARD_QUESTION_CHANGED, questionChangedPayload);
                         logger.info({ gameId, targetQuestionUid, targetQuestionIndex }, '[TIMER_ACTION] Question switched and dashboard notified');
+                        // Check if stats are shown and update them for the new question
+                        try {
+                            const projectionState = await gameStateService_1.default.getProjectionDisplayState(accessCode);
+                            if (projectionState?.showStats) {
+                                logger.info({ accessCode, targetQuestionUid, showStats: projectionState.showStats }, '[TIMER_ACTION] Stats are shown, updating for new question');
+                                const newStats = await (0, helpers_1.getAnswerStats)(accessCode, targetQuestionUid);
+                                await gameStateService_1.default.updateProjectionDisplayState(accessCode, {
+                                    showStats: true,
+                                    currentStats: newStats,
+                                    statsQuestionUid: targetQuestionUid,
+                                    showCorrectAnswers: projectionState.showCorrectAnswers,
+                                    correctAnswersData: projectionState.correctAnswersData
+                                });
+                                // Emit updated stats to projection room
+                                const projectionRoom = `projection_${gameId}`;
+                                const statsPayload = {
+                                    questionUid: targetQuestionUid,
+                                    show: true,
+                                    stats: newStats,
+                                    timestamp: Date.now()
+                                };
+                                // Validate the payload with Zod schema
+                                const validation = projectionShowStats_1.ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
+                                if (validation.success) {
+                                    io.to(projectionRoom).emit('projection_show_stats', validation.data);
+                                    logger.info({ accessCode, targetQuestionUid, statsPayload: validation.data }, '[TIMER_ACTION] Updated and emitted validated stats for new question');
+                                }
+                                else {
+                                    logger.error({
+                                        accessCode,
+                                        targetQuestionUid,
+                                        error: validation.error.format(),
+                                        payload: statsPayload
+                                    }, '[TIMER_ACTION] Invalid stats payload, not emitting');
+                                }
+                            }
+                        }
+                        catch (error) {
+                            logger.error({ error, accessCode, targetQuestionUid }, '[TIMER_ACTION] Error updating stats for new question');
+                        }
                     }
                     else {
                         logger.warn({ gameId, targetQuestionUid, availableQuestions: gameState.questionUids }, '[TIMER_ACTION] Target question UID not found in game questions');

@@ -24,6 +24,8 @@ import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 // (already imported above)
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import { dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
+import { getAnswerStats } from './helpers';
+import { ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
 
 import type { GameTimerState } from '@shared/types/core/timer';
 import type { DashboardQuestionChangedPayload } from '@shared/types/socket/dashboardPayloads';
@@ -803,6 +805,51 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
 
                         logger.info({ gameId, targetQuestionUid, targetQuestionIndex },
                             '[TIMER_ACTION] Question switched and dashboard notified');
+
+                        // Check if stats are shown and update them for the new question
+                        try {
+                            const projectionState = await gameStateService.getProjectionDisplayState(accessCode);
+                            if (projectionState?.showStats) {
+                                logger.info({ accessCode, targetQuestionUid, showStats: projectionState.showStats }, 
+                                    '[TIMER_ACTION] Stats are shown, updating for new question');
+                                
+                                const newStats = await getAnswerStats(accessCode, targetQuestionUid);
+                                await gameStateService.updateProjectionDisplayState(accessCode, {
+                                    showStats: true,
+                                    currentStats: newStats,
+                                    statsQuestionUid: targetQuestionUid,
+                                    showCorrectAnswers: projectionState.showCorrectAnswers,
+                                    correctAnswersData: projectionState.correctAnswersData
+                                });
+
+                                // Emit updated stats to projection room
+                                const projectionRoom = `projection_${gameId}`;
+                                const statsPayload = {
+                                    questionUid: targetQuestionUid,
+                                    show: true,
+                                    stats: newStats,
+                                    timestamp: Date.now()
+                                };
+
+                                // Validate the payload with Zod schema
+                                const validation = ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
+                                if (validation.success) {
+                                    io.to(projectionRoom).emit('projection_show_stats', validation.data);
+                                    logger.info({ accessCode, targetQuestionUid, statsPayload: validation.data }, 
+                                        '[TIMER_ACTION] Updated and emitted validated stats for new question');
+                                } else {
+                                    logger.error({ 
+                                        accessCode, 
+                                        targetQuestionUid, 
+                                        error: validation.error.format(), 
+                                        payload: statsPayload 
+                                    }, '[TIMER_ACTION] Invalid stats payload, not emitting');
+                                }
+                            }
+                        } catch (error) {
+                            logger.error({ error, accessCode, targetQuestionUid }, 
+                                '[TIMER_ACTION] Error updating stats for new question');
+                        }
                     } else {
                         logger.warn({ gameId, targetQuestionUid, availableQuestions: gameState.questionUids },
                             '[TIMER_ACTION] Target question UID not found in game questions');

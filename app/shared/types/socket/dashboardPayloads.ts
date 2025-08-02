@@ -114,7 +114,15 @@ export interface DashboardParticipantUpdatePayload {
  */
 export interface DashboardAnswerStatsUpdatePayload {
     questionUid: string;
-    stats: Record<string, number>; // Map of option id to count
+    stats: Record<string, number> | {
+        type: 'multipleChoice';
+        stats: Record<string, number>;
+        totalUsers: number;
+    } | {
+        type: 'numeric';
+        values: number[];
+        totalAnswers: number;
+    };
 }
 
 /**

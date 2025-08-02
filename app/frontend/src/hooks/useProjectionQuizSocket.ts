@@ -27,8 +27,19 @@ import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@s
 
 const logger = createLogger('useProjectionQuizSocket');
 
+// Answer stats can be legacy format or new format with type discrimination
+type AnswerStats = Record<string, number> | {
+    type: 'multipleChoice';
+    stats: Record<string, number>;
+    totalUsers: number;
+} | {
+    type: 'numeric';
+    values: number[];
+    totalAnswers: number;
+};
+
 // Stable empty objects to prevent unnecessary re-renders
-const EMPTY_STATS: Record<string, number> = {};
+const EMPTY_STATS: AnswerStats = {};
 const EMPTY_LEADERBOARD: Array<{ userId: string; username: string; avatarEmoji?: string; score: number }> = [];
 
 /**
@@ -82,7 +93,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
     // NEW: Projection display state
     const [showStats, setShowStats] = useState<boolean>(false);
-    const [currentStats, setCurrentStats] = useState<Record<string, number>>(EMPTY_STATS);
+    const [currentStats, setCurrentStats] = useState<AnswerStats>(EMPTY_STATS);
     const [showCorrectAnswers, setShowCorrectAnswers] = useState<boolean>(false);
     const [correctAnswersData, setCorrectAnswersData] = useState<{
         questionUid: string;

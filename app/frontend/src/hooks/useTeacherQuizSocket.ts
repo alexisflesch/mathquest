@@ -35,6 +35,17 @@ import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/das
 // Re-export QuizState for other files that import it from this hook
 export type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
 
+// Answer stats can be legacy format or new format with type discrimination
+type AnswerStats = Record<string, number> | {
+    type: 'multipleChoice';
+    stats: Record<string, number>;
+    totalUsers: number;
+} | {
+    type: 'numeric';
+    values: number[];
+    totalAnswers: number;
+};
+
 const logger = createLogger('useTeacherQuizSocket');
 
 /**
@@ -58,7 +69,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
     // State management
     const [quizState, setQuizState] = useState<QuizState | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(0);
-    const [answerStats, setAnswerStats] = useState<Record<string, number>>({});
+    const [answerStats, setAnswerStats] = useState<AnswerStats>({});
 
     // Timer state is now managed externally - this hook only handles quiz/socket state
 

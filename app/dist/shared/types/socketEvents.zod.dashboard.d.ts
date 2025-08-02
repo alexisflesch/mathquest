@@ -303,10 +303,38 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
     }>;
     answersLocked: z.ZodBoolean;
     participantCount: z.ZodNumber;
-    answerStats: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
+    answerStats: z.ZodOptional<z.ZodUnion<[z.ZodRecord<z.ZodString, z.ZodNumber>, z.ZodObject<{
+        type: z.ZodLiteral<"multipleChoice">;
+        stats: z.ZodRecord<z.ZodString, z.ZodNumber>;
+        totalUsers: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        type: "multipleChoice";
+        stats: Record<string, number>;
+        totalUsers: number;
+    }, {
+        type: "multipleChoice";
+        stats: Record<string, number>;
+        totalUsers: number;
+    }>, z.ZodObject<{
+        type: z.ZodLiteral<"numeric">;
+        values: z.ZodArray<z.ZodNumber, "many">;
+        totalAnswers: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        type: "numeric";
+        values: number[];
+        totalAnswers: number;
+    }, {
+        type: "numeric";
+        values: number[];
+        totalAnswers: number;
+    }>]>>;
 }, "strip", z.ZodTypeAny, {
-    status: "pending" | "completed" | "active" | "paused";
+    status: "pending" | "active" | "paused" | "completed";
+    gameId: string;
     accessCode: string;
+    templateName: string;
+    gameInstanceName: string;
+    currentQuestionUid: string | null;
     questions: {
         text: string;
         questionType: string;
@@ -339,15 +367,23 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
         timerEndDateMs: number;
     };
     answersLocked: boolean;
-    currentQuestionUid: string | null;
-    gameId: string;
-    templateName: string;
-    gameInstanceName: string;
     participantCount: number;
-    answerStats?: Record<string, number> | undefined;
+    answerStats?: Record<string, number> | {
+        type: "multipleChoice";
+        stats: Record<string, number>;
+        totalUsers: number;
+    } | {
+        type: "numeric";
+        values: number[];
+        totalAnswers: number;
+    } | undefined;
 }, {
-    status: "pending" | "completed" | "active" | "paused";
+    status: "pending" | "active" | "paused" | "completed";
+    gameId: string;
     accessCode: string;
+    templateName: string;
+    gameInstanceName: string;
+    currentQuestionUid: string | null;
     questions: {
         text: string;
         questionType: string;
@@ -380,12 +416,16 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
         timerEndDateMs: number;
     };
     answersLocked: boolean;
-    currentQuestionUid: string | null;
-    gameId: string;
-    templateName: string;
-    gameInstanceName: string;
     participantCount: number;
-    answerStats?: Record<string, number> | undefined;
+    answerStats?: Record<string, number> | {
+        type: "multipleChoice";
+        stats: Record<string, number>;
+        totalUsers: number;
+    } | {
+        type: "numeric";
+        values: number[];
+        totalAnswers: number;
+    } | undefined;
 }>;
 export type GameControlStatePayload = z.infer<typeof gameControlStatePayloadSchema>;
 export declare const showCorrectAnswersPayloadSchema: z.ZodObject<{
@@ -395,16 +435,16 @@ export declare const showCorrectAnswersPayloadSchema: z.ZodObject<{
     show: z.ZodBoolean;
     terminatedQuestions: z.ZodRecord<z.ZodString, z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    terminatedQuestions: Record<string, boolean>;
     show: boolean;
-    accessCode?: string | undefined;
+    terminatedQuestions: Record<string, boolean>;
     gameId?: string | undefined;
+    accessCode?: string | undefined;
     teacherId?: string | undefined;
 }, {
-    terminatedQuestions: Record<string, boolean>;
     show: boolean;
-    accessCode?: string | undefined;
+    terminatedQuestions: Record<string, boolean>;
     gameId?: string | undefined;
+    accessCode?: string | undefined;
     teacherId?: string | undefined;
 }>;
 export type ShowCorrectAnswersPayload = z.infer<typeof showCorrectAnswersPayloadSchema>;
