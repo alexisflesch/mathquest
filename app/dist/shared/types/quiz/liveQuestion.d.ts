@@ -12,8 +12,13 @@ export interface FilteredQuestion {
     uid: string;
     text: string;
     questionType: string;
-    answerOptions?: string[];
-    timeLimit?: number;
+    timeLimit: number;
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+    };
+    numericQuestion?: {
+        unit?: string;
+    };
     gradeLevel?: string;
     difficulty?: number;
     themes?: string[];

@@ -75,13 +75,13 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     title: { text: 'Stem Plot' },
                     xaxis: {
                         title: { text: 'Values' },
-                        tickmode: 'array',
+                        tickmode: "array" as const, // Fix: use correct union type value
                         tickvals: uniqueValues,
                         ticktext: uniqueValues.map(v => v.toString())
                     },
                     yaxis: {
                         title: { text: 'Frequency' },
-                        rangemode: 'tozero'
+                        rangemode: "tozero" as const
                     }
                 }
             };
@@ -100,7 +100,7 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     xaxis: { title: { text: 'Values' } },
                     yaxis: {
                         title: { text: 'Frequency' },
-                        rangemode: 'tozero'
+                        rangemode: "tozero" as const
                     }
                 }
             };
@@ -125,8 +125,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     <button
                         onClick={() => setChartType('auto')}
                         className={`px-3 py-2 text-sm rounded flex items-center gap-2 transition-colors ${chartType === 'auto'
-                                ? 'bg-blue-500 text-white'
-                                : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-blue-500 text-white'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
                     >
                         <RotateCcw size={16} />
@@ -135,8 +135,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     <button
                         onClick={() => setChartType('stem')}
                         className={`px-3 py-2 text-sm rounded flex items-center gap-2 transition-colors ${chartType === 'stem'
-                                ? 'bg-blue-500 text-white'
-                                : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-blue-500 text-white'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
                     >
                         <Activity size={16} />
@@ -145,8 +145,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     <button
                         onClick={() => setChartType('histogram')}
                         className={`px-3 py-2 text-sm rounded flex items-center gap-2 transition-colors ${chartType === 'histogram'
-                                ? 'bg-blue-500 text-white'
-                                : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-blue-500 text-white'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
                     >
                         <BarChart3 size={16} />
@@ -159,8 +159,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data }) => {
                     <button
                         onClick={() => setHideOutliers(!hideOutliers)}
                         className={`px-3 py-2 text-sm rounded flex items-center gap-2 border transition-colors ${hideOutliers
-                                ? 'bg-orange-500 text-white border-orange-500'
-                                : 'text-gray-600 hover:bg-gray-100 border-gray-300'
+                            ? 'bg-orange-500 text-white border-orange-500'
+                            : 'text-gray-600 hover:bg-gray-100 border-gray-300'
                             }`}
                     >
                         {hideOutliers ? <EyeOff size={16} /> : <Eye size={16} />}

@@ -22,26 +22,37 @@ function filterQuestionForClient(questionObject) {
         uid: questionObject.uid,
         questionType: questionObject.questionType || questionObject.defaultMode,
         text: questionObject.text,
-        // Additional properties for frontend compatibility
-        timeLimit: questionObject.timeLimit,
+        timeLimit: questionObject.timeLimit, // MANDATORY
         gradeLevel: questionObject.gradeLevel,
         difficulty: questionObject.difficulty,
         themes: questionObject.themes,
     };
-    // Handle polymorphic structure: extract answerOptions from multipleChoiceQuestion
-    if (questionObject.multipleChoiceQuestion?.answerOptions) {
+    // Handle multiple choice and single choice questions
+    if (questionObject.questionType === 'multipleChoice' || questionObject.defaultMode === 'multipleChoice' ||
+        questionObject.questionType === 'singleChoice' || questionObject.defaultMode === 'singleChoice') {
+        const answerOptions = questionObject.multipleChoiceQuestion?.answerOptions;
+        if (!answerOptions) {
+            throw new Error(`Multiple/single choice question ${questionObject.uid} is missing answer options`);
+        }
         return {
             ...baseQuestion,
-            answerOptions: questionObject.multipleChoiceQuestion.answerOptions,
+            multipleChoiceQuestion: {
+                answerOptions: answerOptions
+            }
         };
     }
-    // Handle legacy structure: answerOptions directly on question
-    if (questionObject.answerOptions) {
-        return {
+    // Handle numeric questions
+    if (questionObject.questionType === 'numeric' || questionObject.defaultMode === 'numeric') {
+        const unit = questionObject.numericQuestion?.unit;
+        const result = {
             ...baseQuestion,
-            answerOptions: questionObject.answerOptions,
+            numericQuestion: {
+                // Convert null to undefined for Zod compatibility
+                ...(unit !== null && unit !== undefined ? { unit } : {})
+            }
         };
+        return result;
     }
-    // For numeric questions or questions without answer options
+    // For other question types
     return baseQuestion;
 }

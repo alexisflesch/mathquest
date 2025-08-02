@@ -170,7 +170,7 @@ function showCorrectAnswersHandler(io, socket) {
             let correctAnswers = [];
             let answerOptions = [];
             let numericAnswer;
-            if (question.questionType === 'multipleChoice' && question.multipleChoiceQuestion) {
+            if ((question.questionType === 'multipleChoice' || question.questionType === 'singleChoice') && question.multipleChoiceQuestion) {
                 correctAnswers = question.multipleChoiceQuestion.correctAnswers;
                 answerOptions = question.multipleChoiceQuestion.answerOptions;
             }
