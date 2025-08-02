@@ -69,12 +69,13 @@ export function filterQuestionForClient(questionObject: any): FilteredQuestion {
         themes: questionObject.themes,
     };
 
-    // Handle multiple choice questions
-    if (questionObject.questionType === 'multipleChoice' || questionObject.defaultMode === 'multipleChoice') {
+    // Handle multiple choice and single choice questions
+    if (questionObject.questionType === 'multipleChoice' || questionObject.defaultMode === 'multipleChoice' ||
+        questionObject.questionType === 'singleChoice' || questionObject.defaultMode === 'singleChoice') {
         const answerOptions = questionObject.multipleChoiceQuestion?.answerOptions;
 
         if (!answerOptions) {
-            throw new Error(`Multiple choice question ${questionObject.uid} is missing answer options`);
+            throw new Error(`Multiple/single choice question ${questionObject.uid} is missing answer options`);
         }
 
         return {

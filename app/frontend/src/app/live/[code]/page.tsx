@@ -695,7 +695,11 @@ export default function LiveGamePage() {
 
     // Helper: is multiple choice
     const isMultipleChoice = useMemo(() => {
-        return gameState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
+        const questionType = gameState.currentQuestion?.questionType;
+        // Handle both camelCase (from backend) and snake_case (from constants)
+        return questionType === QUESTION_TYPES.MULTIPLE_CHOICE ||
+            questionType === 'multipleChoice' ||
+            questionType === 'multiple_choice';
     }, [gameState.currentQuestion?.questionType]);
 
     // Reset answers when question changes
@@ -844,11 +848,6 @@ export default function LiveGamePage() {
         });
     }, [isMobile, userId, stableLeaderboard.length, userLeaderboardData.rank]);
 
-    // Use canonical QuestionDataForStudent for students (never includes correctAnswers)
-    const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
-        if (!gameState.currentQuestion) return null;
-        return gameState.currentQuestion as QuestionDataForStudent;
-    }, [gameState.currentQuestion]);
     const isReadonly = useMemo(() => {
         return gameState.phase === 'show_answers' ||
             gameState.gameStatus === 'completed' ||
@@ -1029,30 +1028,28 @@ export default function LiveGamePage() {
                 <TimerDisplay gameMode={gameMode} timerState={timerState} isMobile={isMobile} />
 
                 <MathJaxWrapper>
-                    <QuestionDisplay
-                        currentQuestion={currentQuestion}
-                        questionIndex={gameState.questionIndex}
-                        totalQuestions={gameState.totalQuestions}
-                        isMultipleChoice={isMultipleChoice}
-                        selectedAnswer={selectedAnswer}
-                        setSelectedAnswer={setSelectedAnswer}
-                        selectedAnswers={selectedAnswers}
-                        setSelectedAnswers={setSelectedAnswers}
-                        handleSingleChoice={handleSingleChoice}
-                        handleSubmitMultiple={handleSubmitMultiple}
-                        answered={gameState.answered}
-                        isQuizMode={gameMode === 'quiz'}
-                        correctAnswers={correctAnswersBoolean}
-                        readonly={isReadonly}
-                        gameStatus={gameState.gameStatus}
-                        connecting={connecting}
-                        connected={connected}
-                        currentQuestionUid={currentQuestionUid}
-                        numericAnswer={numericAnswer}
-                        setNumericAnswer={setNumericAnswer}
-                        handleNumericSubmit={handleNumericSubmit}
-                        numericCorrectAnswer={numericCorrectAnswer}
-                    />
+                    {gameState.currentQuestion && (
+                        <QuestionCard
+                            currentQuestion={gameState.currentQuestion}
+                            questionIndex={gameState.questionIndex}
+                            totalQuestions={gameState.totalQuestions}
+                            isMultipleChoice={isMultipleChoice}
+                            selectedAnswer={selectedAnswer}
+                            setSelectedAnswer={setSelectedAnswer}
+                            selectedAnswers={selectedAnswers}
+                            setSelectedAnswers={setSelectedAnswers}
+                            handleSingleChoice={handleSingleChoice}
+                            handleSubmitMultiple={handleSubmitMultiple}
+                            answered={gameState.answered}
+                            isQuizMode={gameMode === 'quiz'}
+                            correctAnswers={correctAnswersBoolean}
+                            readonly={isReadonly}
+                            numericAnswer={numericAnswer}
+                            setNumericAnswer={setNumericAnswer}
+                            handleNumericSubmit={handleNumericSubmit}
+                            numericCorrectAnswer={numericCorrectAnswer}
+                        />
+                    )}
                 </MathJaxWrapper>
 
                 {/* Enhanced practice mode progression */}

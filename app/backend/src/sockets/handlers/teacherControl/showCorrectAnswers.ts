@@ -150,7 +150,7 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
             let answerOptions: string[] = [];
             let numericAnswer: { correctAnswer: number; tolerance?: number } | undefined;
 
-            if (question.questionType === 'multipleChoice' && question.multipleChoiceQuestion) {
+            if ((question.questionType === 'multipleChoice' || question.questionType === 'singleChoice') && question.multipleChoiceQuestion) {
                 correctAnswers = question.multipleChoiceQuestion.correctAnswers;
                 answerOptions = question.multipleChoiceQuestion.answerOptions;
             } else if (question.questionType === 'numeric' && question.numericQuestion) {

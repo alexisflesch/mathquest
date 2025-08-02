@@ -429,8 +429,9 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
     let statsArray: number[] = [];
     let totalAnswers = 0;
     let numOptions = 0;
-    if (currentTournamentQuestion && Array.isArray(currentTournamentQuestion.answerOptions)) {
-        numOptions = currentTournamentQuestion.answerOptions.length;
+    if (currentTournamentQuestion && currentTournamentQuestion.multipleChoiceQuestion?.answerOptions) {
+        const answerOptions = currentTournamentQuestion.multipleChoiceQuestion.answerOptions;
+        numOptions = answerOptions.length;
         if (numOptions > 0 && currentStats && typeof currentStats === 'object') {
             for (let i = 0; i < numOptions; i++) {
                 const count = currentStats[i.toString()] || 0;
