@@ -91,13 +91,13 @@ describe('End-to-End Bug Reproduction: Deferred Tournament Attempt Count', () =>
     afterEach(async () => {
         await redisClient.flushdb();
         // Cleanup in reverse dependency order
-        await prisma.numericQuestion.deleteMany({ where: { questionUid: 'e2e-question-1' } }).catch(() => {});
-        await prisma.question.deleteMany({ where: { uid: 'e2e-question-1' } }).catch(() => {});
-        await prisma.gameParticipant.deleteMany({ where: { userId: testData.userId } }).catch(() => {});
-        await prisma.questionsInGameTemplate.deleteMany({ where: { questionUid: 'e2e-question-1' } }).catch(() => {});
-        await prisma.gameInstance.deleteMany({ where: { accessCode: testData.accessCode } }).catch(() => {});
-        await prisma.gameTemplate.deleteMany({ where: { name: 'E2E Bug Fix Template' } }).catch(() => {});
-        await prisma.user.deleteMany({ where: { id: testData.userId } }).catch(() => {});
+        await prisma.numericQuestion.deleteMany({ where: { questionUid: 'e2e-question-1' } }).catch(() => { });
+        await prisma.question.deleteMany({ where: { uid: 'e2e-question-1' } }).catch(() => { });
+        await prisma.gameParticipant.deleteMany({ where: { userId: testData.userId } }).catch(() => { });
+        await prisma.questionsInGameTemplate.deleteMany({ where: { questionUid: 'e2e-question-1' } }).catch(() => { });
+        await prisma.gameInstance.deleteMany({ where: { accessCode: testData.accessCode } }).catch(() => { });
+        await prisma.gameTemplate.deleteMany({ where: { name: 'E2E Bug Fix Template' } }).catch(() => { });
+        await prisma.user.deleteMany({ where: { id: testData.userId } }).catch(() => { });
     });
 
     it('should show correct attempt count: 1, 2, 3... not 3, 5, 7...', async () => {
