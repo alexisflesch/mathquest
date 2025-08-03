@@ -95,9 +95,18 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             if (socket.data.deferredAttemptCount) {
                 attemptCount = socket.data.deferredAttemptCount;
             } else {
-                attemptCount = participant?.nbAttempts || 1;
+                // FIXED: Use currentDeferredAttemptNumber for deferred sessions, not total nbAttempts
+                attemptCount = (participant as any)?.currentDeferredAttemptNumber || 1;
                 // Store for this socket/session
                 socket.data.deferredAttemptCount = attemptCount;
+                // Debug log for attempt count fix
+                console.log('[DEBUG][ATTEMPT_COUNT_FIX]', {
+                    accessCode,
+                    userId,
+                    participantNbAttempts: participant?.nbAttempts,
+                    currentDeferredAttemptNumber: (participant as any)?.currentDeferredAttemptNumber,
+                    finalAttemptCount: attemptCount
+                });
             }
             sessionKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
             // Log the attemptCount and sessionKey for deferred answer submission
@@ -158,7 +167,13 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
         console.log('[DEBUG][TIMER_FETCH] Raw timer loaded:', timer);
         canonicalTimer = toCanonicalTimer(timer, durationMs);
         console.log('[DEBUG][TIMER_FETCH] Canonical timer:', canonicalTimer);
-        const context = { timer: canonicalTimer, gameState, participant, gameInstance: contextGameInstance };
+        const context = {
+            timer: canonicalTimer,
+            gameState,
+            participant,
+            gameInstance: contextGameInstance,
+            attemptCount: isDeferred ? attemptCount : undefined
+        };
         // Call the DRY handler
         return gameAnswerHandler(io, socket, context)(payload);
     });

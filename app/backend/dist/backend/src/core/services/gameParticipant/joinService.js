@@ -87,18 +87,27 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
                         attemptCount: existing.nbAttempts
                     });
                     if (!hasOngoing) {
-                        // New deferred attempt: increment nbAttempts, reset deferredScore
+                        // New deferred attempt: use current nbAttempts as attempt number, then increment for next time
+                        const currentAttemptNumber = existing.nbAttempts;
                         const updated = await tx.gameParticipant.update({
                             where: { id: existing.id },
                             data: {
-                                nbAttempts: existing.nbAttempts + 1,
+                                nbAttempts: existing.nbAttempts + 1, // Increment for next attempt
                                 deferredScore: 0,
                                 status: participant_1.ParticipantStatus.ACTIVE,
                                 lastActiveAt: new Date()
                             },
                             include: { user: true }
                         });
-                        logger.info({ userId, accessCode, participantId: existing.id, newAttempts: updated.nbAttempts }, 'Incremented deferred attempts for new session');
+                        logger.info({
+                            userId,
+                            accessCode,
+                            participantId: existing.id,
+                            currentAttemptNumber,
+                            totalAttemptsAfterIncrement: updated.nbAttempts
+                        }, 'Starting new deferred session - current attempt number and incremented total');
+                        // Return the current attempt number (before increment) for session creation
+                        updated.currentDeferredAttemptNumber = currentAttemptNumber;
                         return updated;
                     }
                     else {

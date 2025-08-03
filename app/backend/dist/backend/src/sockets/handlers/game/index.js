@@ -197,7 +197,13 @@ function registerGameHandlers(io, socket) {
         console.log('[DEBUG][TIMER_FETCH] Raw timer loaded:', timer);
         canonicalTimer = (0, toCanonicalTimer_1.toCanonicalTimer)(timer, durationMs);
         console.log('[DEBUG][TIMER_FETCH] Canonical timer:', canonicalTimer);
-        const context = { timer: canonicalTimer, gameState, participant, gameInstance: contextGameInstance };
+        const context = {
+            timer: canonicalTimer,
+            gameState,
+            participant,
+            gameInstance: contextGameInstance,
+            attemptCount: isDeferred ? attemptCount : undefined
+        };
         // Call the DRY handler
         return (0, gameAnswer_1.gameAnswerHandler)(io, socket, context)(payload);
     });

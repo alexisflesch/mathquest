@@ -483,6 +483,18 @@ function joinGameHandler(io, socket) {
             // CRITICAL FIX: Start deferred tournament game flow for individual player
             if (gameInstance.status === 'completed' && gameInstance.playMode === 'tournament') {
                 logger.info({ accessCode, userId }, 'Starting deferred tournament game flow for individual player');
+                // GUARD: Check if a deferred session is already active for this user and game
+                const existingDeferredRoom = `deferred_${accessCode}_${userId}`;
+                const existingRooms = Array.from(socket.rooms);
+                if (existingRooms.includes(existingDeferredRoom)) {
+                    logger.info({
+                        accessCode,
+                        userId,
+                        existingDeferredRoom,
+                        existingRooms
+                    }, '[GUARD] User already in deferred room, skipping duplicate session creation');
+                    return;
+                }
                 // Get questions for this tournament
                 const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
                     where: { id: gameInstance.id },
@@ -513,8 +525,10 @@ function joinGameHandler(io, socket) {
                         try {
                             const { startDeferredTournamentSession } = await Promise.resolve().then(() => __importStar(require('../deferredTournamentFlow')));
                             logger.info({ accessCode, userId }, '[DEBUG] Successfully imported startDeferredTournamentSession');
-                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
-                            logger.info({ accessCode, userId }, '[DEBUG] startDeferredTournamentSession completed');
+                            // Get the current attempt number from the participant (before increment for new sessions)
+                            const currentAttemptNumber = joinResult.participant.currentDeferredAttemptNumber || joinResult.participant.nbAttempts;
+                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions, currentAttemptNumber);
+                            logger.info({ accessCode, userId, currentAttemptNumber }, '[DEBUG] startDeferredTournamentSession completed');
                         }
                         catch (err) {
                             logger.error({ accessCode, userId, err }, '[ERROR] Failed to start deferred tournament session');

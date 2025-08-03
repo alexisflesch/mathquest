@@ -259,7 +259,7 @@ function cleanupDeferredSessionsForGame(accessCode) {
  * @param userId - Player's user ID
  * @param questions - Array of tournament questions
  */
-async function startDeferredTournamentSession(io, socket, accessCode, userId, questions) {
+async function startDeferredTournamentSession(io, socket, accessCode, userId, questions, currentAttemptNumber) {
     logger.info({
         accessCode,
         userId,
@@ -276,7 +276,8 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         if (currentAccessCode === accessCode) {
             // Check if session is actually active in Redis
             const { hasOngoingDeferredSession } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/deferredTimerUtils')));
-            const attemptCount = await getDeferredAttemptCount(accessCode, userId);
+            // Use the passed currentAttemptNumber parameter for consistency
+            const attemptCount = currentAttemptNumber || await getDeferredAttemptCount(accessCode, userId);
             const hasRedisSession = await hasOngoingDeferredSession({ accessCode, userId, attemptCount });
             if (hasRedisSession) {
                 logger.info({ accessCode, userId, stack: new Error().stack }, 'Deferred tournament session reconnection detected - restoring session state');
@@ -334,7 +335,7 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
             }
         };
         // Store individual session state with unique key (include attemptCount for full isolation)
-        const attemptCount = await getDeferredAttemptCount(accessCode, userId);
+        const attemptCount = currentAttemptNumber || await getDeferredAttemptCount(accessCode, userId);
         // Store attemptCount on socket for this session
         socket.data.deferredAttemptCount = attemptCount;
         const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;

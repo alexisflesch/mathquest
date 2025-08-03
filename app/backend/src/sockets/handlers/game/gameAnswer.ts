@@ -42,6 +42,7 @@ export interface GameAnswerContext {
     gameState: any; // Canonical game/session state (already resolved)
     participant: any; // Canonical participant (already resolved)
     gameInstance: any; // Canonical gameInstance (already resolved)
+    attemptCount?: number; // For deferred sessions: the current attempt count to use for timer/scoring
 }
 
 // Refactored handler: accepts timer/session context as argument
@@ -195,7 +196,8 @@ export function gameAnswerHandler(
                 timeSpent: timeSpentForSubmission,
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
-            }, isDeferred // PATCH: propagate deferred mode)
+            }, isDeferred, // PATCH: propagate deferred mode
+                context.attemptCount // NEW: Pass attempt count for deferred sessions
             );
             scoringPerformed = true;
             scoringMode = (gameInstance.status === 'completed') ? 'DEFERRED' : gameInstance.playMode;

@@ -514,6 +514,19 @@ export function joinGameHandler(
             if (gameInstance.status === 'completed' && gameInstance.playMode === 'tournament') {
                 logger.info({ accessCode, userId }, 'Starting deferred tournament game flow for individual player');
 
+                // GUARD: Check if a deferred session is already active for this user and game
+                const existingDeferredRoom = `deferred_${accessCode}_${userId}`;
+                const existingRooms = Array.from(socket.rooms);
+                if (existingRooms.includes(existingDeferredRoom)) {
+                    logger.info({
+                        accessCode,
+                        userId,
+                        existingDeferredRoom,
+                        existingRooms
+                    }, '[GUARD] User already in deferred room, skipping duplicate session creation');
+                    return;
+                }
+
                 // Get questions for this tournament
                 const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
                     where: { id: gameInstance.id },
@@ -546,8 +559,12 @@ export function joinGameHandler(
                         try {
                             const { startDeferredTournamentSession } = await import('../deferredTournamentFlow');
                             logger.info({ accessCode, userId }, '[DEBUG] Successfully imported startDeferredTournamentSession');
-                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
-                            logger.info({ accessCode, userId }, '[DEBUG] startDeferredTournamentSession completed');
+
+                            // Get the current attempt number from the participant (before increment for new sessions)
+                            const currentAttemptNumber = (joinResult.participant as any).currentDeferredAttemptNumber || joinResult.participant.nbAttempts;
+
+                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions, currentAttemptNumber);
+                            logger.info({ accessCode, userId, currentAttemptNumber }, '[DEBUG] startDeferredTournamentSession completed');
                         } catch (err) {
                             logger.error({ accessCode, userId, err }, '[ERROR] Failed to start deferred tournament session');
                         }

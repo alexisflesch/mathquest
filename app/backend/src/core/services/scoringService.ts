@@ -219,13 +219,16 @@ export function checkAnswerCorrectness(question: any, answer: any): boolean {
  * @param gameInstanceId Game instance ID
  * @param userId User ID
  * @param answerData Answer submission data
+ * @param isDeferredOverride Optional override for deferred mode detection
+ * @param attemptCountOverride Optional attempt count override for deferred sessions
  * @returns Score result with details
  */
 export async function submitAnswerWithScoring(
     gameInstanceId: string,
     userId: string,
     answerData: AnswerSubmissionPayload,
-    isDeferredOverride?: boolean
+    isDeferredOverride?: boolean,
+    attemptCountOverride?: number
 ): Promise<ScoreResult> {
     try {
         logger.info({
@@ -233,7 +236,8 @@ export async function submitAnswerWithScoring(
             userId,
             answerData,
             isDeferredOverride,
-            note: '[DIAGNOSTIC] submitAnswerWithScoring called with isDeferredOverride'
+            attemptCountOverride,
+            note: '[DIAGNOSTIC] submitAnswerWithScoring called with isDeferredOverride and attemptCountOverride'
         }, '[DIAGNOSTIC] Top-level entry to submitAnswerWithScoring');
 
         logger.info({
@@ -285,9 +289,21 @@ export async function submitAnswerWithScoring(
         const isDeferred = gameInstance?.playMode === 'tournament' && gameInstance?.status === 'completed';
         logger.info({ gameInstanceId, userId, playMode: gameInstance?.playMode, status: gameInstance?.status, isDeferred }, '[LOG] GameInstance fetch result (using status for deferred mode)');
         // Use canonical attemptCount for all modes (deferred bug workaround removed)
-        const attemptCount = participant.nbAttempts;
+        // NEW: Use attemptCountOverride for deferred sessions if provided
+        const attemptCount = (isDeferred && attemptCountOverride !== undefined) ? attemptCountOverride : participant.nbAttempts;
         // Use canonical attemptCount for all modes (deferred bug workaround removed)
         const attemptCountForTimer = attemptCount;
+
+        logger.info({
+            gameInstanceId,
+            userId,
+            isDeferred,
+            participantNbAttempts: participant.nbAttempts,
+            attemptCountOverride,
+            finalAttemptCount: attemptCount,
+            attemptCountForTimer,
+            note: 'DEFERRED_FIX: Attempt count selection for timer and scoring'
+        }, '[DEFERRED_FIX] Attempt count determination');
         // FIX: Always use attempt-namespaced key for DEFERRED participants
         let answerKey: string;
         if (isDeferred) {
