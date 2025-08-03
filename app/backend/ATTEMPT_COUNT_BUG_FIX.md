@@ -75,15 +75,15 @@ Created comprehensive tests that verify:
 
 ## Files Modified
 
-1. **`/app/backend/src/sockets/handlers/deferredTournamentFlow.ts`**
+1.  **`/app/backend/src/sockets/handlers/deferredTournamentFlow.ts`**
    - Fixed `getDeferredAttemptCount()` function
    - Made function exported for testing
 
-2. **`/app/backend/src/sockets/handlers/game/joinGame.ts`**
+2.  **`/app/backend/src/sockets/handlers/game/joinGame.ts`**
    - Fixed fallback logic to not use `nbAttempts`
 
-3. **`/app/backend/tests/integration/attempt-count-fix-verification.test.ts`**
-   - Added comprehensive tests for the fix
+3.  **`/app/backend/tests/integration/verify-bug-fix.test.ts`**
+    - Added comprehensive tests for the fix (replaces the archived `attempt-count-fix-verification.test.ts`)
 
 ## Result
 

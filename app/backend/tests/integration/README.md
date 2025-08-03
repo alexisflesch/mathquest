@@ -6,6 +6,12 @@ This directory contains integration tests that verify the complete functionality
 
 The following integration tests are fully functional and validated:
 
+### ✅ Timer Synchronization Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/timer-sync.test.ts`
+- **Coverage**: Verifies that timer actions (run, pause, stop) are correctly synchronized across all clients (player, projection, dashboard).
+- **Test Count**: 1 test (all passing)
+- **Purpose**: Ensures real-time timer state consistency for all users.
+
 ### ✅ Bug Fix Verification Tests
 - **File**: `/home/aflesch/mathquest/app/backend/tests/integration/verify-bug-fix.test.ts`
 - **Coverage**: Verifies the deferred tournament attempt count bug fix (1→2→3 progression instead of 1→3→5)
@@ -100,6 +106,9 @@ Before running integration tests, ensure these services are running:
 
 ### Individual Test Files
 ```bash
+# Run timer sync tests
+npm test -- tests/integration/timer-sync.test.ts --no-coverage --detectOpenHandles --forceExit
+
 # Run bug fix verification tests (main verification test)
 npm test -- tests/integration/verify-bug-fix.test.ts --no-coverage --detectOpenHandles --forceExit
 
