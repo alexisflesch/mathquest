@@ -52,6 +52,7 @@ const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const prisma_1 = require("@/db/prisma");
 const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const gameTimings_1 = require("@shared/constants/gameTimings");
+const socketEvents_zod_2 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('DeferredTournamentFlow');
 // Track running deferred tournament sessions by userId
 const runningDeferredSessions = new Map(); // userId -> accessCode
@@ -340,12 +341,51 @@ async function runDeferredQuestionSequence(io, socket, session) {
             }
             // Wait for question duration
             await new Promise(resolve => setTimeout(resolve, durationMs));
-            // Send correct answers
+            // Send correct answers using canonical payload structure
+            // Extract correct answers based on question type (polymorphic structure)
+            let correctAnswers = [];
+            let numericAnswer;
+            if ((question.questionType === 'multipleChoice' || question.questionType === 'singleChoice') && question.multipleChoiceQuestion) {
+                correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
+            }
+            else if (question.questionType === 'numeric' && question.numericQuestion) {
+                // For numeric questions, DON'T include correctAnswers array - only use numericAnswer
+                numericAnswer = {
+                    correctAnswer: question.numericQuestion.correctAnswer,
+                    tolerance: question.numericQuestion.tolerance || 0
+                };
+            }
+            else {
+                // Fallback to legacy structure for backward compatibility
+                correctAnswers = question.correctAnswers || [];
+            }
+            // Create canonical payload with proper schema validation
             const correctAnswersPayload = {
                 questionUid: question.uid,
-                correctAnswers: question.correctAnswers || []
+                ...(correctAnswers.length > 0 && { correctAnswers }),
+                ...(numericAnswer && { numericAnswer })
             };
-            io.to(playerRoom).emit('correct_answers', correctAnswersPayload);
+            // Validate the payload using the canonical schema
+            const correctAnswersParseResult = socketEvents_zod_2.correctAnswersPayloadSchema.safeParse(correctAnswersPayload);
+            if (!correctAnswersParseResult.success) {
+                logger.error({
+                    errors: correctAnswersParseResult.error.errors,
+                    payload: correctAnswersPayload,
+                    questionUid: question.uid
+                }, '[DEFERRED] Invalid correct_answers payload, skipping emission');
+            }
+            else {
+                io.to(playerRoom).emit('correct_answers', correctAnswersParseResult.data);
+                logger.info({
+                    accessCode,
+                    userId,
+                    event: 'correct_answers',
+                    questionUid: question.uid,
+                    questionType: question.questionType,
+                    correctAnswers: correctAnswers.length > 0 ? correctAnswers : undefined,
+                    numericAnswer: numericAnswer
+                }, '[DEFERRED] Emitted canonical correct_answers with validation');
+            }
             // Wait for correct answers display duration before proceeding
             const correctAnswersDisplayTime = (0, gameTimings_1.getCorrectAnswersDisplayTime)('tournament'); // 1.5s for all modes
             await new Promise(resolve => setTimeout(resolve, correctAnswersDisplayTime * 1000));

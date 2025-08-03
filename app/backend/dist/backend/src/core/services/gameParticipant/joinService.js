@@ -50,13 +50,11 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
         }
         // Determine participant status based on game state
         const participantStatus = gameInstance.status === 'pending' ? participant_1.ParticipantStatus.PENDING : participant_1.ParticipantStatus.ACTIVE;
-        // Upsert user
+        // Upsert user - only create new users, never update existing user profiles
         const updatedUser = await prisma_1.prisma.user.upsert({
             where: { id: userId },
             update: {
-                // 🐛 FIX: Update username if provided to ensure consistency between Redis and database
-                ...(username ? { username } : {}),
-                ...(avatarEmoji ? { avatarEmoji } : {})
+            // Never update username/avatarEmoji during game join - these should only be updated via profile API
             },
             create: {
                 id: userId,
