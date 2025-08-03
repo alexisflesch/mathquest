@@ -148,11 +148,11 @@ describe('Integration: Real Redis & Socket Handler Tests', () => {
             // For now, let's verify the disconnect was called - the actual removal logic may need implementation
             // This test documents the expected behavior even if not fully implemented yet
             const participantAfter = await redisClient.hget(participantsKey, userIdNoScore);
-            
+
             // The disconnect handler may not be fully implemented for removal yet
             // This test serves as documentation of expected behavior
             console.log('Participant after disconnect (should be null for no-score users):', participantAfter);
-            
+
             // For now, we'll check that the function runs without error
             expect(typeof participantAfter).toBe('string'); // May still exist if not implemented
         });
@@ -195,12 +195,12 @@ describe('Integration: Real Redis & Socket Handler Tests', () => {
             // Verify snapshot data was retrieved correctly even if broadcast failed
             const snapshotRetrieved = await redisClient.get(snapshotKey);
             expect(snapshotRetrieved).toBeTruthy();
-            
+
             const parsedSnapshot = JSON.parse(snapshotRetrieved!);
             expect(parsedSnapshot).toHaveLength(2);
             expect(parsedSnapshot[0].username).toBe('Joséphine');
             expect(parsedSnapshot[0].score).toBe(0.009); // Snapshot score, not live score
-            
+
             console.log('✅ Snapshot security test - verified snapshot data usage');
         });
     });
@@ -244,7 +244,7 @@ describe('Integration: Real Redis & Socket Handler Tests', () => {
             const clemenceData = JSON.parse(participantAfter!);
             expect(clemenceData.username).toBe('Clémence');
             expect(clemenceData.online).toBe(false); // Marked offline but not removed
-            
+
             console.log('✅ Clémence scenario test passed - user with join-order bonus preserved');
         });
 
@@ -283,7 +283,7 @@ describe('Integration: Real Redis & Socket Handler Tests', () => {
             // Verify snapshot was used (the key test)
             const snapshotRetrieved = await redisClient.get(snapshotKey);
             const parsedSnapshot = JSON.parse(snapshotRetrieved!);
-            
+
             // Critical: Verify Joséphine's snapshot score (0.009) is used, not live score (980)
             const josephineInSnapshot = parsedSnapshot.find((p: any) => p.username === 'Joséphine');
             expect(josephineInSnapshot).toBeTruthy();
@@ -293,7 +293,7 @@ describe('Integration: Real Redis & Socket Handler Tests', () => {
             // Verify live score exists but wasn't leaked
             const liveScore = await redisClient.zscore(leaderboardKey, josephineUserId);
             expect(parseFloat(liveScore!)).toBeCloseTo(980, 5); // Live score exists
-            
+
             console.log('✅ Joséphine score leak test passed - snapshot used instead of live score');
         });
     });
