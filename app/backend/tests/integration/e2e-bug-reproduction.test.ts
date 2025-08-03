@@ -37,32 +37,39 @@ describe('End-to-End Bug Reproduction: Deferred Tournament Attempt Count', () =>
         await prisma.gameTemplate.deleteMany({ where: { name: 'E2E Bug Fix Template' } });
 
         // Create test game infrastructure
+        // First create the question
+        const question = await prisma.question.create({
+            data: {
+                uid: 'e2e-question-1',
+                text: 'What is 2+2?',
+                questionType: 'numeric',
+                discipline: 'Mathematics',
+                gradeLevel: 'CE1',
+                author: 'test',
+                timeLimit: 30,
+                numericQuestion: {
+                    create: {
+                        correctAnswer: 4,
+                        tolerance: 0
+                    }
+                }
+            }
+        });
+
         const gameTemplate = await prisma.gameTemplate.create({
             data: {
                 name: 'E2E Bug Fix Template',
                 description: 'Template for reproducing the deferred tournament attempt count bug',
-                questions: {
-                    create: [
-                        {
-                            question: {
-                                create: {
-                                    questionUid: 'e2e-question-1',
-                                    title: 'Test Question 1',
-                                    questionText: 'What is 2+2?',
-                                    questionType: 'numeric',
-                                    numericQuestion: {
-                                        create: {
-                                            correctAnswer: 4,
-                                            tolerance: 0,
-                                            unit: null
-                                        }
-                                    }
-                                }
-                            },
-                            order: 1
-                        }
-                    ]
-                }
+                creatorId: testData.userId
+            }
+        });
+
+        // Create the question-template relationship
+        await prisma.questionsInGameTemplate.create({
+            data: {
+                gameTemplateId: gameTemplate.id,
+                questionUid: question.uid,
+                sequence: 1
             }
         });
 
@@ -76,17 +83,21 @@ describe('End-to-End Bug Reproduction: Deferred Tournament Attempt Count', () =>
                 status: 'completed', // Completed so it's available for deferred play
                 differedAvailableFrom: new Date(Date.now() - 24 * 60 * 60 * 1000),
                 differedAvailableTo: new Date(Date.now() + 24 * 60 * 60 * 1000),
-                createdBy: testData.userId,
+                initiatorUserId: testData.userId,
             }
         });
     });
 
     afterEach(async () => {
         await redisClient.flushdb();
-        await prisma.gameParticipant.deleteMany({ where: { userId: testData.userId } });
-        await prisma.gameInstance.deleteMany({ where: { accessCode: testData.accessCode } });
-        await prisma.user.deleteMany({ where: { id: testData.userId } });
-        await prisma.gameTemplate.deleteMany({ where: { name: 'E2E Bug Fix Template' } });
+        // Cleanup in reverse dependency order
+        await prisma.numericQuestion.deleteMany({ where: { questionUid: 'e2e-question-1' } }).catch(() => {});
+        await prisma.question.deleteMany({ where: { uid: 'e2e-question-1' } }).catch(() => {});
+        await prisma.gameParticipant.deleteMany({ where: { userId: testData.userId } }).catch(() => {});
+        await prisma.questionsInGameTemplate.deleteMany({ where: { questionUid: 'e2e-question-1' } }).catch(() => {});
+        await prisma.gameInstance.deleteMany({ where: { accessCode: testData.accessCode } }).catch(() => {});
+        await prisma.gameTemplate.deleteMany({ where: { name: 'E2E Bug Fix Template' } }).catch(() => {});
+        await prisma.user.deleteMany({ where: { id: testData.userId } }).catch(() => {});
     });
 
     it('should show correct attempt count: 1, 2, 3... not 3, 5, 7...', async () => {

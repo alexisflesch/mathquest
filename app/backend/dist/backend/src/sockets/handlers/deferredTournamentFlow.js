@@ -43,6 +43,7 @@ exports.startDeferredTournamentSession = startDeferredTournamentSession;
 exports.hasDeferredSession = hasDeferredSession;
 exports.getDeferredSessionAccessCode = getDeferredSessionAccessCode;
 exports.cleanupDeferredSession = cleanupDeferredSession;
+exports.getDeferredAttemptCount = getDeferredAttemptCount;
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const redis_1 = require("@/config/redis");
@@ -819,12 +820,19 @@ function cleanupDeferredSession(userId) {
 }
 // Utility to get current attemptCount for a user in a deferred tournament
 async function getDeferredAttemptCount(accessCode, userId) {
-    const gameInstance = await prisma_1.prisma.gameInstance.findUnique({ where: { accessCode }, select: { id: true } });
-    if (!gameInstance)
-        return 1;
-    const participant = await prisma_1.prisma.gameParticipant.findFirst({
-        where: { gameInstanceId: gameInstance.id, userId },
-        select: { nbAttempts: true }
-    });
-    return participant?.nbAttempts || 1;
+    // Look for existing deferred session state keys to determine the current attempt number
+    const pattern = `deferred_session:${accessCode}:${userId}:*`;
+    const keys = await redis_1.redisClient.keys(pattern);
+    if (keys.length > 0) {
+        // Extract attempt numbers from the keys and find the highest one
+        const attemptNumbers = keys.map(key => {
+            const parts = key.split(':');
+            return parseInt(parts[parts.length - 1], 10);
+        }).filter(num => !isNaN(num));
+        if (attemptNumbers.length > 0) {
+            return Math.max(...attemptNumbers);
+        }
+    }
+    // If no active session, return 1 for the first attempt
+    return 1;
 }
