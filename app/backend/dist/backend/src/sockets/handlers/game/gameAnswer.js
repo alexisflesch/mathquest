@@ -192,7 +192,8 @@ function gameAnswerHandler(io, socket, context) {
                 timeSpent: timeSpentForSubmission,
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
-            }, isDeferred // PATCH: propagate deferred mode)
+            }, isDeferred, // PATCH: propagate deferred mode
+            context.attemptCount // NEW: Pass attempt count for deferred sessions
             );
             scoringPerformed = true;
             scoringMode = (gameInstance.status === 'completed') ? 'DEFERRED' : gameInstance.playMode;

@@ -896,12 +896,23 @@ export function cleanupDeferredSession(userId: string): void {
 }
 
 // Utility to get current attemptCount for a user in a deferred tournament
-async function getDeferredAttemptCount(accessCode: string, userId: string): Promise<number> {
-    const gameInstance = await prisma.gameInstance.findUnique({ where: { accessCode }, select: { id: true } });
-    if (!gameInstance) return 1;
-    const participant = await prisma.gameParticipant.findFirst({
-        where: { gameInstanceId: gameInstance.id, userId },
-        select: { nbAttempts: true }
-    });
-    return participant?.nbAttempts || 1;
+export async function getDeferredAttemptCount(accessCode: string, userId: string): Promise<number> {
+    // Look for existing deferred session state keys to determine the current attempt number
+    const pattern = `deferred_session:${accessCode}:${userId}:*`;
+    const keys = await redisClient.keys(pattern);
+
+    if (keys.length > 0) {
+        // Extract attempt numbers from the keys and find the highest one
+        const attemptNumbers = keys.map(key => {
+            const parts = key.split(':');
+            return parseInt(parts[parts.length - 1], 10);
+        }).filter(num => !isNaN(num));
+
+        if (attemptNumbers.length > 0) {
+            return Math.max(...attemptNumbers);
+        }
+    }
+
+    // If no active session, return 1 for the first attempt
+    return 1;
 }

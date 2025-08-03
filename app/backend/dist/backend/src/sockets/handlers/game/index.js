@@ -128,9 +128,18 @@ function registerGameHandlers(io, socket) {
                 attemptCount = socket.data.deferredAttemptCount;
             }
             else {
-                attemptCount = participant?.nbAttempts || 1;
+                // FIXED: Use currentDeferredAttemptNumber for deferred sessions, not total nbAttempts
+                attemptCount = participant?.currentDeferredAttemptNumber || 1;
                 // Store for this socket/session
                 socket.data.deferredAttemptCount = attemptCount;
+                // Debug log for attempt count fix
+                console.log('[DEBUG][ATTEMPT_COUNT_FIX]', {
+                    accessCode,
+                    userId,
+                    participantNbAttempts: participant?.nbAttempts,
+                    currentDeferredAttemptNumber: participant?.currentDeferredAttemptNumber,
+                    finalAttemptCount: attemptCount
+                });
             }
             sessionKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
             // Log the attemptCount and sessionKey for deferred answer submission

@@ -560,8 +560,16 @@ export function joinGameHandler(
                             const { startDeferredTournamentSession } = await import('../deferredTournamentFlow');
                             logger.info({ accessCode, userId }, '[DEBUG] Successfully imported startDeferredTournamentSession');
 
-                            // Get the current attempt number from the participant (before increment for new sessions)
-                            const currentAttemptNumber = (joinResult.participant as any).currentDeferredAttemptNumber || joinResult.participant.nbAttempts;
+                            // Get the current attempt number from the participant
+                            // For new sessions, this will be set by joinService as currentDeferredAttemptNumber
+                            // For reconnections, we need to determine it from the existing session
+                            let currentAttemptNumber = (joinResult.participant as any).currentDeferredAttemptNumber;
+
+                            if (!currentAttemptNumber) {
+                                // This is likely a reconnection - determine attempt count from session state
+                                // We'll let startDeferredTournamentSession figure it out via getDeferredAttemptCount
+                                currentAttemptNumber = undefined;
+                            }
 
                             await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions, currentAttemptNumber);
                             logger.info({ accessCode, userId, currentAttemptNumber }, '[DEBUG] startDeferredTournamentSession completed');
