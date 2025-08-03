@@ -374,6 +374,12 @@ export function useStudentGameSocket({
             }, (data): data is QuestionDataForStudent => questionDataForStudentSchema.safeParse(data).success, SOCKET_EVENTS.GAME.GAME_QUESTION)
         );
 
+        // DEBUG: Test event listener to verify backend communication
+        socket.on('test_deferred_debug' as any, (data: any) => {
+            console.log('🧪 [DEBUG] Received test_deferred_debug event:', data);
+            logger.info('🧪 [DEBUG] Received test_deferred_debug event', { data });
+        });
+
         // Game state update handler
         socket.on(SOCKET_EVENTS.GAME.GAME_STATE_UPDATE as any, createSafeEventHandler<GameStateUpdatePayload>((data) => {
             setGameState(prev => ({
@@ -493,6 +499,7 @@ export function useStudentGameSocket({
         return () => {
             socket.off(SOCKET_EVENTS.GAME.GAME_JOINED as any);
             socket.off(SOCKET_EVENTS.GAME.GAME_QUESTION as any);
+            socket.off('test_deferred_debug' as any); // DEBUG: Clean up test event listener
             socket.off(SOCKET_EVENTS.GAME.TIMER_UPDATE as any);
             socket.off(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any);
             socket.off(SOCKET_EVENTS.GAME.GAME_STATE_UPDATE as any);
