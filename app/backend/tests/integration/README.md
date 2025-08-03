@@ -6,15 +6,71 @@ This directory contains integration tests that verify the complete functionality
 
 The following integration tests are fully functional and validated:
 
-### ✅ Deferred Tournament Fixes
+### ✅ Bug Fix Verification Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/verify-bug-fix.test.ts`
+- **Coverage**: Verifies the deferred tournament attempt count bug fix (1→2→3 progression instead of 1→3→5)
+- **Test Count**: 2 tests (all passing)
+- **Purpose**: Main verification that the duplicate `joinGame()` call bug is fixed
+
+### ✅ Real API Integration Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/real-api-test.test.ts`
+- **Coverage**: Tests actual `joinGame()` function calls and validates database reality vs test mocks
+- **Test Count**: 1 test (all passing)
+- **Purpose**: Ensures tests reflect real application behavior, not just test artifacts
+
+### ✅ Leaderboard Payload Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/leaderboard-payload.test.ts`
+- **Coverage**: Tests leaderboard correctness for both live and deferred tournament modes
+- **Test Count**: 3 tests (all passing)
+- **Purpose**: Validates that backend scoring works correctly and deferred tournaments isolate scores
+
+### ✅ Database Values Check Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/check-db-values-only.test.ts`
+- **Coverage**: Direct database validation tests for attempt counts and participant data
+- **Test Count**: Database-focused tests
+- **Purpose**: Validates database state without complex socket operations
+
+### ✅ Database Reality Check Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/database-reality-check.test.ts`
+- **Coverage**: Comprehensive database state validation and reality checks
+- **Test Count**: Database validation tests
+- **Purpose**: Ensures database reflects actual application state, not test artifacts
+
+### ✅ Deferred Leaderboard Emission Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/deferred-leaderboard-emission.test.ts`
+- **Coverage**: Tests leaderboard emission and real-time updates for deferred tournaments
+- **Test Count**: Leaderboard emission tests
+- **Purpose**: Validates real-time leaderboard updates and socket emissions
+
+### ✅ Live to Deferred Bug Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/focused-live-to-deferred-bug.test.ts`
+- **Coverage**: Focused tests on live tournament to deferred tournament transition bugs
+- **Test Count**: Live-to-deferred transition tests
+- **Purpose**: Validates transition scenarios and state preservation
+
+### ✅ Deferred Tournament Fixes (Legacy)
 - **File**: `/home/aflesch/mathquest/app/backend/tests/integration/deferred-tournament-fixes.test.ts`
 - **Coverage**: Tests all fixes for deferred tournament issues including attempt count handling, time penalty calculations, and score isolation
 - **Test Count**: 9 tests (all passing)
+- **Purpose**: Comprehensive testing of timer key generation and scoring service integration
 
-### ✅ Participant Preservation & Redis Tests  
+### ✅ Participant Preservation & Redis Tests (Legacy)
 - **File**: `/home/aflesch/mathquest/app/backend/tests/integration/participant-preservation-real-redis.test.ts`
 - **Coverage**: Tests real Redis operations, socket handlers, participant preservation, and projection security
 - **Test Count**: Real Redis integration with socket handlers
+- **Purpose**: Validates participant preservation and projection security features
+
+## Archived Tests
+
+The following tests have been moved to `/home/aflesch/mathquest/app/backend/tests/integration/archive/` as they were either replaced by better tests or found to be unreliable:
+
+- `attempt-count-bug-reproduction.test.ts` - Replaced by `verify-bug-fix.test.ts`
+- `attempt-count-fix-verification.test.ts` - Replaced by `verify-bug-fix.test.ts` 
+- `comprehensive-tournament.test.ts` - Replaced by `leaderboard-payload.test.ts`
+- `e2e-bug-reproduction.test.ts` - Unreliable, replaced by focused tests
+- `user-reported-attempt-count-bug.test.ts` - Replaced by `verify-bug-fix.test.ts`
+
+These archived tests can be referenced for historical context but should not be run as part of the current test suite.
 
 ## Prerequisites
 
@@ -44,10 +100,31 @@ Before running integration tests, ensure these services are running:
 
 ### Individual Test Files
 ```bash
-# Run deferred tournament fixes tests
+# Run bug fix verification tests (main verification test)
+npm test -- tests/integration/verify-bug-fix.test.ts --no-coverage --detectOpenHandles --forceExit
+
+# Run real API integration tests
+npm test -- tests/integration/real-api-test.test.ts --no-coverage --detectOpenHandles --forceExit
+
+# Run leaderboard payload tests
+npm test -- tests/integration/leaderboard-payload.test.ts --no-coverage --detectOpenHandles --forceExit
+
+# Run database values check tests
+npm test -- tests/integration/check-db-values-only.test.ts --no-coverage --detectOpenHandles --forceExit
+
+# Run database reality check tests
+npm test -- tests/integration/database-reality-check.test.ts --no-coverage --detectOpenHandles --forceExit
+
+# Run deferred leaderboard emission tests
+npm test -- tests/integration/deferred-leaderboard-emission.test.ts --no-coverage --detectOpenHandles --forceExit
+
+# Run live to deferred bug tests
+npm test -- tests/integration/focused-live-to-deferred-bug.test.ts --no-coverage --detectOpenHandles --forceExit
+
+# Run deferred tournament fixes tests (legacy but working)
 npm test -- tests/integration/deferred-tournament-fixes.test.ts --no-coverage --detectOpenHandles --forceExit
 
-# Run participant preservation tests  
+# Run participant preservation tests (legacy but working)
 npm test -- tests/integration/participant-preservation-real-redis.test.ts --no-coverage --detectOpenHandles --forceExit
 ```
 
@@ -164,7 +241,40 @@ Key log patterns to look for:
 
 ## Expected Test Results
 
-### Deferred Tournament Fixes
+### Bug Fix Verification Tests
+```
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+```
+
+Key validations:
+- Deferred tournament attempts show correct progression (1→2→3 instead of 1→3→5)
+- Live tournament regression tests pass
+- Real `joinGame()` function calls work correctly
+
+### Real API Integration Tests
+```
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+```
+
+Key validations:
+- Actual `joinGame()` function creates `nbAttempts: 1` for new participants
+- Tests use real application logic, not test mocks
+- Database values reflect actual application behavior
+
+### Leaderboard Payload Tests
+```
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+```
+
+Key validations:
+- Live tournament leaderboards populate correctly
+- Deferred tournament scores are isolated from global leaderboard
+- Backend scoring service works correctly for both modes
+
+### Deferred Tournament Fixes (Legacy)
 ```
 Test Suites: 1 passed, 1 total
 Tests:       9 passed, 9 total

@@ -103,12 +103,12 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                     });
 
                     if (!hasOngoing) {
-                        // New deferred attempt: use current nbAttempts as attempt number, then increment for next time
-                        const currentAttemptNumber = existing.nbAttempts;
+                        // New deferred attempt: increment nbAttempts to reflect new attempt
+                        const newAttemptNumber = existing.nbAttempts + 1;
                         const updated = await tx.gameParticipant.update({
                             where: { id: existing.id },
                             data: {
-                                nbAttempts: existing.nbAttempts + 1, // Increment for next attempt
+                                nbAttempts: newAttemptNumber,
                                 deferredScore: 0,
                                 status: ParticipantStatus.ACTIVE,
                                 lastActiveAt: new Date()
@@ -119,12 +119,12 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                             userId,
                             accessCode,
                             participantId: existing.id,
-                            currentAttemptNumber,
+                            newAttemptNumber,
                             totalAttemptsAfterIncrement: updated.nbAttempts
-                        }, 'Starting new deferred session - current attempt number and incremented total');
+                        }, 'Starting new deferred session - incremented nbAttempts');
 
-                        // Return the current attempt number (before increment) for session creation
-                        (updated as any).currentDeferredAttemptNumber = currentAttemptNumber;
+                        // Return the new attempt number for session creation
+                        (updated as any).currentDeferredAttemptNumber = newAttemptNumber;
                         return updated;
                     } else {
                         // Ongoing session: just update status and lastActiveAt
