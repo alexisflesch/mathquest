@@ -102,6 +102,14 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
                     nbOfQuestions
                 });
                 finalgameTemplateId = template.id;
+                // For practice sessions, update the practiceSettings to include the newly created gameTemplateId
+                if (playMode === 'practice' && settings && typeof settings === 'object' && 'practiceSettings' in settings) {
+                    settings.practiceSettings.gameTemplateId = template.id;
+                    logger.info({
+                        gameTemplateId: template.id,
+                        practiceSettings: settings.practiceSettings
+                    }, 'Updated practiceSettings with gameTemplateId for student-created practice session');
+                }
             }
             catch (err) {
                 res.status(400).json({ error: err.message || 'Failed to create game template' });

@@ -74,7 +74,8 @@ export class PracticeSessionService {
                 questionPool = await this.generateQuestionPool(settings);
                 logger.info({
                     sessionId,
-                    questionCount: questionPool.length
+                    questionCount: questionPool.length,
+                    reason: 'No gameTemplateId provided in settings.'
                 }, 'Generated new question pool for practice session');
             }
 

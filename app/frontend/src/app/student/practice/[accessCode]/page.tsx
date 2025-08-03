@@ -185,7 +185,11 @@ export default function PracticeSessionWithAccessCodePage() {
 
     // Helper: is multiple choice (exactly like live page)
     const isMultipleChoice = useMemo(() => {
-        return practiceState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
+        const questionType = practiceState.currentQuestion?.questionType;
+        // Handle both camelCase (from backend) and snake_case (from constants)
+        return questionType === QUESTION_TYPES.MULTIPLE_CHOICE ||
+            questionType === 'multipleChoice' ||
+            questionType === 'multiple_choice';
     }, [practiceState.currentQuestion?.questionType]);
 
     // Handle single choice answer submission (exactly like live page)
