@@ -27,8 +27,9 @@ MathQuest est une **alternative libre et open source à Kahoot**, pensée pour l
 
 ## ✨ Fonctionnalités principales
 
-- 🎯 **Quiz interactifs en temps réel** - Préparez des questions en les récupérant dans la base partagée puis utilisez-les en classe.
-- 🏆 **Système de tournois** - Les élèves peuvent organiser des tournois entre eux sur des thèmes de leur choix
+- 🌀 **Quiz interactifs en temps réel** - Préparez des questions en les récupérant dans la base partagée puis utilisez-les en classe.
+- 👥 **Système de tournois** - Les élèves peuvent organiser des tournois entre eux sur des thèmes de leur choix
+- 🏋️‍♂️ **Mode entraînement individuel** - Les élèves peuvent s'entraîner en autonomie, sans timer ni classement
 - 📱 **Interface responsive** - Fonctionne parfaitement sur mobile, tablette et ordinateur  
 - 📊 **Suivi des performances** - Tableaux de bord détaillés pour les enseignants
 - 🔧 **Libre et personnalisable** - Code source ouvert, hébergement autonome

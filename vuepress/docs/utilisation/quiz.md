@@ -1,12 +1,12 @@
 ---
-title: Mode Quiz (enseignant)
+title: 🌀 Mode Quiz (enseignant)
 ---
 
-# Mode Quiz (enseignant)
+# 🌀 Mode Quiz (enseignant)
 
 Le mode Quiz vous permet de piloter entièrement une session de questions en temps réel avec vos élèves.
 
-## 1. Sélection et création de quiz
+## 📝 1. Sélection et création de quiz
 
 Commencez par créer ou sélectionner une activité dans la section dédiée de l’interface. À partir de cette activité, vous pouvez générer un quiz, un tournoi ou une session d’entraînement. Une fois le quiz prêt, communiquez le code d’accès à vos élèves pour qu’ils rejoignent la session.
 
@@ -16,7 +16,7 @@ Commencez par créer ou sélectionner une activité dans la section dédiée de 
   <p><em>Interface de gestion des activités et sélection de quiz</em></p>
 </div>
 
-## 2. Vue vidéoprojecteur
+## 🖥️ 2. Vue vidéoprojecteur
 
 Une fois le quiz sélectionné, affichez sur vidéoprojecteur la page dédiée avec QR code et lien pour rejoindre le quiz. Cette page se rafraîchit automatiquement pour afficher :
 - Les questions en cours
@@ -30,13 +30,30 @@ Une fois le quiz sélectionné, affichez sur vidéoprojecteur la page dédiée a
   <p><em>Vue de projection pour la classe avec QR code et statistiques</em></p>
 </div>
 
+### 📊 Statistiques de réponses
+
+Deux interfaces permettent d’afficher les statistiques en temps réel :
+
+1. **Dashboard enseignant**
+   - Interface privée accessible uniquement à l’enseignant.
+   - Les statistiques s’affichent en temps réel pendant que les élèves répondent.
+   - Pour les QCM/QCU : affichage sous forme de barres derrière les options de réponses.
+   - Pour les questions numériques ou ouvertes : affichage sous forme d’histogramme ou diagramme en bâtons (au choix).
+   - Permet à l’enseignant de suivre la répartition des réponses, le taux de participation, etc.
+
+2. **Vue projection**
+   - Interface partagée, affichée sur le vidéoprojecteur pour toute la classe.
+   - L’enseignant peut choisir d’afficher ou masquer les statistiques via le dashboard à n'importe quel moment.
+   - Les statistiques affichées reprennent le même style que sur le dashboard (barres/histogrammes).
+   - Permet aux élèves de voir la répartition des réponses en direct (si activé).
+
 **💡 Fonctionnalités de la vue projection :**
 - **Mise en page** : Redimensionnez et réorganisez les éléments à votre convenance. Avant le début du quiz, tous les éléments affichent des QR codes pour vos élèves.
 - **Affichage/masquage des statistiques** : Choisissez d’afficher ou non les stats de réponses en temps réel.
 - **QR code dynamique** : Permettez à vos élèves de rejoindre facilement avec leur téléphone.
 - **Mise à jour automatique** : La page se synchronise automatiquement avec votre dashboard enseignant.
 
-## 3. Dashboard de contrôle
+## 🎛️ 3. Dashboard de contrôle
 
 Vous disposez d’un tableau de bord complet pour contrôler la session. Utilisez votre ordinateur ou votre téléphone portable pour un contrôle total.
 
@@ -63,7 +80,7 @@ Vous disposez d’un tableau de bord complet pour contrôler la session. Utilise
 - **Gestion des corrections** : Décidez quand afficher les bonnes réponses et calculer les scores.
 - **Flexibilité mobile** : Contrôlez la session depuis votre téléphone pour circuler dans la classe.
 
-## 4. Expérience élève
+## 👨‍🎓 4. Expérience élève
 
 - Les élèves rejoignent via un code ou un lien (QR code).
 - Ils répondent en temps réel aux questions affichées.
