@@ -254,7 +254,7 @@ describe('Integration: Late Joiner Leaderboard Tests', () => {
             // we can verify it worked by checking the snapshot was populated
             // and the late joiner has the correct data in Redis
             expect(snapshot.some(entry => entry.userId === lateJoiner.id)).toBe(true);
-            
+
             // Verify other expected socket events were emitted
             const gameJoinedEvents = mockSocket.emittedEvents.filter(e => e.event === 'game_joined');
             expect(gameJoinedEvents.length).toBeGreaterThan(0);
