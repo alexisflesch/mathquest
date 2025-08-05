@@ -184,7 +184,7 @@ export default function MyTournamentsPage() {
                                 <Link
                                     href={isCompleted ? `/leaderboard/${game.code}` : `/live/${game.code}`}
                                     className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center"
-                                    title={isCompleted ? "Voir le classement" : "Rejoindre le lobby"}
+                                    title={isCompleted ? "Voir le classement" : "Rejoindre l'activité"}
                                 >
                                     {isCompleted ? (
                                         <BarChart3 style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
@@ -196,7 +196,7 @@ export default function MyTournamentsPage() {
                                 <Link
                                     href={`/leaderboard/${game.code}`}
                                     className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center"
-                                    title={isCompleted ? "Voir les statistiques" : "Voir le classement"}
+                                    title={isCompleted ? "Voir les résultats" : "Voir le classement"}
                                 >
                                     {isCompleted ? (
                                         <BarChart3 style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
@@ -227,7 +227,7 @@ export default function MyTournamentsPage() {
                             <li key={t.id} className="flex items-center gap-4 pt-0 pb-0 pl-2 pr-1 rounded bg-base-200">
                                 <span className="font-mono text-lg">{t.code}</span>
                                 <span className="flex-1 truncate">{formatActivityDate(t)}</span>
-                                <Link href={`/live/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Rejoindre le lobby">
+                                <Link href={`/live/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Rejoindre l'activité">
                                     <SquareArrowRight style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
                                 </Link>
                             </li>
@@ -269,7 +269,7 @@ export default function MyTournamentsPage() {
                             <span className="font-mono text-lg">{t.code}</span>
                             <span className="flex-1 truncate">{formatActivityDate(t)}</span>
                             {t.position && <span className="badge badge-secondary text-xs px-2 py-1">#{t.position}</span>}
-                            <Link href={`/leaderboard/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Voir les statistiques">
+                            <Link href={`/leaderboard/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Voir les résultats">
                                 <BarChart3 style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
                             </Link>
                         </li>

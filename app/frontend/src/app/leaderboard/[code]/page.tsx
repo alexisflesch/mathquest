@@ -12,11 +12,14 @@
  */
 
 "use client";
+import "@/app/ribbon.css";
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Share2 } from "lucide-react";
+import { Share2, QrCode } from "lucide-react";
+import InfoModal from '@/components/SharedModal';
+import QrCodeWithLogo from '@/components/QrCodeWithLogo';
 import { makeApiRequest } from '@/config/api';
 import { TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
 import type { LeaderboardEntry, ParticipationType } from '@shared/types/core/participant';
@@ -32,6 +35,7 @@ export default function TournamentLeaderboardPage() {
     const [error, setError] = useState<string | null>(null);
     const [canPlayDiffered, setCanPlayDiffered] = useState(false);
     const [showReplayNotification, setShowReplayNotification] = useState(false);
+    const [showQrModal, setShowQrModal] = useState(false);
 
     // Check if user was redirected here due to replay attempt
     useEffect(() => {
@@ -109,100 +113,216 @@ export default function TournamentLeaderboardPage() {
     if (error) {
         return <div className="min-h-screen flex items-center justify-center bg-base-200"><div className="alert alert-error">{error}</div></div>;
     }
+    // Split leaderboard into live and deferred
+    const currentUserId = getCurrentUserId();
+    const liveEntries = leaderboard.filter(e => e.participationType === 'LIVE');
+    const deferredEntries = leaderboard.filter(e => e.participationType === 'DEFERRED');
+
+    // Sort and re-rank live entries
+    const sortedLive = [...liveEntries].sort((a, b) => b.score - a.score);
+    const rankedLive = sortedLive.map((e, i) => ({ ...e, rank: i + 1 }));
+
+    // Sort and re-rank deferred entries
+    const sortedDeferred = [...deferredEntries].sort((a, b) => b.score - a.score);
+    const rankedDeferred = sortedDeferred.map((e, i) => ({ ...e, rank: i + 1 }));
+
+    // Custom ribbon style for current user
+    // Ribbon should be positioned relative to the card (li)
+    const cardStyle: React.CSSProperties = {
+        backgroundColor: 'var(--card-bg)',
+        borderColor: 'var(--border)',
+        color: 'var(--text)',
+        position: 'relative' as const
+    };
+    // Ribbon overlays the card
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-200">
-            <div className="card w-full max-w-xl shadow-xl bg-base-100">
+        <div className="main-content">
+            <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-6">
                 <div className="card-body items-center gap-8">
-                    {/* Subtle notification for tournament replay attempts */}
-                    {showReplayNotification && (
-                        <div className="alert alert-info w-full mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Vous avez déjà participé à ce tournoi. Voici vos résultats !</span>
-                        </div>
-                    )}
-                    {/* Row: Retour à l'accueil + share icon */}
+                    {/* Row: share/QR button group */}
                     <div className="w-full flex justify-between items-center mb-2">
-                        <Link href="/" className="text-primary underline hover:text-primary/80 font-semibold">
-                            &larr; Retour à l&apos;accueil
-                        </Link>
-                        <button
-                            className="btn btn-xs btn-outline flex items-center justify-center p-2 min-h-0 h-8"
-                            onClick={handleShareLeaderboard}
-                            aria-label="Partager le classement"
-                            type="button"
-                        >
-                            <Share2 className="w-3 h-3" />
-                        </button>
+                        <div className="flex gap-0 items-center ml-auto">
+                            <button
+                                className="p-2 rounded hover:bg-[color:var(--muted)] transition-colors"
+                                title="Partager le lien"
+                                onClick={() => {
+                                    if (navigator.share) {
+                                        navigator.share({
+                                            title: 'Classement du tournoi Mathquest',
+                                            text: `Voici le classement du tournoi : ${code}`,
+                                            url: window.location.href
+                                        }).catch(() => { });
+                                    } else {
+                                        navigator.clipboard.writeText(window.location.href);
+                                        alert("Lien du classement copié dans le presse-papier !");
+                                    }
+                                }}
+                            >
+                                <span className="sr-only">Partager</span>
+                                <Share2 size={20} />
+                            </button>
+                            <button
+                                className="p-2 rounded hover:bg-[color:var(--muted)] transition-colors"
+                                title="QR Code"
+                                onClick={() => setShowQrModal(true)}
+                            >
+                                <span className="sr-only">QR Code</span>
+                                <QrCode size={20} />
+                            </button>
+                        </div>
                     </div>
+                    {/* QR Modal for leaderboard (copied from live page) */}
+                    <InfoModal
+                        isOpen={showQrModal}
+                        onClose={() => setShowQrModal(false)}
+                        title={null}
+                        size="sm"
+                        showCloseButton={false}
+                    >
+                        <div className="flex flex-col items-center justify-center gap-0 p-0">
+                            <div className="flex items-center justify-center w-full" style={{ minWidth: 220, minHeight: 220 }}>
+                                <QrCodeWithLogo
+                                    value={typeof window !== 'undefined' ? window.location.href : ''}
+                                    size={220}
+                                    logoWidth={45}
+                                    logoHeight={45}
+                                    responsive={false}
+                                    style={{ width: 220, height: 220 }}
+                                />
+                            </div>
+                            <div className="flex justify-end w-full mt-4">
+                                <button
+                                    className="px-4 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition min-w-[100px]"
+                                    onClick={() => setShowQrModal(false)}
+                                >
+                                    Fermer
+                                </button>
+                            </div>
+                        </div>
+                    </InfoModal>
                     <h1 className="card-title text-3xl mb-6 text-center">Tournoi terminé</h1>
                     <div className="w-full text-left text-base mb-4">
-                        {canPlayDiffered && (
-                            <>
-                                Pas encore joué ?{" "}
-                                <Link
-                                    href={`/live/${code}`}
-                                    className="text-primary underline hover:text-primary/80 font-semibold"
-                                >
-                                    Tentez votre chance en différé
-                                </Link>
-                            </>
-                        )}
+                        <>
+                            Vous pouvez rejouer ce tournoi en mode asynchrone, dans les mêmes conditions que le direct.
+                            Pour ce faire,&nbsp;
+                            <Link href={`/live/${code}`} className="text-primary underline hover:text-primary/80 font-semibold" >cliquez ici.</Link>
+                        </>
                     </div>
                     <hr className="w-full border-base-300 my-2" />
-                    <ol className="w-full flex flex-col gap-2">
-                        {/* Legend */}
-                        <div className="flex gap-4 mb-2 text-sm items-center">
-                            <span><span role="img" aria-label="live">⚡</span> = Live</span>
-                            <span><span role="img" aria-label="deferred">🕒</span> = Différé</span>
+                    {/* Live Scores Section */}
+                    {rankedLive.length > 0 && (
+                        <div className="w-full mb-2">
+                            <h2 className="text-lg font-bold mb-2"><span role="img" aria-label="live">⚡</span> Scores en direct</h2>
+                            <ol className="w-full flex flex-col gap-2">
+                                {rankedLive.map((p, idx) => {
+                                    const isCurrent = currentUserId && p.userId === currentUserId;
+                                    const uniqueKey = p.participationId || `${p.userId}-live-${idx}`;
+                                    return (
+                                        <li
+                                            key={uniqueKey}
+                                            className="flex items-center p-3 rounded-lg border transition-colors"
+                                            style={cardStyle}
+                                        >
+                                            {/* Ribbon for current user, overlays card */}
+                                            {isCurrent && (
+                                                <span className="ribbon-diagonal"></span>
+                                            )}
+                                            {/* Rank Number + point */}
+                                            <div className="flex-shrink-0 mr-2 w-8 h-8 flex items-center justify-center">
+                                                <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                                                    {p.rank + '.'}
+                                                </span>
+                                            </div>
+                                            {/* Avatar */}
+                                            <div className="flex-shrink-0 mr-2">
+                                                <div
+                                                    className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
+                                                    style={{
+                                                        backgroundColor: 'var(--input-bg)',
+                                                        color: 'var(--text)'
+                                                    }}
+                                                >
+                                                    {p.avatarEmoji}
+                                                </div>
+                                            </div>
+                                            {/* Username */}
+                                            <div className="flex-1 min-w-0">
+                                                <span className={`text-sm truncate ${isCurrent ? 'font-semibold' : 'font-medium'}`} style={{ color: 'var(--text)' }}>
+                                                    {p.username || 'Joueur'}
+                                                </span>
+                                            </div>
+                                            {/* Score */}
+                                            <div className="flex-shrink-0">
+                                                <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+                                                    {Math.round(p.score)} pts
+                                                </span>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
+                            </ol>
                         </div>
-                        {leaderboard.map((p, idx) => {
-                            // Highlight if current player (userId matches canonical id from AuthProvider)
-                            const currentUserId = getCurrentUserId();
-                            const isCurrent = currentUserId && p.userId === currentUserId;
-
-                            // Use participationType from API response
-                            const isDeferred = p.participationType === 'DEFERRED';
-
-                            // Use participationId as key if available, otherwise fallback to userId + index
-                            const uniqueKey = p.participationId || `${p.userId}-${idx}`;
-
-                            return (
-                                <li
-                                    key={uniqueKey}
-                                    className={
-                                        "flex items-center gap-4 p-2 rounded " +
-                                        (isCurrent ? "font-bold" : "")
-                                    }
-                                    style={isCurrent ? { backgroundColor: "var(--primary)", color: "white" } : undefined}
-                                >
-                                    <div
-                                        className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
-                                        style={{
-                                            boxShadow: "0 0 0 2px var(--border), 0 1px 2px 0 rgba(0,0,0,0.07)"
-                                        }}
-                                    >
-                                        {p.avatarEmoji}
-                                    </div>
-                                    <span className="w-8 text-center">#{p.rank || idx + 1}</span>
-                                    <span className="flex-1 flex items-baseline gap-2">
-                                        {isDeferred ? (
-                                            <span title="Différé" role="img" aria-label="deferred">🕒</span>
-                                        ) : (
-                                            <span title="Live" role="img" aria-label="live">⚡</span>
-                                        )}
-                                        {p.username || 'Joueur'}
-                                        {/* Show attempt count only for deferred entries with multiple attempts */}
-                                        {isDeferred && p.attemptCount && p.attemptCount > 1 && (
-                                            <span className="text-xs opacity-75 ml-1">
-                                                ({p.attemptCount} tentative{p.attemptCount > 1 ? 's' : ''})
-                                            </span>
-                                        )}
-                                    </span>
-                                    <span className="font-mono text-lg">{Math.round(p.score)}</span>
-                                </li>
-                            );
-                        })}
-                    </ol>
+                    )}
+                    {/* Deferred Scores Section */}
+                    {rankedDeferred.length > 0 && (
+                        <div className="w-full mt-4">
+                            <h2 className="text-lg font-bold mb-2"><span role="img" aria-label="deferred">🕒</span> Scores différés</h2>
+                            <ol className="w-full flex flex-col gap-2">
+                                {rankedDeferred.map((p, idx) => {
+                                    const isCurrent = currentUserId && p.userId === currentUserId;
+                                    const uniqueKey = p.participationId || `${p.userId}-deferred-${idx}`;
+                                    return (
+                                        <li
+                                            key={uniqueKey}
+                                            className="flex items-center p-3 rounded-lg border transition-colors"
+                                            style={cardStyle}
+                                        >
+                                            {/* Ribbon for current user, overlays card */}
+                                            {isCurrent && (
+                                                <span className="ribbon-diagonal"></span>
+                                            )}
+                                            {/* Rank Number + point */}
+                                            <div className="flex-shrink-0 mr-2 w-8 h-8 flex items-center justify-center">
+                                                <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                                                    {p.rank + '.'}
+                                                </span>
+                                            </div>
+                                            {/* Avatar */}
+                                            <div className="flex-shrink-0 mr-2">
+                                                <div
+                                                    className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
+                                                    style={{
+                                                        backgroundColor: 'var(--input-bg)',
+                                                        color: 'var(--text)'
+                                                    }}
+                                                >
+                                                    {p.avatarEmoji}
+                                                </div>
+                                            </div>
+                                            {/* Username + attempt count */}
+                                            <div className="flex-1 min-w-0">
+                                                <span className={`text-sm truncate ${isCurrent ? 'font-semibold' : 'font-medium'}`} style={{ color: 'var(--text)' }}>
+                                                    {p.username || 'Joueur'}
+                                                    {p.attemptCount && p.attemptCount > 1 && (
+                                                        <span className="ml-1 text-xs opacity-75">
+                                                            ({p.attemptCount} essai{p.attemptCount > 1 ? 's' : ''})
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {/* Score */}
+                                            <div className="flex-shrink-0">
+                                                <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+                                                    {Math.round(p.score)} pts
+                                                </span>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
+                            </ol>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
