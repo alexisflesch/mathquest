@@ -54,6 +54,12 @@ function LoginPageInner() {
         }
     }, [searchParams]);
 
+    // Map simpleMode to authMode
+    useEffect(() => {
+        if (simpleMode === 'guest') setAuthMode('guest');
+        else setAuthMode('student'); // 'Compte' tab always shows account form
+    }, [simpleMode]);
+
     const handleGuestSubmit = async (guestData: { username: string; avatar: string }) => {
         setIsLoading(true);
         setError('');
@@ -67,12 +73,6 @@ function LoginPageInner() {
             setIsLoading(false);
         }
     };
-
-    // Map simpleMode to authMode
-    useEffect(() => {
-        if (simpleMode === 'guest') setAuthMode('guest');
-        else setAuthMode('student'); // 'Compte' tab always shows account form
-    }, [simpleMode]);
 
     // Unified account form submit handler
     const handleAccountAuth = async (data: { email: string; password: string; confirmPassword?: string; username?: string; avatar?: string }) => {
