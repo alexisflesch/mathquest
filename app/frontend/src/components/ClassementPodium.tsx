@@ -155,7 +155,7 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
 
                     return (
                         <motion.div
-                            key={user.userId}
+                            key={user.userId + '-' + rank}
                             initial={{
                                 opacity: 0,
                                 scale: 0.8,
@@ -225,7 +225,7 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                         // const delay = 1.5 + (idx * 0.1);
                         return (
                             <motion.div
-                                key={user.userId}
+                                key={user.userId + '-' + rank}
                                 initial={{
                                     opacity: 0,
                                     scale: 0.8,
