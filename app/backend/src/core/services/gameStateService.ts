@@ -44,7 +44,13 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<Leade
             where: {
                 gameInstance: { accessCode }
             },
-            include: {
+            select: {
+                id: true,
+                userId: true,
+                liveScore: true,
+                deferredScore: true,
+                nbAttempts: true,
+                status: true,
                 user: {
                     select: { username: true, avatarEmoji: true }
                 }
@@ -99,7 +105,8 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<Leade
 
             // If no scores exist, add a single entry with 0 score
             if ((!participant.liveScore || participant.liveScore === 0) && (!participant.deferredScore || participant.deferredScore === 0)) {
-                const isDeferred = participant.status === 'ACTIVE' && gameInstance.status === 'completed';
+                // FIXED: Determine deferred status based on nbAttempts (starts at 2 for deferred participants)
+                const isDeferred = (participant.nbAttempts || 1) >= 2;
                 leaderboardEntries.push({
                     ...baseEntry,
                     score: 0,
