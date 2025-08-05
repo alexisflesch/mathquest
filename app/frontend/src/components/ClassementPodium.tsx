@@ -1,3 +1,46 @@
+import { AnimatePresence } from 'framer-motion';
+// Factorized score animation component
+function ScoreAnimate({ score, zoomFactor, animateScore }: { score: number, zoomFactor?: number, animateScore?: boolean }) {
+    return (
+        <div className="relative">
+            <span
+                className="font-bold text-primary relative z-10"
+                style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }}
+            >
+                {Math.round(score)}
+            </span>
+            {/* Glitch layers */}
+            {animateScore && (
+                <>
+                    <motion.span
+                        key={score + '-red'}
+                        className="absolute inset-0 font-bold text-red-500 z-0"
+                        style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }}
+                        animate={{
+                            x: [-2, 2, -1, 1, 0],
+                            opacity: [0.8, 0, 0.6, 0, 0]
+                        }}
+                        transition={{ duration: 0.3, times: [0, 0.25, 0.5, 0.75, 1] }}
+                    >
+                        {Math.round(score)}
+                    </motion.span>
+                    <motion.span
+                        key={score + '-blue'}
+                        className="absolute inset-0 font-bold text-blue-500 z-0"
+                        style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }}
+                        animate={{
+                            x: [2, -2, 1, -1, 0],
+                            opacity: [0.8, 0, 0.6, 0, 0]
+                        }}
+                        transition={{ duration: 0.3, times: [0, 0.25, 0.5, 0.75, 1] }}
+                    >
+                        {Math.round(score)}
+                    </motion.span>
+                </>
+            )}
+        </div>
+    );
+}
 import React, { useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
@@ -192,15 +235,7 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                             >
                                 {user.name || 'Unknown Player'}
                             </span>
-                            <motion.span
-                                key={user.score}
-                                className="font-bold text-primary"
-                                style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }}
-                                animate={animateScore ? { scale: [1.2, 1], opacity: [0.5, 1] } : {}}
-                                transition={animateScore ? { duration: 0.5 } : {}}
-                            >
-                                {Math.round(user.score)}
-                            </motion.span>
+                            <ScoreAnimate score={user.score} zoomFactor={zoomFactor} animateScore={animateScore} />
                             <span
                                 className=""
                                 style={{ fontSize: `calc(1.5rem * ${zoomFactor})` }} // Base size text-2xl (1.5rem)
@@ -246,14 +281,7 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                             >
                                 <span className="font-mono w-8 text-center text-sm">{idx + 4}</span>
                                 <span className="flex-1 text-left truncate mx-2">{user.name || 'Unknown Player'}</span>
-                                <motion.span
-                                    key={user.score}
-                                    className="font-bold text-primary w-12 text-right"
-                                    animate={animateScore ? { scale: [1.2, 1], opacity: [0.5, 1] } : {}}
-                                    transition={animateScore ? { duration: 0.5 } : {}}
-                                >
-                                    {Math.round(user.score)}
-                                </motion.span>
+                                <ScoreAnimate score={user.score} zoomFactor={zoomFactor} animateScore={animateScore} />
                             </motion.div>
                         );
                     })}
