@@ -210,27 +210,21 @@ QuestionDisplay.displayName = 'QuestionDisplay';
 const LeaderboardDisplay = React.memo(({
     hookLeaderboard,
     correctAnswersData,
-    shouldAnimatePodium,
     shouldShowQRCode,
     tournamentUrl,
     code,
     zoomFactors,
     setZoomFactors,
-    bringToFront,
-    leaderboardUpdateTrigger,
-    internalAnimationKey
+    bringToFront
 }: {
     hookLeaderboard: any[];
     correctAnswersData: any;
-    shouldAnimatePodium: boolean;
     shouldShowQRCode: boolean;
     tournamentUrl: string;
     code: string;
     zoomFactors: { question: number; classement: number };
     setZoomFactors: React.Dispatch<React.SetStateAction<{ question: number; classement: number }>>;
     bringToFront: (id: string) => void;
-    leaderboardUpdateTrigger: number;
-    internalAnimationKey: number;
 }) => {
     return (
         <div
@@ -266,20 +260,13 @@ const LeaderboardDisplay = React.memo(({
                         }}
                     >
                         <ClassementPodium
-                            top3={hookLeaderboard.slice(0, 3).map((entry) => ({
+                            leaderboard={hookLeaderboard.map((entry) => ({
                                 userId: entry.userId,
                                 name: entry.username || 'Unknown Player',
                                 avatarEmoji: entry.avatarEmoji || '👤',
                                 score: entry.score,
                             }))}
-                            others={hookLeaderboard.slice(3).map((entry) => ({
-                                userId: entry.userId,
-                                name: entry.username || 'Unknown Player',
-                                score: entry.score,
-                            }))}
                             correctAnswers={correctAnswersData?.correctAnswers || []}
-                            animate={shouldAnimatePodium}
-                            animationKey={internalAnimationKey}
                         />
                     </div>
                 )}
@@ -318,19 +305,19 @@ const DraggableResizable = React.memo(({
         top: element?.y ?? 0,
         width: element?.w ?? 200,
         height: element?.h ?? 100,
-        zIndex: element?.z ?? 1,
         touchAction: 'none',
         transform: dragTransform,
         // Remove transition to prevent jump-back effect during drag end
         background: 'transparent',
     };
 
-    const handleResizeStop = useCallback((_e: any, dir: any, ref: any, d: any) => {
+    const handleResizeStop = useCallback((_e: any, _dir: any, _ref: any, d: { width: number; height: number }) => {
+        if (!element) return;
         updateElement(id, {
-            w: (element?.w ?? 200) + d.width,
-            h: (element?.h ?? 100) + d.height,
+            w: (element.w ?? 200) + d.width,
+            h: (element.h ?? 100) + d.height,
         });
-    }, [id, element?.w, element?.h, updateElement]);
+    }, [id, element, updateElement]);
 
     return (
         <Resizable
@@ -437,47 +424,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         currentQuestion: rawCurrentQuestion
     } = useProjectionQuizSocket(code, gameId);
 
-    // Track animation state for podium
-    const [shouldAnimatePodium, setShouldAnimatePodium] = useState(false);
-    const [hasInitialLeaderboard, setHasInitialLeaderboard] = useState(false);
-    const [internalAnimationKey, setInternalAnimationKey] = useState(0);
-
-    // Separate effect to detect initial leaderboard arrival
-    useEffect(() => {
-        if (!hasInitialLeaderboard && hookLeaderboard.length > 0) {
-            console.log('[ANIM-DEBUG] 🎬 Initial leaderboard detected, setting up initial animation');
-            setHasInitialLeaderboard(true);
-            setInternalAnimationKey(1); // Start with 1 for initial load
-            setShouldAnimatePodium(true);
-            // Set timeout to disable animation after initial load completes
-            const timeout = setTimeout(() => {
-                console.log('[ANIM-DEBUG] ⏹️ Setting shouldAnimatePodium to FALSE (INITIAL LOAD COMPLETE)');
-                setShouldAnimatePodium(false);
-            }, 5000);
-            return () => { clearTimeout(timeout); };
-        }
-        return undefined;
-    }, [hasInitialLeaderboard, hookLeaderboard.length]);
-
-    // Trigger animation on leaderboardUpdateTrigger changes (for subsequent updates)
-    useEffect(() => {
-        console.log('[ANIM-DEBUG] 🔄 leaderboardUpdateTrigger changed:', leaderboardUpdateTrigger, 'leaderboard length:', hookLeaderboard.length, 'hasInitialLeaderboard:', hasInitialLeaderboard);
-
-        // Only handle updates after initial load, and only if trigger > 0
-        if (hasInitialLeaderboard && leaderboardUpdateTrigger > 0) {
-            console.log('[ANIM-DEBUG] 🎬 Setting shouldAnimatePodium to TRUE (UPDATE)');
-            setInternalAnimationKey(leaderboardUpdateTrigger);
-            setShouldAnimatePodium(true);
-            // Optionally reset after animation duration (e.g. 5s to give time for all animations)
-            const timeout = setTimeout(() => {
-                console.log('[ANIM-DEBUG] ⏹️ Setting shouldAnimatePodium to FALSE (UPDATE COMPLETE)');
-                setShouldAnimatePodium(false);
-            }, 5000);
-            return () => { clearTimeout(timeout); };
-        }
-        console.log('[ANIM-DEBUG] 🚫 No animation trigger - conditions not met');
-        return undefined;
-    }, [leaderboardUpdateTrigger, hasInitialLeaderboard]); // Remove hookLeaderboard.length dependency
+    // ...existing code...
     const currentQuestion: QuestionDataForStudent | null = (rawCurrentQuestion && typeof rawCurrentQuestion === 'object')
         ? (rawCurrentQuestion as QuestionDataForStudent)
         : null;
@@ -653,15 +600,12 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                     <LeaderboardDisplay
                         hookLeaderboard={hookLeaderboard}
                         correctAnswersData={correctAnswersData}
-                        shouldAnimatePodium={shouldAnimatePodium}
                         shouldShowQRCode={shouldShowQRCode.classement}
                         tournamentUrl={tournamentUrl}
                         code={code}
                         zoomFactors={zoomFactors}
                         setZoomFactors={setZoomFactors}
                         bringToFront={bringToFront}
-                        leaderboardUpdateTrigger={leaderboardUpdateTrigger}
-                        internalAnimationKey={internalAnimationKey}
                     />
                 </DraggableResizable>
             </DndContext>

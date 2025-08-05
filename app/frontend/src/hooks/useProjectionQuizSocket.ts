@@ -330,7 +330,6 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         // Handle leaderboard updates when students join (UX enhancement for teacher projection)
         const handleLeaderboardUpdate = (payload: ProjectionLeaderboardUpdatePayload) => {
             // DEBUG: Log raw leaderboard update event
-            console.log('🟡 [PROJECTION] Received PROJECTION_LEADERBOARD_UPDATE event:', payload);
             logger.info('🟡 [PROJECTION] Received PROJECTION_LEADERBOARD_UPDATE event:', payload);
             // Validate with Zod
             const parseResult = ProjectionLeaderboardUpdatePayloadSchema.safeParse(payload);

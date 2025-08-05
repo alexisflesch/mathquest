@@ -10,71 +10,57 @@ export type PodiumUser = {
 };
 
 export type ClassementPodiumProps = {
-    top3: PodiumUser[]; // max 3
-    others: { userId?: string; name: string; score: number }[];
-    zoomFactor?: number; // Add optional zoomFactor prop
-    correctAnswers?: boolean[]; // Allow correctAnswers prop - changed to boolean[]
-    animate?: boolean; // NEW: Only animate when true
-    animationKey?: number; // NEW: Force re-animation when this changes
+    leaderboard: PodiumUser[]; // Full leaderboard, ordered by rank
+    zoomFactor?: number;
+    correctAnswers?: boolean[];
 };
 
 const medalEmojis = ['🥇', '🥈', '🥉'];
 
 // Custom comparison function to prevent unnecessary re-renders
+/**
+ * Returns an array of indices (ranks) where the leaderboard entry has changed.
+ * Compares by userId and score.
+ */
+export function getChangedRanks(prev: PodiumUser[], next: PodiumUser[]): number[] {
+    const changed: number[] = [];
+    const maxLen = Math.max(prev.length, next.length);
+    for (let i = 0; i < maxLen; i++) {
+        const prevUser = prev[i];
+        const nextUser = next[i];
+        if (
+            !prevUser ||
+            !nextUser ||
+            prevUser.userId !== nextUser.userId ||
+            prevUser.score !== nextUser.score
+        ) {
+            changed.push(i);
+        }
+    }
+    return changed;
+}
 const arePropsEqual = (prevProps: ClassementPodiumProps, nextProps: ClassementPodiumProps): boolean => {
-    // Compare top3 array
-    if (prevProps.top3.length !== nextProps.top3.length) return false;
-    for (let i = 0; i < prevProps.top3.length; i++) {
-        const prev = prevProps.top3[i];
-        const next = nextProps.top3[i];
-        if (prev.userId !== next.userId ||
-            prev.name !== next.name ||
-            prev.avatarEmoji !== next.avatarEmoji ||
-            prev.score !== next.score) {
-            return false;
-        }
-    }
+    // Use getChangedRanks for leaderboard comparison
+    if (getChangedRanks(prevProps.leaderboard, nextProps.leaderboard).length > 0) return false;
 
-    // Compare others array
-    if (prevProps.others.length !== nextProps.others.length) return false;
-    for (let i = 0; i < prevProps.others.length; i++) {
-        const prev = prevProps.others[i];
-        const next = nextProps.others[i];
-        if (prev.userId !== next.userId ||
-            prev.name !== next.name ||
-            prev.score !== next.score) {
-            return false;
-        }
-    }
-
-    // Compare other props
     if (prevProps.zoomFactor !== nextProps.zoomFactor) return false;
-    if (prevProps.animate !== nextProps.animate) return false;
-    if (prevProps.animationKey !== nextProps.animationKey) return false;
-
-    // Only compare correctAnswers if both are defined (ignore changes when it's irrelevant)
     if (prevProps.correctAnswers && nextProps.correctAnswers) {
         if (prevProps.correctAnswers.length !== nextProps.correctAnswers.length) return false;
         for (let i = 0; i < prevProps.correctAnswers.length; i++) {
             if (prevProps.correctAnswers[i] !== nextProps.correctAnswers[i]) return false;
         }
     } else if (prevProps.correctAnswers !== nextProps.correctAnswers) {
-        // If one is undefined and the other isn't, they're different
         return false;
     }
-
     return true;
 };
 
-function ClassementPodium({ top3, others, zoomFactor = 1, correctAnswers, animate = true, animationKey = 0 }: ClassementPodiumProps) { // Destructure zoomFactor with default, animate default true
-    // ANIMATION DEBUG: Easily filterable logs
-    console.log('[ANIM-DEBUG] 🏆 ClassementPodium render - animate:', animate, 'animationKey:', animationKey, 'top3 length:', top3.length);
-
-    // SIMPLIFIED: Just animate all when animate=true and animationKey changes
-    console.log('[ANIM-DEBUG] 🎭 Simple approach: animate all when animate=true, animationKey:', animationKey);
-
+function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: ClassementPodiumProps) {
+    // Animate on every re-render (no external control)
     const podiumOrder = [1, 0, 2];
     const podiumMargins = ['mb-4', 'mb-8', 'mb-0'];
+    const top3 = leaderboard.slice(0, 3);
+    const others = leaderboard.slice(3);
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-start pt-0 flex-1 min-h-0">
@@ -86,28 +72,18 @@ function ClassementPodium({ top3, others, zoomFactor = 1, correctAnswers, animat
                     const heightClass = podiumMargins[pos];
                     const zIndex = pos === 1 ? 'z-10' : 'z-0';
 
-                    // SIMPLIFIED: Animate if animate=true (animate everyone)
-                    const shouldAnimate = animate;
-
-                    // Animation delays: Start with 1st place, then 2nd, then 3rd
+                    // Animate on every re-render
                     let animationDelay = 0;
-                    if (podiumIdx === 0) animationDelay = 0.0; // 1ère place (first to animate)
-                    if (podiumIdx === 1) animationDelay = 0.3; // 2ème place 
-                    if (podiumIdx === 2) animationDelay = 0.6; // 3ème place
-
-                    console.log(`[ANIM-DEBUG] 🎯 Podium setup: podiumIdx=${podiumIdx}, pos=${pos}, delay=${animationDelay}, user=${user.name}, userId=${user.userId?.slice(-4)}, shouldAnimate=${shouldAnimate}, animate=${animate}`);
-
+                    if (podiumIdx === 0) animationDelay = 0.0;
+                    if (podiumIdx === 1) animationDelay = 0.3;
+                    if (podiumIdx === 2) animationDelay = 0.6;
                     return (
                         <motion.div
-                            key={`${user.userId || `player-${podiumIdx}`}-${shouldAnimate ? animationKey : 'static'}`}
-                            initial={shouldAnimate ? {
+                            key={`${user.userId || `player-${podiumIdx}`}`}
+                            initial={{
                                 opacity: 0,
                                 scale: 0.8,
-                                y: -window.innerHeight // Start from top of screen, not just div
-                            } : {
-                                opacity: 1,
-                                scale: 1,
-                                y: 0 // Already in position
+                                y: -window.innerHeight
                             }}
                             animate={{
                                 opacity: 1,
@@ -117,18 +93,8 @@ function ClassementPodium({ top3, others, zoomFactor = 1, correctAnswers, animat
                             transition={{
                                 type: 'spring',
                                 bounce: 0.4,
-                                duration: shouldAnimate ? 1.2 : 0,
-                                delay: shouldAnimate ? animationDelay : 0 // Only delay if animating
-                            }}
-                            onAnimationStart={() => {
-                                if (shouldAnimate) {
-                                    console.log(`[ANIM-DEBUG] 🎬 TOP 3 Animation START for position ${podiumIdx + 1} (${user.name}) userId=${user.userId?.slice(-4)}`);
-                                }
-                            }}
-                            onAnimationComplete={() => {
-                                if (shouldAnimate) {
-                                    console.log(`[ANIM-DEBUG] ✅ TOP 3 Animation COMPLETE for position ${podiumIdx + 1} (${user.name}) userId=${user.userId?.slice(-4)}`);
-                                }
+                                duration: 1.2,
+                                delay: animationDelay
                             }}
                             data-podium-pos={pos}
                             className={`flex flex-col items-center justify-end ${zIndex} ${heightClass}`}
@@ -172,21 +138,15 @@ function ClassementPodium({ top3, others, zoomFactor = 1, correctAnswers, animat
                 {/* Conteneur interne pour la liste, SANS overflow */}
                 <div className="flex flex-col gap-2 w-full px-2">
                     {others.map((user, idx) => {
-                        // SIMPLIFIED: Animate if animate=true (animate everyone)
-                        const shouldAnimate = animate;
+                        // Animate on every re-render
                         const delay = 1.5 + (idx * 0.1);
-                        console.log(`[ANIM-DEBUG] 🎯 Others setup: idx=${idx}, delay=${delay}, user=${user.name}, userId=${user.userId?.slice(-4)}, shouldAnimate=${shouldAnimate}, animate=${animate}`);
                         return (
                             <motion.div
-                                key={`${user.userId || `other-${idx}`}-${shouldAnimate ? animationKey : 'static'}`}
-                                initial={shouldAnimate ? {
+                                key={`${user.userId || `other-${idx}`}`}
+                                initial={{
                                     opacity: 0,
                                     scale: 0.8,
-                                    x: 300 // Start from right of the div
-                                } : {
-                                    opacity: 1,
-                                    scale: 1,
-                                    x: 0 // Already in position
+                                    x: 300
                                 }}
                                 animate={{
                                     opacity: 1,
@@ -196,8 +156,8 @@ function ClassementPodium({ top3, others, zoomFactor = 1, correctAnswers, animat
                                 transition={{
                                     type: 'spring',
                                     bounce: 0.3,
-                                    duration: shouldAnimate ? 0.8 : 0,
-                                    delay: shouldAnimate ? delay : 0 // Only delay if animating
+                                    duration: 0.8,
+                                    delay: delay
                                 }}
                                 className="w-full flex flex-row items-center justify-between bg-base-200/80 rounded-lg px-4 py-2 shadow"
                             >
