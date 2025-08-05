@@ -54,7 +54,7 @@ interface QuestionCardProps {
     readonly?: boolean;   // New prop to make the component display-only
     projectionMode?: boolean; // New prop for projection page - hides input fields completely
     zoomFactor?: number;  // Kept for compatibility but no longer used // MODIFIED: Translated comment
-    correctAnswers?: boolean[]; // Changed to accept boolean array directly
+    correctAnswers?: (boolean | number | string)[]; // Changed to accept mixed array for both MC (boolean) and numeric (number) questions
     stats?: StatsData; // Optional stats prop for question statistics
     showStats?: boolean; // Whether to display the stats
     // Numeric question props
@@ -161,100 +161,112 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     } : {};
 
     return (
-        <div className="tqcard-content w-full flex flex-col gap-6 items-center" style={readonlyStyle}>
+        <div className={`tqcard-content w-full flex flex-col items-center ${projectionMode && isNumericQuestion ? 'gap-2' : 'gap-6'}`} style={readonlyStyle}>
             {/* Only show question number if not in quiz mode */}
             {!isQuizMode && (
                 <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
             )}
             {/* Question text */}
-            <div className="mb-4 text-xl font-semibold text-center w-full question-text-in-live-page">
+            <div className={`text-xl font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}>
                 <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
             </div>
 
             {/* Conditional rendering based on question type */}
             {isNumericQuestion ? (
-                // Numeric question - hide input completely in projection mode
-                !projectionMode && (
-                    <div className="w-full flex flex-col">
-                        <div className="relative w-full">
-                            <input
-                                id="numeric-answer"
-                                type="number"
-                                inputMode="decimal"
-                                value={numericAnswer}
-                                onChange={(e) => setNumericAnswer?.(e.target.value)}
-                                placeholder="Votre réponse"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 text-lg"
-                                disabled={readonly}
-                                aria-disabled={readonly}
-                                step="any"
-                                autoFocus={!readonly}
-                                style={{
-                                    paddingRight: readonly && numericCorrectAnswer && numericAnswer ? 40 : 12,
-                                    borderColor: 'var(--gray-300)',
-                                    boxShadow: 'none',
-                                }}
-                                onFocus={e => {
-                                    e.target.style.boxShadow = '0 0 0 2px var(--primary)';
-                                    e.target.style.borderColor = 'var(--primary)';
-                                }}
-                                onBlur={e => {
-                                    e.target.style.boxShadow = 'none';
-                                    e.target.style.borderColor = 'var(--gray-300)';
-                                }}
-                                onKeyDown={e => {
-                                    if (
-                                        e.key === 'Enter' &&
-                                        !readonly &&
-                                        (typeof numericAnswer === 'string' ? numericAnswer.trim() : numericAnswer)
-                                    ) {
-                                        e.preventDefault();
-                                        handleNumericSubmit?.();
-                                    }
-                                }}
-                            />
-                            {/* Visual feedback for numeric answers when correct answers are shown - positioned inside input field */}
-                            {readonly && numericCorrectAnswer && numericAnswer && (
-                                <div
-                                    className="absolute inset-y-0 right-0 flex items-center pr-3"
-                                    style={{ pointerEvents: 'none' }}
-                                >
-                                    {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
-                                        <GoodAnswer size={20} iconColor="var(--success)" />
-                                    ) : (
-                                        <WrongAnswer size={20} iconColor="var(--alert)" />
-                                    )}
+                <div className="w-full flex flex-col">
+                    {/* Show input only when NOT in projection mode */}
+                    {!projectionMode && (
+                        <>
+                            <div className="relative w-full">
+                                <input
+                                    id="numeric-answer"
+                                    type="number"
+                                    inputMode="decimal"
+                                    value={numericAnswer}
+                                    onChange={(e) => setNumericAnswer?.(e.target.value)}
+                                    placeholder="Votre réponse"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 text-lg"
+                                    disabled={readonly}
+                                    aria-disabled={readonly}
+                                    step="any"
+                                    autoFocus={!readonly}
+                                    style={{
+                                        paddingRight: readonly && numericCorrectAnswer && numericAnswer ? 40 : 12,
+                                        borderColor: 'var(--gray-300)',
+                                        boxShadow: 'none',
+                                    }}
+                                    onFocus={e => {
+                                        e.target.style.boxShadow = '0 0 0 2px var(--primary)';
+                                        e.target.style.borderColor = 'var(--primary)';
+                                    }}
+                                    onBlur={e => {
+                                        e.target.style.boxShadow = 'none';
+                                        e.target.style.borderColor = 'var(--gray-300)';
+                                    }}
+                                    onKeyDown={e => {
+                                        if (
+                                            e.key === 'Enter' &&
+                                            !readonly &&
+                                            (typeof numericAnswer === 'string' ? numericAnswer.trim() : numericAnswer)
+                                        ) {
+                                            e.preventDefault();
+                                            handleNumericSubmit?.();
+                                        }
+                                    }}
+                                />
+                                {/* Visual feedback for numeric answers when correct answers are shown - positioned inside input field */}
+                                {readonly && numericCorrectAnswer && numericAnswer && (
+                                    <div
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                                        style={{ pointerEvents: 'none' }}
+                                    >
+                                        {isNumericAnswerCorrect(numericAnswer, numericCorrectAnswer) ? (
+                                            <GoodAnswer size={20} iconColor="var(--success)" />
+                                        ) : (
+                                            <WrongAnswer size={20} iconColor="var(--alert)" />
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            {!readonly && (
+                                <div className="mt-4 flex justify-end">
+                                    <button
+                                        onClick={handleNumericSubmit}
+                                        className="btn btn-primary btn-sm"
+                                        disabled={typeof numericAnswer === 'string' ? !numericAnswer.trim() : !numericAnswer}
+                                        style={{ minWidth: 90 }}
+                                    >
+                                        Valider
+                                    </button>
                                 </div>
                             )}
+                        </>
+                    )}
+
+                    {/* Large projection-style correct answer display for numeric questions */}
+                    {projectionMode && readonly && correctAnswers && correctAnswers.length > 0 && (
+                        <div className="mt-0 w-full flex flex-col items-start justify-center">
+                            <div className="text-lg font-bold" style={{ color: 'var(--success)' }}>
+                                Réponse : {correctAnswers[0]}
+                            </div>
                         </div>
-                        {!readonly && (
-                            <div className="mt-4 flex justify-end">
-                                <button
-                                    onClick={handleNumericSubmit}
-                                    className="btn btn-primary btn-sm"
-                                    disabled={typeof numericAnswer === 'string' ? !numericAnswer.trim() : !numericAnswer}
-                                    style={{ minWidth: 90 }}
-                                >
-                                    Valider
-                                </button>
+                    )}
+
+                    {/* Show correct answer info when in readonly mode (non-projection) */}
+                    {!projectionMode && readonly && numericCorrectAnswer && (
+                        <div className="mt-2 text-sm text-gray-600">
+                            <div className="flex items-center space-x-2">
+                                <span className="font-medium" style={{ color: 'var(--success)' }}>Réponse correcte :</span>
+                                <span style={{ color: 'var(--success)', fontWeight: 600 }}>{numericCorrectAnswer.correctAnswer}</span>
+                                {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
+                                    <span className="text-gray-500">
+                                        (±{numericCorrectAnswer.tolerance})
+                                    </span>
+                                )}
                             </div>
-                        )}
-                        {/* Show correct answer info when in readonly mode */}
-                        {readonly && numericCorrectAnswer && (
-                            <div className="mt-2 text-sm text-gray-600">
-                                <div className="flex items-center space-x-2">
-                                    <span className="font-medium" style={{ color: 'var(--success)' }}>Réponse correcte :</span>
-                                    <span style={{ color: 'var(--success)', fontWeight: 600 }}>{numericCorrectAnswer.correctAnswer}</span>
-                                    {numericCorrectAnswer.tolerance !== undefined && numericCorrectAnswer.tolerance > 0 && (
-                                        <span className="text-gray-500">
-                                            (±{numericCorrectAnswer.tolerance})
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )
+                        </div>
+                    )}
+                </div>
             ) : (
                 // Multiple choice questions
                 <>

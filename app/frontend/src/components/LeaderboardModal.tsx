@@ -76,9 +76,14 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                     style={{
                                         backgroundColor: 'var(--card-bg)',
                                         borderColor: 'var(--border)',
-                                        color: 'var(--text)'
+                                        color: 'var(--text)',
+                                        position: 'relative'
                                     }}
                                 >
+                                    {/* Ribbon for current user, overlays card */}
+                                    {isCurrentUser && (
+                                        <span className="ribbon-diagonal"></span>
+                                    )}
                                     {/* Rank Number */}
                                     <div className="flex-shrink-0 mr-3 w-8 h-8 flex items-center justify-center">
                                         <span
@@ -94,8 +99,8 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                         <div
                                             className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
                                             style={{
-                                                backgroundColor: isCurrentUser ? 'var(--primary)' : 'var(--input-bg)',
-                                                color: isCurrentUser ? 'white' : 'var(--text)'
+                                                backgroundColor: 'var(--input-bg)',
+                                                color: 'var(--text)'
                                             }}
                                         >
                                             {entry.avatarEmoji || '👤'}
@@ -109,14 +114,6 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                             style={{ color: 'var(--text)' }}
                                         >
                                             {entry.username}
-                                            {isCurrentUser && (
-                                                <span
-                                                    className="ml-2 text-xs opacity-75"
-                                                    style={{ color: 'var(--text-muted)' }}
-                                                >
-                                                    (Vous)
-                                                </span>
-                                            )}
                                         </p>
                                     </div>
 

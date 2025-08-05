@@ -136,20 +136,19 @@ const LeaderboardFAB = React.memo(({
         >
             <motion.div
                 animate={{
-                    scale: [1, 1.2, 1],
-                    rotate: [0, -5, 5, -5, 0],
-                    x: [0, -2, 2, -2, 0]
+                    scale: [1, 1.3, 1.2, 1.3, 1],
+                    rotate: [0, -8, 8, -8, 8, -8, 0],
                 }}
                 transition={{
-                    duration: 0.8,
+                    duration: 0.6,
                     ease: "easeInOut",
-                    repeat: Infinity,
-                    repeatDelay: 2
+                    times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                    repeat: 1,
                 }}
             >
                 <Trophy className="w-5 h-5" />
             </motion.div>
-            <span className="text-sm font-medium">
+            <span className="text-md font-bold">
                 #{userRank}
             </span>
         </button>
