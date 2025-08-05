@@ -29,12 +29,14 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
     leaderboard,
     currentUserId,
 }) => {
-    // Sort leaderboard by score (descending) and add ranks if not present
+    // Sort leaderboard by exact score (descending) and add ranks if not present
+    // Display rounded score only in UI
     const sortedLeaderboard = React.useMemo(() => {
         const sorted = [...leaderboard].sort((a, b) => b.score - a.score);
         return sorted.map((entry, index) => ({
             ...entry,
-            rank: entry.rank ?? index + 1
+            rank: entry.rank ?? index + 1,
+            displayScore: Math.round(entry.score)
         }));
     }, [leaderboard]);
 
@@ -123,7 +125,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                             className="text-sm font-semibold"
                                             style={{ color: 'var(--text)' }}
                                         >
-                                            {entry.score} pts
+                                            {entry.displayScore} pts
                                         </span>
                                     </div>
                                 </div>

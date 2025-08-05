@@ -88,12 +88,14 @@ const LeaderboardFAB = React.memo(({
     userId,
     leaderboardLength,
     userRank,
+    userScore,
     onOpen
 }: {
     isMobile: boolean;
     userId: string | null;
     leaderboardLength: number;
     userRank: number | null;
+    userScore: number;
     onOpen: () => void;
 }) => {
     // Re-render logging for LeaderboardFAB
@@ -109,7 +111,7 @@ const LeaderboardFAB = React.memo(({
         logger.info(`🔄 [FAB-RERENDER] LeaderboardFAB re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
     });
 
-    if (!userId || leaderboardLength === 0 || !userRank) {
+    if (!userId || leaderboardLength === 0) {
         return null;
     }
 
@@ -127,14 +129,22 @@ const LeaderboardFAB = React.memo(({
         zIndex: 150,
     };
 
+    // If only one entry, show points and disable modal
+    const showRank = leaderboardLength > 1;
+    const handleClick = showRank ? onOpen : undefined;
+
+    // Animation key changes when rank or points change
+    const animationKey = showRank ? `rank-${userRank}` : `score-${userScore}`;
+
     return (
         <button
-            onClick={onOpen}
+            onClick={handleClick}
             className={isMobile ? mobileClasses : desktopClasses}
             style={isMobile ? mobileStyle : desktopStyle}
-            aria-label="Voir le classement complet"
+            aria-label={showRank ? "Voir le classement complet" : "Points"}
         >
             <motion.div
+                key={animationKey}
                 animate={{
                     scale: [1, 1.3, 1.2, 1.3, 1],
                     rotate: [0, -8, 8, -8, 8, -8, 0],
@@ -149,7 +159,7 @@ const LeaderboardFAB = React.memo(({
                 <Trophy className="w-5 h-5" />
             </motion.div>
             <span className="text-md font-bold">
-                #{userRank}
+                {showRank ? `#${userRank}` : `${userScore} pts`}
             </span>
         </button>
     );
@@ -1104,6 +1114,7 @@ export default function LiveGamePage() {
                 userId={userId}
                 leaderboardLength={stableLeaderboard.length}
                 userRank={userLeaderboardData.rank}
+                userScore={userLeaderboardData.score}
                 onOpen={handleLeaderboardOpen}
             />
 
