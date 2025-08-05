@@ -646,14 +646,21 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
 
     // Trophy button logic (no questionUid)
     // Only allow toggling ON; cannot be toggled off by teacher
+    // Modal state for alert when timer is running
+    const [showTrophyTimerAlert, setShowTrophyTimerAlert] = useState(false);
     const handleTrophyGlobal = useCallback(() => {
         if (!quizSocket || showTrophy) return; // Prevent toggling off
+        // Check if timer for current question is running
+        if (timerStatus !== 'stop') {
+            setShowTrophyTimerAlert(true);
+            return;
+        }
         // Request leaderboard and correct answers, but do NOT update local state or snackbar here
         const revealLeaderboardPayload = { accessCode: code };
         quizSocket.emit(SOCKET_EVENTS.TEACHER.REVEAL_LEADERBOARD, revealLeaderboardPayload);
         quizSocket.emit(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, { accessCode: code, gameId, teacherId: userProfile?.userId });
         // No snackbar here: only show snackbar on backend confirmation
-    }, [quizSocket, code, gameId, userProfile?.userId, showTrophy]);
+    }, [quizSocket, code, gameId, userProfile?.userId, showTrophy, timerStatus]);
     // Reset trophy when question changes
     useEffect(() => {
         setShowTrophy(false);
@@ -766,14 +773,11 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                 {/* Trophy Toggle Button */}
                                 <button
                                     className={`group p-2 rounded transition-colors border-2
-                                        ${showTrophy
+                    ${showTrophy
                                             ? 'bg-[color:var(--primary)] text-white border-[color:var(--primary)]'
                                             : 'border-[color:var(--primary)] text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 hover:text-white'}
-                                        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    onClick={() => {
-                                        handleTrophyGlobal();
-                                        // Do not update local state here; wait for backend confirmation
-                                    }}
+                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    onClick={handleTrophyGlobal}
                                     disabled={isDisabled}
                                     aria-pressed={showTrophy}
                                     title="Afficher/Masquer le classement final et les bonnes réponses"
@@ -901,6 +905,27 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                         onClick={confirmEndQuiz}
                     >
                         Oui
+                    </button>
+                </div>
+            </InfoModal>
+            {/* Trophy Timer Alert Modal */}
+            <InfoModal
+                isOpen={showTrophyTimerAlert}
+                onClose={() => setShowTrophyTimerAlert(false)}
+                title="Attention !"
+                size="sm"
+                showCloseButton={true}
+            >
+                <div className="mb-6 text-base">
+                    Vous devez d'abord arrêter le chrono de la question en cours avant d'afficher les bonnes réponses et de mettre à jour le classement.
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
+                    <button
+                        type="button"
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+                        onClick={() => setShowTrophyTimerAlert(false)}
+                    >
+                        Fermer
                     </button>
                 </div>
             </InfoModal>
