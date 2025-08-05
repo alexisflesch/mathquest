@@ -2,7 +2,23 @@
 
 This directory contains integration tests that verify the complete functionality of the MathQuest backend system with real Redis and database connections.
 
-## Working Tests (as of August 3, 2025)
+## 🚨 Important: Import Paths for Tests
+
+**CRITICAL**: Integration tests MUST use relative paths for imports, NOT TypeScript path aliases (@/...).
+
+```typescript
+// ❌ DON'T USE (will fail in tests):
+import { redisClient } from '@/config/redis';
+import { prisma } from '@/db/prisma';
+
+// ✅ USE RELATIVE PATHS:
+import { redisClient } from '../../src/config/redis';
+import { prisma } from '../../src/db/prisma';
+```
+
+TypeScript path aliases (@/...) don't work in the Jest test environment. Always use relative paths starting from the test file location.
+
+## Working Tests (as of August 5, 2025)
 
 The following integration tests are fully functional and validated:
 
@@ -65,6 +81,12 @@ The following integration tests are fully functional and validated:
 - **Coverage**: Tests real Redis operations, socket handlers, participant preservation, and projection security
 - **Test Count**: Real Redis integration with socket handlers
 - **Purpose**: Validates participant preservation and projection security features
+
+### ✅ Late Joiner Leaderboard Tests
+- **File**: `/home/aflesch/mathquest/app/backend/tests/integration/late-joiner-leaderboard.test.ts`
+- **Coverage**: Tests late joiner snapshot behavior, leaderboard broadcasting, and real vs snapshot score distinction
+- **Test Count**: 5 tests (snapshot broadcasting scenarios)
+- **Purpose**: Validates that late joiners are added to leaderboard snapshots with join bonuses and broadcasts work correctly for active vs pending games
 
 ## Archived Tests
 

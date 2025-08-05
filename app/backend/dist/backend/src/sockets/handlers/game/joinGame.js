@@ -338,16 +338,29 @@ function joinGameHandler(io, socket) {
                         }, '[JOIN-LEADERBOARD] Sent empty leaderboard for deferred session - avoiding stale data');
                     }
                     else {
-                        // Use snapshot-based emission for live sessions
-                        await (0, leaderboardSnapshotService_1.emitLeaderboardFromSnapshot)(io, accessCode, [socket.id], // Emit only to this specific socket
-                        'join_game_initial_load');
+                        // Use snapshot-based emission for live sessions - broadcast to all when game is active
+                        const targetRooms = gameInstance.status === 'active' ?
+                            [`game_${accessCode}`, `lobby_${accessCode}`] : // Broadcast to game and lobby rooms when active
+                            [socket.id]; // Only to the specific socket when pending
+                        // CRITICAL FIX: Sync snapshot with live data when late joiner joins active game
+                        if (gameInstance.status === 'active') {
+                            await (0, leaderboardSnapshotService_1.syncSnapshotWithLiveData)(accessCode);
+                            logger.info({
+                                accessCode,
+                                userId,
+                                trigger: 'late_joiner_sync_snapshot'
+                            }, '[LATE_JOINER] Synced snapshot with live data for late joiner broadcast');
+                        }
+                        await (0, leaderboardSnapshotService_1.emitLeaderboardFromSnapshot)(io, accessCode, targetRooms, gameInstance.status === 'active' ? 'late_joiner_broadcast' : 'join_game_initial_load');
                         logger.info({
                             accessCode,
                             userId,
                             gameStatus: gameInstance.status,
-                            trigger: 'join_game_initial_load',
+                            targetRooms,
+                            broadcastToAll: gameInstance.status === 'active',
+                            trigger: gameInstance.status === 'active' ? 'late_joiner_broadcast' : 'join_game_initial_load',
                             dataSource: 'leaderboard_snapshot'
-                        }, '[JOIN-LEADERBOARD] Emitted initial leaderboard state to new joiner from snapshot');
+                        }, '[JOIN-LEADERBOARD] Emitted leaderboard snapshot - late joiners will appear with join bonus');
                     }
                 }
                 else {
