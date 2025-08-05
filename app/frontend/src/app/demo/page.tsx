@@ -1,71 +1,160 @@
-"use client"
-import React, { useState } from "react";
-import { Resizable } from "re-resizable";
-import StatisticsChart from "@/components/StatisticsChart";
+"use client";
+import React, { useState } from 'react';
+import ClassementPodium, { PodiumUser } from '@/components/ClassementPodium';
 
-function generateDataset(type: string): number[] {
-    switch (type) {
-        case "few-different":
-            return Array.from({ length: 5 }, (_, i) => i * 2 + 1);
-        case "many-similar":
-            return Array(40).fill(10).map((v, i) => (i < 35 ? 10 : i % 5 + 7));
-        case "all-same":
-            return Array(20).fill(5);
-        case "spread-out":
-            return Array.from({ length: 80 }, () => Math.floor(Math.random() * 100));
-        case "almost-all-same":
-            return Array(30).fill(42).map((v, i) => (i < 27 ? 42 : i % 3 + 40));
-        default:
-            return Array.from({ length: 10 }, () => Math.floor(Math.random() * 20));
-    }
-}
-
-const datasetOptions = [
-    { label: "Few values, all different", value: "few-different" },
-    { label: "Many values, mostly the same", value: "many-similar" },
-    { label: "All values the same", value: "all-same" },
-    { label: "Spread out values", value: "spread-out" },
-    { label: "Almost all the same", value: "almost-all-same" },
-    { label: "Random values", value: "random" },
+const initialLeaderboard: PodiumUser[] = [
+    { userId: '1', name: 'Alice', avatarEmoji: '🦉', score: 100 },
+    { userId: '2', name: 'Bob', avatarEmoji: '🦊', score: 95 },
+    { userId: '3', name: 'Charlie', avatarEmoji: '🐻', score: 90 },
+    { userId: '4', name: 'Diana', avatarEmoji: '🐸', score: 85 },
+    { userId: '5', name: 'Eve', avatarEmoji: '🐧', score: 80 },
+    { userId: '6', name: 'Frank', avatarEmoji: '🦄', score: 75 },
+    { userId: '7', name: 'Grace', avatarEmoji: '🦋', score: 70 },
+    { userId: '8', name: 'Heidi', avatarEmoji: '🦢', score: 65 },
+    { userId: '9', name: 'Ivan', avatarEmoji: '🦓', score: 60 },
+    { userId: '10', name: 'Judy', avatarEmoji: '🦔', score: 55 },
 ];
 
-export default function StatisticsChartDemo() {
-    const [selectedDataset, setSelectedDataset] = useState(datasetOptions[0].value);
-    const [size, setSize] = useState({ width: 900, height: 500 });
-    const data = generateDataset(selectedDataset);
+const scenarios = [
+    {
+        label: 'Nothing changed',
+        leaderboard: [...initialLeaderboard],
+    },
+    {
+        label: 'Only Alice score changed',
+        leaderboard: [
+            { userId: '1', name: 'Alice', avatarEmoji: '🦉', score: 120 },
+            { userId: '2', name: 'Bob', avatarEmoji: '🦊', score: 95 },
+            { userId: '3', name: 'Charlie', avatarEmoji: '🐻', score: 90 },
+            { userId: '4', name: 'Diana', avatarEmoji: '🐸', score: 85 },
+            { userId: '5', name: 'Eve', avatarEmoji: '🐧', score: 80 },
+            { userId: '6', name: 'Frank', avatarEmoji: '🦄', score: 75 },
+            { userId: '7', name: 'Grace', avatarEmoji: '🦋', score: 70 },
+            { userId: '8', name: 'Heidi', avatarEmoji: '🦢', score: 65 },
+            { userId: '9', name: 'Ivan', avatarEmoji: '🦓', score: 60 },
+            { userId: '10', name: 'Judy', avatarEmoji: '🦔', score: 55 },
+        ],
+    },
+    {
+        label: 'Bob and Diana swapped',
+        leaderboard: [
+            { userId: '1', name: 'Alice', avatarEmoji: '🦉', score: 100 },
+            { userId: '4', name: 'Diana', avatarEmoji: '🐸', score: 95 },
+            { userId: '3', name: 'Charlie', avatarEmoji: '🐻', score: 90 },
+            { userId: '2', name: 'Bob', avatarEmoji: '🦊', score: 85 },
+            { userId: '5', name: 'Eve', avatarEmoji: '🐧', score: 80 },
+            { userId: '6', name: 'Frank', avatarEmoji: '🦄', score: 75 },
+            { userId: '7', name: 'Grace', avatarEmoji: '🦋', score: 70 },
+            { userId: '8', name: 'Heidi', avatarEmoji: '🦢', score: 65 },
+            { userId: '9', name: 'Ivan', avatarEmoji: '🦓', score: 60 },
+            { userId: '10', name: 'Judy', avatarEmoji: '🦔', score: 55 },
+        ],
+    },
+    {
+        label: 'All scores changed',
+        leaderboard: [
+            { userId: '1', name: 'Alice', avatarEmoji: '🦉', score: 130 },
+            { userId: '2', name: 'Bob', avatarEmoji: '🦊', score: 125 },
+            { userId: '3', name: 'Charlie', avatarEmoji: '🐻', score: 120 },
+            { userId: '4', name: 'Diana', avatarEmoji: '🐸', score: 115 },
+            { userId: '5', name: 'Eve', avatarEmoji: '🐧', score: 110 },
+            { userId: '6', name: 'Frank', avatarEmoji: '🦄', score: 105 },
+            { userId: '7', name: 'Grace', avatarEmoji: '�', score: 100 },
+            { userId: '8', name: 'Heidi', avatarEmoji: '�', score: 95 },
+            { userId: '9', name: 'Ivan', avatarEmoji: '🦓', score: 90 },
+            { userId: '10', name: 'Judy', avatarEmoji: '🦔', score: 85 },
+        ],
+    },
+    {
+        label: 'New player added',
+        leaderboard: [
+            ...initialLeaderboard,
+            { userId: '11', name: 'Karl', avatarEmoji: '�', score: 50 },
+        ],
+    },
+    {
+        label: 'Player removed',
+        leaderboard: initialLeaderboard.slice(0, 9),
+    },
+    {
+        label: 'All players swapped',
+        leaderboard: [
+            { userId: '10', name: 'Judy', avatarEmoji: '�', score: 130 },
+            { userId: '9', name: 'Ivan', avatarEmoji: '�', score: 125 },
+            { userId: '8', name: 'Heidi', avatarEmoji: '🦢', score: 120 },
+            { userId: '7', name: 'Grace', avatarEmoji: '🦋', score: 115 },
+            { userId: '6', name: 'Frank', avatarEmoji: '🦄', score: 110 },
+            { userId: '5', name: 'Eve', avatarEmoji: '🐧', score: 105 },
+            { userId: '4', name: 'Diana', avatarEmoji: '🐸', score: 100 },
+            { userId: '3', name: 'Charlie', avatarEmoji: '🐻', score: 95 },
+            { userId: '2', name: 'Bob', avatarEmoji: '🦊', score: 90 },
+            { userId: '1', name: 'Alice', avatarEmoji: '🦉', score: 85 },
+        ],
+    },
+    {
+        label: 'Only Eve changed',
+        leaderboard: [
+            { userId: '1', name: 'Alice', avatarEmoji: '🦉', score: 100 },
+            { userId: '2', name: 'Bob', avatarEmoji: '🦊', score: 95 },
+            { userId: '3', name: 'Charlie', avatarEmoji: '🐻', score: 90 },
+            { userId: '4', name: 'Diana', avatarEmoji: '🐸', score: 85 },
+            { userId: '5', name: 'Eve', avatarEmoji: '🐧', score: 120 },
+            { userId: '6', name: 'Frank', avatarEmoji: '🦄', score: 75 },
+            { userId: '7', name: 'Grace', avatarEmoji: '🦋', score: 70 },
+            { userId: '8', name: 'Heidi', avatarEmoji: '🦢', score: 65 },
+            { userId: '9', name: 'Ivan', avatarEmoji: '🦓', score: 60 },
+            { userId: '10', name: 'Judy', avatarEmoji: '🦔', score: 55 },
+        ],
+    },
+    {
+        label: 'No players',
+        leaderboard: [],
+    },
+];
+
+export default function DemoLeaderboardPage() {
+    const [leaderboard, setLeaderboard] = useState<PodiumUser[]>(initialLeaderboard);
+    const [hasInteracted, setHasInteracted] = useState(false);
+
+    // Swap player 1 and player 6
+    const handleSwap = () => {
+        if (leaderboard.length < 6) return;
+        const newLeaderboard = [...leaderboard];
+        const temp = newLeaderboard[0];
+        newLeaderboard[0] = newLeaderboard[5];
+        newLeaderboard[5] = temp;
+        setLeaderboard(newLeaderboard);
+        setHasInteracted(true);
+    };
+
+    const handleScenario = (lb: PodiumUser[]) => {
+        setLeaderboard(lb);
+        setHasInteracted(true);
+    };
 
     return (
-        <div className="p-8">
-            <h1 className="text-2xl font-bold mb-4">StatisticsChart Demo</h1>
-            <div className="mb-4">
-                <label htmlFor="dataset-select" className="mr-2 font-semibold">Select dataset:</label>
-                <select
-                    id="dataset-select"
-                    value={selectedDataset}
-                    onChange={e => setSelectedDataset(e.target.value)}
-                    className="border rounded px-2 py-1"
+        <div className="min-h-screen bg-base-100 p-8 flex flex-col items-center">
+            <h1 className="text-3xl font-bold mb-6">Leaderboard Animation Demo</h1>
+            <div className="flex flex-wrap gap-2 mb-8">
+                <button
+                    className="btn btn-primary btn-sm"
+                    onClick={handleSwap}
                 >
-                    {datasetOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                </select>
+                    Swap player 1 and player 6
+                </button>
+                {scenarios.map((scenario, idx) => (
+                    <button
+                        key={idx}
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleScenario(scenario.leaderboard)}
+                    >
+                        {scenario.label}
+                    </button>
+                ))}
             </div>
-            <Resizable
-                size={size}
-                onResizeStop={(e, direction, ref, d) => {
-                    setSize({
-                        width: size.width + d.width,
-                        height: size.height + d.height,
-                    });
-                }}
-                minWidth={400}
-                minHeight={300}
-                style={{ border: "2px solid #ccc", borderRadius: 8, background: "#fafafa", padding: 8 }}
-            >
-                <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
-                    <StatisticsChart data={data} />
-                </div>
-            </Resizable>
+            <div className="w-full max-w-2xl">
+                <ClassementPodium leaderboard={leaderboard} animateOnInitialLoad={hasInteracted} />
+            </div>
         </div>
     );
 }
