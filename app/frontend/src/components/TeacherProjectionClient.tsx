@@ -216,7 +216,9 @@ const LeaderboardDisplay = React.memo(({
     code,
     zoomFactors,
     setZoomFactors,
-    bringToFront
+    bringToFront,
+    leaderboardUpdateTrigger,
+    internalAnimationKey
 }: {
     hookLeaderboard: any[];
     correctAnswersData: any;
@@ -227,6 +229,8 @@ const LeaderboardDisplay = React.memo(({
     zoomFactors: { question: number; classement: number };
     setZoomFactors: React.Dispatch<React.SetStateAction<{ question: number; classement: number }>>;
     bringToFront: (id: string) => void;
+    leaderboardUpdateTrigger: number;
+    internalAnimationKey: number;
 }) => {
     return (
         <div
@@ -241,7 +245,7 @@ const LeaderboardDisplay = React.memo(({
                     onZoomOut={() => setZoomFactors(z => ({ ...z, classement: Math.max(z.classement - 0.1, 0.5) }))}
                 />
             </div>
-            <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-hidden">
+            <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-visible">
                 {shouldShowQRCode ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">
                         <QrCodeWithLogo
@@ -262,7 +266,6 @@ const LeaderboardDisplay = React.memo(({
                         }}
                     >
                         <ClassementPodium
-                            key="leaderboard-podium"
                             top3={hookLeaderboard.slice(0, 3).map((entry) => ({
                                 userId: entry.userId,
                                 name: entry.username || 'Unknown Player',
@@ -276,6 +279,7 @@ const LeaderboardDisplay = React.memo(({
                             }))}
                             correctAnswers={correctAnswersData?.correctAnswers || []}
                             animate={shouldAnimatePodium}
+                            animationKey={internalAnimationKey}
                         />
                     </div>
                 )}
@@ -435,15 +439,45 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
 
     // Track animation state for podium
     const [shouldAnimatePodium, setShouldAnimatePodium] = useState(false);
+    const [hasInitialLeaderboard, setHasInitialLeaderboard] = useState(false);
+    const [internalAnimationKey, setInternalAnimationKey] = useState(0);
+
+    // Separate effect to detect initial leaderboard arrival
     useEffect(() => {
-        if (leaderboardUpdateTrigger > 0) {
+        if (!hasInitialLeaderboard && hookLeaderboard.length > 0) {
+            console.log('[ANIM-DEBUG] 🎬 Initial leaderboard detected, setting up initial animation');
+            setHasInitialLeaderboard(true);
+            setInternalAnimationKey(1); // Start with 1 for initial load
             setShouldAnimatePodium(true);
-            // Optionally reset after animation duration (e.g. 2s)
-            const timeout = setTimeout(() => setShouldAnimatePodium(false), 2000);
+            // Set timeout to disable animation after initial load completes
+            const timeout = setTimeout(() => {
+                console.log('[ANIM-DEBUG] ⏹️ Setting shouldAnimatePodium to FALSE (INITIAL LOAD COMPLETE)');
+                setShouldAnimatePodium(false);
+            }, 5000);
             return () => { clearTimeout(timeout); };
         }
         return undefined;
-    }, [leaderboardUpdateTrigger]);
+    }, [hasInitialLeaderboard, hookLeaderboard.length]);
+
+    // Trigger animation on leaderboardUpdateTrigger changes (for subsequent updates)
+    useEffect(() => {
+        console.log('[ANIM-DEBUG] 🔄 leaderboardUpdateTrigger changed:', leaderboardUpdateTrigger, 'leaderboard length:', hookLeaderboard.length, 'hasInitialLeaderboard:', hasInitialLeaderboard);
+
+        // Only handle updates after initial load, and only if trigger > 0
+        if (hasInitialLeaderboard && leaderboardUpdateTrigger > 0) {
+            console.log('[ANIM-DEBUG] 🎬 Setting shouldAnimatePodium to TRUE (UPDATE)');
+            setInternalAnimationKey(leaderboardUpdateTrigger);
+            setShouldAnimatePodium(true);
+            // Optionally reset after animation duration (e.g. 5s to give time for all animations)
+            const timeout = setTimeout(() => {
+                console.log('[ANIM-DEBUG] ⏹️ Setting shouldAnimatePodium to FALSE (UPDATE COMPLETE)');
+                setShouldAnimatePodium(false);
+            }, 5000);
+            return () => { clearTimeout(timeout); };
+        }
+        console.log('[ANIM-DEBUG] 🚫 No animation trigger - conditions not met');
+        return undefined;
+    }, [leaderboardUpdateTrigger, hasInitialLeaderboard]); // Remove hookLeaderboard.length dependency
     const currentQuestion: QuestionDataForStudent | null = (rawCurrentQuestion && typeof rawCurrentQuestion === 'object')
         ? (rawCurrentQuestion as QuestionDataForStudent)
         : null;
@@ -626,6 +660,8 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         zoomFactors={zoomFactors}
                         setZoomFactors={setZoomFactors}
                         bringToFront={bringToFront}
+                        leaderboardUpdateTrigger={leaderboardUpdateTrigger}
+                        internalAnimationKey={internalAnimationKey}
                     />
                 </DraggableResizable>
             </DndContext>
