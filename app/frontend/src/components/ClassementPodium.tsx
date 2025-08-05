@@ -115,7 +115,7 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
     // Animate on every re-render (no external control)
     const { animateOnInitialLoad = false } = arguments[0];
     const podiumOrder = [1, 0, 2];
-    const podiumMargins = ['mb-4', 'mb-8', 'mb-0'];
+    const podiumMargins = ['mb-10', 'mb-20', 'mb-4'];
     const top3 = leaderboard.slice(0, 3);
     const others = leaderboard.slice(3);
 
@@ -179,10 +179,10 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
     return (
         <div className="w-full h-full flex flex-col items-center justify-start pt-0 flex-1 min-h-0">
             {/* Podium */}
-            <div className="flex flex-row items-end justify-center gap-4 mb-4 w-full max-w-2xl mx-auto">
+            <div className="flex flex-row items-end justify-center gap-6 mb-4 w-full max-w-2xl mx-auto">
                 {podiumOrder.map((podiumIdx, pos) => {
                     const user = top3[podiumIdx];
-                    if (!user) return <div key={pos} className="w-20" />;
+                    if (!user) return <div key={pos} className="w-24" />;
                     const heightClass = podiumMargins[pos];
                     const zIndex = pos === 1 ? 'z-10' : 'z-0';
 
@@ -190,11 +190,6 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                     const rank = podiumIdx;
                     const animationDelay = animationDelays[rank] ?? 0;
                     const animateScore = animateScoreFlags[rank] ?? false;
-                    // Old hardcoded logic (backup):
-                    // let animationDelay = 0;
-                    // if (podiumIdx === 0) animationDelay = 0.0;
-                    // if (podiumIdx === 1) animationDelay = 0.3;
-                    // if (podiumIdx === 2) animationDelay = 0.6;
 
                     return (
                         <motion.div
@@ -216,29 +211,29 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                                 delay: animationDelay
                             }}
                             data-podium-pos={pos}
-                            className={`flex flex-col items-center justify-end ${zIndex} ${heightClass}`}
+                            className={`flex flex-col items-center justify-end ${zIndex} ${heightClass} w-24 min-w-0`}
                             style={{
-                                flex: pos === 1 ? 1.2 : 1,
                                 position: 'relative',
                             }}
                         >
-                            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-2 overflow-hidden">
+                            {/* AvatarEmoji only, bigger, no background */}
+                            <div className="mb-2 flex items-center justify-center overflow-hidden">
                                 {user.avatarEmoji ? (
-                                    <span className="text-3xl">{user.avatarEmoji}</span>
+                                    <span className="text-5xl">{user.avatarEmoji}</span>
                                 ) : (
                                     <span className="text-2xl font-bold text-gray-700">{(user.name || 'UP').slice(0, 2).toUpperCase()}</span>
                                 )}
                             </div>
                             <span
                                 className="font-semibold text-center truncate max-w-[100px]"
-                                style={{ fontSize: `calc(1.125rem * ${zoomFactor})` }} // Base size text-lg (1.125rem)
+                                style={{ fontSize: `calc(1.125rem * ${zoomFactor})` }}
                             >
                                 {user.name || 'Unknown Player'}
                             </span>
                             <ScoreAnimate score={user.score} zoomFactor={zoomFactor} animateScore={animateScore} />
                             <span
                                 className=""
-                                style={{ fontSize: `calc(1.5rem * ${zoomFactor})` }} // Base size text-2xl (1.5rem)
+                                style={{ fontSize: `calc(1.5rem * ${zoomFactor})` }}
                             >
                                 {medalEmojis[podiumIdx]}
                             </span>
@@ -248,16 +243,12 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
             </div>
 
             {/* Liste des suivants - Conteneur relatif pour le fade, flex-1 pour prendre l'espace restant, ET overflow-hidden */}
-            <div className="w-full max-w-xl mx-auto flex flex-col items-center relative flex-1 min-h-0 overflow-hidden"> {/* Ajout de overflow-hidden */}
-                {/* Conteneur interne pour la liste, SANS overflow */}
+            <div className="w-full max-w-xl mx-auto flex flex-col items-center relative flex-1 min-h-0 overflow-hidden">
                 <div className="flex flex-col gap-2 w-full px-2">
                     {others.map((user, idx) => {
-                        // New animation delay logic for others
                         const rank = idx + 3;
                         const animationDelay = animationDelays[rank] ?? 0;
                         const animateScore = animateScoreFlags[rank] ?? false;
-                        // Old logic (backup):
-                        // const delay = 1.5 + (idx * 0.1);
                         return (
                             <motion.div
                                 key={user.userId + '-' + rank}
@@ -279,15 +270,15 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                                 }}
                                 className="w-full flex flex-row items-center justify-between bg-base-200/80 rounded-lg px-4 py-2 shadow"
                             >
-                                <span className="font-mono w-8 text-center text-sm">{idx + 4}</span>
+                                {/* Rank. avatarEmoji username */}
+                                <span className="font-mono w-8 text-center text-sm">{idx + 4}.</span>
+                                <span className="text-2xl mr-2">{user.avatarEmoji}</span>
                                 <span className="flex-1 text-left truncate mx-2">{user.name || 'Unknown Player'}</span>
                                 <ScoreAnimate score={user.score} zoomFactor={zoomFactor} animateScore={animateScore} />
                             </motion.div>
                         );
                     })}
                 </div>
-
-                {/* Fade-out en bas - positionné sur le conteneur relatif */}
                 <div className="pointer-events-none absolute left-0 right-0 bottom-0 h-12 bg-gradient-to-t from-base-100 to-transparent" />
             </div>
         </div>
