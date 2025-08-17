@@ -95,10 +95,10 @@ export default function Home() {
             </p> */}
 
             <div className="text-left text-muted-foreground space-y-2 max-w-2xl mt-6">
-              <p>• Créez vos quiz personnalisés ou utilisez la base de questions partagée</p>
+              <p>• Créez vos quiz personnalisés en utilisant la base de questions partagée</p>
               <p>• Animez vos cours en temps réel avec scores et classements</p>
+              <p>• Jouez en solo ou en mode multi-joueurs</p>
               <p>• Support natif de LaTeX pour les formules mathématiques</p>
-              <p>• Jouez en solo, en duel ou en mode multi-joueurs</p>
               {/* <p>• Interface adaptée mobile, tablette et ordinateur</p> */}
             </div>
           </div>
@@ -124,6 +124,13 @@ export default function Home() {
               >
                 💻 Code source
               </a>
+            </div>
+          </div>
+          {/* Avertissement développement en bas de page */}
+          <div className="w-full mt-10">
+            <div className="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg p-4 shadow-sm text-base">
+              <strong>⚠️ En développement :</strong> certaines fonctionnalités peuvent manquer et le service être interrompu pour mise à jour.
+              Auto-hébergez l'application si possible.
             </div>
           </div>
         </div>
