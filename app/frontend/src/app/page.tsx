@@ -88,7 +88,7 @@ export default function Home() {
           {/* Description */}
           <div className="text-center mb-8">
             <p className="text-lg text-muted-foreground mb-4">
-              🧠 Une alternative libre à Kahoot avec une base de question partagée.
+              🧠 Une alternative libre à Kahoot avec une base de questions partagée.
             </p>
             {/* <p className="text-success font-medium mb-6">
               🔓 Pas besoin de compte pour jouer !
