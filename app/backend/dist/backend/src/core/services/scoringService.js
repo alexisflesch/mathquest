@@ -20,33 +20,144 @@ const timerKeyUtil_1 = require("./timerKeyUtil");
 const canonicalTimerService_1 = require("./canonicalTimerService");
 const logger = (0, logger_1.default)('ScoringService');
 /**
- * Core scoring calculation
- * @param isCorrect Whether the answer is correct
- * @param serverTimeSpent Time spent in milliseconds (server-calculated)
+ * Core scoring calculation with new balanced scoring system
  * @param question Question object with timeLimit and other properties
+ * @param answer User's submitted answer
+ * @param serverTimeSpent Time spent in milliseconds (server-calculated)
+ * @param accessCode Game access code to get total questions for scaling
  * @returns Score for this answer
  */
-function calculateAnswerScore(isCorrect, serverTimeSpent, question) {
-    if (!isCorrect || !question)
+async function calculateAnswerScore(question, answer, serverTimeSpent, accessCode) {
+    if (!question)
         return { score: 0, timePenalty: 0 };
-    const baseScore = 1000;
-    // Convert milliseconds to seconds for penalty calculation
+    // Get total questions for game scaling (default to 10 if not available)
+    let totalQuestions = 10;
+    if (accessCode) {
+        try {
+            const gameDataKey = `mathquest:game:${accessCode}`;
+            const gameData = await redis_1.redisClient.get(gameDataKey);
+            if (gameData) {
+                const parsed = JSON.parse(gameData);
+                if (parsed.questionUids && Array.isArray(parsed.questionUids)) {
+                    totalQuestions = parsed.questionUids.length;
+                }
+            }
+        }
+        catch (error) {
+            logger.warn({ error, accessCode }, 'Failed to get total questions for scaling, using default of 10');
+        }
+    }
+    // Calculate base score per question (scaled so total game = 1000 points)
+    const baseScorePerQuestion = 1000 / totalQuestions;
+    // Calculate correctness score based on question type
+    let correctnessScore = 0;
+    if (question.multipleChoiceQuestion) {
+        // New balanced scoring for multiple choice questions
+        const mcq = question.multipleChoiceQuestion;
+        if (!mcq.correctAnswers || !Array.isArray(mcq.correctAnswers)) {
+            return { score: 0, timePenalty: 0 };
+        }
+        const B = mcq.correctAnswers.filter(Boolean).length; // Total correct answers
+        const M = mcq.correctAnswers.filter((x) => !x).length; // Total incorrect answers
+        if (B === 0)
+            return { score: 0, timePenalty: 0 }; // No correct answers defined
+        let C_B = 0; // Correct answers selected
+        let C_M = 0; // Incorrect answers selected
+        if (Array.isArray(answer)) {
+            // Multiple selections
+            for (const selectedIndex of answer) {
+                if (selectedIndex >= 0 && selectedIndex < mcq.correctAnswers.length) {
+                    if (mcq.correctAnswers[selectedIndex]) {
+                        C_B++;
+                    }
+                    else {
+                        C_M++;
+                    }
+                }
+            }
+        }
+        else if (typeof answer === 'number') {
+            // Single selection
+            if (answer >= 0 && answer < mcq.correctAnswers.length) {
+                if (mcq.correctAnswers[answer]) {
+                    C_B = 1;
+                }
+                else {
+                    C_M = 1;
+                }
+            }
+        }
+        // Balanced scoring formula: raw_score = max(0, (C_B / B) - (C_M / M))
+        let rawScore = 0;
+        if (M > 0) {
+            rawScore = Math.max(0, (C_B / B) - (C_M / M));
+        }
+        else {
+            // If no incorrect answers, just use C_B / B
+            rawScore = C_B / B;
+        }
+        correctnessScore = rawScore;
+    }
+    else if (question.numericQuestion || question.questionType === 'numeric') {
+        // Numeric questions: binary correct/incorrect
+        const isCorrect = checkAnswerCorrectness(question, answer);
+        correctnessScore = isCorrect ? 1 : 0;
+    }
+    else {
+        // Default: check if answer is correct
+        const isCorrect = checkAnswerCorrectness(question, answer);
+        correctnessScore = isCorrect ? 1 : 0;
+    }
+    // Apply time penalty using logarithmic decay
+    // Get duration from timer Redis key instead of database
+    let timeLimit = 60000; // Default 60 seconds in ms
+    if (accessCode) {
+        try {
+            // Try the basic timer key first (for live/quiz mode)
+            let timerKey = `mathquest:timer:${accessCode}:${question.uid}`;
+            let timerData = await redis_1.redisClient.get(timerKey);
+            if (!timerData) {
+                // If not found, we might need to check if this is a more complex key pattern
+                // For now, use the simple pattern as it's the most common
+                logger.warn({ accessCode, questionUid: question.uid }, 'Timer data not found in Redis, using default duration');
+            }
+            else {
+                const parsed = JSON.parse(timerData);
+                if (parsed.durationMs) {
+                    timeLimit = parsed.durationMs;
+                }
+            }
+        }
+        catch (error) {
+            logger.warn({ error, accessCode, questionUid: question.uid }, 'Failed to get duration from timer Redis key, using default');
+        }
+    }
+    const timeLimitSeconds = timeLimit / 1000;
     const serverTimeSpentSeconds = Math.max(0, serverTimeSpent / 1000);
-    const timePenalty = Math.floor(serverTimeSpentSeconds * 10); // 10 points per second
-    const finalScore = Math.max(baseScore - timePenalty, 0);
+    // Logarithmic time penalty: time_penalty_factor = min(1, log(t + 1) / log(T + 1))
+    const alpha = 0.3; // 30% maximum penalty
+    const timePenaltyFactor = Math.min(1, Math.log(serverTimeSpentSeconds + 1) / Math.log(timeLimitSeconds + 1));
+    // Final score calculation
+    const scoreBeforePenalty = baseScorePerQuestion * correctnessScore;
+    const timePenalty = scoreBeforePenalty * alpha * timePenaltyFactor;
+    const finalScore = Math.max(0, scoreBeforePenalty - timePenalty);
     logger.info({
         questionType: question.questionType,
-        baseScore,
-        serverTimeSpent,
+        totalQuestions,
+        baseScorePerQuestion,
+        correctnessScore,
         serverTimeSpentSeconds,
+        timeLimitSeconds,
+        timePenaltyFactor,
+        alpha,
+        scoreBeforePenalty,
         timePenalty,
         finalScore,
-        isCorrect
-    }, 'Score calculation details (diagnostic)');
-    // Return both score and timePenalty for answer record
+        answer
+    }, 'New scoring calculation details');
     return {
-        score: finalScore,
-        timePenalty
+        score: Math.round(finalScore * 100) / 100, // Round to 2 decimal places
+        timePenalty: Math.round(timePenalty * 100) / 100
     };
 }
 /**
@@ -432,9 +543,9 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             timerDebugInfo = { playMode, note: 'Practice mode: no timer' };
         }
         // [LOG REMOVED] Noisy timer/mode diagnostic
+        // Calculate if answer is correct for Redis storage
         const isCorrect = checkAnswerCorrectness(question, answerData.answer);
-        logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid, isCorrect }, '[LOG] Answer correctness check result');
-        const { score: newScore, timePenalty } = calculateAnswerScore(isCorrect, serverTimeSpent, question);
+        const { score: newScore, timePenalty } = await calculateAnswerScore(question, answerData.answer, serverTimeSpent, gameInstance.accessCode);
         logger.info({
             gameInstanceId,
             userId,
