@@ -11,6 +11,7 @@ import StudentAuthForm from '../../components/auth/StudentAuthForm';
 import AvatarGrid from '../../components/ui/AvatarGrid';
 import Image from 'next/image';
 import InfinitySpin from '@/components/InfinitySpin';
+import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 function LoginPageInner() {
@@ -27,6 +28,10 @@ function LoginPageInner() {
     const [isTeacherSignup, setIsTeacherSignup] = useState(false);
     const [adminPassword, setAdminPassword] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('');
+
+    // Email verification modal state
+    const [showEmailVerificationModal, setShowEmailVerificationModal] = useState(false);
+    const [registeredUserEmail, setRegisteredUserEmail] = useState('');
 
     // URL params for redirect after login  
     const returnTo = searchParams?.get('returnTo') || '/';
@@ -88,6 +93,8 @@ function LoginPageInner() {
                     // Use universal login - automatically detects if user is student or teacher
                     await universalLogin(data.email, data.password);
                 }
+                // Login successful, redirect to target page
+                router.push(finalRedirectUrl);
             } else {
                 if (!data.username) throw new Error('Nom d\'utilisateur requis pour l\'inscription');
                 if (!data.avatar) throw new Error('Avatar requis pour l\'inscription');
@@ -96,13 +103,16 @@ function LoginPageInner() {
 
                 // Registration - use appropriate endpoint based on teacher checkbox
                 if (isTeacherSignup) {
-                    // Need to create teacher registration function
                     await registerTeacher(data.email, data.password, data.username, adminPassword, data.avatar);
                 } else {
                     await registerStudent(data.email, data.password, data.username, data.avatar);
                 }
+
+                // Both student and teacher registrations require email verification
+                setRegisteredUserEmail(data.email);
+                setShowEmailVerificationModal(true);
+                // Don't redirect immediately - let the modal handle the flow
             }
-            router.push(finalRedirectUrl);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Erreur lors de l\'authentification');
         } finally {
@@ -111,6 +121,34 @@ function LoginPageInner() {
     };
 
     // Handler for guest upgrade form - removed as upgrade is now in profile page
+
+    // Handle resending email verification
+    const handleResendEmailVerification = async () => {
+        try {
+            const response = await fetch('/api/auth/resend-email-verification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: registeredUserEmail }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de l\'envoi de l\'email');
+            }
+        } catch (error) {
+            throw error; // Re-throw to let the modal handle the error display
+        }
+    };
+
+    // Handle email verification modal close
+    const handleEmailVerificationModalClose = () => {
+        setShowEmailVerificationModal(false);
+        setRegisteredUserEmail('');
+        // Redirect to final destination after modal is closed
+        router.push(finalRedirectUrl);
+    };
 
     // Only anonymous users should reach this point (all authenticated users are redirected)
     // Show loading state while authentication is being determined
@@ -326,6 +364,14 @@ function LoginPageInner() {
                     )}
                 </div>
             </div>
+
+            {/* Email Verification Modal */}
+            <EmailVerificationModal
+                isOpen={showEmailVerificationModal}
+                onClose={handleEmailVerificationModalClose}
+                userEmail={registeredUserEmail}
+                onResendEmail={handleResendEmailVerification}
+            />
         </div>
     );
 }

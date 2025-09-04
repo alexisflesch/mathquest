@@ -314,7 +314,7 @@ class CanonicalTimerService {
         if (status === 'run' && (timeLeftMs <= 0 || canonicalDurationMs <= 0)) {
             logger.warn({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, canonicalDurationMs, now, timer, elapsed, timeLeftMs }, '[CANONICAL_TIMER][getTimer] Forcing STOP state due to timeLeftMs <= 0 or durationMs <= 0');
             status = 'stop';
-            timeLeftMs = canonicalDurationMs;
+            timeLeftMs = 0; // Timer expired, no time left
             timerEndDateMs = 0;
         }
         logger.info({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, canonicalDurationMs, now, timer, status, elapsed, timeLeftMs, timerEndDateMs }, '[CANONICAL_TIMER][getTimer] Returning canonical timer state');

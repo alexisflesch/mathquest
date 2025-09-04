@@ -129,7 +129,10 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   resetToken: 'resetToken',
   resetTokenExpiresAt: 'resetTokenExpiresAt',
-  avatarEmoji: 'avatarEmoji'
+  avatarEmoji: 'avatarEmoji',
+  emailVerificationToken: 'emailVerificationToken',
+  emailVerificationTokenExpiresAt: 'emailVerificationTokenExpiresAt',
+  emailVerified: 'emailVerified'
 };
 
 exports.Prisma.TeacherProfileScalarFieldEnum = {

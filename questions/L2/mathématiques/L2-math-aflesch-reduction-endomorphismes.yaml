@@ -12,6 +12,7 @@
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
       La matrice \(I_3\) est diagonalisable
   answerOptions:
@@ -31,6 +32,7 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(A\in \mathcal{M}_3(\mathbb{R})\). Quelles affirmations sont vraies?
   answerOptions:
@@ -53,6 +55,7 @@
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 2
+  excludedFrom: ["practice", "tournament"]
   text: |
       Si \(A\) est une matrice diagonalisable alors \(A^2\) est aussi diagonalisable.
   answerOptions:
@@ -72,6 +75,7 @@
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 2
+  excludedFrom: ["practice", "tournament"]
   text: |
         Soit \(A\) une matrice diagonalisable inversible. Alors son inverse est aussi diagonalisable.
   answerOptions:
@@ -90,6 +94,7 @@
   questionType: "multiple_choice"
   timeLimit: 120
   difficulty: 3
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(A\) une matrice réelle diagonalisable. Que peut-on dire?
   answerOptions:
@@ -111,6 +116,7 @@
   questionType: "multiple_choice"
   timeLimit: 120
   difficulty: 3
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(A\) une matrice carrée. Que peut-on dire?
   answerOptions:
@@ -132,6 +138,7 @@
   questionType: "multiple_choice"
   timeLimit: 120
   difficulty: 3
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soient \(A\) une matrice de taille \(n\times n\) (\(n\geqslant 2\)), \(\lambda\) une valeur propre de \(A\) et \(m\) son ordre de multiplicité. Que peut-on dire?
   answerOptions:
@@ -154,6 +161,7 @@
   questionType: "multiple_choice"
   timeLimit: 120
   difficulty: 3
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(f\) un endomorphisme en dimension finie \(n\) et soit \(\chi_f\) son polynôme caractéristique. Que peut-on dire?
   answerOptions:

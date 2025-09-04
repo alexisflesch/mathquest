@@ -1,0 +1,210 @@
+- uid: aflesch-l1-nego-001
+  title: "Négation — quantificateurs simples"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 1
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \forall x \in \mathbb{R}, \; x^2 \geq 0 \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "proposition"
+    - "quantificateurs"
+    - "négation"
+  answerOptions:
+  - '\( \forall x \in \mathbb{R}, \; x^2 < 0 \)'
+  - '\( \exists x \in \mathbb{R}, \; x^2 < 0 \)'
+  - '\( \exists x \in \mathbb{R}, \; x^2 \geq 0 \)'
+  - '\( \forall x \in \mathbb{R}, \; x^2 \geq 0 \)'
+  correctAnswers: [false, true, false, false]
+
+- uid: aflesch-l1-nego-002
+  title: "Négation — implication"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 1
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \forall x > 0, \; (x \geq 1 \Rightarrow x^2 \geq 1) \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "implication"
+    - "quantificateurs"
+    - "négation"
+  answerOptions:
+  - '\( \exists x > 0 \; \text{ tel que } x^2 \geq 1 \)'
+  - '\( \forall x > 0, \; (x < 1 \Rightarrow x^2 \geq 1) \)'
+  - '\( \exists x > 0 \; \text{ tel que } x \geq 1 \text{ et } x^2 < 1 \)'
+  - '\( \exists x > 0 \; \text{ tel que } x < 1 \text{ et } x^2 \geq 1 \)'
+  correctAnswers: [false, false, true, false]
+
+- uid: aflesch-l1-nego-003
+  title: "Négation — quantificateurs imbriqués"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 2
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \forall x > 0, \; \exists y \in \mathbb{Z}, \; x + y = 0 \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "quantificateurs"
+    - "négation"
+  answerOptions:
+  - '\( \exists x > 0 \; \text{ tel que } \forall y \in \mathbb{Z}, \; x + y \neq 0 \)'
+  - '\( \forall x > 0, \forall y \in \mathbb{Z}, \; x + y \neq 0 \)'
+  - '\( \exists x > 0, \exists y \in \mathbb{Z} \; \text{ tel que } x + y \neq 0 \)'
+  - '\( \forall x > 0, \exists y \in \mathbb{Z} \; \text{ tel que } x + y \neq 0 \)'
+  correctAnswers: [true, false, false, false]
+
+- uid: aflesch-l1-nego-004
+  title: "Négation — inégalités"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 1
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \exists x \in \mathbb{N}, \; x^2 + 2x < 0 \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "quantificateurs"
+    - "négation"
+  answerOptions:
+  - '\( \exists x \in \mathbb{N}, \; x^2 + 2x \geq 0 \)'
+  - '\( \forall x \in \mathbb{N}, \; x^2 + 2x = 0 \)'
+  - '\( \exists x \in \mathbb{N}, \; x^2 + 2x = 0 \)'
+  - '\( \forall x \in \mathbb{N}, \; x^2 + 2x \geq 0 \)'
+  correctAnswers: [false, false, false, true]
+
+- uid: aflesch-l1-nego-005
+  title: "Négation — disjonction"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 1
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \forall x \in \mathbb{R}, \; (x = 0 \text{ ou } x \geq 1) \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "connecteurs logiques"
+    - "négation"
+  answerOptions:
+  - '\( \exists x \in \mathbb{R}, \; x < 0 \)'
+  - '\( \exists x \in \mathbb{R}, \; (x \neq 0 \text{ et } x < 1) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x < 0 \text{ et } x \geq 1) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x > 0 \text{ et } x \geq 1) \)'
+  correctAnswers: [false, true, false, false]
+
+- uid: aflesch-l1-nego-006
+  title: "Négation — conjonction"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 2
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \exists x \in \mathbb{R}, \; (x \geq 2 \text{ et } x \leq 5) \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "connecteurs logiques"
+    - "négation"
+  answerOptions:
+  - '\( \exists x \in \mathbb{R}, \; (x < 2 \text{ ou } x > 5) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x \geq 2 \text{ ou } x \leq 5) \)'
+  - '\( \exists x \in \mathbb{R}, \; (x \geq 2 \text{ ou } x \leq 5) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x < 2 \text{ ou } x > 5) \)'
+  correctAnswers: [false, false, false, true]
+
+- uid: aflesch-l1-nego-007
+  title: "Négation — implication et parité"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 2
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \forall n \in \mathbb{N}, \; (n \text{ pair } \Rightarrow n^2 \text{ pair}) \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "implication"
+    - "négation"
+  answerOptions:
+  - '\( \forall n \in \mathbb{N}, \; (n \text{ impair } \Rightarrow n^2 \text{ impair}) \)'
+  - '\( \exists n \in \mathbb{N} \; \text{ tel que } n \text{ est pair et } n^2 \text{ est pair} \)'
+  - '\( \exists n \in \mathbb{N} \; \text{ tel que } n \text{ est pair et } n^2 \text{ est impair} \)'
+  - '\( \forall n \in \mathbb{N}, \; (n \text{ impair } \text{ et } n^2 \text{ pair}) \)'
+  correctAnswers: [false, false, true, false]
+
+- uid: aflesch-l1-nego-008
+  title: "Négation — intervalles et entiers"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 2
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \exists x \in \mathbb{Z}, \; (5 < x < 6) \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "quantificateurs"
+    - "négation"
+  answerOptions:
+  - '\( \forall x \in \mathbb{Z}, \; (x \leq 5 \text{ ou } x \geq 6) \)'
+  - '\( \exists x \in \mathbb{Z}, \; (x \leq 5 \text{ ou } x \geq 6) \)'
+  - '\( \forall x \in \mathbb{Z}, \; (x > 5 \text{ et } x < 6) \)'
+  - '\( \exists x \in \mathbb{Z}, \; (x = 5 \text{ ou } x = 6) \)'
+  correctAnswers: [true, false, false, false]
+
+- uid: aflesch-l1-nego-009
+  title: "Négation — bornes et réels"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 1
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \forall x \in \mathbb{R}, \; (x \geq 0 \Rightarrow x^2 \geq 0) \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "négation"
+    - "implication"
+  answerOptions:
+  - '\( \exists x \in \mathbb{R}, \; (x < 0 \text{ et } x^2 \geq 0) \)'
+  - '\( \exists x \in \mathbb{R}, \; (x \geq 0 \text{ et } x^2 < 0) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x < 0 \Rightarrow x^2 \geq 0) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x \geq 0 \text{ ou } x^2 < 0) \)'
+  correctAnswers: [false, true, false, false]
+
+- uid: aflesch-l1-nego-010
+  title: "Négation — mélange simple"
+  author: "aflesch"
+  discipline: "Mathématiques"
+  gradeLevel: "L1"
+  difficulty: 2
+  questionType: single_choice
+  text: 'Donner la négation de l''assertion suivante : « \( \forall x \in \mathbb{R}, \; (x > 2 \text{ ou } x < -2) \) »'
+  timeLimit: 30
+  themes:
+    - "Logique et raisonnement"
+  tags:
+    - "négation"
+  answerOptions:
+  - '\( \exists x \in \mathbb{R}, \; (x > 2 \text{ et } x < -2) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x < 2 \text{ ou } x > -2) \)'
+  - '\( \forall x \in \mathbb{R}, \; (x \leq 2 \text{ ou } x \geq -2) \)'
+  - '\( \exists x \in \mathbb{R}, \; (x \leq 2 \text{ et } x \geq -2) \)'
+  correctAnswers: [false, false, false, true]

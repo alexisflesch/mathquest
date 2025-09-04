@@ -64,6 +64,18 @@ export const TeacherUpgradeRequestSchema = z.object({
     adminPassword: z.string().min(1, 'Admin password is required')
 });
 
+export const SendEmailVerificationRequestSchema = z.object({
+    email: z.string().email('Invalid email format')
+});
+
+export const VerifyEmailRequestSchema = z.object({
+    token: z.string().min(1, 'Verification token is required')
+});
+
+export const ResendEmailVerificationRequestSchema = z.object({
+    email: z.string().email('Invalid email format')
+});
+
 // --- Game API Request Schemas ---
 
 export const CreateGameRequestSchema = z.object({
@@ -202,8 +214,9 @@ export const LoginResponseSchema = z.object({
 export const RegisterResponseSchema = z.object({
     success: z.boolean(),
     message: z.string(),
-    token: z.string(),
-    user: ApiUserSchema
+    token: z.string().optional(), // Optional for email verification cases
+    user: ApiUserSchema,
+    requiresEmailVerification: z.boolean().optional() // Indicates email verification needed
 });
 
 export const UpgradeAccountResponseSchema = z.object({
@@ -505,6 +518,9 @@ export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>;
 export type PasswordResetConfirmRequest = z.infer<typeof PasswordResetConfirmRequestSchema>;
 export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;
 export type TeacherUpgradeRequest = z.infer<typeof TeacherUpgradeRequestSchema>;
+export type SendEmailVerificationRequest = z.infer<typeof SendEmailVerificationRequestSchema>;
+export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequestSchema>;
+export type ResendEmailVerificationRequest = z.infer<typeof ResendEmailVerificationRequestSchema>;
 export type SetQuestionRequest = z.infer<typeof SetQuestionRequestSchema>;
 // Backward compatibility aliases
 export type UpgradeRequest = UpgradeAccountRequest;

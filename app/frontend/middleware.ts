@@ -39,8 +39,8 @@ export function middleware(request: NextRequest) {
     const userState = getUserState(request);
     const { pathname, origin, search } = request.nextUrl;
 
-    // Allow home and login for everyone
-    if (pathname === '/' || pathname === '/login') {
+    // Allow home, login, and email verification for everyone
+    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email')) {
         return NextResponse.next();
     }
 

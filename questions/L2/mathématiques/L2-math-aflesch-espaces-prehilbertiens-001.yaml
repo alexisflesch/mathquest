@@ -12,6 +12,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
         Soient \(E\) un espace euclidien et \(A\) une partie non vide de \(E\). Que peut-on dire?
   answerOptions:
@@ -31,6 +32,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soient \(u\) et \(v\) deux vecteurs d'un espace préhilbertien \(\left( E,\langle\cdot\vert\cdot\rangle \right)\). Alors, \(u+v\) et \(u-v\) sont orthogonaux ssi:
   answerOptions:
@@ -51,6 +53,7 @@
   questionType: "single_choice"
   timeLimit: 120
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     On munit \(\mathbb{R}_3[X]\) du produit scalaire défini par:
     \[\forall (P,Q)\in \mathbb{R}_3[X]^2, \quad \left\langle P|Q \right\rangle = \int_0^1 P(t)Q(t)\,\mathrm{d}t.\]

@@ -12,6 +12,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(x\in\mathbb{R}\). Quel encadrement est vrai ?
   answerOptions:

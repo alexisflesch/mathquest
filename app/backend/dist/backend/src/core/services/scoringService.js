@@ -608,12 +608,21 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
             // [LOG REMOVED] Noisy log for Redis participant update
             const redisParticipantData = await redis_1.redisClient.hget(participantKey, userId);
+            let participantData;
             if (redisParticipantData) {
-                const participantData = JSON.parse(redisParticipantData);
+                participantData = JSON.parse(redisParticipantData);
                 participantData.score = currentTotalScore;
-                await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
-                // [LOG REMOVED] Noisy log for Redis participant update
             }
+            else {
+                // Create initial participant data if it doesn't exist
+                participantData = {
+                    score: currentTotalScore,
+                    userId: userId,
+                    timestamp: Date.now()
+                };
+            }
+            await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
+            // [LOG REMOVED] Noisy log for Redis participant update
             if (isDeferred) {
                 // 🔒 DEFERRED MODE FIX: Update session state instead of global leaderboard
                 // Store score in isolated session state, not global Redis leaderboard

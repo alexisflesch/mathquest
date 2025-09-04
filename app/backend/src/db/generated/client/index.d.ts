@@ -1903,6 +1903,9 @@ export namespace Prisma {
     resetToken: string | null
     resetTokenExpiresAt: Date | null
     avatarEmoji: string | null
+    emailVerificationToken: string | null
+    emailVerificationTokenExpiresAt: Date | null
+    emailVerified: boolean | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -1915,6 +1918,9 @@ export namespace Prisma {
     resetToken: string | null
     resetTokenExpiresAt: Date | null
     avatarEmoji: string | null
+    emailVerificationToken: string | null
+    emailVerificationTokenExpiresAt: Date | null
+    emailVerified: boolean | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -1927,6 +1933,9 @@ export namespace Prisma {
     resetToken: number
     resetTokenExpiresAt: number
     avatarEmoji: number
+    emailVerificationToken: number
+    emailVerificationTokenExpiresAt: number
+    emailVerified: number
     _all: number
   }
 
@@ -1941,6 +1950,9 @@ export namespace Prisma {
     resetToken?: true
     resetTokenExpiresAt?: true
     avatarEmoji?: true
+    emailVerificationToken?: true
+    emailVerificationTokenExpiresAt?: true
+    emailVerified?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -1953,6 +1965,9 @@ export namespace Prisma {
     resetToken?: true
     resetTokenExpiresAt?: true
     avatarEmoji?: true
+    emailVerificationToken?: true
+    emailVerificationTokenExpiresAt?: true
+    emailVerified?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -1965,6 +1980,9 @@ export namespace Prisma {
     resetToken?: true
     resetTokenExpiresAt?: true
     avatarEmoji?: true
+    emailVerificationToken?: true
+    emailVerificationTokenExpiresAt?: true
+    emailVerified?: true
     _all?: true
   }
 
@@ -2050,6 +2068,9 @@ export namespace Prisma {
     resetToken: string | null
     resetTokenExpiresAt: Date | null
     avatarEmoji: string | null
+    emailVerificationToken: string | null
+    emailVerificationTokenExpiresAt: Date | null
+    emailVerified: boolean | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -2079,6 +2100,9 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
     studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
     teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
     initiatedGameInstances?: boolean | User$initiatedGameInstancesArgs<ExtArgs>
@@ -2097,6 +2121,9 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2109,6 +2136,9 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -2121,9 +2151,12 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "createdAt" | "role" | "resetToken" | "resetTokenExpiresAt" | "avatarEmoji", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "createdAt" | "role" | "resetToken" | "resetTokenExpiresAt" | "avatarEmoji" | "emailVerificationToken" | "emailVerificationTokenExpiresAt" | "emailVerified", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
     teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
@@ -2154,6 +2187,9 @@ export namespace Prisma {
       resetToken: string | null
       resetTokenExpiresAt: Date | null
       avatarEmoji: string | null
+      emailVerificationToken: string | null
+      emailVerificationTokenExpiresAt: Date | null
+      emailVerified: boolean | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -2591,6 +2627,9 @@ export namespace Prisma {
     readonly resetToken: FieldRef<"User", 'String'>
     readonly resetTokenExpiresAt: FieldRef<"User", 'DateTime'>
     readonly avatarEmoji: FieldRef<"User", 'String'>
+    readonly emailVerificationToken: FieldRef<"User", 'String'>
+    readonly emailVerificationTokenExpiresAt: FieldRef<"User", 'DateTime'>
+    readonly emailVerified: FieldRef<"User", 'Boolean'>
   }
     
 
@@ -13272,7 +13311,10 @@ export namespace Prisma {
     role: 'role',
     resetToken: 'resetToken',
     resetTokenExpiresAt: 'resetTokenExpiresAt',
-    avatarEmoji: 'avatarEmoji'
+    avatarEmoji: 'avatarEmoji',
+    emailVerificationToken: 'emailVerificationToken',
+    emailVerificationTokenExpiresAt: 'emailVerificationTokenExpiresAt',
+    emailVerified: 'emailVerified'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -13487,6 +13529,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -13497,13 +13546,6 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -13586,6 +13628,9 @@ export namespace Prisma {
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
     avatarEmoji?: StringNullableFilter<"User"> | string | null
+    emailVerificationToken?: StringNullableFilter<"User"> | string | null
+    emailVerificationTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    emailVerified?: BoolNullableFilter<"User"> | boolean | null
     studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
     teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
@@ -13603,6 +13648,9 @@ export namespace Prisma {
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiresAt?: SortOrderInput | SortOrder
     avatarEmoji?: SortOrderInput | SortOrder
+    emailVerificationToken?: SortOrderInput | SortOrder
+    emailVerificationTokenExpiresAt?: SortOrderInput | SortOrder
+    emailVerified?: SortOrderInput | SortOrder
     studentProfile?: StudentProfileOrderByWithRelationInput
     teacherProfile?: TeacherProfileOrderByWithRelationInput
     initiatedGameInstances?: GameInstanceOrderByRelationAggregateInput
@@ -13623,6 +13671,9 @@ export namespace Prisma {
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
     avatarEmoji?: StringNullableFilter<"User"> | string | null
+    emailVerificationToken?: StringNullableFilter<"User"> | string | null
+    emailVerificationTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    emailVerified?: BoolNullableFilter<"User"> | boolean | null
     studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
     teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
@@ -13640,6 +13691,9 @@ export namespace Prisma {
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiresAt?: SortOrderInput | SortOrder
     avatarEmoji?: SortOrderInput | SortOrder
+    emailVerificationToken?: SortOrderInput | SortOrder
+    emailVerificationTokenExpiresAt?: SortOrderInput | SortOrder
+    emailVerified?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -13658,6 +13712,9 @@ export namespace Prisma {
     resetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     avatarEmoji?: StringNullableWithAggregatesFilter<"User"> | string | null
+    emailVerificationToken?: StringNullableWithAggregatesFilter<"User"> | string | null
+    emailVerificationTokenExpiresAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    emailVerified?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
   }
 
   export type TeacherProfileWhereInput = {
@@ -14307,6 +14364,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -14324,6 +14384,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -14341,6 +14404,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -14358,6 +14424,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -14375,6 +14444,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -14387,6 +14459,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -14399,6 +14474,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type TeacherProfileCreateInput = {
@@ -15125,6 +15203,11 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type StudentProfileNullableScalarRelationFilter = {
     is?: StudentProfileWhereInput | null
     isNot?: StudentProfileWhereInput | null
@@ -15180,6 +15263,9 @@ export namespace Prisma {
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
     avatarEmoji?: SortOrder
+    emailVerificationToken?: SortOrder
+    emailVerificationTokenExpiresAt?: SortOrder
+    emailVerified?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -15192,6 +15278,9 @@ export namespace Prisma {
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
     avatarEmoji?: SortOrder
+    emailVerificationToken?: SortOrder
+    emailVerificationTokenExpiresAt?: SortOrder
+    emailVerified?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -15204,6 +15293,9 @@ export namespace Prisma {
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
     avatarEmoji?: SortOrder
+    emailVerificationToken?: SortOrder
+    emailVerificationTokenExpiresAt?: SortOrder
+    emailVerified?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -15280,6 +15372,14 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
@@ -15340,11 +15440,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
-  }
-
-  export type BoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
   }
 
   export type MultipleChoiceQuestionNullableScalarRelationFilter = {
@@ -15463,14 +15558,6 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type BoolNullableListFilter<$PrismaModel = never> = {
@@ -15976,6 +16063,10 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type StudentProfileUpdateOneWithoutUserNestedInput = {
     create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
     connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
@@ -16207,10 +16298,6 @@ export namespace Prisma {
   export type QuestionUpdateexcludedFromInput = {
     set?: string[]
     push?: string | string[]
-  }
-
-  export type NullableBoolFieldUpdateOperationsInput = {
-    set?: boolean | null
   }
 
   export type MultipleChoiceQuestionUpdateOneWithoutQuestionNestedInput = {
@@ -16647,6 +16734,11 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -16741,9 +16833,12 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
-  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -16798,14 +16893,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -17207,6 +17294,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -17223,6 +17313,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -17255,6 +17348,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -17271,6 +17367,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -17287,6 +17386,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -17303,6 +17405,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -17335,6 +17440,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -17351,6 +17459,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -17745,6 +17856,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -17761,6 +17875,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -17831,6 +17948,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -17847,6 +17967,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -18088,6 +18211,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -18104,6 +18230,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -18209,6 +18338,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -18225,6 +18357,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -18298,6 +18433,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -18314,6 +18452,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -18393,6 +18534,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -18409,6 +18553,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput

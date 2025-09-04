@@ -360,24 +360,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 RegisterResponseSchema
             );
 
-            if (result.success && result.user && result.token) {
-                // Clear any guest data
-                localStorage.removeItem('mathquest_cookie_id');
+            if (result.success && result.user) {
+                // Check if email verification is required
+                if ('requiresEmailVerification' in result && result.requiresEmailVerification) {
+                    // Email verification required - don't update auth state
+                    logger.info('Student registration successful, email verification required', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                    // The frontend will handle showing the verification modal
+                    return;
+                }
 
-                // Update to student state
-                setUserState('student');
-                setUserProfile({
-                    username: result.user.username,
-                    avatar: result.user.avatar || '',
-                    email: result.user.email,
-                    role: result.user.role,
-                    userId: result.user.id
-                });
+                // If we have a token, the user is verified and can be logged in
+                if (result.token) {
+                    // Clear any guest data
+                    localStorage.removeItem('mathquest_cookie_id');
 
-                logger.info('Student registered', {
-                    userId: result.user.id,
-                    email: result.user.email
-                });
+                    // Update to student state
+                    setUserState('student');
+                    setUserProfile({
+                        username: result.user.username,
+                        avatar: result.user.avatar || '',
+                        email: result.user.email,
+                        role: result.user.role,
+                        userId: result.user.id
+                    });
+
+                    logger.info('Student registered and logged in', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                }
             } else {
                 throw new Error('Erreur lors de la création du compte');
             }
@@ -450,24 +464,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 RegisterResponseSchema
             );
 
-            if (result.success && result.user && result.token) {
-                // Clear any guest data
-                localStorage.removeItem('mathquest_cookie_id');
+            if (result.success && result.user) {
+                // Check if email verification is required
+                if ('requiresEmailVerification' in result && result.requiresEmailVerification) {
+                    // Email verification required - don't update auth state
+                    logger.info('Teacher registration successful, email verification required', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                    // The frontend will handle showing the verification modal
+                    return;
+                }
 
-                // Update to teacher state
-                setUserState('teacher');
-                setUserProfile({
-                    username: result.user.username,
-                    avatar: result.user.avatar || avatar,
-                    email: result.user.email,
-                    role: result.user.role,
-                    userId: result.user.id
-                });
+                // If we have a token, the user is verified and can be logged in
+                if (result.token) {
+                    // Clear any guest data
+                    localStorage.removeItem('mathquest_cookie_id');
 
-                logger.info('Teacher registered', {
-                    userId: result.user.id,
-                    email: result.user.email
-                });
+                    // Update to teacher state
+                    setUserState('teacher');
+                    setUserProfile({
+                        username: result.user.username,
+                        avatar: result.user.avatar || avatar,
+                        email: result.user.email,
+                        role: result.user.role,
+                        userId: result.user.id
+                    });
+
+                    logger.info('Teacher registered and logged in', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                }
             } else {
                 throw new Error('Erreur lors de la création du compte enseignant');
             }

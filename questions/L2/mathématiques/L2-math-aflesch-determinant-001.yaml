@@ -11,6 +11,7 @@
   questionType: "numeric"
   timeLimit: 30
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Quelle est la valeur du déterminant ci-dessous?
     \[\begin{vmatrix}
@@ -30,6 +31,7 @@
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
       En dimension finie, le déterminant d'un endomorphisme dépend de la base choisie
   answerOptions:
@@ -48,6 +50,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(A\in \mathcal{M}_n(\mathbb{R})\) où \(n\in \mathbb{N}^\star\).
     Parmi ces affirmations, lesquelles sont vraies?
@@ -70,6 +73,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
       Soient \(A\) une matrice carrée de taille \(n\times n\) et \(\lambda\) un nombre complexe. Alors:
   answerOptions:

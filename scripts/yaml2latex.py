@@ -52,41 +52,55 @@ def get_env_type(q):
 
 def latex_header(title, subtitle):
     full_title = subtitle + " - " + title
-    return r"""
-\documentclass[12pt]{{article}}
-\usepackage[utf8]{{inputenc}}
-\usepackage[T1]{{fontenc}}
-\usepackage{{geometry}}
-\geometry{{margin=2cm}}
-\usepackage{{enumitem}}
-\usepackage{{pifont}}
-\usepackage{{color,xcolor}}
-\usepackage{{amsmath, amssymb}}
+    header = r"""
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{margin=2cm}
+\usepackage{enumitem}
+\usepackage{pifont}
+\usepackage{color,xcolor}
+\usepackage{amsmath, amssymb}
+% Allow unicode fonts (for emoji) when using XeLaTeX
+\usepackage{fontspec}
+% Use TikZ to draw a reliable forbidden icon (avoids missing emoji fonts)
+\usepackage{tikz}
 % Environnements personnalisés
-\newenvironment{{choix_simple}}{{\begin{{quote}}}}{{\end{{quote}}}}
-\newenvironment{{choix_multiple}}{{\begin{{quote}}}}{{\end{{quote}}}}
-\newenvironment{{numeric}}{{\begin{{quote}}}}{{\end{{quote}}}}
+\newenvironment{choix_simple}{\begin{quote}}{\end{quote}}
+\newenvironment{choix_multiple}{\begin{quote}}{\end{quote}}
+\newenvironment{numeric}{\begin{quote}}{\end{quote}}
 % Commandes pour champs
-\newcommand{{\champAuteur}}[1]{{\textbf{{Auteur}} : #1}}
-\newcommand{{\champDiscipline}}[1]{{\textbf{{Discipline}} : #1}}
-\newcommand{{\champThemes}}[1]{{\textbf{{Thèmes}} : #1}}
-\newcommand{{\champTags}}[1]{{\textbf{{Tags}} : #1}}
-\newcommand{{\champTemps}}[1]{{\textbf{{Temps}} : #1 s}}
-\newcommand{{\champDifficulte}}[1]{{\textbf{{Difficulté}} : #1}}
-\newcommand{{\champNiveau}}[1]{{\textbf{{Niveau:}} #1}}
-\newcommand{{\champUID}}[1]{{\textbf{{UID:}} #1}}
-\definecolor{{darkgreen}}{{RGB}}{{0,120,0}}
-\definecolor{{myblue}}{{RGB}}{{0,70,200}}
-\renewcommand{{\checkmark}}{{\textcolor{{darkgreen}}{{\ding{{51}}}}}}
-\newcommand{{\cross}}{{\textcolor{{red}}{{\ding{{55}}}}}}
+\newcommand{\champAuteur}[1]{\textbf{Auteur} : #1}
+\newcommand{\champDiscipline}[1]{\textbf{Discipline} : #1}
+\newcommand{\champThemes}[1]{\textbf{Thèmes} : #1}
+\newcommand{\champTags}[1]{\textbf{Tags} : #1}
+\newcommand{\champTemps}[1]{\textbf{Temps} : #1 s}
+\newcommand{\champDifficulte}[1]{\textbf{Difficulté} : #1}
+\newcommand{\champNiveau}[1]{\textbf{Niveau:} #1}
+\newcommand{\champUID}[1]{\textbf{UID:} #1}
+% Draw a simple 'forbidden' icon using pifont inside a red colorbox (reliable)
+\newcommand{\forbiddenIcon}{%
+    \raisebox{-0.2ex}{\colorbox{red}{\textcolor{white}{\small\ding{55}}}}%
+}
+\newcommand{\panneauInterdit}[1]{%
+        \vspace{0.3em}\noindent\fcolorbox{red}{white}{\textcolor{red}{\textbf{\forbiddenIcon~#1}}}\\
+}
+\definecolor{darkgreen}{RGB}{0,120,0}
+\definecolor{myblue}{RGB}{0,70,200}
+\renewcommand{\checkmark}{\textcolor{darkgreen}{\ding{51}}}
+\newcommand{\cross}{\textcolor{red}{\ding{55}}}
 % Ligne séparatrice personnalisée : boxée et colorée
-\newcommand{{\questionsep}}[1]{{\vspace{{0.5em}}\noindent\\[0.1em]\noindent\fcolorbox{{myblue}}{{white}}{{\textcolor{{myblue}}{{\textbf{{#1}}}}}}\hrulefill\noindent}}
-\title{{{}}}
-\author{{}}
-\date{{}}
-\begin{{document}}
+\newcommand{\questionsep}[1]{\vspace{0.5em}\noindent\\[0.1em]\noindent\fcolorbox{myblue}{white}{\textcolor{myblue}{\textbf{#1}}}\hrulefill\noindent}
+___TITLE___
+\author{}
+\date{}
+\begin{document}
 \maketitle
-""".format(full_title)
+"""
+    # remplacer le placeholder de titre par le titre réel en l'échappant
+    header = header.replace('___TITLE___', f"\\title{{{sanitize_latex(full_title)}}}")
+    return header
 
 def latex_footer():
     return "\n\end{document}\n"
@@ -109,6 +123,19 @@ def latex_question(q):
     feedback = sanitize_latex(q.get('feedback', ''))
     explanation = sanitize_latex_smart(q.get('explanation', ''))
     feedback_wait_time = q.get('feedbackWaitTime', 5)
+
+    # Panneau pour les modes exclus
+    excluded = q.get('excludedFrom', []) or []
+    excluded_latex = ''
+    if excluded:
+        # map internal names to friendly french labels
+        name_map = {
+            'practice': 'entraînement',
+            'tournament': 'tournoi',
+            'quiz': 'quiz',
+        }
+        labels = [name_map.get(x, x) for x in excluded]
+        excluded_latex = f"\\panneauInterdit{{{sanitize_latex(', '.join(labels))}}}\n"
 
     # Ligne 1 : uid et titre en gras, séparés par un tiret, sans parenthèses, avec temps
     time_limit = q.get('timeLimit', q.get('time', None))
@@ -204,17 +231,19 @@ def latex_question(q):
         else:
             opts_latex = "\\textit{Réponse numérique}"
 
-    # Construction finale
-    return (
-        f"{separator}"
-        f"\\begin{{{env}}}\n"
-        f"{header_line}\\\\\n"
-        f"{meta_line}\\\\\n"
-        f"\\\\ \n \\medskip\n{statement_line}\\\\\n"
-        f"{opts_latex}\n"
-        f"{fb_latex}\n"
-        f"\\end{{{env}}}\n"
-    )
+    # Retour sécurisé de la chaîne LaTeX (construction sans f-strings complexes)
+    out = ""
+    out += separator
+    out += "\\begin{" + env + "}\n"
+    out += header_line + "\\\\\n"
+    out += meta_line + "\\\\\n"
+    out += "\\medskip\n"
+    out += excluded_latex
+    out += statement_line + "\\\\\n"
+    out += opts_latex + "\n"
+    out += fb_latex + "\n"
+    out += "\\end{" + env + "}\n"
+    return out
 
 def process_yaml_file(yaml_path, title, subtitle, out_tex):
     with open(yaml_path, 'r', encoding='utf-8') as f:
@@ -227,8 +256,9 @@ def process_yaml_file(yaml_path, title, subtitle, out_tex):
         f.write(latex_footer())
 
 def compile_latex(tex_path):
-    subprocess.run(['pdflatex', '-interaction=nonstopmode', tex_path], cwd=tex_path.parent)
-    subprocess.run(['pdflatex', '-interaction=nonstopmode', tex_path], cwd=tex_path.parent)
+    # Use xelatex for proper Unicode/emoji support
+    subprocess.run(['xelatex', '-interaction=nonstopmode', tex_path], cwd=tex_path.parent)
+    subprocess.run(['xelatex', '-interaction=nonstopmode', tex_path], cwd=tex_path.parent)
 
 def clean_aux_files(folder):
     for ext in ['aux', 'log', 'out', 'toc']:

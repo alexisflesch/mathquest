@@ -10,6 +10,7 @@ export interface User {
     id: string;
     username: string;
     email?: string;
+    emailVerified?: boolean;
     avatarEmoji: string; // Mandatory - defaults to 🐼 panda emoji
     role: UserRole;
     cookieId?: string;
@@ -23,6 +24,7 @@ export interface PublicUser {
     id: string;
     username: string;
     email?: string;
+    emailVerified?: boolean;
     avatarEmoji: string; // Mandatory - consistent with User interface
     role: UserRole;
     createdAt: string;

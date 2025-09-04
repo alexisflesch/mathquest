@@ -12,7 +12,7 @@
   questionType: "multiple_choice"
   timeLimit: 120
   difficulty: 2
-  excludedFrom: ["tournament"]
+  excludedFrom: ["practice", "tournament"]
   text: |
     Parmi ces assertions, lesquelles sont vraies ?
   answerOptions:
@@ -38,6 +38,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 2
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(f\) l'application définie par:
     \[ \begin{array}{ccccc}
@@ -64,6 +65,7 @@
   questionType: "multiple_choice"
   timeLimit: 120
   difficulty: 2
+  excludedFrom: ["practice", "tournament"]
   text: |
     Comment choisir les ensembles \(E\) et \(F\) pour que l'application
     \(f\colon E\rightarrow F\) définie par \(f(x)=x^2\) soit bijective?
@@ -85,6 +87,7 @@
   questionType: "multiple_choice"
   timeLimit: 120
   difficulty: 2
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(f\) une application de \(E=\left\{ 1;2 \right\}\) vers \(F=\left\{ 3;4;5 \right\}\). Alors:
   answerOptions:
@@ -105,6 +108,7 @@
   questionType: "numeric"
   timeLimit: 120
   difficulty: 2
+  excludedFrom: ["practice", "tournament"]
   text: |
     Combien y a-t-il d'éléments dans l'ensemble des parties de
     \(\{ \{1;2\};2\}\)?
@@ -121,6 +125,7 @@
   questionType: "numeric"
   timeLimit: 120
   difficulty: 2
+  excludedFrom: ["practice", "tournament"]
   text: |
     Combien y a-t-il d'éléments dans l'ensemble des parties de
     \(\{ \{1;2\};2\}\)?

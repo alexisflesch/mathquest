@@ -9,20 +9,23 @@ datasource db {
 }
 
 model User {
-  id                     String            @id @default(uuid())
-  username               String
-  email                  String?           @unique
-  passwordHash           String?
-  createdAt              DateTime          @default(now())
-  role                   UserRole
-  resetToken             String?           @map("reset_token")
-  resetTokenExpiresAt    DateTime?         @map("reset_token_expires_at")
-  avatarEmoji            String?
-  studentProfile         StudentProfile?
-  teacherProfile         TeacherProfile?
-  initiatedGameInstances GameInstance[]    @relation("InitiatedGameInstancesByUser")
-  gameParticipations     GameParticipant[]
-  createdGameTemplates   GameTemplate[]    @relation("UserCreatedGameTemplates")
+  id                              String            @id @default(uuid())
+  username                        String
+  email                           String?           @unique
+  passwordHash                    String?
+  createdAt                       DateTime          @default(now())
+  role                            UserRole
+  resetToken                      String?           @map("reset_token")
+  resetTokenExpiresAt             DateTime?         @map("reset_token_expires_at")
+  avatarEmoji                     String?
+  emailVerificationToken          String?           @map("email_verification_token")
+  emailVerificationTokenExpiresAt DateTime?         @map("email_verification_token_expires_at")
+  emailVerified                   Boolean?          @default(false) @map("email_verified")
+  studentProfile                  StudentProfile?
+  teacherProfile                  TeacherProfile?
+  initiatedGameInstances          GameInstance[]    @relation("InitiatedGameInstancesByUser")
+  gameParticipations              GameParticipant[]
+  createdGameTemplates            GameTemplate[]    @relation("UserCreatedGameTemplates")
 }
 
 model TeacherProfile {

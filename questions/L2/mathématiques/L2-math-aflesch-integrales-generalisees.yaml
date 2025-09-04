@@ -11,6 +11,7 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Quelle est la nature de l'intégrale généralisée suivante ?
     \[\int_1^{+\infty}\frac{t+1}{\mathrm{e}^t+t^2\ln(t)} \,\mathrm{d}t\]
@@ -30,6 +31,7 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soient \(f\) et \(g\) deux fonctions telles que, au voisinage de l'infini, \(f\leq g\). Parmi ces affirmations, lesquelles sont exactes?
   answerOptions:
@@ -53,6 +55,7 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Parmi ces affirmations, lesquelles sont exactes?
   answerOptions:
@@ -73,6 +76,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(\alpha\in \mathbb{R}\). L'intégrale \(\displaystyle\int_0^2 t^\alpha\,\mathrm{d}t\) converge ssi:
   answerOptions:
@@ -94,6 +98,7 @@
   questionType: "single_choice"
   timeLimit: 60
   difficulty: 1
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(f\colon \mathbb{R}\rightarrow \mathbb{R}\) continue vérfiant:
     \[x^2f(x) \underset{x\to\infty}{\longrightarrow}+\infty.\]
@@ -112,6 +117,7 @@
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 3
+  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(f\) une fonction telle que \(\displaystyle\int_1^{+\infty}f(t)\,\mathrm{d}t\) converge. Que peut-on dire?
   answerOptions:
