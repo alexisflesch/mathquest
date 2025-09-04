@@ -200,17 +200,17 @@ export default function CreateActivityPage() {
             ): FilterOption[] => {
                 // Debug: Log the original API response
                 logger.info('GRADE_DEBUG - Original API response:', apiResponse);
-                
+
                 const result: FilterOption[] = [];
                 const addedValues = new Set<string>();
 
                 // Handle both string arrays and FilterOption arrays
-                const compatibleGradeLevels = apiResponse.map(item => 
+                const compatibleGradeLevels = apiResponse.map(item =>
                     typeof item === 'string' ? item : item.value
                 ).filter(value => value != null);
-                
+
                 logger.info('GRADE_DEBUG - Compatible grade levels:', compatibleGradeLevels);
-                
+
                 const sortedGradeLevels = sortGradeLevels(compatibleGradeLevels);
                 logger.info('GRADE_DEBUG - Sorted grade levels:', sortedGradeLevels);
 
@@ -218,10 +218,10 @@ export default function CreateActivityPage() {
                 sortedGradeLevels.forEach(gradeLevel => {
                     if (!addedValues.has(gradeLevel) && gradeLevel) {
                         // For string arrays, all items are compatible by default
-                        const originalItem = typeof apiResponse[0] === 'string' 
+                        const originalItem = typeof apiResponse[0] === 'string'
                             ? { value: gradeLevel, isCompatible: true }
                             : (apiResponse as FilterOption[]).find(item => item.value === gradeLevel);
-                            
+
                         const newItem = {
                             value: gradeLevel,
                             isCompatible: originalItem?.isCompatible ?? true

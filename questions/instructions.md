@@ -1,121 +1,162 @@
-# Instructions pour un agent IA : rédiger des questions au format YAML pour MathQuest
+# Guide pour la Rédaction de Questions au Format YAML pour MathQuest
 
-Objectif
-
-- Produire des fichiers YAML contenant une ou plusieurs questions conformes au format attendu par MathQuest.
-- Respecter les conventions de nommage, les champs obligatoires et les bonnes pratiques observées dans le dépôt.
-
-Principes généraux
-
-- Les clés YAML doivent être en anglais (par ex. `uid`, `text`, `questionType`).
-- Les valeurs textuelles (énoncés, thèmes, tags, explications) doivent être en français.
-- Les fichiers se placent dans le dossier `questions/` sous le niveau scolaire approprié (ex : `CP`, `L1`, `L2`).
-- Utiliser la syntaxe YAML plain/flow standard ; pour des textes multi-lignes utiliser le bloc `|`.
-- Les formules mathématiques doivent utiliser LaTeX compatible MathJax. Utiliser `\(...\)` pour inline et `\[ ... \]` pour les blocs. Ne pas employer `$$...$$` ou `$...$`.
-
-Champs requis et recommandés
-
-- `uid` (string) - Obligatoire. Identifiant unique. Convention suggérée : `auteur-niveau-sujet-XXX` (ex : `dupont-6e-fractions-001`).
-- `text` (string) - Obligatoire. Énoncé de la question. Pour plusieurs paragraphes utiliser `|`.
-- `questionType` (string) - Obligatoire. Un des : `single_choice`, `multiple_choice`, `numeric`.
-- `discipline` (string) - Obligatoire. Exemple : `mathématiques`, `français`.
-- `themes` (array[string]) - Obligatoire. Liste des thèmes.
-- `difficulty` (int) - Obligatoire. Entier indiquant la difficulté (1,2,3...).
-- `gradeLevel` (string) - Obligatoire. Niveau scolaire (ex : `CP`, `L1`).
-- `answerOptions` (array[string]) - Obligatoire pour `single_choice` et `multiple_choice`.
-- `correctAnswers` (array[bool]) - Obligatoire pour `single_choice` et `multiple_choice`. Doit avoir la même longueur que `answerOptions`.
-- `correctAnswer` (number) - Obligatoire pour `numeric`.
-
-Champs optionnels fréquemment utilisés
-
-- `title` (string) - Titre court.
-- `author` (string) - Auteur.
-- `tags` (array[string]) - Mots-clés non hiérarchiques.
-- `explanation` (string) - Explication affichée après la réponse.
-- `timeLimit` (int) - Durée en secondes.
-- `tolerance` (number) - Pour `numeric` questions.
-- `excludedFrom` (array[string]) - Modes exclus (ex : `tournament`, `practice`).
-- `feedbackWaitTime` (int) - Durée d'affichage de l'explication.
-
-Conventions et validations automatiques à effectuer
-
-- `uid` doit être unique dans le fichier et idéalement globalement unique. Ajouter un préfixe auteur pour réduire les collisions.
-- Pour `single_choice`, `correctAnswers` doit contenir exactement un `true`.
-- Pour `multiple_choice`, `correctAnswers` peut contenir plusieurs `true`.
-- Les longueurs de `answerOptions` et `correctAnswers` doivent correspondre.
-- Pour `numeric`, `correctAnswer` doit être un nombre (entier ou flottant). `tolerance` si présent doit être >=0.
-- Les thèmes/discipline doivent correspondre aux conventions du dépôt (ex : `mathématiques` avec accent, ou `Mathematics` selon dossier existant). Si incertain, copier exactement la casse/orthographe observée dans les exemples.
-
-Exemples
-
-- single_choice
-
-```yaml
-- uid: "dupont-6e-fractions-001"
-  author: "dupont"
-  gradeLevel: "6e"
-  discipline: "mathématiques"
-  themes: ["fractions"]
-  title: "Addition de fractions"
-  questionType: "single_choice"
-  difficulty: 1
-  timeLimit: 60
-  text: |
-    Calculer : \(\frac{1}{2} + \frac{1}{3} = ?\)
-  answerOptions:
-    - "\(\frac{5}{6}\)"
-    - "\(\frac{2}{5}\)"
-    - "\(\frac{3}{4}\)"
-    - "Aucune des réponses ci-dessus"
-  correctAnswers: [true, false, false, false]
-```
-
-- numeric
-
-```yaml
-- uid: "dupont-6e-calcul-001"
-  questionType: "numeric"
-  discipline: "mathématiques"
-  gradeLevel: "6e"
-  themes: ["calcul mental"]
-  text: "Combien font 2 + 2 ?"
-  correctAnswer: 4
-  tolerance: 0
-```
-
-Consignes de style
-
-- Préférer des énoncés concis et un langage clair.
-- Pour les listes d'options, inclure une option "Aucune des réponses ci-dessus" si pertinent.
-- Limiter la longueur des `answerOptions` pour une bonne lisibilité sur mobile.
-- Pour les formules LaTeX, vérifier l'affichage en mode aperçu (MathJax).
-
-Checklist avant finalisation (doit être cochée par l'agent IA)
-
-- [ ] Le YAML est valide (parser YAML OK).
-- [ ] `uid` respecte la convention et n'introduit pas de doublon dans le fichier.
-- [ ] Tous les champs obligatoires sont présents.
-- [ ] Longueur de `answerOptions` == longueur de `correctAnswers` (pour choix multiples).
-- [ ] `questionType` correspond à la structure fournie (`numeric` vs `single/multiple_choice`).
-- [ ] Les formules LaTeX sont entre `\\(...\\)` ou `\\[\\]`.
-
-Comment livrer
-
-- Placer les fichiers sous `questions/<NIVEAU>/...`.
-- Nommer le fichier avec un préfixe indiquant l'auteur et un thème court si possible.
-- Fournir un bref commentaire ou `README` si plusieurs fichiers sont ajoutés.
-
-Notes sur l'utilisation de l'agent
-
-- Si tu n'es pas sûr d'une orthographe/nom de thème, reproduis la casse et l'orthographe des exemples existants.
-- En cas de doute sur une formulation pédagogique, propose deux variantes (courte / détaillée) et laisse le choix à l'éditeur humain.
+Ce guide détaille exactement comment formuler les questions au format YAML pour ton application MathQuest, en s’appuyant sur les spécifications officielles en date du **4 septembre 2025**. ([alexisflesch.github.io](https://alexisflesch.github.io/mathquest/questions-yaml/))
 
 ---
 
-Fichier généré automatiquement : `questions/instructions.md` - rédigé à partir de la doc `vuepress/docs/questions-yaml/README.md` et d'exemples existants dans `questions/`.
- 
- Niveaux autorisés et fichier de nomenclature
- 
- - Niveaux standards acceptés : `CP`, `CE1`, `CE2`, `CM1`, `CM2`, `6e`, `5e`, `4e`, `3e`, `2de`, `1re`, `Terminale`, `L1`, `L2`, `L3`, `M1`, `M2`.
- - Les fichiers de nomenclature (disciplines / thèmes / tags) se trouvent à la racine du dossier `questions/` sous la forme `CP.yaml`, `CE1.yaml`, `L1.yaml`, etc. Exemple : `questions/CP.yaml`.
- - Lors de la validation automatique, l'agent doit charger le fichier `questions/<grade>.yaml` (par ex. `questions/L1.yaml`) pour vérifier que la `discipline`, les `themes` et les `tags` mentionnés existent et respecter la casse exacte.
+## 1. Structure Générale d’une Question
+
+Chaque question doit respecter une structure commune, avec des **champs obligatoires** et des **champs optionnels**, en fonction du type (`questionType`). Les valeurs des champs `discipline`, `themes`, et `tags` doivent respecter strictement la nomenclature définie dans le dossier `questions` (ex. : `CP`, `CE1`, etc.). Les noms des champs sont en anglais, les valeurs (textes, réponses) en français.
+
+### Types supportés
+- `single_choice` – une seule bonne réponse
+- `multiple_choice` – plusieurs bonnes réponses possibles
+- `numeric` – la réponse est un nombre
+
+---
+
+## 2. Exemples Concrets
+
+### 2.1. **single_choice**
+```yaml
+uid: "Q-0001"
+author: "Alexis Flesch"
+text: "Quelle est la capitale de la France ?"
+questionType: "single_choice"
+discipline: "Géographie"
+timeLimit: 15
+themes: ["Europe", "France"]
+answerOptions:
+  - "Paris"
+  - "Londres"
+  - "Berlin"
+  - "Madrid"
+correctAnswers: [true, false, false, false]
+difficulty: 1
+gradeLevel: "Sixième"
+```
+
+---
+
+### 2.2. **multiple_choice**
+```yaml
+uid: "Q-0002"
+title: "Animaux marins"
+text: |
+  Parmi les animaux suivants, lesquels vivent dans l'eau de mer ?
+questionType: "multiple_choice"
+discipline: "sciences"
+themes: ["biologie", "milieux naturels"]
+difficulty: 2
+gradeLevel: "CM1"
+author: "Mme Dupont"
+explanation: "Le dauphin, le thon et la méduse vivent en milieu marin, contrairement à la grenouille qui vit en eau douce."
+tags: ["animaux", "milieu", "eau"]
+timeLimit: 30
+excludedFrom: ["tournament", "practice"]
+answerOptions:
+  - "Dauphin"
+  - "Grenouille"
+  - "Méduse"
+  - "Thon"
+correctAnswers: [true, false, true, true]
+feedbackWaitTime: 5
+```
+
+---
+
+### 2.3. **numeric**
+```yaml
+uid: "jdupont-6e-maths-cp-001"
+title: "Calcul mental simple"
+text: "Combien font 2 + 2 ?"
+questionType: "numeric"
+discipline: "mathématiques"
+gradeLevel: "CP"
+themes: ["Calcul"]
+author: "Jean Dupont"
+difficulty: 1
+correctAnswer: 4
+explanation: "2 + 2 = 4"
+timeLimit: 20
+tolerance: 0
+feedbackWaitTime: 5
+```
+
+---
+
+## 3. Détail des Champs YAML
+
+| Champ             | Type          | Obligatoire | Description |
+|------------------|---------------|-------------|-------------|
+| `uid`            | string        | Oui         | Identifiant unique |
+| `title`          | string        | Non         | Titre court de la question |
+| `text`           | string        | Oui         | Énoncé de la question |
+| `questionType`   | string        | Oui         | `single_choice`, `multiple_choice`, ou `numeric` |
+| `discipline`     | string        | Oui         | Discipline (ex. `mathématiques`, `géographie`) |
+| `themes`         | string[]      | Oui         | Liste des thèmes abordés |
+| `difficulty`     | int           | Oui         | Niveau de difficulté (entier) |
+| `gradeLevel`     | string        | Oui         | Niveau scolaire (ex. `5e`, `Terminale`) |
+| `author`         | string        | Non         | Auteur de la question |
+| `explanation`    | string        | Non         | Explication affichée après réponse |
+| `tags`           | string[]      | Non         | Mots-clés non hiérarchiques |
+| `timeLimit`      | int           | Non         | Temps limite (en secondes) |
+| `excludedFrom`   | string[]      | Non         | Modes exclus (`tournament`, `practice`, `quiz`) |
+| `answerOptions`  | string[]      | Oui*        | Obligatoire pour `single_choice` & `multiple_choice` |
+| `correctAnswers` | bool[]        | Oui*        | Tableau de booléens obligatoire pour `single_choice` & `multiple_choice` |
+| `correctAnswer`  | number        | Oui*        | Obligatoire pour `numeric` |
+| `tolerance`      | number        | Non         | Marge d’erreur pour `numeric` (par défaut 0) |
+| `feedbackWaitTime` | int         | Non         | Durée d’affichage de l’explication (par défaut 5 s) |
+
+\* Selon le type de question concerné.
+
+---
+
+## 4. Spécificités pour les Questions Numériques
+
+- Utilise `correctAnswer` pour la valeur attendue.
+- Tu peux ajouter `tolerance` pour accepter une plage autour de la bonne réponse.
+
+---
+
+## 5. Inclusion de Formules LaTeX
+
+Tu peux intégrer des formules mathématiques dans les champs `text`, `answerOptions`, `explanation`, etc., avec une syntaxe LaTeX compatible MathJax :
+
+- **Formule en ligne** : `\(E = mc^2\)`
+- **Formule centrée (bloc)** :
+  ```yaml
+  text: |
+    Voici une intégrale :
+    \[
+      \int_0^1 x^2\,dx = \frac{1}{3}
+    \]
+  ```
+  **Important** : Les délimiteurs `$$...$$` ou `$...$` ne sont **pas supportés**.
+
+---
+
+## 6. Processus d’Import des Questions
+
+1. Place les fichiers YAML dans le dossier prévu dans ton projet.
+2. Lance le script d’import fourni pour les charger dans la base de données.
+
+---
+
+## 7. Checklist pour les Agents IA
+
+Avant de finaliser une question, vérifie :
+
+- Que **tous les champs obligatoires** sont bien présents selon le `questionType`.
+- Que les valeurs sont en français, et que les champs comme `discipline`, `gradeLevel`, `themes`, `tags` suivent la nomenclature existante.
+- Que `uid` est **unique**.
+- Que pour `numeric`, si la précision est importante, un `tolerance` raisonnable est défini.
+- Que les formules LaTeX sont valides et n’utilisent pas `$...$` ou `$$...$$`.
+- Que les **champs optionnels** sont utilisés à bon escient (`author`, `explanation`, `timeLimit`, etc.).
+- Que la structure YAML est bien indentée et syntactiquement correcte.
+
+---
+
+##  Conclusion
+
+Ce guide donne à tes agents IA une base complète pour rédiger des questions conformes au format attendu par MathQuest.
