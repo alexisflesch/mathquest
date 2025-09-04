@@ -78,7 +78,7 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), 
  */
 router.get('/filters', async (req: Request, res: Response<any>): Promise<void> => {
     try {
-        const { gradeLevel, discipline, theme, author } = req.query;
+        const { gradeLevel, discipline, theme, author, mode } = req.query;
         const filterCriteria: any = {};
         if (gradeLevel) {
             filterCriteria.gradeLevel = Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel as string];
@@ -91,6 +91,9 @@ router.get('/filters', async (req: Request, res: Response<any>): Promise<void> =
         }
         if (author) {
             filterCriteria.author = Array.isArray(author) ? author : [author as string];
+        }
+        if (mode) {
+            filterCriteria.mode = mode as string;
         }
         const compatibleFilters = await getQuestionService().getAvailableFilters(filterCriteria);
         // Return only compatible filters for each field
@@ -114,7 +117,7 @@ router.get('/filters', async (req: Request, res: Response<any>): Promise<void> =
  */
 router.get('/list', async (req: Request, res: Response<string[] | ErrorResponse>): Promise<void> => {
     try {
-        const { gradeLevel, discipline, themes, limit } = req.query;
+        const { gradeLevel, discipline, themes, limit, mode } = req.query;
 
         // Convert to appropriate types for filtering
         const filters: any = {};
@@ -124,6 +127,11 @@ router.get('/list', async (req: Request, res: Response<string[] | ErrorResponse>
             filters.themes = Array.isArray(themes)
                 ? themes as string[]
                 : (themes as string).split(',').map(t => t.trim()).filter(t => t.length > 0);
+        }
+
+        // Add mode parameter for filtering based on excludedFrom
+        if (mode) {
+            filters.mode = mode as string;
         }
 
         // Students can only see non-hidden questions
@@ -192,6 +200,7 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
             tags,
             questionType,
             includeHidden, // req.query.includeHidden (string | undefined)
+            mode, // mode parameter for filtering based on excludedFrom
             page = '1',
             pageSize = '20',
             limit, // Frontend uses 'limit' instead of 'pageSize'
@@ -249,6 +258,11 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
         }
 
         if (questionType) filters.questionType = questionType as string;
+
+        // Handle mode parameter for excluding questions from specific modes
+        if (mode) {
+            filters.mode = mode as string;
+        }
 
         // Handle includeHidden filter
         // If includeHidden query param is provided (e.g., 'true' or 'false')

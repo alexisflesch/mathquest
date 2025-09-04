@@ -9,6 +9,7 @@
   themes: ["Logique et raisonnement"]
   title: "Négation d'une assertion"
   tags: ["quantificateurs", "négation"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -30,6 +31,7 @@
   themes: ["Logique et raisonnement"]
   title: "Négation d'une assertion avec quantificateurs"
   tags: ["quantificateurs", "négation"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -50,6 +52,7 @@
   themes: ["Logique et raisonnement"]
   title: "Négation d'une implication"
   tags: ["implication", "négation"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -70,6 +73,7 @@
   themes: ["Logique et raisonnement"]
   title: "Négation d'une assertion avec contrainte"
   tags: ["quantificateurs", "négation"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 2
@@ -90,6 +94,7 @@
   themes: ["Logique et raisonnement"]
   title: "Négation d'une assertion avec quantificateurs"
   tags: ["quantificateurs", "négation"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -112,6 +117,7 @@
   title: |
     "Contraposée de \(P \implies Q\)"
   tags: ["contraposée"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -135,6 +141,7 @@
   title: |
     Devinette logique (Faux \(\implies\) Faux)
   tags: ["proposition"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -153,6 +160,7 @@
   themes: ["Logique et raisonnement"]
   title: "Négation d'une suite croissante"
   tags: ["quantificateurs", "négation"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -174,6 +182,7 @@
   themes: ["Logique et raisonnement"]
   title: "Négation d'une assertion avec quantificateurs et fonctions"
   tags: ["quantificateurs", "négation"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 40
   difficulty: 2
@@ -199,6 +208,7 @@
   title: |
     Négation de la réciproque
   tags: ["négation", "implication"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -220,6 +230,7 @@
   title: |
     Contraposée de la réciproque
   tags: ["contraposée", "implication"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1

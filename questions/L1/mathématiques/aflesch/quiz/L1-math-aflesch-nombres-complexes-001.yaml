@@ -9,6 +9,7 @@
   themes: ["Nombres complexes"]
   title: "Un calcul de module facile"
   tags: ["module"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 60
   difficulty: 2
@@ -31,6 +32,7 @@
   themes: ["Nombres complexes"]
   title: "Forme exponentielle d'un nombre négatif"
   tags: ["forme exponentielle"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 2
@@ -50,6 +52,7 @@
   themes: ["Nombres complexes"]
   title: "Un calcul d'argument"
   tags: ["argument"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 60
   difficulty: 2
@@ -76,6 +79,7 @@
   title: "Un calcul d'argument"
   tags: ["module", "forme algébrique", "argument"]
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 2
   text: |
@@ -97,6 +101,7 @@
   title: "Nombre de racines"
   tags: ["racines carrées"]
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 1
   text: |
@@ -117,6 +122,7 @@
   themes: ["Nombres complexes"]
   title: "Nombre de solutions d'une équation"
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 1
   text: |
@@ -140,6 +146,7 @@
   title: "Cours : formule de Moivre"
   tags: ["forme exponentielle"]
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 1
   text: |
@@ -161,6 +168,7 @@
   title: "Propriétés de la fonction carré complexe"
   tags: ["injection", "surjection", "bijection", "racines carrées"]
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 1
   text: |
@@ -186,6 +194,7 @@
   title: "Propriétés de la fonction carré complexe"
   tags: ["injection", "surjection", "bijection", "racines carrées"]
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 120
   difficulty: 3
   text: |

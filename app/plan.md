@@ -1,14 +1,61 @@
-# MathQuest App De## ✅ COMPLETED: Em**Status**: ✅ PHASE 1 COMPLETED
+# MathQuest App Development Plan
+
+## ✅ COMPLETED: Grade Level Sorting Fix
+
+### [COMPLETED] Proper Educational Grade Level Ordering
+**Objective**: Fix grade level dropdown sorting to follow natural educational progression instead of alphabetical ordering.
+
+**Key Features Implemented**:
+- **Educational Order**: CP, CE1, CE2, CM1, Sixème, Cinquième, Quatrième, Troisième, Seconde, Première, Terminal, L1, L2, L3, M1, M2
+- **Shared Utility**: Created `sortGradeLevels()` function in `/utils/gradeLevelSort.ts` for consistent sorting across the app
+- **Student Page Update**: Applied proper sorting to `/student/create-game` page grade level dropdown
+- **Teacher Page Update**: Applied proper sorting to `/teacher/games/new` page grade level filters
+- **Type Safety**: Handles both string arrays and FilterOption arrays correctly
+
+**Technical Implementation**:
+- **Utility Function**: `sortGradeLevels(gradeLevels: string[]): string[]` with predefined educational order
+- **Student Integration**: Updated initial filters loading with `sortGradeLevels(data.gradeLevel.filter(...))`
+- **Teacher Integration**: Complex FilterOption handling with value extraction, sorting, and reconstruction
+- **Fallback Logic**: Unknown grade levels fall back to alphabetical sorting
+
+**Status**: ✅ FULLY IMPLEMENTED AND TESTED
+**Date**: 2025-09-04
+
+---
+
+## ✅ COMPLETED: Question Filtering by Mode
+
+### [COMPLETED] Backend and Frontend Mode-Based Question Filtering
+**Objective**: Fix backend to properly filter questions using the `excludedFrom` parameter for create-game pages, ensuring tournament pages exclude practice-only questions and training pages exclude tournament-only questions.
+
+**Key Features Implemented**:
+- **Backend Mode Filtering**: Updated `questionService.ts` to accept mode parameter and filter out questions with matching `excludedFrom` values
+- **API Endpoint Updates**: Added mode parameter to `/questions`, `/questions/list`, and `/questions/filters` endpoints
+- **Frontend Integration**: Updated create-game page to pass mode parameter ('tournament' or 'practice') to all API calls
+- **Filter Dropdown Consistency**: Ensured grade, discipline, and theme filter dropdowns respect mode filtering
+- **Separation of Concerns**: Properly separated `isHidden` (teacher-only) from `excludedFrom` (mode-specific) filtering logic
+
+**Technical Implementation**:
+- **Database Schema**: Uses existing `excludedFrom: string[]` and `isHidden: boolean` fields
+- **Mode Logic**: tournament mode excludes questions with `excludedFrom: ['tournament']`, practice mode excludes questions with `excludedFrom: ['practice']`
+- **API Consistency**: All question-related endpoints now accept and properly handle mode parameter
+- **Frontend UX**: Training parameter (`?training=true`) determines mode selection for filtering
+
+**Status**: ✅ FULLY IMPLEMENTED AND TESTED
+**Date**: 2025-01-10
+
+---
+
+## ✅ COMPLETED: Email Verification Implementation - Phase 1
+
+### [COMPLETED] Email Verification System with Brevo - Backend Infrastructure
+**Status**: ✅ PHASE 1 COMPLETED
 **Plan Document**: [`email-verification-implementation-plan.md`](./email-verification-implementation-plan.md)
 **Estimated Duration**: 4 weeks
 **Date Started**: 2025-08-31
 **Phase 1 Completed**: 2025-08-31
 
-**Phase 1 Results**: ✅ FULLY COMPLETEDrification Implementation - Phase 1
-
-### [COMPLETED] Email Verification System with Brevo - Backend Infrastructureopment Plan
-
-## ✅ COMPLETED: New Scoring Strategy Implementation
+**Phase 1 Results**: ✅ FULLY COMPLETED
 
 ### [COMPLETED] New Balanced Scoring Strategy
 **Objective**: Implement new scoring strategy from scoring-todo.md with balanced multiple choice scoring, game scaling to 1000 points, and logarithmic time penalty.

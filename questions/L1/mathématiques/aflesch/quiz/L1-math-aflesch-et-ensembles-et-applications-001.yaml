@@ -141,6 +141,7 @@
   title: "Inclusion d'ensembles"
   tags: ["inclusion", "parties"]
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 2
   text: |
@@ -158,6 +159,7 @@
   themes: ["Ensembles et applications"]
   title: "Complémentaire d'un ensemble"
   tags: ["complémentaire", "union", "intersection"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
@@ -181,6 +183,7 @@
   themes: ["Ensembles et applications"]
   title: "Élément d'un ensemble"
   tags: ["appartenance", "inclusion"]
+  excludedFrom: ["practice", "tournament"]
   questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 2

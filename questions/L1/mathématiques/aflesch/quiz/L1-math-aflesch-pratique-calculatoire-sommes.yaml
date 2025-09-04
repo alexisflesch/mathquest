@@ -10,6 +10,7 @@
   title: "Changement d'indice simple"
   tags: ["changement d'indice"]
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 1
   text: |
@@ -32,6 +33,7 @@
   title: "Formule de somme géométrique"
   tags: ["somme géométrique"]
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 1
   text: |
@@ -53,6 +55,7 @@
   title: "Formule du binôme"
   tags: ["formule du binôme"]
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -77,6 +80,7 @@
   title: "Coefficient binomial"
   tags: ["formule du binôme"]
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 60
   difficulty: 2
   text: |

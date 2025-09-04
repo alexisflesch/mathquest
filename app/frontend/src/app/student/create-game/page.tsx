@@ -24,6 +24,7 @@ import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
 import { useAuth } from '@/components/AuthProvider';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { sortGradeLevels } from '@/utils/gradeLevelSort';
 
 // Create a logger for this component
 const logger = createLogger('CreateTournament');
@@ -55,11 +56,20 @@ function StudentCreateTournamentPageInner() {
     const [availableThemes, setAvailableThemes] = useState<string[]>([]);
 
     useEffect(() => {
-        makeApiRequest<QuestionsFiltersResponse>('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
+        const params = new URLSearchParams();
+        if (isTraining) {
+            params.append('mode', 'practice');
+        } else {
+            params.append('mode', 'tournament');
+        }
+
+        const url = params.toString() ? `questions/filters?${params.toString()}` : 'questions/filters';
+
+        makeApiRequest<QuestionsFiltersResponse>(url, undefined, undefined, QuestionsFiltersResponseSchema)
             .then((data) => {
                 // Filter out null values to match local Filters interface
                 const cleanedData = {
-                    gradeLevel: data.gradeLevel.filter((n): n is string => n !== null),
+                    gradeLevel: sortGradeLevels(data.gradeLevel.filter((n): n is string => n !== null)),
                     disciplines: data.disciplines,
                     themes: data.themes
                 };
@@ -69,7 +79,7 @@ function StudentCreateTournamentPageInner() {
             .catch((err) => {
                 logger.error("Error loading filters", err);
             });
-    }, []);
+    }, [isTraining]);
 
     // Fetch disciplines when niveau changes
     useEffect(() => {
@@ -81,6 +91,11 @@ function StudentCreateTournamentPageInner() {
             // Use secure filters API to get disciplines filtered by niveau
             const params = new URLSearchParams();
             params.append('gradeLevel', niveau);
+            if (isTraining) {
+                params.append('mode', 'practice');
+            } else {
+                params.append('mode', 'tournament');
+            }
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
@@ -96,17 +111,22 @@ function StudentCreateTournamentPageInner() {
             setDiscipline("");
             setThemes([]);
         }
-    }, [niveau]);
+    }, [niveau, isTraining]);
 
     // Fetch themes when discipline changes
     useEffect(() => {
-        if (niveau && discipline) {
+        if (discipline && niveau) {
             setThemes([]);
 
-            // Use secure filters API to get themes filtered by niveau and discipline
+            // Use secure filters API to get themes filtered by discipline and niveau
             const params = new URLSearchParams();
             params.append('gradeLevel', niveau);
             params.append('discipline', discipline);
+            if (isTraining) {
+                params.append('mode', 'practice');
+            } else {
+                params.append('mode', 'tournament');
+            }
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
@@ -120,9 +140,7 @@ function StudentCreateTournamentPageInner() {
             setAvailableThemes([]);
             setThemes([]);
         }
-    }, [niveau, discipline]);
-
-    // Check if enough questions exist for the selected filters
+    }, [discipline, niveau, isTraining]);    // Check if enough questions exist for the selected filters
     useEffect(() => {
         if (niveau && discipline && themes.length > 0) {
             setLoading(true);
@@ -135,6 +153,14 @@ function StudentCreateTournamentPageInner() {
                 discipline: discipline,
                 themes: themes.join(',')
             });
+
+            // Add mode parameter based on training flag
+            if (isTraining) {
+                listParams.append('mode', 'practice');
+            } else {
+                listParams.append('mode', 'tournament');
+            }
+
             makeApiRequest<string[]>(`/api/questions/list?${listParams.toString()}`)
                 .then((questions) => {
                     const count = questions.length;

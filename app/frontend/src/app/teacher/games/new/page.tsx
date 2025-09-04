@@ -36,6 +36,7 @@ import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { sortGradeLevels } from '@/utils/gradeLevelSort';
 
 const logger = createLogger('CreateActivityPage');
 
@@ -192,12 +193,70 @@ export default function CreateActivityPage() {
                 return result;
             };
 
+            // Special handling for grade levels to apply educational ordering
+            const processGradeLevelOptions = (
+                apiResponse: FilterOption[] | string[],
+                currentSelected: string[]
+            ): FilterOption[] => {
+                // Debug: Log the original API response
+                logger.info('GRADE_DEBUG - Original API response:', apiResponse);
+                
+                const result: FilterOption[] = [];
+                const addedValues = new Set<string>();
+
+                // Handle both string arrays and FilterOption arrays
+                const compatibleGradeLevels = apiResponse.map(item => 
+                    typeof item === 'string' ? item : item.value
+                ).filter(value => value != null);
+                
+                logger.info('GRADE_DEBUG - Compatible grade levels:', compatibleGradeLevels);
+                
+                const sortedGradeLevels = sortGradeLevels(compatibleGradeLevels);
+                logger.info('GRADE_DEBUG - Sorted grade levels:', sortedGradeLevels);
+
+                // Add sorted compatible options maintaining their compatibility status
+                sortedGradeLevels.forEach(gradeLevel => {
+                    if (!addedValues.has(gradeLevel) && gradeLevel) {
+                        // For string arrays, all items are compatible by default
+                        const originalItem = typeof apiResponse[0] === 'string' 
+                            ? { value: gradeLevel, isCompatible: true }
+                            : (apiResponse as FilterOption[]).find(item => item.value === gradeLevel);
+                            
+                        const newItem = {
+                            value: gradeLevel,
+                            isCompatible: originalItem?.isCompatible ?? true
+                        };
+                        logger.info('GRADE_DEBUG - Adding grade level:', newItem);
+                        result.push(newItem);
+                        addedValues.add(gradeLevel);
+                    }
+                });
+
+                // Add any selected options that are NOT in the API response (these are incompatible)
+                currentSelected.forEach(selected => {
+                    if (!compatibleGradeLevels.includes(selected) && !addedValues.has(selected) && selected) {
+                        const newItem = { value: selected, isCompatible: false };
+                        logger.info('GRADE_DEBUG - Adding incompatible selected:', newItem);
+                        result.push(newItem);
+                        addedValues.add(selected);
+                    }
+                });
+
+                return result;
+            };
+
             const processedFilters: EnhancedFilters = {
-                levels: processFilterOptions(data.gradeLevel || [], selectedLevels),
+                levels: processGradeLevelOptions(data.gradeLevel || [], selectedLevels),
                 disciplines: processFilterOptions(data.disciplines || [], selectedDisciplines),
                 themes: processFilterOptions(data.themes || [], selectedThemes),
                 authors: processFilterOptions(data.authors || [], selectedAuthors)
             };
+
+            // Debug: Log the processed levels to check for duplicates
+            logger.info('GRADE_DEBUG - Processed grade levels:', processedFilters.levels);
+            logger.info('GRADE_DEBUG - Grade level values:', processedFilters.levels.map(l => l.value));
+            const uniqueValues = new Set(processedFilters.levels.map(l => l.value));
+            logger.info('GRADE_DEBUG - Unique count:', uniqueValues.size, 'Total count:', processedFilters.levels.length);
 
             logger.debug('Processed dynamic filters:', processedFilters);
             setFilters(processedFilters);

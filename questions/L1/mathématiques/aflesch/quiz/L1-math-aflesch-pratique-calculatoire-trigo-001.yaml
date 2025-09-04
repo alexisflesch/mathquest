@@ -37,7 +37,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soient \(a\) et \(b\) deux nombres réels. Alors, 
     \[ \cos(a+b) = \ldots \]
@@ -62,7 +61,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soient \(a\) et \(b\) deux nombres réels. Alors, 
     \[ \cos(a-b) = \ldots \]
@@ -85,7 +83,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soient \(a\) et \(b\) deux nombres réels. Alors, 
     \[ \sin(a+b) = \ldots \]
@@ -108,7 +105,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 1
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soient \(a\) et \(b\) deux nombres réels. Alors, 
     \[ \sin(a-b) = \ldots \]
@@ -132,7 +128,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 2
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(x\) un nombre réel. Alors,
     \[ \sin(\pi - x) = \ldots \]
@@ -155,7 +150,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 2
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(x\) un nombre réel. Alors,
     \[ \cos\left(x + \frac{\pi}{2}\right) = \ldots \]
@@ -178,7 +172,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 2
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(x\) un nombre réel. Alors,
     \[ \sin(x + \pi) = \ldots \]
@@ -201,7 +194,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 2
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(x\) un nombre réel. Alors,
     \[ \cos(\pi - x) = \ldots \]
@@ -224,7 +216,6 @@
   questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 2
-  excludedFrom: ["practice", "tournament"]
   text: |
     Soit \(x\) un nombre réel. Alors,
     \[ \sin\left(\frac{\pi}{2} - x\right) = \ldots \]

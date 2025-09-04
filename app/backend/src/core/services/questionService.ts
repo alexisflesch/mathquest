@@ -90,6 +90,7 @@ export class QuestionService {
         tags?: string[];
         questionType?: string;
         includeHidden?: boolean;
+        mode?: 'tournament' | 'practice' | 'quiz';
     } = {}, pagination: {
         skip?: number;
         take?: number;
@@ -106,12 +107,30 @@ export class QuestionService {
                 authors,
                 tags,
                 questionType,
-                includeHidden = false
+                includeHidden = false,
+                mode
             } = filters;
             const { skip = 0, take = 20 } = pagination;
 
             // Build the where clause with AND logic between filter types, OR within each filter type
             const where: any = {};
+
+            // Exclude questions based on mode
+            if (mode === 'tournament') {
+                where.NOT = {
+                    ...(where.NOT || {}),
+                    excludedFrom: {
+                        has: 'tournament'
+                    }
+                };
+            } else if (mode === 'practice') {
+                where.NOT = {
+                    ...(where.NOT || {}),
+                    excludedFrom: {
+                        has: 'practice'
+                    }
+                };
+            }
 
             // Apply discipline filters with OR logic if multiple values
             if (disciplines && disciplines.length > 0) {
@@ -158,12 +177,8 @@ export class QuestionService {
 
             // Always apply hidden filter (AND with other conditions)
             if (!includeHidden) {
-                // Exclude questions that are hidden from all modes
-                where.NOT = {
-                    excludedFrom: {
-                        hasEvery: ['quiz', 'tournament', 'practice']
-                    }
-                };
+                // Exclude questions that are explicitly hidden (isHidden field)
+                where.isHidden = { not: true };
             }
 
             const [questions, total] = await Promise.all([
@@ -317,17 +332,42 @@ export class QuestionService {
 
     /**
      * Get available filter values (unique disciplines, grade levels, themes)
-     * @param filterCriteria Optional criteria to filter the results (e.g., {gradeLevel: 'elementary'})
+     * @param filterCriteria Optional criteria to filter the results (e.g., {gradeLevel: 'elementary', mode: 'tournament'})
      */
     async getAvailableFilters(filterCriteria?: any) {
         try {
             const baseWhere: any = {
+                // Exclude questions that are hidden from all modes
                 NOT: {
                     excludedFrom: {
                         hasEvery: ['quiz', 'tournament', 'practice']
                     }
                 }
             };
+
+            // Add mode-specific exclusions
+            if (filterCriteria?.mode) {
+                if (filterCriteria.mode === 'tournament') {
+                    baseWhere.NOT = {
+                        ...baseWhere.NOT,
+                        excludedFrom: {
+                            has: 'tournament'
+                        }
+                    };
+                } else if (filterCriteria.mode === 'practice') {
+                    baseWhere.NOT = {
+                        ...baseWhere.NOT,
+                        excludedFrom: {
+                            has: 'practice'
+                        }
+                    };
+                }
+            }
+
+            // Exclude questions with isHidden = true (unless explicitly including hidden)
+            if (!filterCriteria?.includeHidden) {
+                baseWhere.isHidden = { not: true };
+            }
 
             // Build different where clauses for different filter types
             const niveauxWhere = { ...baseWhere };
