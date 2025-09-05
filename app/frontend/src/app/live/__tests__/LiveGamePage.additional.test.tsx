@@ -297,7 +297,7 @@ describe('LiveGamePage - Additional Coverage Tests', () => {
 
             // After submission, input should still contain the submitted value
             expect(input).toHaveValue(123);
-            
+
             // Verify submitAnswer was called
             expect(mockSubmitAnswer).toHaveBeenCalledWith(
                 'numeric-question-1',

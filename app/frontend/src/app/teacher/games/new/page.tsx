@@ -831,7 +831,7 @@ export default function CreateActivityPage() {
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <ShoppingCart size={20} className="text-[color:var(--foreground)]" />
-                                    <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Panier de l'activité</h2>
+                                    <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Panier de l&apos;activité</h2>
                                 </div>
                                 <button
                                     onClick={() => setShowMobileCart(false)}
@@ -899,7 +899,7 @@ export default function CreateActivityPage() {
             >
                 <div className="dialog-modal-content">
                     <p className="text-[color:var(--foreground)] mb-4">
-                        L'activité <strong>"{createdActivityName}"</strong> a été créée avec succès.
+                        L&apos;activité <strong>&quot;{createdActivityName}&quot;</strong> a été créée avec succès.
                     </p>
                     <div className="dialog-modal-actions">
                         <button

@@ -560,7 +560,7 @@ export default function PracticeSessionWithAccessCodePage() {
                 title={
                     <div className="flex items-center gap-3 justify-center">
                         <BarChart3 size={24} strokeWidth={2.4} />
-                        <span>Bilan de l'entraînement</span>
+                        <span>Bilan de l&apos;entraînement</span>
                     </div>
                 }
                 size="md"

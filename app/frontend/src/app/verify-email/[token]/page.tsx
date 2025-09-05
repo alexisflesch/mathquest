@@ -152,7 +152,7 @@ export default function VerifyEmailPage() {
                                     e.currentTarget.style.opacity = '1';
                                 }}
                             >
-                                Retour à l'accueil
+                                Retour à l&apos;accueil
                             </button>
                             <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
                                 Redirection en cours...
@@ -176,7 +176,7 @@ export default function VerifyEmailPage() {
                                     e.currentTarget.style.opacity = '1';
                                 }}
                             >
-                                Retour à l'accueil
+                                Retour à l&apos;accueil
                             </button>
                             <button
                                 onClick={() => router.push('/login')}

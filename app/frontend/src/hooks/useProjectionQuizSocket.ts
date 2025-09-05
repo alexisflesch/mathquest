@@ -403,7 +403,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 }
 
                 // Ensure currentQuestionIndex matches timer.questionUid if possible
-                let newGameState = { ...payload.gameState };
+                const newGameState = { ...payload.gameState };
                 if (
                     payload.gameState.timer &&
                     payload.gameState.timer.questionUid &&

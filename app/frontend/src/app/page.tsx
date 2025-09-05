@@ -130,7 +130,7 @@ export default function Home() {
           <div className="w-full mt-10">
             <div className="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg p-4 shadow-sm text-base">
               <strong>⚠️ En développement :</strong> certaines fonctionnalités peuvent manquer et le service être interrompu pour mise à jour.
-              Auto-hébergez l'application si possible.
+              Auto-hébergez l&apos;application si possible.
             </div>
           </div>
         </div>

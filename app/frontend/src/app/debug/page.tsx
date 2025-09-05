@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { makeApiRequest } from '@/config/api';
 import { useAuth } from '@/components/AuthProvider';
 import { AuthStatusResponseSchema, LogoutResponseSchema } from '@shared/types/api/schemas';
@@ -219,7 +220,7 @@ export default function DebugPage() {
                         <div>
                             <h3 className="text-md font-semibold mb-2">Direct Links (Browser Navigation)</h3>
                             <div className="flex flex-wrap gap-2">
-                                <a href="/" className="px-3 py-1 bg-orange-200 dark:bg-orange-800 text-center rounded hover:bg-orange-300">Home</a>
+                                <Link href="/" className="px-3 py-1 bg-orange-200 dark:bg-orange-800 text-center rounded hover:bg-orange-300">Home</Link>
                                 <a href="/login" className="px-3 py-1 bg-orange-200 dark:bg-orange-800 text-center rounded hover:bg-orange-300">Login</a>
                                 <a href="/student/home" className="px-3 py-1 bg-orange-200 dark:bg-orange-800 text-center rounded hover:bg-orange-300">Student Home</a>
                                 <a href="/teacher/home" className="px-3 py-1 bg-orange-200 dark:bg-orange-800 text-center rounded hover:bg-orange-300">Teacher Home</a>
@@ -250,10 +251,10 @@ export default function DebugPage() {
 
                 <div className="bg-yellow-100 dark:bg-yellow-900 p-4 rounded">
                     <p className="text-sm">
-                        <strong>TIP:</strong> If you're stuck after logout, try the following steps:
+                        <strong>TIP:</strong> If you&apos;re stuck after logout, try the following steps:
                     </p>
                     <ol className="list-decimal ml-5 text-sm">
-                        <li>Use "Force Clear Auth Data" to clear both client and server cookies</li>
+                        <li>Use &quot;Force Clear Auth Data&quot; to clear both client and server cookies</li>
                         <li>Force a page reload</li>
                         <li>Try both router navigation and direct links to test routing behavior</li>
                     </ol>

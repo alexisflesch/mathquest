@@ -155,7 +155,7 @@ export default function StudentJoinPage() {
             >
                 {modal?.type === 'notfound' && (
                     <div className="dialog-modal-content gap-4">
-                        <span>Le code que vous avez saisi n'existe pas.</span>
+                        <span>Le code que vous avez saisi n&apos;existe pas.</span>
                         <div className="dialog-modal-actions">
                             <button
                                 className="dialog-modal-btn"

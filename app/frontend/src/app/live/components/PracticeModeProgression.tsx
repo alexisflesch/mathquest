@@ -70,7 +70,7 @@ const PracticeModeProgression = React.memo(({
                         onClick={handleRequestNextQuestion}
                         disabled={!currentQuestion}
                     >
-                        Terminer l'entraînement ✓
+                        Terminer l&apos;entraînement ✓
                     </button>
                 )}
 
@@ -80,7 +80,7 @@ const PracticeModeProgression = React.memo(({
                         className="btn btn-outline btn-sm"
                         onClick={onReopenFeedback}
                     >
-                        Revoir l'explication
+                        Revoir l&apos;explication
                     </button>
                 )}
             </div>

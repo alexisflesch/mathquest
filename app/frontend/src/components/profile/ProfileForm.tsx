@@ -35,7 +35,7 @@ export default function ProfileForm({
             <div>
                 <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
                     <User className="inline w-4 h-4 mr-2" />
-                    Nom d'utilisateur
+                    Nom d&apos;utilisateur
                 </label>
                 <input
                     type="text"

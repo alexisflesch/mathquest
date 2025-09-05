@@ -4,7 +4,7 @@ import withPWA from '@ducanh2912/next-pwa';
 
 const isLightBuild = process.env.LIGHT_BUILD === '1';
 const nextConfig: NextConfig = {
-    eslint: isLightBuild ? { ignoreDuringBuilds: true } : { 
+    eslint: isLightBuild ? { ignoreDuringBuilds: true } : {
         dirs: ['.'],
         // Only show errors, not warnings during build
         ignoreDuringBuilds: false

@@ -124,7 +124,7 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
     // Compute animation triggers for each rank
     const { animationDelays, animateScoreFlags } = useMemo(() => {
         let rankChanged: number[] = [];
-        let scoreChanged: number[] = [];
+        const scoreChanged: number[] = [];
         if (!prevLeaderboardRef.current) {
             // Initial render: treat all ranks as changed
             rankChanged = Array.from({ length: leaderboard.length }, (_, i) => i);

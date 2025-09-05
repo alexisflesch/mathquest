@@ -155,7 +155,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
 
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg text-[color:var(--foreground)]">
-                                    <span className="font-semibold">Démarrer l'activité </span>
+                                    <span className="font-semibold">Démarrer l&apos;activité </span>
                                     <span className="italic" style={{ color: 'var(--foreground)', fontWeight: 'normal' }}>{templateName}</span>
                                 </h3>
                                 <button
@@ -240,7 +240,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
                         style={{ borderColor: getModeColor(gameInfo?.mode || 'quiz') }}
                     >
                         <div className="text-sm mb-2 font-medium text-[color:var(--foreground)]">
-                            Code d'accès pour vos élèves :
+                            Code d&apos;accès pour vos élèves :
                         </div>
                         <div className="flex items-center gap-2">
                             <code

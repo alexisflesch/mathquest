@@ -674,10 +674,10 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Fetch quiz/activity name from API for reliability
     // Remove legacy fetchQuizName effect: all naming now comes from socket payload
 
-    if (authLoading) return <LoadingScreen message="Vérification de l'authentification..." />;
+    if (authLoading) return <LoadingScreen message="Vérification de l&apos;authentification..." />;
     if (loading) return <LoadingScreen message="Chargement du tableau de bord..." />;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
-    if (!code) return <div className="p-8 text-orange-600">Aucun code d'accès fourni.</div>;
+    if (!code) return <div className="p-8 text-orange-600">Aucun code d&apos;accès fourni.</div>;
 
     // Add a projection page URL for the current code
     const projectionUrl = `/teacher/projection/${code}`;
@@ -917,7 +917,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 showCloseButton={true}
             >
                 <div className="mb-6 text-base">
-                    Vous devez d'abord arrêter le chrono de la question en cours avant d'afficher les bonnes réponses et de mettre à jour le classement.
+                    Vous devez d&apos;abord arrêter le chrono de la question en cours avant d&apos;afficher les bonnes réponses et de mettre à jour le classement.
                 </div>
                 <div className="flex justify-end gap-3 mt-4">
                     <button

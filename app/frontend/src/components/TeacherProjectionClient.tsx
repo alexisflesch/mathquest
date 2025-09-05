@@ -87,7 +87,7 @@ const QuestionDisplay = React.memo(({
         const numOptions = answerOptions.length;
         if (numOptions > 0) {
             const extractedStats = extractMultipleChoiceStats(currentStats);
-            let statsArray: number[] = [];
+            const statsArray: number[] = [];
             for (let i = 0; i < numOptions; i++) {
                 const value = extractedStats[i.toString()] || 0;
                 statsArray.push(value);
