@@ -517,7 +517,7 @@ export default function LiveGamePage() {
 
     // Use stable leaderboard reference to prevent unnecessary re-renders
     const stableLeaderboard = useMemo(() => {
-        return gameState.leaderboard.length > 0 ? gameState.leaderboard : EMPTY_LEADERBOARD;
+        return gameState.leaderboard?.length > 0 ? gameState.leaderboard : EMPTY_LEADERBOARD;
     }, [gameState.leaderboard]);
     // Calculate user's score and rank from leaderboard
     const userLeaderboardData = useMemo(() => {
