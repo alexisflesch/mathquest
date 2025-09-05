@@ -1,4 +1,4 @@
-# Questions de mathématiques niveau L1 pour MathQuest
+# Questions de Mathématiques niveau L1 pour MathQuest
 # Thème : Nombres complexes
 # Auteur : Alexis Flesch
 
@@ -186,7 +186,7 @@
   correctAnswers: [true, false, false, false]
 
 
-- uid: "aflesch-mt1-nombres-complexes-008"
+- uid: "aflesch-mt1-nombres-complexes-008b"
   author: "aflesch"
   gradeLevel: "L1"
   discipline: "Mathématiques"

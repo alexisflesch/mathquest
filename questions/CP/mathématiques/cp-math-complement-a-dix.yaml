@@ -1,0 +1,145 @@
+# Questions de Mathématiques niveau CP pour MathQuest
+# Auteur : GPT-5
+
+- uid: "copilot-cp-math-complement10-001"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 0 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 10
+
+- uid: "copilot-cp-math-complement10-002"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 1 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 9
+
+- uid: "copilot-cp-math-complement10-003"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 2 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 8
+
+- uid: "copilot-cp-math-complement10-004"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 3 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 7
+
+- uid: "copilot-cp-math-complement10-005"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 4 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 6
+
+- uid: "copilot-cp-math-complement10-006"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 5 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 5
+
+- uid: "copilot-cp-math-complement10-007"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 6 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+
+- uid: "copilot-cp-math-complement10-008"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 7 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 3
+
+- uid: "copilot-cp-math-complement10-009"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 8 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 2
+
+- uid: "copilot-cp-math-complement10-010"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 9 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 1
+
+- uid: "copilot-cp-math-complement10-011"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 10"
+  text: "Quel nombre faut-il ajouter à 10 pour obtenir 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 0

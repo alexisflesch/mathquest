@@ -1,0 +1,276 @@
+# Questions de Mathématiques niveau CP pour MathQuest
+# Auteur : GPT-5
+
+
+- uid: "copilot-cp-math-complement20-001"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 0 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 20
+
+- uid: "copilot-cp-math-complement20-002"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 1 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 19
+
+- uid: "copilot-cp-math-complement20-003"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 2 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 18
+
+- uid: "copilot-cp-math-complement20-004"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 3 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 17
+
+- uid: "copilot-cp-math-complement20-005"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 4 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 16
+
+- uid: "copilot-cp-math-complement20-006"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 5 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 15
+
+- uid: "copilot-cp-math-complement20-007"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 6 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 14
+
+- uid: "copilot-cp-math-complement20-008"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 7 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 13
+
+- uid: "copilot-cp-math-complement20-009"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 8 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12
+
+- uid: "copilot-cp-math-complement20-010"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 9 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 11
+
+- uid: "copilot-cp-math-complement20-011"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 10 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 10
+
+- uid: "copilot-cp-math-complement20-012"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 11 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 9
+
+- uid: "copilot-cp-math-complement20-013"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 12 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 8
+
+- uid: "copilot-cp-math-complement20-014"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 13 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 7
+
+- uid: "copilot-cp-math-complement20-015"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 14 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 6
+
+- uid: "copilot-cp-math-complement20-016"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 15 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 5
+
+- uid: "copilot-cp-math-complement20-017"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 16 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+
+- uid: "copilot-cp-math-complement20-018"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 17 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 3
+
+- uid: "copilot-cp-math-complement20-019"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 18 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 2
+
+- uid: "copilot-cp-math-complement20-020"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 19 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 1
+
+- uid: "copilot-cp-math-complement20-021"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Compléments à 20"
+  text: "Quel nombre faut-il ajouter à 20 pour obtenir 20 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["compléments à 20"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 0

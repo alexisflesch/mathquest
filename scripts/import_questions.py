@@ -96,6 +96,7 @@ def import_questions():
     all_errors = []
     all_warnings = []
     all_questions = []
+    seen_uids = {}
     # For summary: count per discipline/theme
     from collections import defaultdict
     questions_per_folder = defaultdict(int)
@@ -271,6 +272,16 @@ def import_questions():
                         folder = os.path.dirname(rel_path)
                         questions_per_folder[folder] += 1
                         all_questions.append((q, yaml_path))
+                        # Vérification des doublons de uid
+                        uid = q.get('uid')
+                        if uid:
+                            if uid in seen_uids:
+                                msg = f"WARNING: Deux questions ont le même uid '{uid}' dans les fichiers : {seen_uids[uid]} et {yaml_path}"
+                                print_colored('WARNING', msg)
+                                all_warnings.append(msg)
+                                total_warnings += 1
+                            else:
+                                seen_uids[uid] = yaml_path
 
     if total_errors > 0:
         logging.error("\n=== Import annulé : des erreurs ont été détectées dans les fichiers/questions ===")

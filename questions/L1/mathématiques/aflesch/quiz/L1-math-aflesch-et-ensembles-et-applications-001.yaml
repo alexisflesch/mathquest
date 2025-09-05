@@ -1,4 +1,4 @@
-# Questions de mathématiques niveau L1 pour MathQuest
+# Questions de Mathématiques niveau L1 pour MathQuest
 # Thème : Ensembles et applications
 # Auteur : Alexis Flesch
 
@@ -77,7 +77,7 @@
   correctAnswers: [true, false, false, false]
 
 
-- uid: "aflesch-mt1-ensembles-et-applications-003"
+- uid: "aflesch-mt1-ensembles-et-applications-003b"
   author: "aflesch"
   gradeLevel: "L1"
   discipline: "Mathématiques"
@@ -98,7 +98,7 @@
   correctAnswers: [false, true, true, false]
 
 
-- uid: "aflesch-mt1-ensembles-et-applications-003"
+- uid: "aflesch-mt1-ensembles-et-applications-003c"
   author: "aflesch"
   gradeLevel: "L1"
   discipline: "Mathématiques"

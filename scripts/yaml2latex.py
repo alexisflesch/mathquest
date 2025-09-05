@@ -10,11 +10,51 @@ import subprocess
 
 
 import re
+from typing import Set
+
+# When option 1 selected: do not attempt font or image rendering; replace emoji with placeholder
+EMOJI_PLACEHOLDER = '[emoji]'
+
+def find_emoji_font_file():
+    """Return an absolute path to a Noto Color Emoji ttf if present, else None."""
+    try:
+        out = subprocess.check_output(['fc-list', ':file family'], stderr=subprocess.DEVNULL).decode('utf-8')
+        for line in out.splitlines():
+            # line format: /path/to/file.ttf: Family Name
+            parts = line.split(':')
+            if not parts:
+                continue
+            path = parts[0].strip()
+            fam = ':'.join(parts[1:]).strip()
+            if 'Noto Color Emoji' in fam or 'NotoColorEmoji' in path or 'Noto-Emoji' in path or 'NotoEmoji' in fam:
+                return path
+    except Exception:
+        return None
+    return None
 
 def sanitize_latex(s):
     if not isinstance(s, str):
         return s
-    return s.replace('_', '\_').replace('%', '\%').replace('&', '\&').replace('#', '\#').replace('$', '\$').replace('{', '\{').replace('}', '\}').replace('^', '\^{}').replace('~', '\~{}')
+    # Escape LaTeX special characters, but avoid re-escaping ones that are
+    # already escaped in the source (e.g. "\_" should remain "\_"). We use
+    # negative lookbehind to only match characters not preceded by a backslash.
+    s2 = s
+    # Common single-char escapes
+    replacements = [
+        (r'(?<!\\)_', r'\\_'),
+        (r'(?<!\\)%', r'\\%'),
+        (r'(?<!\\)&', r'\\&'),
+        (r'(?<!\\)#', r'\\#'),
+        (r'(?<!\\)\$', r'\\$'),
+        (r'(?<!\\){', r'\\{'),
+        (r'(?<!\\)}', r'\\}'),
+    ]
+    for pat, repl in replacements:
+        s2 = re.sub(pat, repl, s2)
+    # Caret and tilde need special forms
+    s2 = re.sub(r'(?<!\\)\^', r'\\^{}', s2)
+    s2 = re.sub(r'(?<!\\)~', r'\\~{}', s2)
+    return s2
 
 # N'échappe pas les blocs \( ... \) et \[ ... \]
 def sanitize_latex_smart(s):
@@ -41,6 +81,52 @@ def sanitize_latex_smart(s):
         parts.append(sanitize_latex(s[last_end:]))
     return ''.join(parts)
 
+def wrap_emojis(s):
+    """Replace emoji characters by \emoji{<char>} so they render with the emoji font.
+    Matches common emoji Unicode ranges.
+    """
+    if not isinstance(s, str) or not s:
+        return s
+    # common emoji ranges: Misc symbols, emoticons, transport, dingbats, etc.
+    emoji_pattern = re.compile(r'([\U0001F300-\U0001F5FF\U0001F600-\U0001F64F\U0001F680-\U0001F6FF\u2600-\u26FF\u2700-\u27BF])')
+    return emoji_pattern.sub(r'\\emoji{\1}', s)
+
+
+def sanitize_preserve_emoji(s):
+    """Sanitize a string for LaTeX while preserving emoji characters.
+    Approach:
+    - Find emoji runs and replace them by placeholders (\x01, \x02, ...)
+    - Run existing sanitize_latex / sanitize_latex_smart on the non-emoji parts
+    - Reinsert the emoji runs wrapped in a TeX group that selects the emoji font
+      i.e. {\emojiFont <emoji>} so fontspec will use the emoji font for that glyph
+    """
+    if not isinstance(s, str) or not s:
+        return s
+    # Regex matching a wide set of emoji/codepoints (extend as needed)
+    emoji_pattern = re.compile(r'([\U0001F300-\U0001FAFF\U0001F600-\U0001F64F\U0001F680-\U0001F6FF\u2600-\u26FF\u2700-\u27BF])')
+    parts = []
+    placeholders = {}
+    idx = 0
+    last = 0
+    for m in emoji_pattern.finditer(s):
+        if m.start() > last:
+            parts.append(s[last:m.start()])
+        ph = f"\x01{idx}\x02"
+        placeholders[ph] = m.group(0)
+        parts.append(ph)
+        idx += 1
+        last = m.end()
+    if last < len(s):
+        parts.append(s[last:])
+
+    # Sanitize the non-emoji pieces using the smart sanitizer to keep math blocks
+    sanitized = ''.join(sanitize_latex_smart(p) if not (p.startswith('\x01') and p.endswith('\x02')) else p for p in parts)
+
+    # Reinsert emojis with a simple textual placeholder (easier, portable)
+    for ph, emo in placeholders.items():
+        sanitized = sanitized.replace(ph, EMOJI_PLACEHOLDER)
+    return sanitized
+
 def get_env_type(q):
     # Détection du type de question
     t = q.get('type', '').lower() or q.get('questionType', '').lower()
@@ -52,6 +138,15 @@ def get_env_type(q):
 
 def latex_header(title, subtitle):
     full_title = subtitle + " - " + title
+    # Try to find an installed Noto Color Emoji file and prefer explicit path when available
+    emoji_ttf = find_emoji_font_file()
+    # If we found a ttf file, add a fontspec option to load it by path
+    # We no longer load or declare an emoji font because emojis are replaced by a
+    # textual placeholder earlier in the pipeline (EMOJI_PLACEHOLDER). Keep fontspec
+    # available for users who choose a Unicode engine, but avoid forcing specific
+    # fonts that previously caused engine-dependent failures.
+    emoji_font_declaration = ''
+
     header = r"""
 \documentclass[12pt]{article}
 \usepackage[utf8]{inputenc}
@@ -64,6 +159,8 @@ def latex_header(title, subtitle):
 \usepackage{amsmath, amssymb}
 % Allow unicode fonts (for emoji) when using XeLaTeX
 \usepackage{fontspec}
+% Keep fontspec available for Unicode-aware engines; do not force a specific main or emoji font
+""" + "\n" + emoji_font_declaration + "\n" + r"""
 % Use TikZ to draw a reliable forbidden icon (avoids missing emoji fonts)
 \usepackage{tikz}
 % Environnements personnalisés
@@ -157,7 +254,8 @@ def latex_question(q):
     meta_line = " \, | \, ".join(meta_parts)
 
     # Ligne 3 : énoncé (toujours affiché)
-    statement_line = statement if statement else ""
+    # Sanitize while preserving/wrapping emoji runs so they use the emoji font
+    statement_line = sanitize_preserve_emoji(statement) if statement else ""
 
     # Ligne 4 : réponses (toujours affiché)
     opts_latex = ""
@@ -167,14 +265,14 @@ def latex_question(q):
         if opts:
             opts_latex = "\\begin{enumerate}[label=\\alph*)]"
             for i, opt in enumerate(opts):
-                txt = sanitize_latex(str(opt))
+                txt = sanitize_preserve_emoji(str(opt))
                 correct = False
                 if isinstance(corrects, list) and i < len(corrects):
                     correct = bool(corrects[i])
                 if correct:
-                    opts_latex += f"\n  \\item \\checkmark  {txt}"
+                    opts_latex += f"\n  \\item \\checkmark  {wrap_emojis(txt)}"
                 else:
-                    opts_latex += f"\n  \\item  {txt}"
+                    opts_latex += f"\n  \\item  {wrap_emojis(txt)}"
             opts_latex += "\n\\end{enumerate}"
         else:
             opts_latex = "\\textit{Aucune réponse}"
@@ -183,13 +281,18 @@ def latex_question(q):
         if 'correctAnswer' in q:
             answer = q.get('correctAnswer')
             opts_latex = f"\\textbf{{Réponse attendue}} : {sanitize_latex_smart(str(answer))}"
+            # Ajoute un saut de ligne LaTeX avant l'explication si elle existe
+            if explanation:
+                opts_latex += " \\newline "
         else:
             opts_latex = "\\textit{Réponse numérique}"
 
     # Ligne 5 : feedback (temps) si présent
     fb_latex = ""
     if explanation:
-        fb_latex = f"\\textbf{{Explication}} ({feedback_wait_time}s) : {explanation}"
+        # Ensure the explanation starts on its own line in LaTeX output.
+        # We prepend a newline command so it doesn't run on the same line as the answer block.
+        fb_latex = f" \\newline \\textbf{{Explication}} ({feedback_wait_time}s) : {sanitize_preserve_emoji(explanation)}"
     elif feedback:
         fb_latex = f"\\textit{{Feedback}} : {feedback}"
         if temps:
@@ -216,11 +319,11 @@ def latex_question(q):
         if opts:
             opts_latex = ""
             for i, opt in enumerate(opts):
-                txt = sanitize_latex_smart(str(opt))
+                txt = sanitize_preserve_emoji(str(opt))
                 correct = False
                 if isinstance(corrects, list) and i < len(corrects):
                     correct = bool(corrects[i])
-                symbol = "\\checkmark\," if correct else "\\cross\,"
+                symbol = "\\checkmark\\," if correct else "\\cross\\,"
                 opts_latex += f"{symbol} {txt}\\\\\n"
         else:
             opts_latex = "\\textit{Aucune réponse}"
@@ -256,9 +359,78 @@ def process_yaml_file(yaml_path, title, subtitle, out_tex):
         f.write(latex_footer())
 
 def compile_latex(tex_path):
-    # Use xelatex for proper Unicode/emoji support
-    subprocess.run(['xelatex', '-interaction=nonstopmode', tex_path], cwd=tex_path.parent)
-    subprocess.run(['xelatex', '-interaction=nonstopmode', tex_path], cwd=tex_path.parent)
+    # Prefer lualatex if available (better color emoji support via fontspec + HarfBuzz),
+    # otherwise fallback to xelatex.
+    def has_cmd(cmd):
+        from shutil import which
+        return which(cmd) is not None
+
+    # Detect presence of Noto Color Emoji
+    def has_emoji_font():
+        try:
+            out = subprocess.check_output(['fc-list', ':family'], stderr=subprocess.DEVNULL).decode('utf-8')
+            return 'Noto Color Emoji' in out
+        except Exception:
+            return False
+
+    engine = None
+    if has_cmd('lualatex') and has_emoji_font():
+        engine = 'lualatex'
+    elif has_cmd('xelatex'):
+        engine = 'xelatex'
+    else:
+        engine = 'xelatex'  # fallback; will error if absent
+
+    # Diagnostics for debugging emoji rendering
+    print(f"[yaml2latex] Using LaTeX engine: {engine}")
+    print(f"[yaml2latex] Noto Color Emoji available: {has_emoji_font()}")
+
+
+
+    # Try to dump a small excerpt around the first emoji (if any) for inspection
+    try:
+        txt = Path(tex_path).read_text(encoding='utf-8')
+        m = re.search(r'([\U0001F300-\U0001FAFF\U0001F600-\U0001F64F\U0001F680-\U0001F6FF\u2600-\u26FF\u2700-\u27BF])', txt)
+        if m:
+            start = max(0, m.start() - 40)
+            end = min(len(txt), m.end() + 40)
+            excerpt = txt[start:end]
+            print("[yaml2latex] .tex excerpt around first emoji:")
+            print(excerpt)
+    except Exception:
+        pass
+
+    def run_engine(cmd):
+        try:
+            cp = subprocess.run(cmd, cwd=tex_path.parent, capture_output=True, text=True)
+            if cp.returncode != 0:
+                print(f"[yaml2latex] {cmd[0]} failed with return code {cp.returncode}")
+                if cp.stdout:
+                    print("[yaml2latex] stdout:")
+                    print(cp.stdout)
+                if cp.stderr:
+                    print("[yaml2latex] stderr:")
+                    print(cp.stderr)
+            return cp.returncode, cp.stdout + "\n" + cp.stderr
+        except Exception as e:
+            print(f"[yaml2latex] Error running {cmd}: {e}")
+            return 1, str(e)
+
+    cmd = [engine, '-interaction=nonstopmode', tex_path]
+    rc, out = run_engine(cmd)
+    if rc != 0 and engine == 'lualatex':
+        print('[yaml2latex] lualatex failed, retrying with xelatex')
+        if has_cmd('xelatex'):
+            engine = 'xelatex'
+            cmd = [engine, '-interaction=nonstopmode', tex_path]
+            rc2, out2 = run_engine(cmd)
+            rc = rc2
+            out = out2
+        else:
+            print('[yaml2latex] xelatex not available as fallback')
+    # run a second pass if first succeeded
+    if rc == 0:
+        run_engine([engine, '-interaction=nonstopmode', tex_path])
 
 def clean_aux_files(folder):
     for ext in ['aux', 'log', 'out', 'toc']:

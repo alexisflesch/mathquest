@@ -12,6 +12,7 @@ disciplines:
         tags:
           - "additions simples"
           - "compléments à 10"
+          - "compléments à 20"
           - "résolution de problèmes très simples"
       - nom: "Géométrie"
         tags:
@@ -115,32 +116,32 @@ disciplines:
     themes:
       - nom: "Compréhension orale"
         tags:
-          - "salutations"
+          - "mots du quotidien"
           - "instructions simples"
       - nom: "Vocabulaire"
         tags:
           - "couleurs"
           - "chiffres"
-          - "objets de la classe"
+          - "animaux"
   - nom: "Espagnol"
     themes:
       - nom: "Compréhension orale"
         tags:
-          - "phrases simples"
-          - "salutations"
+          - "mots du quotidien"
+          - "instructions simples"
       - nom: "Vocabulaire"
         tags:
-          - "nombres"
-          - "jours de la semaine"
+          - "couleurs"
+          - "chiffres"
           - "animaux"
   - nom: "Italien"
     themes:
       - nom: "Compréhension orale"
         tags:
-          - "phrases du quotidien"
+          - "mots du quotidien"
           - "instructions simples"
       - nom: "Vocabulaire"
         tags:
-          - "salutations"
           - "couleurs"
-          - "objets courants"
+          - "chiffres"
+          - "animaux"
