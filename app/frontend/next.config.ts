@@ -1,5 +1,6 @@
 import path from "path";
 import type { NextConfig } from "next";
+import withPWA from '@ducanh2912/next-pwa';
 
 const isLightBuild = process.env.LIGHT_BUILD === '1';
 const nextConfig: NextConfig = {
@@ -24,4 +25,31 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default nextConfig;
+export default withPWA({
+    dest: 'public',
+    disable: process.env.NODE_ENV === 'development',
+    register: true,
+    workboxOptions: {
+        maximumFileSizeToCacheInBytes: 5000000, // 5MB instead of default 2MB
+        runtimeCaching: [
+            {
+                urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+                handler: 'StaleWhileRevalidate',
+                options: {
+                    cacheName: 'google-fonts-stylesheets',
+                },
+            },
+            {
+                urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+                handler: 'CacheFirst',
+                options: {
+                    cacheName: 'google-fonts-webfonts',
+                    expiration: {
+                        maxEntries: 30,
+                        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                    },
+                },
+            },
+        ],
+    },
+})(nextConfig);

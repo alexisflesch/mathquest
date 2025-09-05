@@ -66,7 +66,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Exclude all favicon.* files (svg, ico, png, etc) from auth middleware
-        '/((?!_next|api|static|favicon\\..*).*)',
+        // Exclude PWA files, favicons, Next.js files, API routes, and static assets
+        '/((?!_next|api|static|favicon\\.|manifest\\.json|sw\\.js|workbox-.*\\.js|icon-.*\\.png).*)',
     ],
 };
