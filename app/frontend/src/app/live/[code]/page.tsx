@@ -151,67 +151,6 @@ export default function LiveGamePage() {
     const [isMobile, setIsMobile] = useState(false);
     const [startClicked, setStartClicked] = useState(false);
 
-    // 🐛 DEBUG: Track userProfile state to identify username vs cookieId issues
-    useEffect(() => {
-        logger.info('UserProfile state', { userProfile });
-    }, [userProfile]);
-
-    // Listen for unified participant events
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleParticipantsList = (payload: UnifiedParticipantListPayload) => {
-            logger.info('[LOBBY] Received unified participants_list', payload);
-            setLobbyState(prev => ({
-                ...prev,
-                participants: payload.participants,
-                creator: payload.creator
-            }));
-        };
-
-        const handleCountdownTick = (payload: { countdown: number }) => {
-            logger.info('[LOBBY] Received countdown_tick', payload);
-            setLobbyState(prev => ({ ...prev, countdown: payload.countdown }));
-        };
-
-        const handleCountdownComplete = () => {
-            logger.info('[LOBBY] Received countdown_complete');
-            setLobbyState(prev => ({ ...prev, countdown: 0 }));
-        };
-
-        // Use the existing socket event constant
-        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
-        // These events are not in the typed interface yet, so use any
-        (socket as any).on('countdown_tick', handleCountdownTick);
-        (socket as any).on('countdown_complete', handleCountdownComplete);
-
-        return () => {
-            socket.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
-            (socket as any).off('countdown_tick', handleCountdownTick);
-            (socket as any).off('countdown_complete', handleCountdownComplete);
-        };
-    }, [socket]);
-
-    // Show lobby UI when game status is pending (unified participant model)
-    const showLobby = gameState.gameStatus === 'pending' && gameState.connectedToRoom;
-
-    // Show loading while authentication is being checked
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-                <div className="text-center">
-                    <InfinitySpin size={48} />
-                    <p className="mt-4 text-gray-600">Vérification de l'authentification...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // Don't render if not authenticated
-    if (userState === 'anonymous' || !userProfile.username || !userProfile.avatar) {
-        return null;
-    }
-
     // Use stable leaderboard reference to prevent unnecessary re-renders
     const stableLeaderboard = useMemo(() => {
         return gameState.leaderboard?.length > 0 ? gameState.leaderboard : EMPTY_LEADERBOARD;
@@ -292,6 +231,149 @@ export default function LiveGamePage() {
         }
         return () => { }; // Return empty cleanup function for other cases
     }, [gameState.gameStatus, router, code]);
+
+    // 🐛 DEBUG: Track userProfile state to identify username vs cookieId issues
+    useEffect(() => {
+        logger.info('UserProfile state', { userProfile });
+    }, [userProfile]);
+
+    // Listen for unified participant events
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleParticipantsList = (payload: UnifiedParticipantListPayload) => {
+            logger.info('[LOBBY] Received unified participants_list', payload);
+            setLobbyState(prev => ({
+                ...prev,
+                participants: payload.participants,
+                creator: payload.creator
+            }));
+        };
+
+        const handleCountdownTick = (payload: { countdown: number }) => {
+            logger.info('[LOBBY] Received countdown_tick', payload);
+            setLobbyState(prev => ({ ...prev, countdown: payload.countdown }));
+        };
+
+        const handleCountdownComplete = () => {
+            logger.info('[LOBBY] Received countdown_complete');
+            setLobbyState(prev => ({ ...prev, countdown: 0 }));
+        };
+
+        // Use the existing socket event constant
+        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+        // These events are not in the typed interface yet, so use any
+        (socket as any).on('countdown_tick', handleCountdownTick);
+        (socket as any).on('countdown_complete', handleCountdownComplete);
+
+        return () => {
+            socket.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+            (socket as any).off('countdown_tick', handleCountdownTick);
+            (socket as any).off('countdown_complete', handleCountdownComplete);
+        };
+    }, [socket]);
+
+    // Join the game ONLY when socket is connected and user data is ready
+    useEffect(() => {
+        if (userId && username && typeof code === 'string' && connected && !hasJoinedRef.current) {
+            logger.info('Joining game with enhanced socket hook (on socket connect)');
+            joinGame();
+            hasJoinedRef.current = true;
+        }
+        // Reset join flag if code or user changes (e.g., navigating to a new game)
+        // This ensures joinGame is called again if the user switches games or logs in/out
+        // (code/userId/username are all dependencies)
+        // Reset if disconnected
+        if (!connected) {
+            hasJoinedRef.current = false;
+        }
+    }, [userId, username, code, connected, joinGame]);
+
+    // Handle game completion redirect
+    useEffect(() => {
+        if (gameState.gameStatus === 'completed' && code) {
+            logger.info(`Game finished - waiting for backend redirect signal`);
+            // Do NOT redirect automatically - wait for backend event
+        }
+        return () => { }; // Return empty cleanup function for other cases
+    }, [gameState.gameStatus, router, code]);
+
+    // 🐛 DEBUG: Track userProfile state to identify username vs cookieId issues
+    useEffect(() => {
+        logger.info('UserProfile state', { userProfile });
+    }, [userProfile]);
+
+    // Show lobby UI when game status is pending (unified participant model)
+    const showLobby = gameState.gameStatus === 'pending' && gameState.connectedToRoom;
+
+    // Show loading while authentication is being checked
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                <div className="text-center">
+                    <InfinitySpin size={48} />
+                    <p className="mt-4 text-gray-600">Vérification de l'authentification...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Don't render if not authenticated
+    if (userState === 'anonymous' || !userProfile.username || !userProfile.avatar) {
+        return null;
+    }
+
+    // Handle game end - Wait for backend signaling, do NOT redirect automatically
+    // The backend should emit 'tournament_finished_redirect' or similar event
+    // Removed automatic redirect to respect backend control
+    useEffect(() => {
+        if (gameState.gameStatus === 'completed' && code) {
+            logger.info(`Game finished - waiting for backend redirect signal`);
+            // Do NOT redirect automatically - wait for backend event
+        }
+        return () => { }; // Return empty cleanup function for other cases
+    }, [gameState.gameStatus, router, code]);
+
+    // 🐛 DEBUG: Track userProfile state to identify username vs cookieId issues
+    useEffect(() => {
+        logger.info('UserProfile state', { userProfile });
+    }, [userProfile]);
+
+    // Listen for unified participant events
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleParticipantsList = (payload: UnifiedParticipantListPayload) => {
+            logger.info('[LOBBY] Received unified participants_list', payload);
+            setLobbyState(prev => ({
+                ...prev,
+                participants: payload.participants,
+                creator: payload.creator
+            }));
+        };
+
+        const handleCountdownTick = (payload: { countdown: number }) => {
+            logger.info('[LOBBY] Received countdown_tick', payload);
+            setLobbyState(prev => ({ ...prev, countdown: payload.countdown }));
+        };
+
+        const handleCountdownComplete = () => {
+            logger.info('[LOBBY] Received countdown_complete');
+            setLobbyState(prev => ({ ...prev, countdown: 0 }));
+        };
+
+        // Use the existing socket event constant
+        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+        // These events are not in the typed interface yet, so use any
+        (socket as any).on('countdown_tick', handleCountdownTick);
+        (socket as any).on('countdown_complete', handleCountdownComplete);
+
+        return () => {
+            socket.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+            (socket as any).off('countdown_tick', handleCountdownTick);
+            (socket as any).off('countdown_complete', handleCountdownComplete);
+        };
+    }, [socket]);
 
     // Enhanced feedback handling for all modes
     useEffect(() => {
