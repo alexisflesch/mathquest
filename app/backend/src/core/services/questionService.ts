@@ -99,7 +99,7 @@ export class QuestionService {
             logger.info({ filters, pagination }, 'Starting getQuestions with filters and pagination');
             logger.info(`getQuestions called with filters: ${JSON.stringify(filters)}`);
             logger.info(`getQuestions called with pagination: ${JSON.stringify(pagination)}`);
-            
+
             const {
                 discipline,
                 disciplines,
@@ -209,10 +209,10 @@ export class QuestionService {
                 totalPages: Math.ceil(total / take)
             };
         } catch (error) {
-            logger.error({ 
+            logger.error({
                 error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
                 filters,
-                pagination 
+                pagination
             }, 'Error fetching questions');
             throw error;
         }

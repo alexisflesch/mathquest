@@ -750,28 +750,28 @@ export default function CreateActivityPage() {
                                 ) : (
                                     <>
                                         {questions.map(q => (
-                                                <QuestionDisplay
-                                                    key={q.uid}
-                                                    question={q}
-                                                    isActive={isQuestionSelected(q.uid)}
-                                                    isOpen={openUid === q.uid}
-                                                    onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
-                                                    timerStatus="stop"
-                                                    disabled={false}
-                                                    showControls={false}
-                                                    className=""
-                                                    showMeta={true}
-                                                    showCheckbox={true}
-                                                    checked={isQuestionSelected(q.uid)}
-                                                    onCheckboxChange={(checked) => {
-                                                        if (checked) {
-                                                            addToCart(q);
-                                                        } else {
-                                                            removeFromCart(q.uid);
-                                                        }
-                                                    }}
-                                                />
-                                            ))}
+                                            <QuestionDisplay
+                                                key={q.uid}
+                                                question={q}
+                                                isActive={isQuestionSelected(q.uid)}
+                                                isOpen={openUid === q.uid}
+                                                onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
+                                                timerStatus="stop"
+                                                disabled={false}
+                                                showControls={false}
+                                                className=""
+                                                showMeta={true}
+                                                showCheckbox={true}
+                                                checked={isQuestionSelected(q.uid)}
+                                                onCheckboxChange={(checked) => {
+                                                    if (checked) {
+                                                        addToCart(q);
+                                                    } else {
+                                                        removeFromCart(q.uid);
+                                                    }
+                                                }}
+                                            />
+                                        ))}
                                         {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
                                     </>
                                 )}
@@ -863,28 +863,28 @@ export default function CreateActivityPage() {
                             ) : (
                                 <>
                                     {questions.map(q => (
-                                            <QuestionDisplay
-                                                key={q.uid}
-                                                question={q}
-                                                isActive={isQuestionSelected(q.uid)}
-                                                isOpen={openUid === q.uid}
-                                                onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
-                                                timerStatus="stop"
-                                                disabled={false}
-                                                showControls={false}
-                                                className=""
-                                                showMeta={true}
-                                                showCheckbox={true}
-                                                checked={isQuestionSelected(q.uid)}
-                                                onCheckboxChange={(checked) => {
-                                                    if (checked) {
-                                                        addToCart(q);
-                                                    } else {
-                                                        removeFromCart(q.uid);
-                                                    }
-                                                }}
-                                            />
-                                        ))}
+                                        <QuestionDisplay
+                                            key={q.uid}
+                                            question={q}
+                                            isActive={isQuestionSelected(q.uid)}
+                                            isOpen={openUid === q.uid}
+                                            onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
+                                            timerStatus="stop"
+                                            disabled={false}
+                                            showControls={false}
+                                            className=""
+                                            showMeta={true}
+                                            showCheckbox={true}
+                                            checked={isQuestionSelected(q.uid)}
+                                            onCheckboxChange={(checked) => {
+                                                if (checked) {
+                                                    addToCart(q);
+                                                } else {
+                                                    removeFromCart(q.uid);
+                                                }
+                                            }}
+                                        />
+                                    ))}
                                     {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
                                 </>
                             )}
