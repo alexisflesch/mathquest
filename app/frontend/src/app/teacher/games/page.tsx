@@ -862,7 +862,7 @@ export default function TeacherGamesPage() {
                         </div>
                         <h3 className="text-xl font-semibold text-foreground mb-2">Aucune activité créée</h3>
                         <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                            Commencez par créer votre première activité pour engager vos élèves dans l'apprentissage des mathématiques.
+                            Commencez par créer votre première activité pour engager vos élèves dans l&apos;apprentissage des mathématiques.
                         </p>
                     </div>
                 )}
@@ -894,8 +894,8 @@ export default function TeacherGamesPage() {
                     isOpen={deleteModal.isOpen}
                     title="Supprimer l'activité"
                     message={deleteModal.forceDelete
-                        ? `Il existe des sessions de jeu liées à "${deleteModal.templateName}". Voulez-vous supprimer l'activité ET toutes ses sessions ? Cette action est irréversible.`
-                        : `Êtes-vous sûr de vouloir supprimer "${deleteModal.templateName}" ? Cette action est irréversible.`
+                        ? `Il existe des sessions de jeu liées à &quot;${deleteModal.templateName}&quot;. Voulez-vous supprimer l&apos;activité ET toutes ses sessions ? Cette action est irréversible.`
+                        : `Êtes-vous sûr de vouloir supprimer &quot;${deleteModal.templateName}&quot; ? Cette action est irréversible.`
                     }
                     confirmText={deleteModal.forceDelete ? "Supprimer tout" : "Supprimer"}
                     cancelText="Annuler"

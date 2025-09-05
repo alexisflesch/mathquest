@@ -4,7 +4,11 @@ import withPWA from '@ducanh2912/next-pwa';
 
 const isLightBuild = process.env.LIGHT_BUILD === '1';
 const nextConfig: NextConfig = {
-    eslint: isLightBuild ? { ignoreDuringBuilds: true } : { dirs: ['.'] },
+    eslint: isLightBuild ? { ignoreDuringBuilds: true } : { 
+        dirs: ['.'],
+        // Only show errors, not warnings during build
+        ignoreDuringBuilds: false
+    },
     typescript: isLightBuild ? { ignoreBuildErrors: true } : {},
     // // Set default port to 3008
     // devServer: {
@@ -27,6 +31,6 @@ const nextConfig: NextConfig = {
 
 export default withPWA({
     dest: 'public',
-    disable: true, // Temporarily disable PWA to fix the service worker issue
-    register: false,
+    disable: process.env.NODE_ENV === 'development',
+    register: true,
 })(nextConfig);

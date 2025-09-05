@@ -306,6 +306,7 @@ export default function LiveGamePage() {
             const t = setTimeout(() => setSnackbarOpen(false), 2000);
             return () => clearTimeout(t);
         }
+        return () => {}; // Return empty cleanup function when snackbarOpen is false
     }, [snackbarOpen]);
 
     // 🚨 IMPORTANT: Returns must come *after* hooks
