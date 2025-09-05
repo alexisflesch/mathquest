@@ -157,6 +157,7 @@ export default function CreateActivityPage() {
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const listRef = useRef<HTMLDivElement>(null);
+    const mobileListRef = useRef<HTMLDivElement>(null);
     const [tagSearch, setTagSearch] = useState('');
     const [showMobileCart, setShowMobileCart] = useState(false);
 
@@ -314,6 +315,17 @@ export default function CreateActivityPage() {
             const data = await makeApiRequest<QuestionsResponse>(url, undefined, undefined, QuestionsResponseSchema);
 
             const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as any[];
+            const paginationMeta = Array.isArray(data) ? null : data;
+
+            logger.debug('[fetchQuestions Debug]', {
+                reset,
+                currentOffset: reset ? 0 : offset,
+                apiResponseLength: newQuestionsFromApi.length,
+                batchSize: BATCH_SIZE,
+                willHaveMore: newQuestionsFromApi.length === BATCH_SIZE,
+                paginationMeta,
+                url: url
+            });
 
             const transformedQuestions: Question[] = newQuestionsFromApi
                 .filter((q: any) => {
@@ -375,16 +387,32 @@ export default function CreateActivityPage() {
 
             if (reset) {
                 setQuestions(transformedQuestions);
-                setOffset(transformedQuestions.length); // Next offset starts after these questions
+                setOffset(newQuestionsFromApi.length); // Use raw API response length for correct offset
             } else {
                 setQuestions(prev => {
                     const existingUids = new Set(prev.map(pq => pq.uid));
                     const filteredNew = transformedQuestions.filter(nq => !existingUids.has(nq.uid));
                     return [...prev, ...filteredNew];
                 });
-                setOffset(prevOffset => prevOffset + transformedQuestions.length); // Increment offset by number of new questions fetched
+                setOffset(prevOffset => prevOffset + newQuestionsFromApi.length); // Use raw API response length for correct offset
             }
-            setHasMore(transformedQuestions.length === BATCH_SIZE);
+
+            // Use pagination metadata if available, otherwise fall back to length comparison
+            if (paginationMeta && typeof paginationMeta.page === 'number' && typeof paginationMeta.totalPages === 'number') {
+                setHasMore(paginationMeta.page < paginationMeta.totalPages);
+                logger.debug('[fetchQuestions] Using pagination metadata:', {
+                    currentPage: paginationMeta.page,
+                    totalPages: paginationMeta.totalPages,
+                    hasMore: paginationMeta.page < paginationMeta.totalPages
+                });
+            } else {
+                setHasMore(newQuestionsFromApi.length === BATCH_SIZE); // Fallback to length comparison
+                logger.debug('[fetchQuestions] Using length comparison fallback:', {
+                    responseLength: newQuestionsFromApi.length,
+                    batchSize: BATCH_SIZE,
+                    hasMore: newQuestionsFromApi.length === BATCH_SIZE
+                });
+            }
             setLoadingQuestions(false);
             setLoadingMore(false);
         } catch (error) {
@@ -392,7 +420,7 @@ export default function CreateActivityPage() {
             setLoadingQuestions(false);
             setLoadingMore(false);
         }
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors, offset, loadingQuestions, loadingMore]); // Added offset to dependencies
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors, offset]); // Removed loadingQuestions and loadingMore from dependencies
 
     // Helper functions for cart management
     const addToCart = (question: Question) => {
@@ -443,17 +471,110 @@ export default function CreateActivityPage() {
     }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]); // Dependencies that trigger a full reset
 
     useEffect(() => {
+        let lastScrollTime = 0;
+        const THROTTLE_MS = 100; // Throttle scroll events
+
         const handleScroll = () => {
-            const el = listRef.current;
-            if (!el || loadingQuestions || loadingMore || !hasMore) return;
-            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
+            const now = Date.now();
+            if (now - lastScrollTime < THROTTLE_MS) {
+                return; // Throttle rapid scroll events
+            }
+            lastScrollTime = now;
+
+            // Get the visible scroll container (desktop or mobile)
+            const desktopEl = listRef.current;
+            const mobileEl = mobileListRef.current;
+
+            // Check which element is actually visible by checking if it has dimensions
+            let el: HTMLDivElement | null = null;
+            let layout = '';
+
+            if (desktopEl && desktopEl.offsetParent !== null) {
+                // Desktop element is visible (offsetParent is null when display:none)
+                el = desktopEl;
+                layout = 'desktop';
+            } else if (mobileEl && mobileEl.offsetParent !== null) {
+                // Mobile element is visible
+                el = mobileEl;
+                layout = 'mobile';
+            }
+
+            if (!el) {
+                return; // No visible element
+            }
+
+            // Minimal logging for infinite scroll
+            logger.debug('[Infinite Scroll] Scroll event fired:', {
+                scrollTop: el.scrollTop,
+                layout: layout
+            });
+
+            const debugInfo = {
+                hasElement: !!el,
+                loadingQuestions,
+                loadingMore,
+                hasMore,
+                scrollTop: el.scrollTop,
+                clientHeight: el.clientHeight,
+                scrollHeight: el.scrollHeight,
+                threshold: el.scrollHeight - 150,
+                shouldLoad: el.scrollTop + el.clientHeight >= el.scrollHeight - 150
+            };
+
+            // Only log detailed info if we're near the bottom
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 250) {
+                logger.debug('[Infinite Scroll] Near bottom:', debugInfo);
+            }
+
+            if (loadingQuestions || loadingMore || !hasMore) {
+                return; // Skip logging when blocked
+            }
+
+            // Only trigger if there's actually scrollable content
+            if (el.scrollHeight <= el.clientHeight) {
+                return; // Skip logging when no scrollable content
+            }
+
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 150) {
+                logger.info('[Infinite Scroll] Triggering load more');
                 setLoadingMore(true);
                 fetchQuestions(false); // Fetch more, don't reset
             }
         };
-        const el = listRef.current;
-        if (el) el.addEventListener('scroll', handleScroll);
-        return () => { if (el) el.removeEventListener('scroll', handleScroll); };
+
+        // Get the visible scroll container (desktop or mobile) for listener attachment
+        const desktopEl = listRef.current;
+        const mobileEl = mobileListRef.current;
+
+        // Check which element is actually visible by checking if it has dimensions
+        let el: HTMLDivElement | null = null;
+        let layout = '';
+
+        if (desktopEl && desktopEl.offsetParent !== null) {
+            // Desktop element is visible (offsetParent is null when display:none)
+            el = desktopEl;
+            layout = 'desktop';
+        } else if (mobileEl && mobileEl.offsetParent !== null) {
+            // Mobile element is visible
+            el = mobileEl;
+            layout = 'mobile';
+        }
+
+        if (el) {
+            logger.debug('[Infinite Scroll] Adding scroll listener:', {
+                layout: layout,
+                isScrollable: el.scrollHeight > el.clientHeight
+            });
+            el.addEventListener('scroll', handleScroll);
+        } else {
+            logger.warn('[Infinite Scroll] No visible element found');
+        }
+
+        return () => {
+            if (el) {
+                el.removeEventListener('scroll', handleScroll);
+            }
+        };
     }, [fetchQuestions, loadingQuestions, loadingMore, hasMore]);
 
     const handleSaveActivity = async () => {
@@ -631,7 +752,9 @@ export default function CreateActivityPage() {
                             )}
                         </div>
                         <div className="question-list-simple flex-1 flex flex-col min-h-0 w-full overflow-x-hidden">
-                            <div className="overflow-y-auto flex-1" ref={listRef}>
+                            <div className="overflow-y-auto flex-1"
+                                style={{ maxHeight: '70vh' }}
+                                ref={listRef}>
                                 {loadingQuestions && questions.length === 0 ? (
                                     <div className="text-center text-[color:var(--muted-foreground)] text-lg py-8">
                                         Chargement des questions…
@@ -758,7 +881,9 @@ export default function CreateActivityPage() {
                         )}
                     </div>
                     <div className="question-list-simple flex-1 flex flex-col min-h-0 overflow-hidden">
-                        <div className="overflow-y-auto flex-1">
+                        <div className="overflow-y-auto flex-1"
+                            style={{ maxHeight: '70vh' }}
+                            ref={mobileListRef}>
                             {loadingQuestions && questions.length === 0 ? (
                                 <div className="text-center text-[color:var(--muted-foreground)] py-8">Chargement des questions…</div>
                             ) : questions.length === 0 ? (
