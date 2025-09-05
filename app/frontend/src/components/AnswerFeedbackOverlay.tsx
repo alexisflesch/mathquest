@@ -77,6 +77,7 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
     return (
         <div
             className="feedback-overlay"
+            data-testid="feedback-overlay"
             role="dialog"
             aria-live="polite"
             onClick={mode === 'practice' ? handleClose : undefined} // Allow clicking anywhere in practice mode
@@ -131,7 +132,7 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
                     )}
 
                     <MathJaxWrapper>
-                        <p className="feedback-text mb-3 p-2">{explanation}</p>
+                        <p className="feedback-text mb-3 p-2" data-testid="feedback-explanation">{explanation}</p>
                     </MathJaxWrapper>
                 </div>
             </div>

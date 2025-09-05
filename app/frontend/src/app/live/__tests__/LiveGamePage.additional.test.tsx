@@ -260,6 +260,50 @@ describe('LiveGamePage - Additional Coverage Tests', () => {
                 4,
                 expect.any(Number)
             );
+
+            // Input should still show the submitted value (not cleared)
+            expect(input).toHaveValue(4);
+        });
+
+        test('numeric input persists after successful submission', () => {
+            const numericQuestion = {
+                uid: 'numeric-question-1',
+                text: 'Enter a number:',
+                questionType: QUESTION_TYPES.NUMERIC
+            };
+
+            (useStudentGameSocket as jest.Mock).mockReturnValue({
+                ...defaultSocketHook,
+                connected: true,
+                gameState: {
+                    ...defaultGameState,
+                    currentQuestion: numericQuestion,
+                    gameStatus: 'active',
+                    connectedToRoom: true
+                }
+            });
+
+            render(<LiveGamePage />);
+
+            const input = screen.getByTestId('numeric-answer-input');
+            const submitButton = screen.getByTestId('numeric-submit-button');
+
+            // Enter numeric answer
+            fireEvent.change(input, { target: { value: '123' } });
+            expect(input).toHaveValue(123);
+
+            // Submit answer
+            fireEvent.click(submitButton);
+
+            // After submission, input should still contain the submitted value
+            expect(input).toHaveValue(123);
+            
+            // Verify submitAnswer was called
+            expect(mockSubmitAnswer).toHaveBeenCalledWith(
+                'numeric-question-1',
+                123,
+                expect.any(Number)
+            );
         });
 
         test('validates numeric answers', () => {

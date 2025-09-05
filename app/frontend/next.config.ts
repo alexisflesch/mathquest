@@ -27,29 +27,6 @@ const nextConfig: NextConfig = {
 
 export default withPWA({
     dest: 'public',
-    disable: process.env.NODE_ENV === 'development',
-    register: true,
-    workboxOptions: {
-        maximumFileSizeToCacheInBytes: 5000000, // 5MB instead of default 2MB
-        runtimeCaching: [
-            {
-                urlPattern: /^https:\/\/fonts\.googleapis\.com/,
-                handler: 'StaleWhileRevalidate',
-                options: {
-                    cacheName: 'google-fonts-stylesheets',
-                },
-            },
-            {
-                urlPattern: /^https:\/\/fonts\.gstatic\.com/,
-                handler: 'CacheFirst',
-                options: {
-                    cacheName: 'google-fonts-webfonts',
-                    expiration: {
-                        maxEntries: 30,
-                        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-                    },
-                },
-            },
-        ],
-    },
+    disable: true, // Temporarily disable PWA to fix the service worker issue
+    register: false,
 })(nextConfig);
