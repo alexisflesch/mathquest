@@ -510,7 +510,7 @@ export default function CreateActivityPage() {
                 scrollTop: el.scrollTop,
                 layout: layout
             });
-            
+
             const debugInfo = {
                 hasElement: !!el,
                 loadingQuestions,
