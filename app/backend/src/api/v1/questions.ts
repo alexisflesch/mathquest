@@ -78,7 +78,7 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), 
  */
 router.get('/filters', async (req: Request, res: Response<any>): Promise<void> => {
     try {
-        const { gradeLevel, discipline, theme, author, mode } = req.query;
+        const { gradeLevel, discipline, theme, tag, mode } = req.query;
         const filterCriteria: any = {};
         if (gradeLevel) {
             filterCriteria.gradeLevel = Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel as string];
@@ -89,8 +89,8 @@ router.get('/filters', async (req: Request, res: Response<any>): Promise<void> =
         if (theme) {
             filterCriteria.theme = Array.isArray(theme) ? theme : [theme as string];
         }
-        if (author) {
-            filterCriteria.author = Array.isArray(author) ? author : [author as string];
+        if (tag) {
+            filterCriteria.tag = Array.isArray(tag) ? tag : [tag as string];
         }
         if (mode) {
             filterCriteria.mode = mode as string;
@@ -101,7 +101,7 @@ router.get('/filters', async (req: Request, res: Response<any>): Promise<void> =
             gradeLevel: (compatibleFilters.gradeLevel || []).filter((v: any) => typeof v === 'string'),
             disciplines: (compatibleFilters.disciplines || []).filter((v: any) => typeof v === 'string'),
             themes: (compatibleFilters.themes || []).filter((v: any) => typeof v === 'string'),
-            authors: (compatibleFilters.authors || []).filter((v: any) => typeof v === 'string'),
+            tags: (compatibleFilters.tags || []).filter((v: any) => typeof v === 'string'),
         });
     } catch (error) {
         logger.error({ error }, 'Error fetching filters');
@@ -189,13 +189,14 @@ router.get('/:uid', optionalAuth, async (req: Request, res: Response<{ question:
  */
 router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any[], total: number, page: number, pageSize: number, totalPages: number } | ErrorResponse>): Promise<void> => {
     try {
+        logger.info('Starting questions endpoint request');
         const {
             discipline,
             theme,  // Frontend sends 'theme', not 'themes'
             themes,
             level,  // Frontend sends 'level', not 'gradeLevel'
             gradeLevel,
-            author, // Frontend sends 'author'
+            tag, // Frontend sends 'tag'
             difficulty,
             tags,
             questionType,
@@ -206,6 +207,8 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
             limit, // Frontend uses 'limit' instead of 'pageSize'
             offset // Frontend uses 'offset' for pagination
         } = req.query;
+
+        logger.info('Extracted query parameters', { discipline, theme, themes, level, gradeLevel, tag, difficulty, tags, questionType, includeHidden, mode, page, pageSize, limit, offset });
 
         // Convert to appropriate types
         const filters: any = {};
@@ -242,19 +245,14 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
             }
         }
 
-        if (author) {
-            // Handle both single values and arrays (consistent with filters endpoint)
-            if (Array.isArray(author)) {
-                filters.authors = author as string[];
-            } else {
-                filters.author = author as string;
+        // Handle tags from both 'tag' and 'tags' parameters
+        const tagParam = tag || tags;
+        if (tagParam) {
+            if (Array.isArray(tagParam)) {
+                filters.tags = tagParam as string[];
+            } else if (typeof tagParam === 'string') {
+                filters.tags = tagParam.split(',').map(t => t.trim()).filter(t => t.length > 0);
             }
-        }
-
-        if (tags) {
-            filters.tags = Array.isArray(tags)
-                ? tags as string[]
-                : (tags as string).split(',').map(t => t.trim()).filter(t => t.length > 0);
         }
 
         if (questionType) filters.questionType = questionType as string;
@@ -295,9 +293,12 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
             };
         }
 
+        logger.info('About to call getQuestionService().getQuestions', { filters, pagination });
         const result = await getQuestionService().getQuestions(filters, pagination);
 
         // Debug logging
+        logger.info(`Filters used: ${JSON.stringify(filters)}`);
+        logger.info(`Pagination used: ${JSON.stringify(pagination)}`);
         logger.info(`Returning ${result.questions.length} questions for API request`);
         if (result.questions.length > 0) {
             logger.info(`First question sample: ${JSON.stringify(result.questions[0], null, 2)}`);
@@ -305,7 +306,7 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
 
         res.status(200).json(result);
     } catch (error) {
-        logger.error({ error }, 'Error fetching questions');
+        logger.error({ error: error instanceof Error ? { message: error.message, stack: error.stack } : error }, 'Error fetching questions');
         res.status(500).json({ error: 'An error occurred while fetching questions' });
     }
 });

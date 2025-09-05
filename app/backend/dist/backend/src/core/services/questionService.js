@@ -69,6 +69,9 @@ class QuestionService {
      */
     async getQuestions(filters = {}, pagination = {}) {
         try {
+            logger.info({ filters, pagination }, 'Starting getQuestions with filters and pagination');
+            logger.info(`getQuestions called with filters: ${JSON.stringify(filters)}`);
+            logger.info(`getQuestions called with pagination: ${JSON.stringify(pagination)}`);
             const { discipline, disciplines, themes, difficulty, gradeLevel, gradeLevels, author, authors, tags, questionType, includeHidden = false, mode } = filters;
             const { skip = 0, take = 20 } = pagination;
             // Build the where clause with AND logic between filter types, OR within each filter type
@@ -158,7 +161,11 @@ class QuestionService {
             };
         }
         catch (error) {
-            logger.error({ error }, 'Error fetching questions');
+            logger.error({
+                error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+                filters,
+                pagination
+            }, 'Error fetching questions');
             throw error;
         }
     }
@@ -358,7 +365,17 @@ class QuestionService {
                 themesWhere.author = authorFilter;
                 authorsWhere.author = authorFilter;
             }
-            const [niveaux, disciplines, themes, authors] = await Promise.all([
+            if (filterCriteria?.tag) {
+                // When tag(s) is selected: use array contains logic
+                const tagFilter = Array.isArray(filterCriteria.tag)
+                    ? { hasSome: filterCriteria.tag }
+                    : { has: filterCriteria.tag };
+                niveauxWhere.tags = tagFilter;
+                disciplinesWhere.tags = tagFilter;
+                themesWhere.tags = tagFilter;
+                authorsWhere.tags = tagFilter;
+            }
+            const [niveaux, disciplines, themes, authors, tagsData] = await Promise.all([
                 prisma_1.prisma.question.findMany({
                     select: { gradeLevel: true },
                     distinct: ['gradeLevel'],
@@ -392,6 +409,13 @@ class QuestionService {
                             { author: { not: '' } }
                         ]
                     }
+                }),
+                prisma_1.prisma.question.findMany({
+                    select: { tags: true },
+                    where: {
+                        ...authorsWhere, // Using authorsWhere as the base filter criteria for tags
+                        tags: { isEmpty: false }
+                    }
                 })
             ]);
             // Extract unique themes from all questions
@@ -401,11 +425,19 @@ class QuestionService {
                     q.themes.forEach(theme => uniqueThemes.add(theme));
                 }
             });
+            // Extract unique tags from all questions
+            const uniqueTags = new Set();
+            tagsData.forEach(q => {
+                if (Array.isArray(q.tags)) {
+                    q.tags.forEach(tag => uniqueTags.add(tag));
+                }
+            });
             return {
                 gradeLevel: niveaux.map(n => n.gradeLevel).filter((v) => Boolean(v)).sort(),
                 disciplines: disciplines.map(d => d.discipline).filter((v) => Boolean(v)).sort(),
                 themes: Array.from(uniqueThemes).sort(),
-                authors: authors.map(a => a.author).filter((v) => Boolean(v)).sort()
+                authors: authors.map(a => a.author).filter((v) => Boolean(v)).sort(),
+                tags: Array.from(uniqueTags).sort()
             };
         }
         catch (error) {

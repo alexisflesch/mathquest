@@ -9,7 +9,6 @@ import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import EnhancedMultiSelectDropdown from '@/components/EnhancedMultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
-import { Search } from 'lucide-react';
 import { QuestionsResponseSchema, GameCreationResponseSchema, type QuestionsResponse, type GameCreationResponse } from '@/types/api';
 import { type FilterOption, type EnhancedFilters, type EnhancedFiltersResponse } from '@/types/enhancedFilters';
 import {
@@ -126,7 +125,7 @@ export default function CreateActivityPage() {
         levels: [],
         disciplines: [],
         themes: [],
-        authors: []
+        tags: []
     });
 
     // Calculate total time of selected questions
@@ -148,7 +147,7 @@ export default function CreateActivityPage() {
     const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
-    const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [openUid, setOpenUid] = useState<string | null>(null);
@@ -158,7 +157,6 @@ export default function CreateActivityPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const listRef = useRef<HTMLDivElement>(null);
     const mobileListRef = useRef<HTMLDivElement>(null);
-    const [tagSearch, setTagSearch] = useState('');
     const [showMobileCart, setShowMobileCart] = useState(false);
 
     // Drag and drop sensors
@@ -176,7 +174,7 @@ export default function CreateActivityPage() {
             selectedLevels.forEach(level => params.append('gradeLevel', level));
             selectedDisciplines.forEach(discipline => params.append('discipline', discipline));
             selectedThemes.forEach(theme => params.append('theme', theme));
-            selectedAuthors.forEach(author => params.append('author', author));
+            selectedTags.forEach(tag => params.append('tag', tag));
 
             const url = `questions/filters?${params.toString()}`;
 
@@ -267,7 +265,7 @@ export default function CreateActivityPage() {
                 levels: processGradeLevelOptions(data.gradeLevel || [], selectedLevels),
                 disciplines: processFilterOptions(data.disciplines || [], selectedDisciplines),
                 themes: processFilterOptions(data.themes || [], selectedThemes),
-                authors: processFilterOptions(data.authors || [], selectedAuthors)
+                tags: processFilterOptions(data.tags || [], selectedTags)
             };
 
             // Debug: Log the processed levels to check for duplicates
@@ -281,12 +279,12 @@ export default function CreateActivityPage() {
         } catch (error) {
             logger.error('Error fetching dynamic filters:', error);
         }
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]);
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags]);
 
     // Fetch filters whenever selections change
     useEffect(() => {
         fetchFilters();
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]);
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags]);
 
     const fetchQuestions = useCallback(async (reset = false) => {
         if (loadingQuestions || loadingMore) return;
@@ -303,7 +301,7 @@ export default function CreateActivityPage() {
             selectedLevels.forEach(level => params.append('gradeLevel', level));
             selectedDisciplines.forEach(discipline => params.append('discipline', discipline));
             selectedThemes.forEach(theme => params.append('theme', theme));
-            selectedAuthors.forEach(author => params.append('author', author));
+            selectedTags.forEach(tag => params.append('tag', tag));
 
             // Add pagination and other parameters
             params.append('limit', BATCH_SIZE.toString());
@@ -420,7 +418,7 @@ export default function CreateActivityPage() {
             setLoadingQuestions(false);
             setLoadingMore(false);
         }
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors, offset]); // Removed loadingQuestions and loadingMore from dependencies
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags, offset]); // Removed loadingQuestions and loadingMore from dependencies
 
     // Helper functions for cart management
     const addToCart = (question: Question) => {
@@ -468,7 +466,7 @@ export default function CreateActivityPage() {
         setHasMore(true); // Assume there's more data
         fetchQuestions(true); // Fetch with reset
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]); // Dependencies that trigger a full reset
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags]); // Dependencies that trigger a full reset
 
     useEffect(() => {
         let lastScrollTime = 0;
@@ -700,8 +698,8 @@ export default function CreateActivityPage() {
             {/* Content */}
             <div className="mx-auto w-full px-2 sm:px-4 md:px-6 lg:px-8 py-6 flex-1 flex flex-col min-h-0 overflow-x-hidden">
                 {/* Filters Row */}
-                <div className="flex flex-col xl:flex-row gap-4 mb-6 flex-shrink-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row gap-4 xl:flex-1">
+                <div className="flex flex-col xl:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6 flex-shrink-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row gap-2 sm:gap-4 xl:flex-1">
                         <EnhancedMultiSelectDropdown
                             options={filters.levels || []}
                             selected={selectedLevels}
@@ -721,22 +719,10 @@ export default function CreateActivityPage() {
                             placeholder="Thèmes"
                         />
                         <EnhancedMultiSelectDropdown
-                            options={filters.authors || []}
-                            selected={selectedAuthors}
-                            onChange={setSelectedAuthors}
-                            placeholder="Auteurs"
-                        />
-                    </div>
-                    <div className="relative flex-1 xl:max-w-md">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={16} className="text-gray-500" />
-                        </div>
-                        <input
-                            className="px-3 py-2 w-full pl-10 text-sm placeholder-gray-500 focus:outline-none focus:ring-0 transition-colors"
-                            type="text"
-                            placeholder="Rechercher par tag, thème, niveau, discipline..."
-                            value={tagSearch}
-                            onChange={e => setTagSearch(e.target.value)}
+                            options={filters.tags || []}
+                            selected={selectedTags}
+                            onChange={setSelectedTags}
+                            placeholder="Tags"
                         />
                     </div>
                 </div>
@@ -763,21 +749,7 @@ export default function CreateActivityPage() {
                                     <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
                                 ) : (
                                     <>
-                                        {questions
-                                            .filter((q) => {
-                                                if (!tagSearch.trim()) return true;
-                                                const search = tagSearch.trim().toLowerCase();
-                                                const tags = [
-                                                    ...(q.tags || []),
-                                                    q.themes,
-                                                    q.gradeLevel,
-                                                    q.discipline,
-                                                    q.title,
-                                                    q.text
-                                                ].filter(Boolean).map(String).map(s => s.toLowerCase());
-                                                return tags.some(t => t.includes(search));
-                                            })
-                                            .map(q => (
+                                        {questions.map(q => (
                                                 <QuestionDisplay
                                                     key={q.uid}
                                                     question={q}
@@ -873,7 +845,7 @@ export default function CreateActivityPage() {
                 </div>
 
                 {/* Mobile Layout */}
-                <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden" style={{ minHeight: 200 }}>
+                <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
                     <div className="flex items-center gap-3 mb-4 flex-shrink-0">
                         <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Liste des questions</h2>
                         {loadingQuestions && (
@@ -882,7 +854,7 @@ export default function CreateActivityPage() {
                     </div>
                     <div className="question-list-simple flex-1 flex flex-col min-h-0 overflow-hidden">
                         <div className="overflow-y-auto flex-1"
-                            style={{ maxHeight: '70vh' }}
+                            style={{ minHeight: '60vh', maxHeight: '75vh' }}
                             ref={mobileListRef}>
                             {loadingQuestions && questions.length === 0 ? (
                                 <div className="text-center text-[color:var(--muted-foreground)] py-8">Chargement des questions…</div>
@@ -890,21 +862,7 @@ export default function CreateActivityPage() {
                                 <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
                             ) : (
                                 <>
-                                    {questions
-                                        .filter((q) => {
-                                            if (!tagSearch.trim()) return true;
-                                            const search = tagSearch.trim().toLowerCase();
-                                            const tags = [
-                                                ...(q.tags || []),
-                                                q.themes,
-                                                q.gradeLevel,
-                                                q.discipline,
-                                                q.title,
-                                                q.text
-                                            ].filter(Boolean).map(String).map(s => s.toLowerCase());
-                                            return tags.some(t => t.includes(search));
-                                        })
-                                        .map(q => (
+                                    {questions.map(q => (
                                             <QuestionDisplay
                                                 key={q.uid}
                                                 question={q}
@@ -956,7 +914,10 @@ export default function CreateActivityPage() {
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <ShoppingCart size={20} className="text-[color:var(--foreground)]" />
-                                    <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Panier de l&apos;activité</h2>
+                                    <h2 className="text-xl font-semibold text-[color:var(--foreground)]">
+                                        Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'}
+                                        {selectedQuestions.length > 0 && ` - ${calculateTotalTime(selectedQuestions)}`})
+                                    </h2>
                                 </div>
                                 <button
                                     onClick={() => setShowMobileCart(false)}

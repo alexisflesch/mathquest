@@ -96,6 +96,10 @@ export class QuestionService {
         take?: number;
     } = {}) {
         try {
+            logger.info({ filters, pagination }, 'Starting getQuestions with filters and pagination');
+            logger.info(`getQuestions called with filters: ${JSON.stringify(filters)}`);
+            logger.info(`getQuestions called with pagination: ${JSON.stringify(pagination)}`);
+            
             const {
                 discipline,
                 disciplines,
@@ -205,7 +209,11 @@ export class QuestionService {
                 totalPages: Math.ceil(total / take)
             };
         } catch (error) {
-            logger.error({ error }, 'Error fetching questions');
+            logger.error({ 
+                error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+                filters,
+                pagination 
+            }, 'Error fetching questions');
             throw error;
         }
     }
@@ -424,7 +432,19 @@ export class QuestionService {
                 authorsWhere.author = authorFilter;
             }
 
-            const [niveaux, disciplines, themes, authors] = await Promise.all([
+            if (filterCriteria?.tag) {
+                // When tag(s) is selected: use array contains logic
+                const tagFilter = Array.isArray(filterCriteria.tag)
+                    ? { hasSome: filterCriteria.tag }
+                    : { has: filterCriteria.tag };
+
+                niveauxWhere.tags = tagFilter;
+                disciplinesWhere.tags = tagFilter;
+                themesWhere.tags = tagFilter;
+                authorsWhere.tags = tagFilter;
+            }
+
+            const [niveaux, disciplines, themes, authors, tagsData] = await Promise.all([
                 prisma.question.findMany({
                     select: { gradeLevel: true },
                     distinct: ['gradeLevel'],
@@ -458,6 +478,13 @@ export class QuestionService {
                             { author: { not: '' } }
                         ]
                     }
+                }),
+                prisma.question.findMany({
+                    select: { tags: true },
+                    where: {
+                        ...authorsWhere, // Using authorsWhere as the base filter criteria for tags
+                        tags: { isEmpty: false }
+                    }
                 })
             ]);
 
@@ -469,11 +496,20 @@ export class QuestionService {
                 }
             });
 
+            // Extract unique tags from all questions
+            const uniqueTags = new Set<string>();
+            tagsData.forEach(q => {
+                if (Array.isArray(q.tags)) {
+                    q.tags.forEach(tag => uniqueTags.add(tag));
+                }
+            });
+
             return {
                 gradeLevel: niveaux.map(n => n.gradeLevel).filter((v): v is string => Boolean(v)).sort(),
                 disciplines: disciplines.map(d => d.discipline).filter((v): v is string => Boolean(v)).sort(),
                 themes: Array.from(uniqueThemes).sort(),
-                authors: authors.map(a => a.author).filter((v): v is string => Boolean(v)).sort()
+                authors: authors.map(a => a.author).filter((v): v is string => Boolean(v)).sort(),
+                tags: Array.from(uniqueTags).sort()
             };
         } catch (error) {
             logger.error({ error }, 'Error fetching available filters');
