@@ -135,10 +135,10 @@ export default function CreateActivityPage() {
             const questionTime = question.customTime ?? (typeof question.durationMs === 'number' ? Math.round(question.durationMs / 1000) : 30);
             return total + questionTime;
         }, 0);
-        
+
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
-        
+
         if (minutes > 0) {
             return seconds > 0 ? `${minutes}m${seconds.toString().padStart(2, '0')}s` : `${minutes}m`;
         } else {
