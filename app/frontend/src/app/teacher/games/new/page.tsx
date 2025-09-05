@@ -386,6 +386,7 @@ export default function CreateActivityPage() {
             if (reset) {
                 setQuestions(transformedQuestions);
                 setOffset(newQuestionsFromApi.length); // Use raw API response length for correct offset
+                setOpenUid(null); // Clear any expanded question when resetting the list
             } else {
                 setQuestions(prev => {
                     const existingUids = new Set(prev.map(pq => pq.uid));
@@ -501,12 +502,15 @@ export default function CreateActivityPage() {
                 return; // No visible element
             }
 
+            // Increased threshold for mobile to account for padding and card structure
+            const threshold = layout === 'mobile' ? 200 : 150;
+
             // Minimal logging for infinite scroll
             logger.debug('[Infinite Scroll] Scroll event fired:', {
                 scrollTop: el.scrollTop,
                 layout: layout
             });
-
+            
             const debugInfo = {
                 hasElement: !!el,
                 loadingQuestions,
@@ -515,8 +519,9 @@ export default function CreateActivityPage() {
                 scrollTop: el.scrollTop,
                 clientHeight: el.clientHeight,
                 scrollHeight: el.scrollHeight,
-                threshold: el.scrollHeight - 150,
-                shouldLoad: el.scrollTop + el.clientHeight >= el.scrollHeight - 150
+                threshold: el.scrollHeight - threshold,
+                shouldLoad: el.scrollTop + el.clientHeight >= el.scrollHeight - threshold,
+                layout
             };
 
             // Only log detailed info if we're near the bottom
@@ -533,7 +538,7 @@ export default function CreateActivityPage() {
                 return; // Skip logging when no scrollable content
             }
 
-            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 150) {
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) {
                 logger.info('[Infinite Scroll] Triggering load more');
                 setLoadingMore(true);
                 fetchQuestions(false); // Fetch more, don't reset
@@ -852,9 +857,8 @@ export default function CreateActivityPage() {
                             <InfinitySpin size={24} />
                         )}
                     </div>
-                    <div className="question-list-simple flex-1 flex flex-col min-h-0 overflow-hidden">
-                        <div className="overflow-y-auto flex-1"
-                            style={{ minHeight: '60vh', maxHeight: '75vh' }}
+                    <div className="question-list-simple flex-1 bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg min-h-0 overflow-hidden">
+                        <div className="overflow-y-auto h-full p-4"
                             ref={mobileListRef}>
                             {loadingQuestions && questions.length === 0 ? (
                                 <div className="text-center text-[color:var(--muted-foreground)] py-8">Chargement des questions…</div>
