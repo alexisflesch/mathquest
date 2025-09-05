@@ -420,14 +420,14 @@ function StudentCreateTournamentPageInner() {
                                         style={
                                             numQuestions === n
                                                 ? {
-                                                    background: 'var(--navbar)',
+                                                    background: 'var(--primary)',
                                                     color: 'var(--primary-foreground)',
-                                                    borderColor: 'var(--navbar)'
+                                                    borderColor: 'var(--primary)'
                                                 }
                                                 : {
                                                     background: 'var(--dropdown)',
                                                     color: 'var(--dropdown-foreground)',
-                                                    borderColor: 'var(--navbar)'
+                                                    borderColor: 'var(--primary)'
                                                 }
                                         }
                                         onClick={() => setNumQuestions(n)}
@@ -479,7 +479,7 @@ function StudentCreateTournamentPageInner() {
                                     onClick={handleCreateTournament}
                                     style={{ minWidth: 120 }}
                                 >
-                                    {loading ? 'Création...' : isTraining ? 'Commencer l\'entraînement' : 'Continuer'}
+                                    {loading ? 'Création...' : isTraining ? 'Démarrer' : 'Continuer'}
                                 </button>
                             </div>
                             {/* The tournament code and copy button are no longer shown after creation */}

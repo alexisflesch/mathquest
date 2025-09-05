@@ -128,6 +128,23 @@ export default function CreateActivityPage() {
         themes: [],
         authors: []
     });
+
+    // Calculate total time of selected questions
+    const calculateTotalTime = (questions: CartQuestion[]): string => {
+        const totalSeconds = questions.reduce((total, question) => {
+            const questionTime = question.customTime ?? (typeof question.durationMs === 'number' ? Math.round(question.durationMs / 1000) : 30);
+            return total + questionTime;
+        }, 0);
+        
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        
+        if (minutes > 0) {
+            return seconds > 0 ? `${minutes}m${seconds.toString().padStart(2, '0')}s` : `${minutes}m`;
+        } else {
+            return `${seconds}s`;
+        }
+    };
     const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
@@ -671,7 +688,10 @@ export default function CreateActivityPage() {
                     <div className="flex-[1] flex flex-col min-h-0 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-4 flex-shrink-0">
                             <ShoppingCart size={20} className="text-[color:var(--foreground)] flex-shrink-0" />
-                            <h2 className="text-lg font-semibold text-[color:var(--foreground)] truncate min-w-0">Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'})</h2>
+                            <h2 className="text-lg font-semibold text-[color:var(--foreground)] truncate min-w-0">
+                                Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'}
+                                {selectedQuestions.length > 0 && ` - ${calculateTotalTime(selectedQuestions)}`})
+                            </h2>
                         </div>
 
                         {/* Cart Content - Flexible height */}
