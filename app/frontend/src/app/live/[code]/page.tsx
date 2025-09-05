@@ -95,24 +95,11 @@ export default function LiveGamePage() {
     const username: string | null = userProfile.username ?? null;
     const avatarEmoji = userProfile.avatar;
 
-    // 🐛 DEBUG: Track userProfile state to identify username vs cookieId issues
-    useEffect(() => {
-        logger.info('🐛 [USER_PROFILE_DEBUG] UserProfile state in live page', {
-            userProfile,
-            userId,
-            username,
-            avatarEmoji,
-            cookieId: userProfile.cookieId,
-            marker: '[LIVE_PAGE_USER_DEBUG]'
-        });
-    }, [userProfile, userId, username, avatarEmoji]);
-
     // Enhanced socket hook integration
     const {
         socket,
         gameState,
         connected,
-        connecting,
         error: socketError,
         joinGame,
         submitAnswer,
@@ -129,12 +116,45 @@ export default function LiveGamePage() {
         }
     });
 
+    // Modern timer hook integration (canonical per-question)
+    const timer = useSimpleTimer({
+        accessCode: typeof code === 'string' ? code : '',
+        socket,
+        role: 'student'
+    });
+    // Canonical: get timer state for the current question
+    const currentQuestionUid = gameState.currentQuestion?.uid;
+    const timerState = currentQuestionUid ? timer.getTimerState(currentQuestionUid) : undefined;
+
     // Unified participant state for lobby display
     const [lobbyState, setLobbyState] = useState<LobbyUIState>({
         participants: [],
         creator: null,
         countdown: null
     });
+
+    // Feedback system state
+    const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
+    const [feedbackText, setFeedbackText] = useState<string>("");
+    const [feedbackDuration, setFeedbackDuration] = useState<number>(0);
+
+    // Leaderboard modal state
+    const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+
+    // Local UI state
+    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+    const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+    const [numericAnswer, setNumericAnswer] = useState<string>(''); // State for numeric questions
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState<string>("");
+    const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
+    const [isMobile, setIsMobile] = useState(false);
+    const [startClicked, setStartClicked] = useState(false);
+
+    // 🐛 DEBUG: Track userProfile state to identify username vs cookieId issues
+    useEffect(() => {
+        logger.info('UserProfile state', { userProfile });
+    }, [userProfile]);
 
     // Listen for unified participant events
     useEffect(() => {
@@ -191,36 +211,6 @@ export default function LiveGamePage() {
     if (userState === 'anonymous' || !userProfile.username || !userProfile.avatar) {
         return null;
     }
-
-    // Modern timer hook integration (canonical per-question)
-    const timer = useSimpleTimer({
-        accessCode: typeof code === 'string' ? code : '',
-        socket,
-        role: 'student'
-    });
-    // Canonical: get timer state for the current question
-    const currentQuestionUid = gameState.currentQuestion?.uid;
-    const timerState = currentQuestionUid ? timer.getTimerState(currentQuestionUid) : undefined;
-
-
-    // Local UI state
-    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-    const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
-    const [numericAnswer, setNumericAnswer] = useState<string>(''); // State for numeric questions
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState<string>("");
-    const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
-    const [isMobile, setIsMobile] = useState(false);
-    const [lastErrorTimestamp, setLastErrorTimestamp] = useState<number>(0);
-    const [startClicked, setStartClicked] = useState(false);
-
-    // Feedback system state
-    const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
-    const [feedbackText, setFeedbackText] = useState<string>("");
-    const [feedbackDuration, setFeedbackDuration] = useState<number>(0);
-
-    // Leaderboard modal state
-    const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
 
     // Use stable leaderboard reference to prevent unnecessary re-renders
     const stableLeaderboard = useMemo(() => {
