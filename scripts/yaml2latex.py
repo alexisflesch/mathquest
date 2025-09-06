@@ -282,8 +282,8 @@ def latex_question(q):
             answer = q.get('correctAnswer')
             opts_latex = f"\\textbf{{Réponse attendue}} : {sanitize_latex_smart(str(answer))}"
             # Ajoute un saut de ligne LaTeX avant l'explication si elle existe
-            if explanation:
-                opts_latex += " \\newline "
+            # if explanation:
+            #     opts_latex += " \\newline "
         else:
             opts_latex = "\\textit{Réponse numérique}"
 
@@ -292,7 +292,12 @@ def latex_question(q):
     if explanation:
         # Ensure the explanation starts on its own line in LaTeX output.
         # We prepend a newline command so it doesn't run on the same line as the answer block.
-        fb_latex = f" \\newline \\textbf{{Explication}} ({feedback_wait_time}s) : {sanitize_preserve_emoji(explanation)}"
+        #only for numeric questions
+        fb_latex = f"\\textbf{{Explication}} ({feedback_wait_time}s) : {sanitize_preserve_emoji(explanation)}"
+        if env=='numeric':
+            fb_latex = "\\newline " + fb_latex
+        if temps:
+            fb_latex += f
     elif feedback:
         fb_latex = f"\\textit{{Feedback}} : {feedback}"
         if temps:
