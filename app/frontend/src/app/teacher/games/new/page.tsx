@@ -157,6 +157,7 @@ export default function CreateActivityPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const listRef = useRef<HTMLDivElement>(null);
     const mobileListRef = useRef<HTMLDivElement>(null);
+    const loadTriggerRef = useRef<HTMLDivElement>(null);
     const [showMobileCart, setShowMobileCart] = useState(false);
 
     // Drag and drop sensors
@@ -480,36 +481,41 @@ export default function CreateActivityPage() {
             }
             lastScrollTime = now;
 
-            // Get the visible scroll container (desktop or mobile)
+            // Get the current scroll containers (refs might change)
             const desktopEl = listRef.current;
             const mobileEl = mobileListRef.current;
 
-            // Check which element is actually visible by checking if it has dimensions
+            // Determine which element is visible and should be used for scroll detection
             let el: HTMLDivElement | null = null;
             let layout = '';
 
-            if (desktopEl && desktopEl.offsetParent !== null) {
-                // Desktop element is visible (offsetParent is null when display:none)
-                el = desktopEl;
-                layout = 'desktop';
-            } else if (mobileEl && mobileEl.offsetParent !== null) {
-                // Mobile element is visible
-                el = mobileEl;
-                layout = 'mobile';
+            // In test environments, offsetParent might not work reliably
+            // So we also check if the element exists and has dimensions
+            if (desktopEl) {
+                const isDesktopVisible = desktopEl.offsetParent !== null ||
+                    (desktopEl.clientHeight > 0 && desktopEl.clientWidth > 0);
+                if (isDesktopVisible) {
+                    el = desktopEl;
+                    layout = 'desktop';
+                }
+            }
+
+            if (!el && mobileEl) {
+                const isMobileVisible = mobileEl.offsetParent !== null ||
+                    (mobileEl.clientHeight > 0 && mobileEl.clientWidth > 0);
+                if (isMobileVisible) {
+                    el = mobileEl;
+                    layout = 'mobile';
+                }
             }
 
             if (!el) {
-                return; // No visible element
+                logger.debug('[Infinite Scroll] No visible element found during scroll');
+                return;
             }
 
-            // Increased threshold for mobile to account for padding and card structure
-            const threshold = layout === 'mobile' ? 200 : 150;
-
-            // Minimal logging for infinite scroll
-            logger.debug('[Infinite Scroll] Scroll event fired:', {
-                scrollTop: el.scrollTop,
-                layout: layout
-            });
+            // Use different thresholds for mobile vs desktop
+            const threshold = layout === 'mobile' ? 300 : 150;
 
             const debugInfo = {
                 hasElement: !!el,
@@ -521,23 +527,26 @@ export default function CreateActivityPage() {
                 scrollHeight: el.scrollHeight,
                 threshold: el.scrollHeight - threshold,
                 shouldLoad: el.scrollTop + el.clientHeight >= el.scrollHeight - threshold,
-                layout
+                layout,
+                distanceFromBottom: el.scrollHeight - (el.scrollTop + el.clientHeight)
             };
 
-            // Only log detailed info if we're near the bottom
-            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 250) {
-                logger.debug('[Infinite Scroll] Near bottom:', debugInfo);
-            }
+            // Always log scroll events for debugging
+            logger.debug('[Infinite Scroll] Scroll event:', debugInfo);
 
+            // Check if we should skip (loading states)
             if (loadingQuestions || loadingMore || !hasMore) {
-                return; // Skip logging when blocked
+                logger.debug('[Infinite Scroll] Skipping - loading or no more data');
+                return;
             }
 
             // Only trigger if there's actually scrollable content
             if (el.scrollHeight <= el.clientHeight) {
-                return; // Skip logging when no scrollable content
+                logger.debug('[Infinite Scroll] Skipping - no scrollable content');
+                return;
             }
 
+            // Check if we're near the bottom
             if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) {
                 logger.info('[Infinite Scroll] Triggering load more');
                 setLoadingMore(true);
@@ -545,40 +554,62 @@ export default function CreateActivityPage() {
             }
         };
 
-        // Get the visible scroll container (desktop or mobile) for listener attachment
+        // Attach listeners to both elements (only one will be visible at a time)
         const desktopEl = listRef.current;
         const mobileEl = mobileListRef.current;
 
-        // Check which element is actually visible by checking if it has dimensions
-        let el: HTMLDivElement | null = null;
-        let layout = '';
+        const attachedElements: HTMLDivElement[] = [];
 
-        if (desktopEl && desktopEl.offsetParent !== null) {
-            // Desktop element is visible (offsetParent is null when display:none)
-            el = desktopEl;
-            layout = 'desktop';
-        } else if (mobileEl && mobileEl.offsetParent !== null) {
-            // Mobile element is visible
-            el = mobileEl;
-            layout = 'mobile';
+        if (desktopEl) {
+            logger.debug('[Infinite Scroll] Attaching desktop scroll listener');
+            desktopEl.addEventListener('scroll', handleScroll);
+            attachedElements.push(desktopEl);
         }
 
-        if (el) {
-            logger.debug('[Infinite Scroll] Adding scroll listener:', {
-                layout: layout,
-                isScrollable: el.scrollHeight > el.clientHeight
-            });
-            el.addEventListener('scroll', handleScroll);
-        } else {
-            logger.warn('[Infinite Scroll] No visible element found');
+        if (mobileEl) {
+            logger.debug('[Infinite Scroll] Attaching mobile scroll listener');
+            mobileEl.addEventListener('scroll', handleScroll);
+            attachedElements.push(mobileEl);
+        }
+
+        if (attachedElements.length === 0) {
+            logger.warn('[Infinite Scroll] No elements found for scroll listeners');
         }
 
         return () => {
-            if (el) {
+            attachedElements.forEach(el => {
                 el.removeEventListener('scroll', handleScroll);
-            }
+            });
         };
     }, [fetchQuestions, loadingQuestions, loadingMore, hasMore]);
+
+    // Backup intersection observer for more reliable infinite scroll
+    useEffect(() => {
+        const triggerElement = loadTriggerRef.current;
+        if (!triggerElement || !hasMore || loadingQuestions || loadingMore) {
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const [entry] = entries;
+                if (entry.isIntersecting) {
+                    logger.info('[Intersection Observer] Triggering load more');
+                    setLoadingMore(true);
+                    fetchQuestions(false);
+                }
+            },
+            {
+                rootMargin: '100px' // Trigger 100px before the element comes into view
+            }
+        );
+
+        observer.observe(triggerElement);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [fetchQuestions, hasMore, loadingQuestions, loadingMore]);
 
     const handleSaveActivity = async () => {
         setSavingActivity(true);
@@ -778,6 +809,8 @@ export default function CreateActivityPage() {
                                             />
                                         ))}
                                         {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
+                                        {/* Intersection observer trigger - desktop */}
+                                        {hasMore && !loadingMore && <div className="h-1"></div>}
                                     </>
                                 )}
                             </div>
@@ -890,6 +923,8 @@ export default function CreateActivityPage() {
                                         />
                                     ))}
                                     {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
+                                    {/* Intersection observer trigger */}
+                                    {hasMore && !loadingMore && <div ref={loadTriggerRef} className="h-1"></div>}
                                 </>
                             )}
                         </div>

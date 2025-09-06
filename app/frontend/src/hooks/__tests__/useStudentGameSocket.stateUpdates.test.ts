@@ -65,21 +65,13 @@ describe('useStudentGameSocket - State Updates', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const questionPayload = {
-            question: {
-                uid: 'q1',
-                text: 'What is the capital of France?',
-                questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['London', 'Paris', 'Berlin', 'Madrid'],
-                timeLimit: 30
-            },
-            timer: {
-                status: 'run' as const,
-                questionUid: 'q1',
-                timerEndDateMs: Date.now() + 45000,
-            },
-            questionIndex: 2,
-            totalQuestions: 10,
-            questionState: 'active'
+            uid: 'q1',
+            text: 'What is the capital of France?',
+            questionType: QUESTION_TYPES.SINGLE_CHOICE,
+            answerOptions: ['London', 'Paris', 'Berlin', 'Madrid'],
+            timeLimit: 30,
+            currentQuestionIndex: 2,
+            totalQuestions: 10
         };
 
         act(() => {
@@ -96,7 +88,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.currentQuestion).toEqual(questionPayload.question);
+            expect(result.current.gameState.currentQuestion).toEqual(questionPayload);
             expect(result.current.gameState.questionIndex).toBe(2);
             expect(result.current.gameState.totalQuestions).toBe(10);
             // Timer state is now managed by useSimpleTimer hook
@@ -116,7 +108,11 @@ describe('useStudentGameSocket - State Updates', () => {
 
         // First, set answered to true
         act(() => {
-            eventHandlers['answer_received']?.({ received: true });
+            eventHandlers['answer_received']?.({
+                questionUid: 'q1',
+                timeSpent: 5000,
+                correct: true
+            });
         });
 
         await waitFor(() => {
@@ -125,21 +121,13 @@ describe('useStudentGameSocket - State Updates', () => {
 
         // Now receive a new question
         const questionPayload = {
-            question: {
-                uid: 'q2',
-                text: 'What is 5 + 3?',
-                questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['6', '7', '8', '9'],
-                timeLimit: 30
-            },
-            timer: {
-                status: 'run' as const,
-                questionUid: 'q2',
-                timerEndDateMs: Date.now() + 30000,
-            },
-            questionIndex: 1,
-            totalQuestions: 5,
-            questionState: 'active'
+            uid: 'q2',
+            text: 'What is 5 + 3?',
+            questionType: QUESTION_TYPES.SINGLE_CHOICE,
+            answerOptions: ['6', '7', '8', '9'],
+            timeLimit: 30,
+            currentQuestionIndex: 1,
+            totalQuestions: 5
         };
 
         act(() => {
@@ -183,21 +171,13 @@ describe('useStudentGameSocket - State Updates', () => {
 
         // Connection should persist through question updates
         const questionPayload = {
-            question: {
-                uid: 'q1',
-                text: 'Test question',
-                questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['A', 'B', 'C', 'D'],
-                timeLimit: 30
-            },
-            timer: {
-                status: 'run' as const,
-                questionUid: 'q1',
-                timerEndDateMs: Date.now() + 30000,
-            },
-            questionIndex: 0,
-            totalQuestions: 1,
-            questionState: 'active'
+            uid: 'q1',
+            text: 'Test question',
+            questionType: QUESTION_TYPES.SINGLE_CHOICE,
+            answerOptions: ['A', 'B', 'C', 'D'],
+            timeLimit: 30,
+            currentQuestionIndex: 0,
+            totalQuestions: 1
         };
 
         act(() => {
@@ -223,21 +203,13 @@ describe('useStudentGameSocket - State Updates', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const multipleChoicePayload = {
-            question: {
-                uid: 'q3',
-                text: 'Which of the following are prime numbers?',
-                questionType: QUESTION_TYPES.MULTIPLE_CHOICE,
-                answerOptions: ['2', '3', '4', '5', '6', '7'],
-                timeLimit: 60
-            },
-            timer: {
-                status: 'run' as const,
-                questionUid: 'q3',
-                timerEndDateMs: Date.now() + 60000,
-            },
-            questionIndex: 3,
-            totalQuestions: 8,
-            questionState: 'active'
+            uid: 'q3',
+            text: 'Which of the following are prime numbers?',
+            questionType: QUESTION_TYPES.MULTIPLE_CHOICE,
+            answerOptions: ['2', '3', '4', '5', '6', '7'],
+            timeLimit: 60,
+            currentQuestionIndex: 3,
+            totalQuestions: 8
         };
 
         act(() => {
@@ -260,8 +232,8 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        // Start with waiting
-        expect(result.current.gameState.gameStatus).toBe('waiting');
+        // Start with pending
+        expect(result.current.gameState.gameStatus).toBe('pending');
 
         // Transition to active
         act(() => {
@@ -279,10 +251,8 @@ describe('useStudentGameSocket - State Updates', () => {
 
         // Transition to paused
         act(() => {
-            eventHandlers['timer_update']?.({
-                timeLeftMs: 15,
-                status: 'pause',
-                running: false
+            eventHandlers['game_state_update']?.({
+                status: 'paused'
             });
         });
 
@@ -293,13 +263,14 @@ describe('useStudentGameSocket - State Updates', () => {
         // Transition to finished
         act(() => {
             eventHandlers['game_ended']?.({
+                accessCode: 'TEST123',
                 score: 80,
                 totalQuestions: 5
             });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.gameStatus).toBe('finished');
+            expect(result.current.gameState.gameStatus).toBe('completed');
         });
     });
 
@@ -315,26 +286,22 @@ describe('useStudentGameSocket - State Updates', () => {
         // Timer state is now managed by useSimpleTimer hook
         // Initial timer status test removed
 
-        // Update timer to play
+        // Update game status to active
         act(() => {
-            eventHandlers['timer_update']?.({
-                timeLeftMs: 30,
-                status: 'run',
-                running: true
+            eventHandlers['game_state_update']?.({
+                status: 'active'
             });
         });
 
         await waitFor(() => {
-            // Timer state is now managed by useSimpleTimer hook
+            // Game status managed independently from timer
             expect(result.current.gameState.gameStatus).toBe('active');
         });
 
-        // Update timer to pause
+        // Update game status to paused  
         act(() => {
-            eventHandlers['timer_update']?.({
-                timeLeftMs: 25,
-                status: 'pause',
-                running: false
+            eventHandlers['game_state_update']?.({
+                status: 'paused'
             });
         });
 
@@ -354,7 +321,8 @@ describe('useStudentGameSocket - State Updates', () => {
 
         await waitFor(() => {
             // Timer state is now managed by useSimpleTimer hook
-            expect(result.current.gameState.gameStatus).toBe('completed');
+            // Game status should not change based on timer events
+            expect(result.current.gameState.gameStatus).toBe('paused');
         });
     });
 
@@ -368,21 +336,13 @@ describe('useStudentGameSocket - State Updates', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const questionWithMetadata = {
-            question: {
-                uid: 'q5',
-                text: 'What is photosynthesis?',
-                questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['A', 'B', 'C', 'D'],
-                timeLimit: 40
-            },
-            timer: {
-                status: 'run' as const,
-                questionUid: 'q5',
-                timerEndDateMs: Date.now() + 40000,
-            },
-            questionIndex: 4,
-            totalQuestions: 6,
-            questionState: 'active'
+            uid: 'q5',
+            text: 'What is photosynthesis?',
+            questionType: QUESTION_TYPES.SINGLE_CHOICE,
+            answerOptions: ['A', 'B', 'C', 'D'],
+            timeLimit: 40,
+            currentQuestionIndex: 4,
+            totalQuestions: 6
         };
 
         act(() => {
@@ -445,21 +405,13 @@ describe('useStudentGameSocket - State Updates', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const questionPayload = {
-            question: {
-                uid: 'q1',
-                text: 'Quick question',
-                questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['A', 'B'],
-                timeLimit: 20
-            },
-            timer: {
-                status: 'stop' as const,
-                questionUid: 'q1',
-                timerEndDateMs: 0,
-            },
-            questionIndex: 0,
-            totalQuestions: 1,
-            questionState: 'active'
+            uid: 'q1',
+            text: 'Quick question',
+            questionType: QUESTION_TYPES.SINGLE_CHOICE,
+            answerOptions: ['A', 'B'],
+            timeLimit: 20,
+            currentQuestionIndex: 0,
+            totalQuestions: 1
         };
 
         act(() => {
@@ -472,7 +424,7 @@ describe('useStudentGameSocket - State Updates', () => {
             expect(result.current.gameState.currentQuestion?.uid).toBe('q1');
             expect(result.current.gameState.currentQuestion?.questionType).toBe(QUESTION_TYPES.SINGLE_CHOICE);
             expect(result.current.gameState.currentQuestion?.answerOptions).toEqual(['A', 'B']);
-            expect(result.current.gameState.gameStatus).toBe('waiting');
+            expect(result.current.gameState.gameStatus).toBe('active');
         });
     });
 });

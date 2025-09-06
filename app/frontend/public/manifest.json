@@ -4,8 +4,8 @@
     "description": "MathQuest : une alternative libre à Kahoot avec une base de questions partagée.",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#3b82f6",
+    "background_color": "#153B50",
+    "theme_color": "#153B50",
     "orientation": "portrait-primary",
     "categories": [
         "education",

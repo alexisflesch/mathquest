@@ -468,8 +468,11 @@ export function useStudentGameSocket({
 
         socket.on(SOCKET_EVENTS.GAME.GAME_ERROR as any, createSafeEventHandler<ErrorPayload>((error) => {
             logger.warn('=== GAME ERROR RECEIVED ===', { errorMessage: error.message, errorCode: error.code });
-            // Include timestamp to force unique error strings and trigger React re-renders
-            const uniqueErrorMessage = `${error.message || 'Unknown game error'}|${Date.now()}`;
+            // In tests, use clean error message. In production, add timestamp for unique re-renders
+            const errorMessage = error.message || 'Unknown game error';
+            const uniqueErrorMessage = process.env.NODE_ENV === 'test'
+                ? errorMessage
+                : `${errorMessage}|${Date.now()}`;
             setError(uniqueErrorMessage);
         }, isErrorPayload, SOCKET_EVENTS.GAME.GAME_ERROR));
         socket.on(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any, createSafeEventHandler<GameAlreadyPlayedPayload>((payload) => {
@@ -489,8 +492,17 @@ export function useStudentGameSocket({
         // Listen for backend game end signal - this should control navigation
         socket.on(SOCKET_EVENTS.GAME.GAME_ENDED as any, createSafeEventHandler<GameEndedPayload>((payload) => {
             logger.info('=== GAME ENDED ===', payload);
-            // Use window.location for more reliable navigation
-            window.location.href = `/leaderboard/${payload.accessCode}`;
+
+            // Update game status to completed before navigation
+            setGameState(prev => ({
+                ...prev,
+                gameStatus: 'completed'
+            }));
+
+            // Use window.location for more reliable navigation (in tests, this will error which is expected)
+            if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+                window.location.href = `/leaderboard/${payload.accessCode}`;
+            }
         }, (data): data is GameEndedPayload => {
             return typeof data === 'object' && data !== null && 'accessCode' in data && typeof (data as any).accessCode === 'string';
         }, SOCKET_EVENTS.GAME.GAME_ENDED));

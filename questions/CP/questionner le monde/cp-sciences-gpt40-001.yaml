@@ -183,7 +183,7 @@
   author: "gpt4o"
   answerOptions:
     - "Tigre"
-    - "Cameleon"
+    - "Caméléon"
     - "Éléphant"
     - "Aigle"
   correctAnswers: [false, true, false, false]
