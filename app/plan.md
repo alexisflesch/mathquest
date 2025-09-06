@@ -1,5 +1,48 @@
 # MathQuest App Development Plan
 
+## ✅ COMPLETED: VPS Deployment & PWA Cache Fix
+
+### [COMPLETED] Service Worker Cache Issues Resolution + Backend Build Fix
+**Objective**: Fix CSS loading errors and service worker cache conflicts causing 400/404 errors on VPS deployment, plus resolve backend build issues.
+
+**Issues Identified**:
+- **Development Build in Production**: Service worker was caching development build assets, causing 400 Bad Request errors for CSS files
+- **PWA Configuration Errors**: Incorrect configuration properties causing TypeScript errors and cache management issues
+- **Backend Build Failure**: TypeScript compiler was including test files and missing type definitions
+- **Build Process**: Need for proper VPS build script to handle server-side rendering requirements
+
+**Key Features Implemented**:
+- **Fixed PWA Configuration**: Updated `next.config.ts` with correct `workboxOptions` including `skipWaiting: true` and `clientsClaim: true`
+- **Service Worker Cache Management**: Added runtime caching with NetworkFirst strategy for better offline support
+- **Backend Build Fix**: Excluded test files from TypeScript compilation and installed missing type definitions
+- **Build Scripts Structure**: Created `build-all.sh` in app root and simplified VPS deployment script
+- **Cache Clearing Utility**: Added `scripts/clear-cache.sh` for troubleshooting cache issues
+
+**Technical Implementation**:
+- **PWA Config**: Properly configured @ducanh2912/next-pwa with workboxOptions for immediate service worker activation
+- **Backend TypeScript**: Fixed tsconfig.json to exclude `tests/**/*` and `src/tests/**/*` from compilation
+- **Type Definitions**: Installed @types/bcrypt, @types/jsonwebtoken, @types/cookie-parser for production dependencies
+- **Build Process**: Script handles backend build, frontend build with PWA, and PM2 process management
+- **Cache Strategy**: NetworkFirst caching for all HTTPS requests with 200 entry limit
+- **Error Prevention**: Automatic cache clearing between deployments to prevent stale cache conflicts
+
+**Status**: ✅ FULLY IMPLEMENTED
+**Files Created/Modified**:
+- `frontend/next.config.ts` - Fixed PWA configuration
+- `backend/tsconfig.json` - Excluded test files from build
+- `build-all.sh` - Comprehensive build script in app root
+- `scripts/deploy-vps.sh` - Simplified VPS deployment script  
+- `scripts/clear-cache.sh` - Cache troubleshooting utility
+
+**New Workflow**:
+- Build: `./build-all.sh` (builds frontend + backend)
+- Start: `./start-all.sh` (starts PM2 processes)
+- Deploy: `./scripts/deploy-vps.sh` (full VPS deployment)
+
+**Date**: 2025-09-06
+
+---
+
 ## ✅ COMPLETED: Grade Level Sorting Fix
 
 ### [COMPLETED] Proper Educational Grade Level Ordering

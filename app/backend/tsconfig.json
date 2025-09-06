@@ -23,11 +23,12 @@
     },
     "include": [
         "src/**/*",
-        "tests/**/*",
         "../shared/**/*.ts" // Only include shared TypeScript files, exclude .tsx examples
     ],
     "exclude": [
         "node_modules",
+        "tests/**/*", // Exclude test files from production build
+        "src/tests/**/*", // Exclude test files in src directory
         "../shared/types/examples" // Exclude shared TSX examples directory
     ],
     "ts-node": {

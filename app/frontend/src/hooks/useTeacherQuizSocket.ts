@@ -85,9 +85,9 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
                 const clientTime = Date.now();
                 const correctedNow = clientTime + serverDriftRef.current;
                 const timeLeft = Math.max(0, timerEndDateRef.current - correctedNow);
-                
+
                 setTimeLeftMs(timeLeft);
-                
+
                 // Stop timer when it reaches 0
                 if (timeLeft === 0) {
                     setTimerStatus('stop');
@@ -173,32 +173,32 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         // Quiz timer update handler - this was missing
         const quizTimerUpdateHandler = (update: any) => {
             logger.debug('Received quiz_timer_update', update);
-            
+
             // Handle canonical GameTimerUpdatePayload structure
             if (update.timer) {
                 const { timer } = update;
-                
+
                 // Set timer status from canonical timer.status
                 if (timer.status !== undefined) {
                     setTimerStatus(timer.status);
                 }
-                
+
                 // Set question UID from canonical timer.questionUid
                 if (timer.questionUid !== undefined) {
                     setTimerQuestionUid(timer.questionUid);
                 }
-                
+
                 // Compute timeLeftMs from timerEndDateMs and serverTime
                 if (timer.timerEndDateMs !== undefined && timer.timerEndDateMs > 0 && update.serverTime !== undefined) {
                     const serverTime = update.serverTime;
                     const timerEndDateMs = timer.timerEndDateMs;
                     const clientTime = Date.now();
                     const drift = serverTime - clientTime;
-                    
+
                     // Store timer end date and drift for countdown logic
                     timerEndDateRef.current = timerEndDateMs;
                     serverDriftRef.current = drift;
-                    
+
                     const correctedNow = clientTime + drift;
                     const timeLeft = Math.max(0, timerEndDateMs - correctedNow);
                     setTimeLeftMs(timeLeft);
@@ -230,32 +230,32 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         // Dashboard timer updated handler - this was missing
         const dashboardTimerUpdatedHandler = (update: any) => {
             logger.debug('Received dashboard_timer_updated', update);
-            
+
             // Handle canonical DashboardTimerUpdatedPayload structure
             if (update.timer) {
                 const { timer } = update;
-                
+
                 // Set timer status from canonical timer.status
                 if (timer.status !== undefined) {
                     setTimerStatus(timer.status);
                 }
-                
+
                 // Set question UID from canonical timer.questionUid
                 if (timer.questionUid !== undefined) {
                     setTimerQuestionUid(timer.questionUid);
                 }
-                
+
                 // Compute timeLeftMs from timerEndDateMs and serverTime
                 if (timer.timerEndDateMs !== undefined && timer.timerEndDateMs > 0 && update.serverTime !== undefined) {
                     const serverTime = update.serverTime;
                     const timerEndDateMs = timer.timerEndDateMs;
                     const clientTime = Date.now();
                     const drift = serverTime - clientTime;
-                    
+
                     // Store timer end date and drift for countdown logic
                     timerEndDateRef.current = timerEndDateMs;
                     serverDriftRef.current = drift;
-                    
+
                     const correctedNow = clientTime + drift;
                     const timeLeft = Math.max(0, timerEndDateMs - correctedNow);
                     setTimeLeftMs(timeLeft);

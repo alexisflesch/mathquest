@@ -33,4 +33,21 @@ export default withPWA({
     dest: 'public',
     disable: process.env.NODE_ENV === 'development',
     register: true,
+    sw: 'sw.js',
+    workboxOptions: {
+        skipWaiting: true, // Force new service worker to activate immediately
+        clientsClaim: true, // Take control of all clients immediately
+        runtimeCaching: [
+            {
+                urlPattern: /^https?.*/,
+                handler: 'NetworkFirst',
+                options: {
+                    cacheName: 'offlineCache',
+                    expiration: {
+                        maxEntries: 200,
+                    },
+                },
+            },
+        ],
+    },
 })(nextConfig);

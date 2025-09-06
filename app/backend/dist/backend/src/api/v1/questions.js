@@ -170,6 +170,7 @@ router.get('/:uid', auth_1.optionalAuth, async (req, res) => {
  */
 router.get('/', auth_1.teacherAuth, async (req, res) => {
     try {
+        logger.info('Starting questions endpoint request');
         const { discipline, theme, // Frontend sends 'theme', not 'themes'
         themes, level, // Frontend sends 'level', not 'gradeLevel'
         gradeLevel, tag, // Frontend sends 'tag'
@@ -178,6 +179,7 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
         page = '1', pageSize = '20', limit, // Frontend uses 'limit' instead of 'pageSize'
         offset // Frontend uses 'offset' for pagination
          } = req.query;
+        logger.info('Extracted query parameters', { discipline, theme, themes, level, gradeLevel, tag, difficulty, tags, questionType, includeHidden, mode, page, pageSize, limit, offset });
         // Convert to appropriate types
         const filters = {};
         if (discipline) {
@@ -259,6 +261,7 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
                 take: Number(pageSize)
             };
         }
+        logger.info('About to call getQuestionService().getQuestions', { filters, pagination });
         const result = await getQuestionService().getQuestions(filters, pagination);
         // Debug logging
         logger.info(`Filters used: ${JSON.stringify(filters)}`);
