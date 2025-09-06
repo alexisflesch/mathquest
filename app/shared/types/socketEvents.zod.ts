@@ -95,6 +95,7 @@ export const joinGamePayloadSchema = z.object({
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),
   username: z.string().min(1, { message: "Username cannot be empty." }),
   avatarEmoji: z.string().optional(),
+  isDiffered: z.boolean().optional(),
 });
 
 // Leave game payload schema for unified flow

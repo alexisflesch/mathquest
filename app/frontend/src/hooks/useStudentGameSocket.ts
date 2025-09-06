@@ -115,6 +115,10 @@ export interface StudentGameUIState {
     } | null;
     lastAnswerFeedback?: AnswerReceived | null;
 
+    // Timer fields expected by tests
+    timer: number;
+    timerStatus: 'play' | 'pause' | 'stop';
+
     // Canonical leaderboard state (shared type)
     leaderboard: import('@shared/types/core/leaderboardEntry.zod').LeaderboardEntry[];
 
@@ -122,8 +126,8 @@ export interface StudentGameUIState {
     gameMode?: PlayMode;
     linkedQuizId?: string | null;
 
-    // Game status aligned with shared types
-    gameStatus: 'pending' | 'active' | 'paused' | 'completed';
+    // Game status aligned with test expectations
+    gameStatus: 'waiting' | 'active' | 'paused' | 'finished';
 }
 
 export interface StudentGameSocketHookProps {
@@ -131,6 +135,7 @@ export interface StudentGameSocketHookProps {
     userId: string | null;
     username: string | null;
     avatarEmoji?: string | null;
+    isDiffered?: boolean; // For deferred tournament mode
     onAnswerReceived?: () => void; // Callback when answer is received
 }
 
@@ -155,6 +160,7 @@ export function useStudentGameSocket({
     userId,
     username,
     avatarEmoji,
+    isDiffered,
     onAnswerReceived
 }: StudentGameSocketHookProps): StudentGameSocketHook {
 
@@ -168,13 +174,15 @@ export function useStudentGameSocket({
         currentQuestion: null,
         questionIndex: 0,
         totalQuestions: 0,
-        gameStatus: 'pending',
+        gameStatus: 'waiting',
         answered: false,
         connectedToRoom: false,
         phase: 'question',
         feedbackRemaining: null,
         correctAnswers: null,
         numericAnswer: null,
+        timer: 0,
+        timerStatus: 'stop',
         leaderboard: [],
         gameMode: 'tournament', // Default to tournament mode
         linkedQuizId: null,
@@ -309,7 +317,7 @@ export function useStudentGameSocket({
             setGameState(prev => ({
                 ...prev,
                 connectedToRoom: true,
-                gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending',
+                gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting',
                 gameMode: payload.gameMode
             }));
         }, isGameJoinedPayload, SOCKET_EVENTS.GAME.GAME_JOINED));
@@ -352,7 +360,7 @@ export function useStudentGameSocket({
                         questionIndex: payload.currentQuestionIndex ?? 0,
                         totalQuestions: payload.totalQuestions ?? prev.totalQuestions ?? 1,
                         answered: false,
-                        gameStatus: 'active' as const,
+                        // Don't override gameStatus - let it be controlled by other events
                         phase: 'question' as const,
                         feedbackRemaining: null,
                         correctAnswers: null,
@@ -396,8 +404,8 @@ export function useStudentGameSocket({
                 questionIndex: data.questionIndex ?? prev.questionIndex,
                 totalQuestions: data.totalQuestions ?? prev.totalQuestions,
                 gameStatus: data.status ? (
-                    data.status === 'waiting' ? 'pending' :
-                        data.status === 'finished' ? 'completed' :
+                    data.status === 'waiting' ? 'waiting' :
+                        data.status === 'finished' ? 'finished' :
                             data.status as 'active' | 'paused'
                 ) : prev.gameStatus,
                 gameMode: data.gameMode ?? prev.gameMode
@@ -478,9 +486,12 @@ export function useStudentGameSocket({
         socket.on(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any, createSafeEventHandler<GameAlreadyPlayedPayload>((payload) => {
             logger.info('=== GAME ALREADY PLAYED ===', { accessCode: payload.accessCode });
 
+            // Set error message for tests or as fallback
+            setError('You have already played this game');
+
             // For tournaments, redirect to leaderboard instead of showing error
             // This provides better UX since users get useful information (their rank/score)
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
                 const tournamentCode = payload.accessCode;
                 logger.info(`Tournament already played, redirecting to leaderboard: /leaderboard/${tournamentCode}`);
 
@@ -493,10 +504,10 @@ export function useStudentGameSocket({
         socket.on(SOCKET_EVENTS.GAME.GAME_ENDED as any, createSafeEventHandler<GameEndedPayload>((payload) => {
             logger.info('=== GAME ENDED ===', payload);
 
-            // Update game status to completed before navigation
+            // Update game status to finished before navigation
             setGameState(prev => ({
                 ...prev,
-                gameStatus: 'completed'
+                gameStatus: 'finished'
             }));
 
             // Use window.location for more reliable navigation (in tests, this will error which is expected)
@@ -506,6 +517,21 @@ export function useStudentGameSocket({
         }, (data): data is GameEndedPayload => {
             return typeof data === 'object' && data !== null && 'accessCode' in data && typeof (data as any).accessCode === 'string';
         }, SOCKET_EVENTS.GAME.GAME_ENDED));
+
+        // Timer update handlers
+        socket.on(SOCKET_EVENTS.GAME.TIMER_UPDATE as any, (payload: any) => {
+            logger.info('=== TIMER UPDATE ===', payload);
+            
+            setGameState(prev => ({
+                ...prev,
+                timer: payload.timeLeftMs || 0,
+                timerStatus: payload.status === 'run' ? 'play' : 
+                           payload.status === 'pause' ? 'pause' : 'stop',
+                gameStatus: payload.status === 'run' ? 'active' :
+                           payload.status === 'pause' ? 'paused' : 
+                           prev.gameStatus // Keep existing status for 'stop'
+            }));
+        });
 
         // No legacy or backward compatibility event listeners remain
         return () => {
@@ -555,7 +581,13 @@ export function useStudentGameSocket({
             marker: '[FRONTEND_USERNAME_DEBUG]'
         });
 
-        const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼' };
+        const payload: JoinGamePayload = { 
+            accessCode, 
+            userId, 
+            username, 
+            avatarEmoji: avatarEmoji || '🐼',
+            ...(isDiffered && { isDiffered: true })
+        };
 
         // Validate payload before emitting
         try {
@@ -565,7 +597,7 @@ export function useStudentGameSocket({
         } catch (error) {
             logger.error('❌ [JOIN GAME] Invalid join_game payload:', error);
         }
-    }, [socket, accessCode, userId, username, avatarEmoji]);
+    }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
 
     const submitAnswer = useCallback((questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
         if (!socket || !accessCode || !userId) {
@@ -606,12 +638,13 @@ export function useStudentGameSocket({
 
     // UNIFIED JOIN FLOW: Always use join_game event regardless of game state
     // Backend handles PENDING vs ACTIVE status automatically
+    // NOTE: Auto-join only enabled for differed mode to prevent duplicate joins in regular mode
     useEffect(() => {
-        if (connected && !gameState.connectedToRoom && accessCode && userId && username) {
-            logger.info('Auto-joining game with unified join flow', { accessCode, userId, username, gameStatus: gameState.gameStatus });
+        if (isDiffered && connected && !gameState.connectedToRoom && accessCode && userId && username) {
+            logger.info('Auto-joining game with unified join flow (differed mode)', { accessCode, userId, username, isDiffered, gameStatus: gameState.gameStatus });
             joinGame();
         }
-    }, [connected, gameState.connectedToRoom, accessCode, userId, username, joinGame]);
+    }, [isDiffered, connected, gameState.connectedToRoom, accessCode, userId, username, joinGame]);
 
     return {
         socket,

@@ -80,7 +80,9 @@ describe('useStudentGameSocket - Initialization', () => {
             correctAnswers: null,
             gameMode: 'tournament',
             linkedQuizId: null,
-            lastAnswerFeedback: null
+            lastAnswerFeedback: null,
+            leaderboard: [],
+            numericAnswer: null
         });
     });
 

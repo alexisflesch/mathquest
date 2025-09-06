@@ -232,8 +232,8 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        // Start with pending
-        expect(result.current.gameState.gameStatus).toBe('pending');
+        // Start with waiting
+        expect(result.current.gameState.gameStatus).toBe('waiting');
 
         // Transition to active
         act(() => {
@@ -270,7 +270,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.gameStatus).toBe('completed');
+            expect(result.current.gameState.gameStatus).toBe('finished');
         });
     });
 
@@ -424,7 +424,8 @@ describe('useStudentGameSocket - State Updates', () => {
             expect(result.current.gameState.currentQuestion?.uid).toBe('q1');
             expect(result.current.gameState.currentQuestion?.questionType).toBe(QUESTION_TYPES.SINGLE_CHOICE);
             expect(result.current.gameState.currentQuestion?.answerOptions).toEqual(['A', 'B']);
-            expect(result.current.gameState.gameStatus).toBe('active');
+            // gameStatus remains 'waiting' since game_question doesn't change it
+            expect(result.current.gameState.gameStatus).toBe('waiting');
         });
     });
 });

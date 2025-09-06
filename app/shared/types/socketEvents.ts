@@ -45,6 +45,7 @@ export interface JoinGamePayload {
     userId: string;
     username: string;
     avatarEmoji?: string;
+    isDiffered?: boolean;
 }
 
 // ===== LEGACY EVENT PAYLOADS (DEPRECATED) =====
