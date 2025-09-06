@@ -117,6 +117,12 @@ verify_staged_builds() {
 atomic_deploy() {
     echo "🔄 Performing atomic deployment..."
     
+    # Stop PM2 processes first
+    echo "⏹️  Stopping PM2 processes..."
+    cd "$APP_ROOT"
+    pm2 stop mathquest-backend 2>/dev/null || echo "Backend not running"
+    pm2 stop mathquest-frontend 2>/dev/null || echo "Frontend not running"
+    
     # Backup current builds (just in case)
     local backup_dir="$APP_ROOT/.backup_$(date +%s)"
     mkdir -p "$backup_dir"
@@ -174,18 +180,20 @@ main() {
     # If we get here, builds were successful - perform atomic deployment
     atomic_deploy
     
+    # Start services using the main start script
+    echo "▶️  Starting services..."
+    cd "$APP_ROOT"
+    ./start-all.sh
+    
     echo ""
-    echo "🎉 Build and deployment completed successfully!"
+    echo "🎉 Atomic deployment completed successfully!"
     echo ""
-    echo "📋 What was built:"
-    echo "   ✅ Frontend: .next directory with PWA support"
-    echo "   ✅ Backend: dist directory with compiled TypeScript"
-    echo "   ✅ Service Worker: sw.js for offline functionality"
+    echo "📊 Process Status:"
+    pm2 status
     echo ""
-    echo "📝 Next steps:"
-    echo "   Run your PM2 start script to launch the services"
-    echo "   Check that files are in place:"
-    echo "     ls -la frontend/.next backend/dist"
+    echo "🌐 Your app should be available at:"
+    echo "   Frontend: http://localhost:3008"
+    echo "   Backend:  http://localhost:3007"
     echo ""
 }
 
