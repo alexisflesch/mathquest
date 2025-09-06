@@ -104,12 +104,15 @@ describe('Timer Countdown Behavior Test', () => {
         // Simulate starting a timer from dashboard (backend sends timer start event)
         const startTimerUpdate = {
             timer: {
-                startedAt: Date.now(),
-                duration: 15000, // 15 seconds
-                isPaused: false,
-                timeLeftMs: 15000 // Canonical field name
+                status: 'run' as const,
+                timerEndDateMs: Date.now() + 15000, // Timer will end in 15 seconds
+                questionUid: 'test-question-1'
             },
-            questionUid: 'test-question-1'
+            questionUid: 'test-question-1',
+            questionIndex: 0,
+            totalQuestions: 1,
+            answersLocked: false,
+            serverTime: Date.now()
         };
 
         act(() => {
@@ -126,9 +129,10 @@ describe('Timer Countdown Behavior Test', () => {
         // Wait for initial timer state to be set
         await act(async () => {
             await waitFor(() => {
-                expect(result.current.timeLeftMs).toBe(15000);
-                expect(result.current.timerStatus).toBe('play');
-                expect(result.current.localTimeLeftMs).toBe(15000);
+                expect(result.current.timeLeftMs).toBeGreaterThan(14000);
+                expect(result.current.timeLeftMs).toBeLessThanOrEqual(15000);
+                expect(result.current.timerStatus).toBe('run');
+                expect(result.current.localTimeLeftMs).toBeGreaterThan(14000);
             }, { timeout: 1000 });
         });
 
@@ -166,7 +170,7 @@ describe('Timer Countdown Behavior Test', () => {
         });
 
         // The timer should have counted down
-        expect(result.current.timerStatus).toBe('play');
+        expect(result.current.timerStatus).toBe('run');
         // Accept a wider range for timeLeftMs due to timer update intervals and animation
         expect(result.current.timeLeftMs).toBeGreaterThanOrEqual(2000); // Allow wider margin
         expect(result.current.timeLeftMs).toBeLessThanOrEqual(12000); // Allow wider margin
@@ -235,12 +239,15 @@ describe('Timer Countdown Behavior Test', () => {
         // Start with 20 seconds
         const startTimerUpdate = {
             timer: {
-                startedAt: Date.now(),
-                duration: 20000,
-                isPaused: false,
-                timeLeftMs: 20000 // Canonical field name
+                status: 'run' as const,
+                timerEndDateMs: Date.now() + 20000,
+                questionUid: 'test-question-1'
             },
-            questionUid: 'test-question-1'
+            questionUid: 'test-question-1',
+            questionIndex: 0,
+            totalQuestions: 1,
+            answersLocked: false,
+            serverTime: Date.now()
         };
 
         act(() => {
@@ -250,8 +257,8 @@ describe('Timer Countdown Behavior Test', () => {
 
         await act(async () => {
             await waitFor(() => {
+                expect(result.current.timerStatus).toBe('run');
                 expect(result.current.timeLeftMs).toBe(20000);
-                expect(result.current.timerStatus).toBe('play');
             });
         });
 
@@ -274,12 +281,16 @@ describe('Timer Countdown Behavior Test', () => {
         // Pause the timer
         const pauseTimerUpdate = {
             timer: {
-                startedAt: Date.now() - 5000,
-                duration: 20000,
-                isPaused: true,
-                timeLeftMs: 15000 // Canonical field name
+                status: 'pause' as const,
+                timerEndDateMs: 0, // Timer is paused, so no end date
+                questionUid: 'test-question-1',
+                timeLeftMs: 15000 // When paused, backend provides timeLeftMs directly
             },
-            questionUid: 'test-question-1'
+            questionUid: 'test-question-1',
+            questionIndex: 0,
+            totalQuestions: 1,
+            answersLocked: false,
+            serverTime: Date.now()
         };
 
         act(() => {
@@ -314,12 +325,15 @@ describe('Timer Countdown Behavior Test', () => {
         // Resume the timer
         const resumeTimerUpdate = {
             timer: {
-                startedAt: Date.now(),
-                duration: 20000,
-                isPaused: false,
-                timeLeftMs: 15000 // Canonical field name
+                status: 'run' as const,
+                timerEndDateMs: Date.now() + 15000, // Resume with 15 seconds left
+                questionUid: 'test-question-1'
             },
-            questionUid: 'test-question-1'
+            questionUid: 'test-question-1',
+            questionIndex: 0,
+            totalQuestions: 1,
+            answersLocked: false,
+            serverTime: Date.now()
         };
 
         act(() => {
@@ -329,7 +343,7 @@ describe('Timer Countdown Behavior Test', () => {
 
         await act(async () => {
             await waitFor(() => {
-                expect(result.current.timerStatus).toBe('play');
+                expect(result.current.timerStatus).toBe('run');
                 // Allow ±1200ms margin for timer drift
                 expect(result.current.timeLeftMs).toBeGreaterThanOrEqual(13800);
                 expect(result.current.timeLeftMs).toBeLessThanOrEqual(15200);
@@ -351,7 +365,7 @@ describe('Timer Countdown Behavior Test', () => {
         // Allow ±1200ms margin for timer drift
         expect(result.current.timeLeftMs).toBeGreaterThanOrEqual(8800);
         expect(result.current.timeLeftMs).toBeLessThanOrEqual(10200);
-        expect(result.current.timerStatus).toBe('play');
+        expect(result.current.timerStatus).toBe('run');
 
         console.log('✅ Timer pause/resume behavior works correctly!');
     });
@@ -373,12 +387,15 @@ describe('Timer Countdown Behavior Test', () => {
         // Start a timer
         const timerUpdate = {
             timer: {
-                startedAt: Date.now(),
-                duration: 10000,
-                isPaused: false,
-                timeLeftMs: 10000 // Canonical field name
+                status: 'run' as const,
+                timerEndDateMs: Date.now() + 10000,
+                questionUid: 'test-question-1'
             },
-            questionUid: 'test-question-1'
+            questionUid: 'test-question-1',
+            questionIndex: 0,
+            totalQuestions: 1,
+            answersLocked: false,
+            serverTime: Date.now()
         };
 
         act(() => {
@@ -388,7 +405,7 @@ describe('Timer Countdown Behavior Test', () => {
 
         await act(async () => {
             await waitFor(() => {
-                expect(result.current.timerStatus).toBe('play');
+                expect(result.current.timerStatus).toBe('run');
                 expect(result.current.timeLeftMs).toBe(10000);
             });
         });
@@ -435,12 +452,15 @@ describe('Timer Countdown Behavior Test', () => {
         // Start timer for question 1
         const question1Timer = {
             timer: {
-                startedAt: Date.now(),
-                duration: 30000,
-                isPaused: false,
-                timeLeftMs: 30000 // Canonical field name
+                status: 'run' as const,
+                timerEndDateMs: Date.now() + 30000,
+                questionUid: 'question-1'
             },
-            questionUid: 'question-1'
+            questionUid: 'question-1',
+            questionIndex: 0,
+            totalQuestions: 2,
+            answersLocked: false,
+            serverTime: Date.now()
         };
 
         act(() => {
@@ -452,7 +472,7 @@ describe('Timer Countdown Behavior Test', () => {
             await waitFor(() => {
                 expect(result.current.timerQuestionUid).toBe('question-1');
                 expect(result.current.timeLeftMs).toBe(30000);
-                expect(result.current.timerStatus).toBe('play');
+                expect(result.current.timerStatus).toBe('run');
             });
         });
 
@@ -475,12 +495,15 @@ describe('Timer Countdown Behavior Test', () => {
         // Change to question 2 with new timer
         const question2Timer = {
             timer: {
-                startedAt: Date.now(),
-                duration: 45000,
-                isPaused: false,
-                timeLeftMs: 45000 // Canonical field name
+                status: 'run' as const,
+                timerEndDateMs: Date.now() + 45000,
+                questionUid: 'question-2'
             },
-            questionUid: 'question-2'
+            questionUid: 'question-2',
+            questionIndex: 1,
+            totalQuestions: 2,
+            answersLocked: false,
+            serverTime: Date.now()
         };
 
         act(() => {
@@ -492,7 +515,7 @@ describe('Timer Countdown Behavior Test', () => {
             await waitFor(() => {
                 expect(result.current.timerQuestionUid).toBe('question-2');
                 expect(result.current.timeLeftMs).toBe(45000);
-                expect(result.current.timerStatus).toBe('play');
+                expect(result.current.timerStatus).toBe('run');
             });
         });
 

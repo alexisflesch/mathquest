@@ -5,7 +5,7 @@
  * with useSimpleTimer instead of legacy UnifiedGameManager.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from './useSimpleTimer';
 import { useGameSocket } from './useGameSocket';
@@ -72,6 +72,31 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
     const [timeLeftMs, setTimeLeftMs] = useState<number>(0);
     const [timerStatus, setTimerStatus] = useState<TimerStatus>('stop');
     const [timerQuestionUid, setTimerQuestionUid] = useState<string | undefined>(undefined); // Use undefined instead of null
+
+    // Timer countdown logic - automatically count down when running
+    const timerEndDateRef = useRef<number>(0);
+    const serverDriftRef = useRef<number>(0);
+
+    useEffect(() => {
+        if (timerStatus !== 'run') return;
+
+        const interval = setInterval(() => {
+            if (timerEndDateRef.current > 0) {
+                const clientTime = Date.now();
+                const correctedNow = clientTime + serverDriftRef.current;
+                const timeLeft = Math.max(0, timerEndDateRef.current - correctedNow);
+                
+                setTimeLeftMs(timeLeft);
+                
+                // Stop timer when it reaches 0
+                if (timeLeft === 0) {
+                    setTimerStatus('stop');
+                }
+            }
+        }, 100); // Update every 100ms for smooth countdown
+
+        return () => clearInterval(interval);
+    }, [timerStatus]);
 
     // Set up socket event handlers
     useEffect(() => {
@@ -148,9 +173,53 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         // Quiz timer update handler - this was missing
         const quizTimerUpdateHandler = (update: any) => {
             logger.debug('Received quiz_timer_update', update);
-            if (update.timeLeftMs !== undefined) setTimeLeftMs(update.timeLeftMs);
-            if (update.status !== undefined) setTimerStatus(update.status);
-            if (update.questionUid !== undefined) setTimerQuestionUid(update.questionUid);
+            
+            // Handle canonical GameTimerUpdatePayload structure
+            if (update.timer) {
+                const { timer } = update;
+                
+                // Set timer status from canonical timer.status
+                if (timer.status !== undefined) {
+                    setTimerStatus(timer.status);
+                }
+                
+                // Set question UID from canonical timer.questionUid
+                if (timer.questionUid !== undefined) {
+                    setTimerQuestionUid(timer.questionUid);
+                }
+                
+                // Compute timeLeftMs from timerEndDateMs and serverTime
+                if (timer.timerEndDateMs !== undefined && timer.timerEndDateMs > 0 && update.serverTime !== undefined) {
+                    const serverTime = update.serverTime;
+                    const timerEndDateMs = timer.timerEndDateMs;
+                    const clientTime = Date.now();
+                    const drift = serverTime - clientTime;
+                    
+                    // Store timer end date and drift for countdown logic
+                    timerEndDateRef.current = timerEndDateMs;
+                    serverDriftRef.current = drift;
+                    
+                    const correctedNow = clientTime + drift;
+                    const timeLeft = Math.max(0, timerEndDateMs - correctedNow);
+                    setTimeLeftMs(timeLeft);
+                } else if (timer.timeLeftMs !== undefined) {
+                    // Fallback to direct timeLeftMs if provided (for paused timers)
+                    setTimeLeftMs(timer.timeLeftMs);
+                    // Don't clear end date for paused timers - keep countdown paused
+                    if (timer.status === 'pause' || timer.status === 'stop') {
+                        timerEndDateRef.current = 0; // Clear end date for paused/stopped timers
+                    }
+                } else {
+                    // If no timing info, set to 0
+                    setTimeLeftMs(0);
+                    timerEndDateRef.current = 0;
+                }
+            } else {
+                // Legacy format handling for backward compatibility
+                if (update.timeLeftMs !== undefined) setTimeLeftMs(update.timeLeftMs);
+                if (update.status !== undefined) setTimerStatus(update.status);
+                if (update.questionUid !== undefined) setTimerQuestionUid(update.questionUid);
+            }
         };
 
         socket.socket.on('quiz_timer_update' as any, quizTimerUpdateHandler);
@@ -161,9 +230,53 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         // Dashboard timer updated handler - this was missing
         const dashboardTimerUpdatedHandler = (update: any) => {
             logger.debug('Received dashboard_timer_updated', update);
-            if (update.timeLeftMs !== undefined) setTimeLeftMs(update.timeLeftMs);
-            if (update.status !== undefined) setTimerStatus(update.status);
-            if (update.questionUid !== undefined) setTimerQuestionUid(update.questionUid);
+            
+            // Handle canonical DashboardTimerUpdatedPayload structure
+            if (update.timer) {
+                const { timer } = update;
+                
+                // Set timer status from canonical timer.status
+                if (timer.status !== undefined) {
+                    setTimerStatus(timer.status);
+                }
+                
+                // Set question UID from canonical timer.questionUid
+                if (timer.questionUid !== undefined) {
+                    setTimerQuestionUid(timer.questionUid);
+                }
+                
+                // Compute timeLeftMs from timerEndDateMs and serverTime
+                if (timer.timerEndDateMs !== undefined && timer.timerEndDateMs > 0 && update.serverTime !== undefined) {
+                    const serverTime = update.serverTime;
+                    const timerEndDateMs = timer.timerEndDateMs;
+                    const clientTime = Date.now();
+                    const drift = serverTime - clientTime;
+                    
+                    // Store timer end date and drift for countdown logic
+                    timerEndDateRef.current = timerEndDateMs;
+                    serverDriftRef.current = drift;
+                    
+                    const correctedNow = clientTime + drift;
+                    const timeLeft = Math.max(0, timerEndDateMs - correctedNow);
+                    setTimeLeftMs(timeLeft);
+                } else if (timer.timeLeftMs !== undefined) {
+                    // Fallback to direct timeLeftMs if provided (for paused timers)
+                    setTimeLeftMs(timer.timeLeftMs);
+                    // Don't clear end date for paused timers - keep countdown paused
+                    if (timer.status === 'pause' || timer.status === 'stop') {
+                        timerEndDateRef.current = 0; // Clear end date for paused/stopped timers
+                    }
+                } else {
+                    // If no timing info, set to 0
+                    setTimeLeftMs(0);
+                    timerEndDateRef.current = 0;
+                }
+            } else {
+                // Legacy format handling for backward compatibility
+                if (update.timeLeftMs !== undefined) setTimeLeftMs(update.timeLeftMs);
+                if (update.status !== undefined) setTimerStatus(update.status);
+                if (update.questionUid !== undefined) setTimerQuestionUid(update.questionUid);
+            }
         };
 
         socket.socket.on('dashboard_timer_updated' as any, dashboardTimerUpdatedHandler);

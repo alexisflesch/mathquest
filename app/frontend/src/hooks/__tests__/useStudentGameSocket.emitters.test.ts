@@ -63,17 +63,16 @@ describe('useStudentGameSocket - Emitters', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarEmoji: 'https://example.com/avatar.jpg',
-            isDiffered: false
+            avatarEmoji: 'https://example.com/avatar.jpg'
         });
     });
 
-    it('should emit join_game with differed mode', async () => {
+    it('should emit join_game with default avatar', async () => {
         const hookProps = {
             accessCode: 'TEST123',
             userId: 'user-123',
-            username: 'TestUser',
-            isDiffered: true
+            username: 'TestUser'
+            // No avatarEmoji provided - should use default
         };
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
@@ -86,8 +85,7 @@ describe('useStudentGameSocket - Emitters', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarEmoji: '🐼', // Default avatar when none provided
-            isDiffered: true
+            avatarEmoji: '🐼' // Default avatar when none provided
         });
     });
 
