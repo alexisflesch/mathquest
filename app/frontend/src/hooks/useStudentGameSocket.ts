@@ -521,15 +521,15 @@ export function useStudentGameSocket({
         // Timer update handlers
         socket.on(SOCKET_EVENTS.GAME.TIMER_UPDATE as any, (payload: any) => {
             logger.info('=== TIMER UPDATE ===', payload);
-            
+
             setGameState(prev => ({
                 ...prev,
                 timer: payload.timeLeftMs || 0,
-                timerStatus: payload.status === 'run' ? 'play' : 
-                           payload.status === 'pause' ? 'pause' : 'stop',
+                timerStatus: payload.status === 'run' ? 'play' :
+                    payload.status === 'pause' ? 'pause' : 'stop',
                 gameStatus: payload.status === 'run' ? 'active' :
-                           payload.status === 'pause' ? 'paused' : 
-                           prev.gameStatus // Keep existing status for 'stop'
+                    payload.status === 'pause' ? 'paused' :
+                        prev.gameStatus // Keep existing status for 'stop'
             }));
         });
 
@@ -581,10 +581,10 @@ export function useStudentGameSocket({
             marker: '[FRONTEND_USERNAME_DEBUG]'
         });
 
-        const payload: JoinGamePayload = { 
-            accessCode, 
-            userId, 
-            username, 
+        const payload: JoinGamePayload = {
+            accessCode,
+            userId,
+            username,
             avatarEmoji: avatarEmoji || '🐼',
             ...(isDiffered && { isDiffered: true })
         };
