@@ -50,5 +50,15 @@ export default [
       'import/no-anonymous-default-export': 'off',
       'eslint-comments/no-unused-disable': 'off'
     }
+  },
+  // Less aggressive linting for test files
+  {
+    files: ['**/__tests__/**/*', '**/*.test.*', '**/tests/**/*'],
+    rules: {
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      'no-console': 'off'
+    }
   }
 ];

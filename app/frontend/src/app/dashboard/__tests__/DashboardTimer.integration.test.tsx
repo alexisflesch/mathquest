@@ -466,7 +466,6 @@ describe('Dashboard Timer Integration', () => {
 
             // Look for input with the display value instead of text content
             try {
-                // eslint-disable-next-line no-await-in-loop
                 await screen.findByDisplayValue(mmss);
                 console.log(`[TEST] Successfully found timer display for ${sec}s: ${mmss}`);
             } catch (e) {
