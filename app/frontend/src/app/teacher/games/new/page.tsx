@@ -467,7 +467,6 @@ export default function CreateActivityPage() {
         setOffset(0); // Reset offset
         setHasMore(true); // Assume there's more data
         fetchQuestions(true); // Fetch with reset
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags]); // Dependencies that trigger a full reset
 
     useEffect(() => {

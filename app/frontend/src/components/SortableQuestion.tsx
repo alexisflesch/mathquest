@@ -163,7 +163,6 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     // Debug log for timer state after stop
     React.useEffect(() => {
         if (isActive && liveStatus === 'stop') {
-            // eslint-disable-next-line no-console
             console.log('[DEBUG][SortableQuestion] After stop:', {
                 q_uid: q.uid,
                 durationMs,
