@@ -100,7 +100,7 @@ function StudentCreateTournamentPageInner() {
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    setAvailableDisciplines(data.disciplines.map(option => option.value).sort());
+                    setAvailableDisciplines(data.disciplines.filter(option => option.isCompatible).map(option => option.value).sort());
                 })
                 .catch(err => {
                     logger.error("Error loading disciplines", err);
@@ -131,7 +131,7 @@ function StudentCreateTournamentPageInner() {
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    setAvailableThemes(data.themes.map(option => option.value).sort());
+                    setAvailableThemes(data.themes.filter(option => option.isCompatible).map(option => option.value).sort());
                 })
                 .catch(err => {
                     logger.error("Error loading themes", err);
@@ -370,6 +370,7 @@ function StudentCreateTournamentPageInner() {
                                 value={niveau}
                                 onChange={(val) => { setNiveau(val); setStep(2); }}
                                 placeholder="Niveau"
+                                data-testid="grade-level-dropdown"
                             />
                         </div>
                     )}
@@ -382,6 +383,7 @@ function StudentCreateTournamentPageInner() {
                                 value={discipline}
                                 onChange={(val) => { setDiscipline(val); setStep(3); }}
                                 placeholder="Discipline"
+                                data-testid="discipline-dropdown"
                             />
                         </div>
                     )}
@@ -395,6 +397,7 @@ function StudentCreateTournamentPageInner() {
                                 onChange={setThemes}
                                 placeholder="Thèmes"
                                 disabled={availableThemes.length === 0}
+                                data-testid="themes-dropdown"
                             />
                             <div className="flex justify-end w-full">
                                 <button

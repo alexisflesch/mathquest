@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
         ignoreDuringBuilds: false
     },
     typescript: isLightBuild ? { ignoreBuildErrors: true } : {},
-    
+
     // Memory optimizations for low-memory environments
     ...(isLightBuild && {
         swcMinify: false, // Disable SWC minification to save memory
@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
             removeConsole: false, // Skip console removal to save processing
         },
     }),
-    
+
     webpack: (config, { dev, isServer }) => {
         config.resolve.alias["@"] = path.resolve(__dirname, "src");
         config.resolve.alias["@logger"] = path.resolve(__dirname, "../shared/logger.ts");
@@ -27,19 +27,19 @@ const nextConfig: NextConfig = {
         // Add missing aliases for build
         config.resolve.alias["@db"] = path.resolve(__dirname, "../backend-backup/db/index.ts");
         config.resolve.alias["@/app/utils/usernameFilter"] = path.resolve(__dirname, "src/app/utils/usernameFilter.ts");
-        
+
         // Memory optimizations for light builds
         if (isLightBuild) {
             // Reduce parallelism to use less memory
             config.parallelism = 1;
-            
+
             // Disable some optimizations that use more memory
             config.optimization = {
                 ...config.optimization,
                 moduleIds: 'named', // Use simpler module IDs
                 chunkIds: 'named',  // Use simpler chunk IDs
             };
-            
+
             // Reduce bundle analysis overhead
             if (!dev && !isServer) {
                 config.optimization.splitChunks = {
@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
                 };
             }
         }
-        
+
         return config;
     },
     outputFileTracingRoot: path.join(__dirname, '..'), // Point to the monorepo root (app/)
