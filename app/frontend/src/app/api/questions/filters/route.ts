@@ -13,13 +13,21 @@ export async function GET(request: NextRequest) {
             tags: searchParams.getAll('tags')
         };
 
+        // Extract mode parameter (practice, tournament, quiz)
+        const mode = searchParams.get('mode');
+
         console.log('Current filter selections:', currentSelections);
+        console.log('Mode:', mode);
 
         // Backend URL - use environment variable with fallback
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:3007/api/v1';
 
-        // Fetch all options (without filters)
-        const allOptionsUrl = `${backendUrl}/questions/filters`;
+        // Fetch all options (without filters) - but with mode parameter for excludedFrom filtering
+        const allOptionsParams = new URLSearchParams();
+        if (mode) {
+            allOptionsParams.append('mode', mode);
+        }
+        const allOptionsUrl = `${backendUrl}/questions/filters${allOptionsParams.toString() ? '?' + allOptionsParams.toString() : ''}`;
         console.log('Fetching all options from backend:', allOptionsUrl);
 
         const allOptionsResponse = await fetch(allOptionsUrl, {
@@ -60,6 +68,11 @@ export async function GET(request: NextRequest) {
         currentSelections.disciplines.forEach((discipline: string) => compatibleParams.append('discipline', discipline));
         currentSelections.themes.forEach((theme: string) => compatibleParams.append('theme', theme));
         currentSelections.tags.forEach((tag: string) => compatibleParams.append('tag', tag));
+        
+        // Add mode parameter to compatible options call
+        if (mode) {
+            compatibleParams.append('mode', mode);
+        }
 
         const compatibleUrl = `${backendUrl}/questions/filters?${compatibleParams.toString()}`;
         console.log('Fetching compatible options from backend:', compatibleUrl);
