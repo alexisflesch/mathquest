@@ -5,7 +5,51 @@
 
 set -e  # Exit on any error
 
-echo "🚀 Building MathQuest App (Atomic Deployment)..."
+# Parse command line arguments
+LOW_MEMORY=false
+SHOW_HELP=false
+
+for arg in "$@"; do
+    case $arg in
+        --low-memory)
+            LOW_MEMORY=true
+            shift
+            ;;
+        --help|-h)
+            SHOW_HELP=true
+            shift
+            ;;
+        *)
+            ;;
+    esac
+done
+
+if [ "$SHOW_HELP" = true ]; then
+    echo "MathQuest Build Script"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "OPTIONS:"
+    echo "  --low-memory    Optimize build for low-memory VPS environments"
+    echo "                  • Disables TypeScript and ESLint checks"
+    echo "                  • Limits Node.js heap size to 1GB"
+    echo "                  • Reduces webpack parallelism"
+    echo "                  • Disables memory-intensive optimizations"
+    echo ""
+    echo "  --help, -h      Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                    # Standard build (for local development)"
+    echo "  $0 --low-memory      # Memory-optimized build (for VPS deployment)"
+    echo ""
+    exit 0
+fi
+
+if [ "$LOW_MEMORY" = true ]; then
+    echo "🚀 Building MathQuest App (Memory-Optimized Mode)..."
+else
+    echo "🚀 Building MathQuest App (Standard Mode)..."
+fi
 
 # Get script directory (app root)
 APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,9 +92,26 @@ build_frontend() {
     # Set production environment
     export NODE_ENV=production
     
+    # Apply memory optimizations for VPS builds
+    if [ "$LOW_MEMORY" = true ]; then
+        echo "🧠 Applying memory optimizations for VPS..."
+        export LIGHT_BUILD=1
+        export NODE_OPTIONS="--max-old-space-size=1024"
+        export NEXT_TELEMETRY_DISABLED=1
+        export DISABLE_ESLINT=1
+        echo "   • Disabled TypeScript checks"
+        echo "   • Disabled ESLint checks"  
+        echo "   • Limited Node.js heap to 1GB"
+        echo "   • Disabled Next.js telemetry"
+    fi
+    
     # Build frontend
     echo "🏗️  Running production build..."
-    npm run build
+    if [ "$LOW_MEMORY" = true ]; then
+        npm run vps-build
+    else
+        npm run build
+    fi
     
     # Move build output to staging
     echo "📦 Moving frontend build to staging..."

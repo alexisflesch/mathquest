@@ -87,6 +87,7 @@ exports.joinGamePayloadSchema = zod_1.z.object({
     userId: zod_1.z.string().min(1, { message: "Player ID cannot be empty." }),
     username: zod_1.z.string().min(1, { message: "Username cannot be empty." }),
     avatarEmoji: zod_1.z.string().optional(),
+    isDiffered: zod_1.z.boolean().optional(),
 });
 // Leave game payload schema for unified flow
 exports.leaveGamePayloadSchema = zod_1.z.object({
