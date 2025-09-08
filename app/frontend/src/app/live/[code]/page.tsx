@@ -1,4 +1,5 @@
 "use client";
+import AnswerDebug from '@/components/AnswerDebug';
 import QrCodeWithLogo from '@/components/QrCodeWithLogo';
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -251,10 +252,32 @@ export default function LiveGamePage() {
 
     // Handlers
     const handleSingleChoice = useCallback((idx: number) => {
-        if (gameState.gameStatus !== 'active' || !gameState.currentQuestion) return;
+        console.log('🎯 [FRONTEND-ANSWER-CLICK] Answer button clicked:', {
+            answerIndex: idx,
+            gameStatus: gameState.gameStatus,
+            questionUid: gameState.currentQuestion?.uid,
+            previousSelection: selectedAnswer,
+            socketConnected: !!socket,
+            timestamp: new Date().toISOString()
+        });
+
+        if (!gameState.currentQuestion) {
+            console.log('🚫 [FRONTEND-ANSWER-CLICK] Early return - no question available:', {
+                gameStatus: gameState.gameStatus,
+                hasQuestion: !!gameState.currentQuestion
+            });
+            return;
+        }
+
         setSelectedAnswer(idx === selectedAnswer ? null : idx);
+        console.log('✅ [FRONTEND-ANSWER-CLICK] About to submit answer:', {
+            questionUid: gameState.currentQuestion.uid,
+            answer: idx,
+            timeSpent: Date.now()
+        });
+
         submitAnswer(gameState.currentQuestion.uid, idx, Date.now());
-    }, [gameState, selectedAnswer, submitAnswer]);
+    }, [gameState, selectedAnswer, submitAnswer, socket]);
 
     const handleSubmitMultiple = useCallback(() => {
         if (gameState.gameStatus !== 'active' || !gameState.currentQuestion) return;
@@ -323,7 +346,7 @@ export default function LiveGamePage() {
         return null;
     }
 
-    if (gameState.gameStatus === 'waiting' && gameState.connectedToRoom) {
+    if (gameState.gameStatus === 'waiting' && gameState.connectedToRoom && !gameState.currentQuestion) {
         return (
             <LobbyDisplay
                 lobbyState={lobbyState}

@@ -88,16 +88,20 @@ HTMLCanvasElement.prototype.toBlob = jest.fn((callback) => {
     if (callback) callback(new Blob());
 });
 
-// Mock Request for Next.js API route testing
+// Mock Request for Next.js API route testing - needed for NextRequest to work
 global.Request = class MockRequest {
     constructor(url, options = {}) {
-        this.url = url;
+        this._url = typeof url === 'string' ? url : url.toString();
         this.method = options.method || 'GET';
         this.headers = options.headers || new Map();
     }
+    
+    get url() {
+        return this._url;
+    }
 
     clone() {
-        return new MockRequest(this.url, { method: this.method, headers: this.headers });
+        return new MockRequest(this._url, { method: this.method, headers: this.headers });
     }
 };
 
@@ -126,4 +130,41 @@ global.Response = class MockResponse {
             headers: this.headers
         });
     }
+
+    static json(body, init = {}) {
+        return new MockResponse(JSON.stringify(body), {
+            ...init,
+            headers: {
+                'content-type': 'application/json',
+                ...init.headers
+            }
+        });
+    }
 };
+
+// Mock NextResponse for Next.js API route testing
+jest.mock('next/server', () => {
+    return {
+        NextRequest: class MockNextRequest {
+            constructor(url, options = {}) {
+                this.url = typeof url === 'string' ? url : url.toString();
+                this.method = options.method || 'GET';
+                this.headers = options.headers || new Map();
+                this.nextUrl = {
+                    searchParams: new URLSearchParams(this.url.split('?')[1] || '')
+                };
+            }
+        },
+        NextResponse: {
+            json: (body, init = {}) => {
+                return new global.Response(JSON.stringify(body), {
+                    ...init,
+                    headers: {
+                        'content-type': 'application/json',
+                        ...init.headers
+                    }
+                });
+            }
+        }
+    };
+});

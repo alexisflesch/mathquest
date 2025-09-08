@@ -52,6 +52,7 @@ describe('/api/questions/filters - Simplified Tests', () => {
 
             // Create a mock request with gradeLevel=L1
             const mockRequest = {
+                url: 'http://localhost:3000/api/questions/filters?gradeLevel=L1',
                 nextUrl: {
                     searchParams: new URLSearchParams('gradeLevel=L1')
                 }
@@ -106,6 +107,7 @@ describe('/api/questions/filters - Simplified Tests', () => {
 
             // Create a mock request with no filters
             const mockRequest = {
+                url: 'http://localhost:3000/api/questions/filters',
                 nextUrl: {
                     searchParams: new URLSearchParams('')
                 }
@@ -126,6 +128,7 @@ describe('/api/questions/filters - Simplified Tests', () => {
             mockFetch.mockRejectedValue(new Error('Backend error'));
 
             const mockRequest = {
+                url: 'http://localhost:3000/api/questions/filters',
                 nextUrl: {
                     searchParams: new URLSearchParams('')
                 }

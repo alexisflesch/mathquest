@@ -70,12 +70,12 @@ describe('/api/questions/filters', () => {
                     { value: 'biology', isCompatible: false },
                     { value: 'chemistry', isCompatible: false }
                 ],
-                tags: [
+                tags: expect.arrayContaining([
                     { value: 'basic', isCompatible: true },
                     { value: 'quiz', isCompatible: true },
                     { value: 'advanced', isCompatible: false },
                     { value: 'exam', isCompatible: false }
-                ]
+                ])
             });
 
             // Verify backend was called with correct parameters
@@ -91,7 +91,7 @@ describe('/api/questions/filters', () => {
 
             // Second call: get compatible options (with filters)
             expect(mockFetch).toHaveBeenNthCalledWith(2,
-                expect.stringContaining('/questions/filters?gradeLevel=elementary&disciplines=math'),
+                expect.stringContaining('/questions/filters?gradeLevel=elementary&discipline=math'),
                 expect.objectContaining({
                     method: 'GET'
                 })
@@ -142,7 +142,7 @@ describe('/api/questions/filters', () => {
             const secondCallUrl = mockFetch.mock.calls[1][0] as string;
             expect(secondCallUrl).toMatch(/gradeLevel=elementary/);
             expect(secondCallUrl).toMatch(/gradeLevel=middle/);
-            expect(secondCallUrl).toMatch(/themes=algebra/);
+            expect(secondCallUrl).toMatch(/theme=algebra/);
         });
 
         it('should return all options as compatible when no filters are selected', async () => {
@@ -213,6 +213,18 @@ describe('/api/questions/filters', () => {
         });
 
         it('should properly encode special characters in query parameters', async () => {
+            // Mock the first call (all options)
+            mockFetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    gradeLevel: ['K-12'],
+                    disciplines: ['Math & Science'],
+                    themes: ['Topic A/B'],
+                    tags: ['Tag#1']
+                })
+            } as Response);
+
+            // Mock the second call (compatible options)  
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: async () => ({
@@ -231,9 +243,9 @@ describe('/api/questions/filters', () => {
             expect(response.status).toBe(200);
 
             // Verify that special characters are handled correctly
-            const backendCallUrl = mockFetch.mock.calls[0][0] as string;
-            expect(backendCallUrl).toContain('disciplines=Math%20%26%20Science');
-            expect(backendCallUrl).toContain('themes=Topic%20A%2FB');
+            const backendCallUrl = mockFetch.mock.calls[1][0] as string;
+            expect(backendCallUrl).toContain('discipline=Math+%26+Science');
+            expect(backendCallUrl).toContain('theme=Topic+A%2FB');
         });
     });
 

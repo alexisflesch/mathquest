@@ -8,9 +8,18 @@ export async function GET(request: NextRequest) {
         // Extract current filter selections from query parameters
         const currentSelections = {
             gradeLevel: searchParams.getAll('gradeLevel'),
-            disciplines: searchParams.getAll('disciplines'),
-            themes: searchParams.getAll('themes'),
-            tags: searchParams.getAll('tags')
+            disciplines: [
+                ...searchParams.getAll('disciplines'),
+                ...searchParams.getAll('discipline') // Handle both singular and plural
+            ],
+            themes: [
+                ...searchParams.getAll('themes'),
+                ...searchParams.getAll('theme') // Handle both singular and plural
+            ],
+            tags: [
+                ...searchParams.getAll('tags'),
+                ...searchParams.getAll('tag') // Handle both singular and plural
+            ]
         };
 
         // Extract mode parameter (practice, tournament, quiz)

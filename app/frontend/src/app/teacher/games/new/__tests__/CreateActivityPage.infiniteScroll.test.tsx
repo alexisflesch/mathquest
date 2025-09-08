@@ -167,6 +167,7 @@ const createMockFiltersResponse = () => ({
 describe('CreateActivityPage Infinite Scroll', () => {
     const mockPush = jest.fn();
     const mockMakeApiRequest = makeApiRequest as jest.MockedFunction<typeof makeApiRequest>;
+    const originalFetch = global.fetch;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -193,18 +194,29 @@ describe('CreateActivityPage Infinite Scroll', () => {
         mockIntersectionObserver.mockClear();
     });
 
+    afterEach(() => {
+        // Restore original fetch
+        global.fetch = originalFetch;
+    });
+
     const setupApiMocks = () => {
         // Clear any previous calls completely
         mockMakeApiRequest.mockClear();
         mockMakeApiRequest.mockReset();
 
-        // Mock filters request (called first by useEffect)
-        mockMakeApiRequest.mockResolvedValueOnce(createMockFiltersResponse());
+        // Mock the fetch call for filters (using fetch() directly in component)
+        const mockFetch = jest.fn();
+        global.fetch = mockFetch;
 
-        // Mock initial questions request 
+        mockFetch.mockResolvedValueOnce(new Response(JSON.stringify(createMockFiltersResponse()), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        }));
+
+        // Mock initial questions request (using makeApiRequest)
         mockMakeApiRequest.mockResolvedValueOnce(createMockQuestionsResponse(0, 20));
 
-        console.log('Setup API mocks - filters and questions responses configured');
+        console.log('Setup API mocks - filters (fetch) and questions (makeApiRequest) responses configured');
     };
 
     describe('Initial Load and Setup', () => {
@@ -309,7 +321,7 @@ describe('CreateActivityPage Infinite Scroll', () => {
 
             // Wait for the API call and new questions to appear
             await waitFor(() => {
-                expect(mockMakeApiRequest).toHaveBeenCalledTimes(3); // filters + first + second batch
+                expect(mockMakeApiRequest).toHaveBeenCalledTimes(2); // first + second batch (filters use fetch, not makeApiRequest)
             }, { timeout: 3000 });
 
             // Verify second batch was called with correct offset
@@ -386,7 +398,7 @@ describe('CreateActivityPage Infinite Scroll', () => {
 
             // Wait for the API call and new questions to appear
             await waitFor(() => {
-                expect(mockMakeApiRequest).toHaveBeenCalledTimes(3); // filters + first + second batch
+                expect(mockMakeApiRequest).toHaveBeenCalledTimes(2); // first + second batch (filters use fetch, not makeApiRequest)
             }, { timeout: 3000 });
 
             // Should load more questions with mobile threshold (300px)
@@ -444,8 +456,8 @@ describe('CreateActivityPage Infinite Scroll', () => {
             });
 
             // Should only have one API call for the second batch (the first scroll)
-            // Total: filters + first batch + one second batch call = 3
-            expect(mockMakeApiRequest).toHaveBeenCalledTimes(3); // filters + first batch + second batch
+            // Total: first batch + one second batch call = 2 (filters use fetch, not makeApiRequest)
+            expect(mockMakeApiRequest).toHaveBeenCalledTimes(2); // first batch + second batch
 
             // Resolve the promise
             resolveSecondBatch(createMockQuestionsResponse(20, 20));
@@ -502,7 +514,7 @@ describe('CreateActivityPage Infinite Scroll', () => {
 
             // Should not load more questions
             await waitFor(() => {
-                expect(mockMakeApiRequest).toHaveBeenCalledTimes(2); // Only filters + first batch
+                expect(mockMakeApiRequest).toHaveBeenCalledTimes(1); // Only first batch (filters use fetch, not makeApiRequest)
             });
         });
     });
@@ -584,6 +596,12 @@ describe('CreateActivityPage Infinite Scroll', () => {
             });
 
             // Mock filter change that triggers reset
+            // Need to mock both fetch (for filters) and makeApiRequest (for questions)
+            const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+            mockFetch.mockResolvedValueOnce(new Response(JSON.stringify(createMockFiltersResponse()), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            }));
             mockMakeApiRequest.mockResolvedValueOnce(createMockQuestionsResponse(0, 20));
 
             // Change a filter to trigger reset
@@ -596,7 +614,7 @@ describe('CreateActivityPage Infinite Scroll', () => {
 
             // Wait for new questions to load
             await waitFor(() => {
-                expect(mockMakeApiRequest).toHaveBeenCalledTimes(4); // filters + initial + filters + reset
+                expect(mockMakeApiRequest).toHaveBeenCalledTimes(2); // initial + reset (filters use fetch, not makeApiRequest)
             });
 
             // OpenUid should be reset (no expanded questions)
