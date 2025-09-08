@@ -1,16 +1,7 @@
 /**
  * MathQuest Landing Page
  * 
- * This comp  //  // No automatic redirects - let users navigate from the main landing page
-  useEffect(() => {
-    if (isLoading) return;
-    // All user types stay on landing page - no redirects to separate home pages
-    console.log('[LandingPage] User state loaded, showing landing page for all users');
-  }, [isLoading]);tomatic redirections - show landing page content for all users
-  if (isLoading) {
-    // Only show loading state during auth check
-    return null;
-  } the main entry point for the application, providing:
+ * This component serves as the main entry point for the application, providing:
  * - A welcome introduction to the MathQuest platform
  * - Role selection between Student and Teacher modes
  * - Smart navigation that remembers previous user roles
@@ -26,7 +17,6 @@ import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
 import InfinitySpin from '@/components/InfinitySpin';
 import { useEffect } from 'react';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function Home() {
   const { isStudent, isTeacher, isLoading, refreshAuth, canJoinGame } = useAuth();

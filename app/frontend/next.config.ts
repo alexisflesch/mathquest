@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
 
     // Memory optimizations for low-memory environments
     ...(isLightBuild && {
-        swcMinify: false, // Disable SWC minification to save memory
         compiler: {
             removeConsole: false, // Skip console removal to save processing
         },
@@ -21,12 +20,8 @@ const nextConfig: NextConfig = {
 
     webpack: (config, { dev, isServer }) => {
         config.resolve.alias["@"] = path.resolve(__dirname, "src");
-        config.resolve.alias["@logger"] = path.resolve(__dirname, "../shared/logger.ts");
         config.resolve.alias["@components"] = path.resolve(__dirname, "src/components");
         config.resolve.alias["@shared"] = path.resolve(__dirname, "../shared");
-        // Add missing aliases for build
-        config.resolve.alias["@db"] = path.resolve(__dirname, "../backend-backup/db/index.ts");
-        config.resolve.alias["@/app/utils/usernameFilter"] = path.resolve(__dirname, "src/app/utils/usernameFilter.ts");
 
         // Memory optimizations for light builds
         if (isLightBuild) {
