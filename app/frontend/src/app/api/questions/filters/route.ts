@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         currentSelections.disciplines.forEach((discipline: string) => compatibleParams.append('discipline', discipline));
         currentSelections.themes.forEach((theme: string) => compatibleParams.append('theme', theme));
         currentSelections.tags.forEach((tag: string) => compatibleParams.append('tag', tag));
-        
+
         // Add mode parameter to compatible options call
         if (mode) {
             compatibleParams.append('mode', mode);
