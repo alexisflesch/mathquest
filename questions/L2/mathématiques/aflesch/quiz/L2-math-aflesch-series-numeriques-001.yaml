@@ -10,6 +10,7 @@
   tags: ["convergence", "absolue convergence"]
   title: "Série simple"
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -29,6 +30,7 @@
   tags: ["convergence", "équivalence"]
   title: "Série téléscopique"
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -51,6 +53,7 @@
   tags: ["Riemann"]
   title: "Condition suffisante série de Riemann"
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -73,6 +76,7 @@
   themes: ["Séries numériques"]
   title: "Conditions nécessaires de convergence"
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -92,6 +96,7 @@
   themes: ["Séries numériques"]
   title: "Conditions de convergence"
   questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -113,6 +118,7 @@
   tags: ["série géométrique", "calcul de somme"]
   title: "Série géométrique dérivée"
   questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |

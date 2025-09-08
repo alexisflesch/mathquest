@@ -1,0 +1,162 @@
+- uid: "aflesch-mt3-integrales-generalisees-011"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Apparence compliquée à l'infini"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  feedbackWaitTime: 10
+  text: |
+    L'intégrale suivante est-elle convergente ?
+    \[
+    \int_{1}^{+\infty} \frac{x^2 + 3x - \ln(x)}{x^4 + 7\sqrt{x}}\,dx
+    \]
+  answerOptions:
+    - "Oui"
+    - "Non"
+  correctAnswers: [true, false]
+  explanation: |
+    Pour \(x\to +\infty\), le terme dominant au numérateur est \(x^2\), et au dénominateur c’est \(x^4\). Donc l’intégrande est équivalent \(1/x^2\), ce qui donne une intégrale convergente par théorème d'équivalence (\(1/x^2\) est positif).
+
+- uid: "aflesch-mt3-integrales-generalisees-012"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Croissance lente au numérateur"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  feedbackWaitTime: 10
+  text: |
+    L'intégrale suivante est-elle convergente ?
+    \[
+    \int_{1}^{+\infty} \frac{\ln(x)}{x^{3/2} + 5}\,dx
+    \]
+  answerOptions:
+    - "Oui"
+    - "Non"
+  correctAnswers: [true, false]
+  explanation: |
+    Au voisinage de \(+\infty\), l'intégrande est majoré par \( x/x^{3/2}\). On reconnaît alors une intégrale de Riemann convergente et on peut utiliser le théorème d'équivalence, car \(1/x^{1/2}\) est positif.
+
+- uid: "aflesch-mt3-integrales-generalisees-013"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Rapport rationnel"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  feedbackWaitTime: 10
+  text: |
+    L'intégrale suivante est-elle convergente ?
+    \[
+    \int_{1}^{+\infty} \frac{x^5 - 7}{2x^5 + \sqrt{x}}\,dx
+    \]
+  answerOptions:
+    - "Oui"
+    - "Non"
+  correctAnswers: [false, true]
+  explanation: |
+    Pour \(x\to +\infty\), les termes dominants sont \(x^5\) au numérateur et \(2x^5\) au dénominateur. L’intégrande est donc équivalent à \(1/2\) et l'intégrale diverge.
+
+- uid: "aflesch-mt3-integrales-generalisees-014"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Comportement en 1/x"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  feedbackWaitTime: 10
+  text: |
+    L'intégrale suivante est-elle convergente ?
+    \[
+    \int_{1}^{+\infty} \frac{2x^2 + 1}{x^3 + \ln(x)}\,dx
+    \]
+  answerOptions:
+    - "Oui"
+    - "Non"
+  correctAnswers: [true, false]
+  explanation: |
+    Pour \(x\to +\infty\), l'intégrande est équivalent à \(2x^2/x^3 = 2/x\). D'où le résultat par théorème d'équivalence (tout est positif).
+
+- uid: "aflesch-mt3-integrales-generalisees-015"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Décroissance exponentielle"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  feedbackWaitTime: 10
+  text: |
+    L'intégrale suivante est-elle convergente ?
+    \[
+    \int_{1}^{+\infty} \frac{e^{-x} (x^2+1)}{\sqrt{x}}\,dx
+    \]
+  answerOptions:
+    - "Oui"
+    - "Non"
+  correctAnswers: [true, false]
+  explanation: |
+    Le facteur \(e^{-x}\) impose une décroissance exponentielle très rapide. On peut vérifier la convergence avec le critère de Riemann facilement.
+
+
+- uid: "aflesch-mt3-integrales-generalisees-017"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Puissance positive à 0"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  feedbackWaitTime: 10
+  text: |
+    L'intégrale suivante est-elle convergente ?
+    \[
+    \int_{0}^{1} \frac{1}{\sqrt{x}(1+x^2)}\,dx
+    \]
+  answerOptions:
+    - "Oui"
+    - "Non"
+  correctAnswers: [true, false]
+  explanation: |
+    Pour \(x\to 0^+\), l’intégrande est équivalente à \(1/\sqrt{x}\). Comme \(\int_0^1 x^{-1/2}\, dx\) converge, l’intégrale est convergente (tout est positif).
+
+
+- uid: "aflesch-mt3-integrales-generalisees-020"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Fraction rationnelle en 0"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  feedbackWaitTime: 10
+  text: |
+    L'intégrale suivante est-elle convergente ?
+    \[
+    \int_{0}^{1} \frac{x^2 + \sqrt{x}}{x^3 + x^2}\,dx
+    \]
+  answerOptions:
+    - "Oui"
+    - "Non"
+  correctAnswers: [false, true]
+  explanation: |
+    Au voisinage de 0, un équivalent de l'intégrande est \(1/x^{3/2}\). Comme \(\int_0^1 1/x^{3/2}\, dx\) diverge, l’intégrale diverge (tout est positif).
