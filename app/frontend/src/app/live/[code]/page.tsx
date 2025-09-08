@@ -289,7 +289,7 @@ export default function LiveGamePage() {
     const handleLeaderboardClose = useCallback(() => setShowLeaderboardModal(false), []);
 
     const isReadonly = useMemo(() => {
-        return gameState.phase === 'show_answers' || gameState.gameStatus === 'completed' || (gameState.answered && gameMode === 'practice');
+        return gameState.phase === 'show_answers' || gameState.gameStatus === 'finished' || (gameState.answered && gameMode === 'practice');
     }, [gameState.phase, gameState.gameStatus, gameState.answered, gameMode]);
 
     const correctAnswersBoolean = useMemo(() => {
@@ -323,7 +323,7 @@ export default function LiveGamePage() {
         return null;
     }
 
-    if (gameState.gameStatus === 'pending' && gameState.connectedToRoom) {
+    if (gameState.gameStatus === 'waiting' && gameState.connectedToRoom) {
         return (
             <LobbyDisplay
                 lobbyState={lobbyState}

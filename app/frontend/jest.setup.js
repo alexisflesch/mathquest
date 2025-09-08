@@ -87,3 +87,43 @@ HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'mocked-data-url');
 HTMLCanvasElement.prototype.toBlob = jest.fn((callback) => {
     if (callback) callback(new Blob());
 });
+
+// Mock Request for Next.js API route testing
+global.Request = class MockRequest {
+    constructor(url, options = {}) {
+        this.url = url;
+        this.method = options.method || 'GET';
+        this.headers = options.headers || new Map();
+    }
+
+    clone() {
+        return new MockRequest(this.url, { method: this.method, headers: this.headers });
+    }
+};
+
+// Mock Response for Next.js API route testing
+global.Response = class MockResponse {
+    constructor(body, options = {}) {
+        this.body = body;
+        this.status = options.status || 200;
+        this.statusText = options.statusText || 'OK';
+        this.headers = options.headers || new Map();
+        this.ok = this.status >= 200 && this.status < 300;
+    }
+
+    async json() {
+        return typeof this.body === 'string' ? JSON.parse(this.body) : this.body;
+    }
+
+    async text() {
+        return typeof this.body === 'string' ? this.body : JSON.stringify(this.body);
+    }
+
+    clone() {
+        return new MockResponse(this.body, {
+            status: this.status,
+            statusText: this.statusText,
+            headers: this.headers
+        });
+    }
+};

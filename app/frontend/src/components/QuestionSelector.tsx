@@ -21,7 +21,8 @@ import type { QuestionData } from '@shared/types/socketEvents';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { Check, X, Search } from 'lucide-react';
 import { makeApiRequest } from '@/config/api';
-import { QuestionsFiltersResponseSchema, QuestionsResponseSchema } from '@/types/api';
+import { QuestionsResponseSchema } from '@/types/api';
+import { QuestionsFiltersResponseSchema, type QuestionsFiltersResponse } from '@shared/types/api/schemas';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 
@@ -55,13 +56,13 @@ export default function QuestionSelector({
     const [expanded, setExpanded] = useState<{ [uid: string]: boolean }>({});
 
     useEffect(() => {
-        makeApiRequest('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
+        makeApiRequest<QuestionsFiltersResponse>('/api/questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
             .then(data => {
-                // Filter out null values from niveaux array
+                // Extract values from FilterOption objects
                 setFilters({
-                    disciplines: data.disciplines,
-                    gradeLevel: data.gradeLevel.filter((n): n is string => n !== null),
-                    themes: data.themes
+                    disciplines: data.disciplines.map(option => option.value),
+                    gradeLevel: data.gradeLevel.map(option => option.value),
+                    themes: data.themes.map(option => option.value)
                 });
             })
             .catch(error => {

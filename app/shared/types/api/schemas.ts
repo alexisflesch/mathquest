@@ -354,10 +354,18 @@ export const QuestionUidsResponseSchema = z.object({
     total: z.number()
 });
 
+// FilterOption schema for enhanced filters with compatibility information
+export const FilterOptionSchema = z.object({
+    value: z.string(),
+    label: z.string().optional(),
+    isCompatible: z.boolean()
+});
+
 export const QuestionsFiltersResponseSchema = z.object({
-    gradeLevel: z.array(z.string().nullable()),
-    disciplines: z.array(z.string()),
-    themes: z.array(z.string())
+    gradeLevel: z.array(FilterOptionSchema),
+    disciplines: z.array(FilterOptionSchema),
+    themes: z.array(FilterOptionSchema),
+    tags: z.array(FilterOptionSchema).optional()
 });
 
 export const QuestionsCountResponseSchema = z.object({

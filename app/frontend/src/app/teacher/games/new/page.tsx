@@ -173,40 +173,63 @@ export default function CreateActivityPage() {
 
             // Add current selections - multiple values as separate parameters for OR logic
             selectedLevels.forEach(level => params.append('gradeLevel', level));
-            selectedDisciplines.forEach(discipline => params.append('discipline', discipline));
-            selectedThemes.forEach(theme => params.append('theme', theme));
-            selectedTags.forEach(tag => params.append('tag', tag));
+            selectedDisciplines.forEach(discipline => params.append('disciplines', discipline));
+            selectedThemes.forEach(theme => params.append('themes', theme));
+            selectedTags.forEach(tag => params.append('tags', tag));
 
-            const url = `questions/filters?${params.toString()}`;
+            const url = `/api/questions/filters?${params.toString()}`;
 
-            const data = await makeApiRequest<EnhancedFiltersResponse>(url);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
 
             logger.debug('Enhanced filters API response:', data);
+            console.log('🔍 API Response:', data);
+            console.log('🔍 Disciplines from API (raw):', data.disciplines);
+            console.log('🔍 Disciplines first item:', data.disciplines?.[0]);
+            console.log('🔍 Themes from API (raw):', data.themes);
+            console.log('🔍 Themes first item:', data.themes?.[0]);
 
             // Helper function to process filter arrays with selection-based compatibility
             const processFilterOptions = (
                 apiResponse: (string | FilterOption)[],
                 currentSelected: string[]
             ): FilterOption[] => {
+                console.log('🔍 processFilterOptions called with:', { apiResponse, currentSelected });
+
                 const result: FilterOption[] = [];
 
-                // Extract compatible options from API response (normalize to strings first)
-                const compatibleOptions = apiResponse.map(item =>
-                    typeof item === 'string' ? item : item.value
-                );
+                // If API response already contains FilterOption objects, use them directly
+                if (apiResponse.length > 0 && typeof apiResponse[0] === 'object' && 'isCompatible' in apiResponse[0]) {
+                    console.log('✅ Using FilterOption objects directly from API');
+                    // Use the FilterOption objects directly from API
+                    (apiResponse as FilterOption[]).forEach(option => {
+                        result.push(option);
+                    });
+                } else {
+                    console.log('⚠️ Converting string array to FilterOption objects');
+                    // Fallback for string arrays - mark all as compatible
+                    const compatibleOptions = apiResponse.map(item =>
+                        typeof item === 'string' ? item : item.value
+                    );
 
-                // Add all compatible options from API (these are always compatible)
-                compatibleOptions.forEach(option => {
-                    result.push({ value: option, isCompatible: true });
-                });
+                    compatibleOptions.forEach(option => {
+                        result.push({ value: option, isCompatible: true });
+                    });
+                }
 
                 // Add any selected options that are NOT in the API response (these are incompatible)
+                const apiValues = result.map(item => item.value);
                 currentSelected.forEach(selected => {
-                    if (!compatibleOptions.includes(selected)) {
+                    if (!apiValues.includes(selected)) {
+                        console.log('⚠️ Adding incompatible selected option:', selected);
                         result.push({ value: selected, isCompatible: false });
                     }
                 });
 
+                console.log('🎯 processFilterOptions result:', result);
                 return result;
             };
 
@@ -221,23 +244,29 @@ export default function CreateActivityPage() {
                 const result: FilterOption[] = [];
                 const addedValues = new Set<string>();
 
+                let compatibleGradeLevels: FilterOption[] = [];
+
                 // Handle both string arrays and FilterOption arrays
-                const compatibleGradeLevels = apiResponse.map(item =>
-                    typeof item === 'string' ? item : item.value
-                ).filter(value => value != null);
+                if (apiResponse.length > 0 && typeof apiResponse[0] === 'object' && 'isCompatible' in apiResponse[0]) {
+                    // Use the FilterOption objects directly from API
+                    compatibleGradeLevels = apiResponse as FilterOption[];
+                } else {
+                    // Convert string array to FilterOption array (mark all as compatible)
+                    compatibleGradeLevels = (apiResponse as string[]).map(level => ({
+                        value: level,
+                        isCompatible: true
+                    }));
+                }
 
-                logger.info('GRADE_DEBUG - Compatible grade levels:', compatibleGradeLevels);
+                logger.info('GRADE_DEBUG - Compatible grade levels with compatibility flags:', compatibleGradeLevels);
 
-                const sortedGradeLevels = sortGradeLevels(compatibleGradeLevels);
+                const sortedGradeLevels = sortGradeLevels(compatibleGradeLevels.map(g => g.value));
                 logger.info('GRADE_DEBUG - Sorted grade levels:', sortedGradeLevels);
 
-                // Add sorted compatible options maintaining their compatibility status
+                // Add sorted compatible options maintaining their compatibility status from API
                 sortedGradeLevels.forEach(gradeLevel => {
                     if (!addedValues.has(gradeLevel) && gradeLevel) {
-                        // For string arrays, all items are compatible by default
-                        const originalItem = typeof apiResponse[0] === 'string'
-                            ? { value: gradeLevel, isCompatible: true }
-                            : (apiResponse as FilterOption[]).find(item => item.value === gradeLevel);
+                        const originalItem = compatibleGradeLevels.find(item => item.value === gradeLevel);
 
                         const newItem = {
                             value: gradeLevel,
@@ -250,8 +279,9 @@ export default function CreateActivityPage() {
                 });
 
                 // Add any selected options that are NOT in the API response (these are incompatible)
+                const apiGradeLevelValues = compatibleGradeLevels.map(g => g.value);
                 currentSelected.forEach(selected => {
-                    if (!compatibleGradeLevels.includes(selected) && !addedValues.has(selected) && selected) {
+                    if (!apiGradeLevelValues.includes(selected) && !addedValues.has(selected) && selected) {
                         const newItem = { value: selected, isCompatible: false };
                         logger.info('GRADE_DEBUG - Adding incompatible selected:', newItem);
                         result.push(newItem);

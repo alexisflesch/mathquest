@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import CustomDropdown from "@/components/CustomDropdown";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import { makeApiRequest } from '@/config/api';
-import { QuizListResponseSchema, QuestionsFiltersResponseSchema, type QuizListResponse, type QuestionsFiltersResponse } from '@/types/api';
+import { QuizListResponseSchema, type QuizListResponse } from '@/types/api';
+import { QuestionsFiltersResponseSchema, type QuestionsFiltersResponse } from '@shared/types/api/schemas';
 import { useAuth } from '@/components/AuthProvider';
 import { Search } from 'lucide-react';
 import type { GameTemplate } from '@shared/types/core/game';
@@ -47,13 +48,13 @@ export default function UseQuizPage() {
         } else {
             setQuizzes([]);
         }
-        makeApiRequest<QuestionsFiltersResponse>('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
+        makeApiRequest<QuestionsFiltersResponse>('/api/questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
             .then(data => {
-                // Filter out null values from niveaux array
+                // Extract values from FilterOption objects
                 setFilters({
-                    gradeLevel: data.gradeLevel.filter((n): n is string => n !== null),
-                    disciplines: data.disciplines,
-                    themes: data.themes
+                    gradeLevel: data.gradeLevel.map(option => option.value),
+                    disciplines: data.disciplines.map(option => option.value),
+                    themes: data.themes.map(option => option.value)
                 });
             })
             .catch(error => {

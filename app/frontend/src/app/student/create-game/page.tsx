@@ -21,7 +21,8 @@ import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import EnhancedSingleSelectDropdown from "@/components/EnhancedSingleSelectDropdown";
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
-import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
+import { QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
+import { QuestionsFiltersResponseSchema, type QuestionsFiltersResponse } from '@shared/types/api/schemas';
 import { useAuth } from '@/components/AuthProvider';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { sortGradeLevels } from '@/utils/gradeLevelSort';
@@ -63,15 +64,15 @@ function StudentCreateTournamentPageInner() {
             params.append('mode', 'tournament');
         }
 
-        const url = params.toString() ? `questions/filters?${params.toString()}` : 'questions/filters';
+        const url = params.toString() ? `/api/questions/filters?${params.toString()}` : '/api/questions/filters';
 
         makeApiRequest<QuestionsFiltersResponse>(url, undefined, undefined, QuestionsFiltersResponseSchema)
             .then((data) => {
-                // Filter out null values to match local Filters interface
+                // Extract values from FilterOption objects to match local Filters interface
                 const cleanedData = {
-                    gradeLevel: sortGradeLevels(data.gradeLevel.filter((n): n is string => n !== null)),
-                    disciplines: data.disciplines,
-                    themes: data.themes
+                    gradeLevel: sortGradeLevels(data.gradeLevel.map(option => option.value)),
+                    disciplines: data.disciplines.map(option => option.value),
+                    themes: data.themes.map(option => option.value)
                 };
                 setFilters(cleanedData);
                 logger.debug("Loaded filters", cleanedData);
@@ -99,7 +100,7 @@ function StudentCreateTournamentPageInner() {
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    setAvailableDisciplines(data.disciplines.sort());
+                    setAvailableDisciplines(data.disciplines.map(option => option.value).sort());
                 })
                 .catch(err => {
                     logger.error("Error loading disciplines", err);
@@ -130,7 +131,7 @@ function StudentCreateTournamentPageInner() {
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    setAvailableThemes(data.themes.sort());
+                    setAvailableThemes(data.themes.map(option => option.value).sort());
                 })
                 .catch(err => {
                     logger.error("Error loading themes", err);
