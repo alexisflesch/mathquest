@@ -36,6 +36,10 @@ describe('FOCUSED: Live→Deferred nbAttempts Bug', () => {
         await prisma.gameInstance.deleteMany({
             where: { id: testData.gameId }
         });
+        // Delete any game templates created by this user first to avoid FK constraints
+        await prisma.gameTemplate.deleteMany({
+            where: { creatorId: testData.userId }
+        });
         await prisma.user.deleteMany({
             where: { id: testData.userId }
         });

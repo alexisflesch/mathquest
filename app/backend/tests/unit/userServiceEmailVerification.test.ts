@@ -1,3 +1,10 @@
+require('../setupTestEnv');
+
+// Mock jsonwebtoken to avoid runtime issues inside jwt.sign during tests
+jest.mock('jsonwebtoken', () => ({
+    sign: jest.fn(() => 'mocked-jwt-token')
+}));
+
 import { UserService } from '@/core/services/userService';
 import createLogger from '@/utils/logger';
 

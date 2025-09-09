@@ -1,3 +1,4 @@
+require('../../../tests/setupTestEnv');
 import { Server as SocketIOServer } from 'socket.io';
 import Client from 'socket.io-client';
 import { createServer } from 'http';

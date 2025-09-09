@@ -602,6 +602,7 @@ export function useStudentGameSocket({
     const submitAnswer = useCallback((questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
         if (!socket || !accessCode || !userId) {
             logger.warn("Cannot submit answer: missing socket or parameters");
+            setError("Connexion perdue. Tentative de reconnexion...");
             return;
         }
 
@@ -615,6 +616,7 @@ export function useStudentGameSocket({
             socket.emit('game_answer', validatedPayload);
         } catch (error) {
             logger.error('Invalid game_answer payload:', error);
+            setError("Erreur lors de l'envoi de la réponse. Veuillez réessayer.");
         }
     }, [socket, accessCode, userId]);
 

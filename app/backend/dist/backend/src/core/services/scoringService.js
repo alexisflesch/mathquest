@@ -42,6 +42,23 @@ async function calculateAnswerScore(question, answer, serverTimeSpent, accessCod
                     totalQuestions = parsed.questionUids.length;
                 }
             }
+            else {
+                // Redis didn't have metadata for this game - try to derive question count from DB
+                try {
+                    const gi = await prisma_1.prisma.gameInstance.findUnique({
+                        where: { accessCode },
+                        select: { gameTemplateId: true }
+                    });
+                    if (gi && gi.gameTemplateId) {
+                        const qCount = await prisma_1.prisma.questionsInGameTemplate.count({ where: { gameTemplateId: gi.gameTemplateId } });
+                        if (qCount > 0)
+                            totalQuestions = qCount;
+                    }
+                }
+                catch (dbErr) {
+                    logger.warn({ error: dbErr, accessCode }, 'Failed to fetch question count from DB; falling back to default of 10');
+                }
+            }
         }
         catch (error) {
             logger.warn({ error, accessCode }, 'Failed to get total questions for scaling, using default of 10');
@@ -52,51 +69,40 @@ async function calculateAnswerScore(question, answer, serverTimeSpent, accessCod
     // Calculate correctness score based on question type
     let correctnessScore = 0;
     if (question.multipleChoiceQuestion) {
-        // New balanced scoring for multiple choice questions
-        const mcq = question.multipleChoiceQuestion;
-        if (!mcq.correctAnswers || !Array.isArray(mcq.correctAnswers)) {
-            return { score: 0, timePenalty: 0 };
-        }
-        const B = mcq.correctAnswers.filter(Boolean).length; // Total correct answers
-        const M = mcq.correctAnswers.filter((x) => !x).length; // Total incorrect answers
-        if (B === 0)
-            return { score: 0, timePenalty: 0 }; // No correct answers defined
-        let C_B = 0; // Correct answers selected
-        let C_M = 0; // Incorrect answers selected
-        if (Array.isArray(answer)) {
-            // Multiple selections
-            for (const selectedIndex of answer) {
-                if (selectedIndex >= 0 && selectedIndex < mcq.correctAnswers.length) {
-                    if (mcq.correctAnswers[selectedIndex]) {
+        // Balanced partial scoring for multiple-choice questions
+        // raw_score = max(0, (C_B / B) - (C_M / M))
+        // where:
+        //  - B = number of correct options
+        //  - C_B = number of correctly selected options
+        //  - M = number of incorrect options
+        //  - C_M = number of incorrectly selected options
+        try {
+            const mc = question.multipleChoiceQuestion;
+            const correctAnswersArr = Array.isArray(mc.correctAnswers) ? mc.correctAnswers : [];
+            const B = correctAnswersArr.filter(Boolean).length;
+            const M = Math.max(0, correctAnswersArr.length - B);
+            const selected = Array.isArray(answer) ? answer : (typeof answer === 'number' ? [answer] : []);
+            const selectedSet = new Set(selected);
+            let C_B = 0;
+            let C_M = 0;
+            for (let i = 0; i < correctAnswersArr.length; i++) {
+                const isCorrect = !!correctAnswersArr[i];
+                if (selectedSet.has(i)) {
+                    if (isCorrect)
                         C_B++;
-                    }
-                    else {
+                    else
                         C_M++;
-                    }
                 }
             }
+            const partCorrect = B > 0 ? (C_B / B) : 0;
+            const partIncorrect = M > 0 ? (C_M / M) : 0;
+            const raw_score = Math.max(0, partCorrect - partIncorrect);
+            correctnessScore = raw_score;
         }
-        else if (typeof answer === 'number') {
-            // Single selection
-            if (answer >= 0 && answer < mcq.correctAnswers.length) {
-                if (mcq.correctAnswers[answer]) {
-                    C_B = 1;
-                }
-                else {
-                    C_M = 1;
-                }
-            }
+        catch (err) {
+            logger.warn({ error: err, questionUid: question.uid }, 'Failed to compute partial multiple-choice score, falling back to strict correctness');
+            correctnessScore = checkAnswerCorrectness(question, answer) ? 1 : 0;
         }
-        // Balanced scoring formula: raw_score = max(0, (C_B / B) - (C_M / M))
-        let rawScore = 0;
-        if (M > 0) {
-            rawScore = Math.max(0, (C_B / B) - (C_M / M));
-        }
-        else {
-            // If no incorrect answers, just use C_B / B
-            rawScore = C_B / B;
-        }
-        correctnessScore = rawScore;
     }
     else if (question.numericQuestion || question.questionType === 'numeric') {
         // Numeric questions: binary correct/incorrect

@@ -123,6 +123,9 @@ export default function LiveGamePage() {
     const [isMobile, setIsMobile] = useState(false);
     const [startClicked, setStartClicked] = useState(false);
 
+    // Track answered questions by UID to allow re-answering when teacher restarts same question
+    const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+
     // Stable leaderboard
     const stableLeaderboard = useMemo(() => {
         return gameState.leaderboard?.length > 0 ? gameState.leaderboard : EMPTY_LEADERBOARD;
@@ -276,22 +279,41 @@ export default function LiveGamePage() {
             timeSpent: Date.now()
         });
 
+        // Show immediate feedback
+        setSnackbarType("success");
+        setSnackbarMessage("Envoi de la réponse...");
+        setSnackbarOpen(true);
+
         submitAnswer(gameState.currentQuestion.uid, idx, Date.now());
+
+        // Track that this question has been answered
+        if (gameState.currentQuestion) {
+            setAnsweredQuestions(prev => new Set(prev).add(gameState.currentQuestion!.uid));
+        }
     }, [gameState, selectedAnswer, submitAnswer, socket]);
 
     const handleSubmitMultiple = useCallback(() => {
-        if (gameState.gameStatus !== 'active' || !gameState.currentQuestion) return;
+        if (!gameState.currentQuestion) return;
         if (!selectedAnswers.length) {
             setSnackbarMessage("Veuillez sélectionner au moins une réponse.");
             setSnackbarType("error");
             setSnackbarOpen(true);
             return;
         }
+
+        // Show immediate feedback
+        setSnackbarType("success");
+        setSnackbarMessage("Envoi de la réponse...");
+        setSnackbarOpen(true);
+
         submitAnswer(gameState.currentQuestion.uid, selectedAnswers, Date.now());
+
+        // Track that this question has been answered
+        setAnsweredQuestions(prev => new Set(prev).add(gameState.currentQuestion!.uid));
     }, [gameState, selectedAnswers, submitAnswer]);
 
     const handleNumericSubmit = useCallback(() => {
-        if (gameState.gameStatus !== 'active' || !gameState.currentQuestion) return;
+        if (!gameState.currentQuestion) return;
         const val = parseFloat(numericAnswer);
         if (isNaN(val)) {
             setSnackbarMessage("Veuillez entrer une réponse numérique.");
@@ -299,7 +321,16 @@ export default function LiveGamePage() {
             setSnackbarOpen(true);
             return;
         }
+
+        // Show immediate feedback
+        setSnackbarType("success");
+        setSnackbarMessage("Envoi de la réponse...");
+        setSnackbarOpen(true);
+
         submitAnswer(gameState.currentQuestion.uid, val, Date.now());
+
+        // Track that this question has been answered
+        setAnsweredQuestions(prev => new Set(prev).add(gameState.currentQuestion!.uid));
     }, [gameState, numericAnswer, submitAnswer]);
 
     const handleRequestNextQuestion = useCallback(() => {
@@ -312,8 +343,28 @@ export default function LiveGamePage() {
     const handleLeaderboardClose = useCallback(() => setShowLeaderboardModal(false), []);
 
     const isReadonly = useMemo(() => {
-        return gameState.phase === 'show_answers' || gameState.gameStatus === 'finished' || (gameState.answered && gameMode === 'practice');
-    }, [gameState.phase, gameState.gameStatus, gameState.answered, gameMode]);
+        // Always readonly if showing answers or game is finished
+        if (gameState.phase === 'show_answers' || gameState.gameStatus === 'finished') {
+            return true;
+        }
+
+        // For practice mode, only readonly if we've answered THIS specific question
+        // BUT allow re-answering if we're in the 'question' phase (teacher actively showing question)
+        if (gameMode === 'practice' && gameState.currentQuestion) {
+            const hasAnsweredThisQuestion = answeredQuestions.has(gameState.currentQuestion.uid);
+            const isActiveQuestionPhase = gameState.phase === 'question';
+
+            // If teacher is actively showing the question (question phase), allow answering even if previously answered
+            if (isActiveQuestionPhase) {
+                return false;
+            }
+
+            // Otherwise, readonly if we've answered this question
+            return hasAnsweredThisQuestion;
+        }
+
+        return false;
+    }, [gameState.phase, gameState.gameStatus, gameMode, gameState.currentQuestion, answeredQuestions]);
 
     const correctAnswersBoolean = useMemo(() => {
         return gameState.phase === 'show_answers' && gameState.correctAnswers ? gameState.correctAnswers : undefined;

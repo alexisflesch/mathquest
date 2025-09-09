@@ -1,6 +1,6 @@
 // Set Redis URL before importing modules that depend on it
 process.env.REDIS_URL = "redis://localhost:6379";
-process.env.DATABASE_URL = "postgresql://postgres:password@localhost:5432/mathquest_test";
+
 
 import { beforeAll, afterAll, beforeEach, describe, it, expect } from '@jest/globals';
 import { prisma } from '../../src/db/prisma';
@@ -212,7 +212,9 @@ describe('New Scoring Strategy - All Game Modes', () => {
             // Check Redis leaderboard (live tournaments update ZSET)
             const leaderboardKey = `mathquest:game:leaderboard:${testData.accessCode}`;
             const score = await redisClient.zscore(leaderboardKey, testData.userId);
-            expect(score).toBe(result.totalScore.toString());
+            expect(score).toBeTruthy();
+            // Redis stores numbers as strings; allow small floating point rounding differences
+            expect(parseFloat(score!)).toBeCloseTo(result.totalScore, 2);
 
             // Check that NO deferred session state was created
             const sessionStateKey = `deferred_session:${testData.accessCode}:${testData.userId}:0`;
@@ -359,7 +361,7 @@ describe('New Scoring Strategy - All Game Modes', () => {
                 { mode: 'tournament', status: 'completed' } // Deferred tournament
             ];
 
-            const results = [];
+            const results: Array<{ mode: string; status: string; scoreAdded: number; totalScore: number }> = [];
 
             for (const scenario of scenarios) {
                 const uniqueId = `consistency-${scenario.mode}-${scenario.status}-${Date.now()}`;

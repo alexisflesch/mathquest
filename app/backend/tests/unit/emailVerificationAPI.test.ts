@@ -1,3 +1,4 @@
+require('../setupTestEnv');
 import { UserService } from '@/core/services/userService';
 import createLogger from '@/utils/logger';
 
