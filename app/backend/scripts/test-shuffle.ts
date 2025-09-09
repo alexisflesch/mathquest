@@ -35,12 +35,12 @@ async function testShuffle() {
         console.log('📝 Creating test questions...');
         for (let i = 1; i <= 15; i++) {
             const questionUid = `shuffle-test-${i.toString().padStart(2, '0')}`;
-            
+
             // Check if question already exists
             const existingQuestion = await prisma.question.findUnique({
                 where: { uid: questionUid }
             });
-            
+
             if (!existingQuestion) {
                 await prisma.question.create({
                     data: {
@@ -68,7 +68,7 @@ async function testShuffle() {
         // 2. Create multiple GameTemplates and check for shuffle
         console.log('🎲 Creating GameTemplates to test shuffle...');
         const templates: any[] = [];
-        
+
         for (let i = 0; i < 3; i++) {
             const template = await gameTemplateService.createStudentGameTemplate({
                 userId: testUserId,
@@ -84,7 +84,7 @@ async function testShuffle() {
 
         // 3. Extract and compare question sequences
         console.log('🔍 Analyzing question sequences...\n');
-        const questionSequences = templates.map(template => 
+        const questionSequences = templates.map(template =>
             template.questions
                 .sort((a: any, b: any) => a.sequence - b.sequence)
                 .map((q: any) => q.questionUid.replace('shuffle-test-', ''))
@@ -126,7 +126,7 @@ async function testShuffle() {
     } finally {
         // 6. Cleanup
         console.log('\n🧹 Cleaning up test data...');
-        
+
         try {
             await prisma.questionsInGameTemplate.deleteMany({
                 where: {
@@ -152,20 +152,20 @@ async function testShuffle() {
                 }
             });
 
-        // 7. Clean up user
-        try {
-            await prisma.studentProfile.delete({
-                where: { id: testUserId }
-            }).catch(() => {}); // Ignore if doesn't exist
+            // 7. Clean up user
+            try {
+                await prisma.studentProfile.delete({
+                    where: { id: testUserId }
+                }).catch(() => { }); // Ignore if doesn't exist
 
-            await prisma.user.delete({
-                where: { id: testUserId }
-            }).catch(() => {}); // Ignore if doesn't exist
-        } catch (userCleanupError) {
-            console.log('User cleanup skipped (may not exist)');
-        }
+                await prisma.user.delete({
+                    where: { id: testUserId }
+                }).catch(() => { }); // Ignore if doesn't exist
+            } catch (userCleanupError) {
+                console.log('User cleanup skipped (may not exist)');
+            }
 
-        console.log('✅ Cleanup completed');
+            console.log('✅ Cleanup completed');
         } catch (cleanupError) {
             console.error('❌ Cleanup failed:', cleanupError);
         }
