@@ -95,7 +95,7 @@ global.Request = class MockRequest {
         this.method = options.method || 'GET';
         this.headers = options.headers || new Map();
     }
-    
+
     get url() {
         return this._url;
     }
