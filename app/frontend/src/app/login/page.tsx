@@ -221,13 +221,16 @@ function LoginPageInner() {
                             <form onSubmit={e => {
                                 e.preventDefault();
                                 const form = e.currentTarget;
-                                handleAccountAuth({
+                                const formData = {
                                     email: form.email.value,
                                     password: form.password.value,
                                     confirmPassword: form.confirmPassword?.value,
-                                    username: form.username?.value,
+                                    username: accountUsername, // Use state directly
                                     avatar: selectedAvatar
-                                });
+                                };
+                                console.log('Form submission data:', formData);
+                                console.log('accountUsername state:', accountUsername);
+                                handleAccountAuth(formData);
                             }} className="space-y-4">
                                 {/* Only one set of fields, in correct order */}
                                 <div>
@@ -283,13 +286,10 @@ function LoginPageInner() {
                                     <div>
                                         <UsernameSelector
                                             id="username"
-                                            name="username"
                                             value={accountUsername}
                                             onChange={setAccountUsername}
                                             required
                                         />
-                                        {/* keep a hidden input so the existing form handler (form.username.value) still works */}
-                                        <input type="hidden" name="username" value={accountUsername} />
                                     </div>
                                 )}
                                 {studentAuthMode === 'signup' && (
