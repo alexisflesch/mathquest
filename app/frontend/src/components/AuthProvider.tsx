@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             username,
                             avatar,
                             cookieId,
-                            role: 'STUDENT'
+                            role: 'GUEST'
                             // No email/password for guest users
                         }),
                     },

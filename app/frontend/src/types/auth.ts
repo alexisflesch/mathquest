@@ -16,7 +16,7 @@ export interface UserProfile {
     username?: string;
     avatar?: string;
     email?: string;
-    role?: 'STUDENT' | 'TEACHER';
+    role?: 'STUDENT' | 'TEACHER' | 'GUEST';
     userId?: string;
     cookieId?: string;    // Pour les invités
 }

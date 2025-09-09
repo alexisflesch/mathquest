@@ -27,7 +27,7 @@ export const RegisterRequestSchema = z.object({
     username: z.string().min(3, 'Username must be at least 3 characters'),
     email: z.string().email('Invalid email format').optional(),
     password: z.string().min(6, 'Password must be at least 6 characters').optional(), // Optional for guest users
-    role: z.enum(['STUDENT', 'TEACHER']).optional(),
+    role: z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     gradeLevel: z.string().optional(),
     avatar: z.string().optional(),
     cookieId: z.string().optional(),
@@ -42,7 +42,7 @@ export const UpgradeAccountRequestSchema = z.object({
     cookieId: z.string().min(1, 'Cookie ID is required'),
     email: z.string().email('Invalid email format'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
-    targetRole: z.enum(['STUDENT', 'TEACHER']).optional(),
+    targetRole: z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     adminPassword: z.string().optional()
 });
 
@@ -190,7 +190,7 @@ const ApiUserSchema = z.object({
     username: z.string(),
     email: z.string().optional(),
     avatar: z.string(),
-    role: z.enum(['STUDENT', 'TEACHER'])
+    role: z.enum(['STUDENT', 'TEACHER', 'GUEST'])
 });
 
 // Auth Response Schemas

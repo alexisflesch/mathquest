@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { ALL_ALLOWED_AVATARS } from '@shared/constants/avatars';
 
 interface AvatarGridProps {
     selectedAvatar: string;
@@ -9,30 +9,10 @@ interface AvatarGridProps {
     className?: string;
 }
 
-// Comprehensive list of animal emojis - must match backend avatarUtils.ts
-const ANIMAL_AVATARS = [
-    // Mammals - Land
-    '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🦁', '🐯', '🐸', '🐵', '🐰', '🐺', '🦝', '🐷', '🐮', '🐹',
-    '🐭', '🐗', '🦏', '🦛', '🐘', '🦒', '🦌', '🐄', '🐂', '🐃', '🐎', '🦄', '🦓', '🐑', '🐐', '🦙',
-    '🦘', '🐪', '🐫', '🦔', '🦇', '🐿️', '🦫', '🦦', '🦨', '🦡',
-
-    // Birds
-    '🐔', '🐓', '🐣', '🐤', '🐥', '🦆', '🦅', '🦉', '🦚', '🦜', '🦢', '🐧', '🕊️', '🦃', '🦩',
-
-    // Marine Animals
-    '🐳', '🐋', '🐬', '🦭', '🐟', '🐠', '🐡', '🦈', '🐙', '🦑', '🦞', '🦀', '🐚', '🦐',
-
-    // Reptiles & Amphibians
-    '🐢', '🦎', '🐍', '🐲', '🐉', '🦕', '🦖',
-
-    // Insects & Small Creatures
-    '🐛', '🦋', '🐌', '🐞', '🐜', '🦗', '🕷️', '🦂', '🐝', '🪲', '🪳'
-];
-
 export default function AvatarGrid({ selectedAvatar, onAvatarSelect, className = "" }: AvatarGridProps) {
     return (
         <div className={`flex flex-wrap justify-center gap-2 sm:gap-4 max-h-80 overflow-y-auto p-2 sm:p-3 ${className}`}>
-            {ANIMAL_AVATARS.map((avatar) => (
+            {ALL_ALLOWED_AVATARS.map((avatar) => (
                 <button
                     key={avatar}
                     type="button"

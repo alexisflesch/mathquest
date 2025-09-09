@@ -127,8 +127,13 @@ export interface PracticeAnswerFeedbackPayload {
     questionUid: string;
     /** Whether the answer was correct */
     isCorrect: boolean;
-    /** Correct answer flags for each answer option */
+    /** Correct answer flags for each answer option (for multiple choice) */
     correctAnswers: boolean[];
+    /** Numeric question correct answer data (for numeric questions) */
+    numericCorrectAnswer?: {
+        correctAnswer: number;
+        tolerance?: number;
+    };
     /** Optional explanation */
     explanation?: string;
     /** Whether retry is allowed for this question */

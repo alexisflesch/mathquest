@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { User, Camera } from 'lucide-react';
 import AvatarGrid from '../ui/AvatarGrid';
+import UsernameSelector from '../ui/UsernameSelector';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface GuestFormProps {
@@ -32,19 +33,12 @@ export default function GuestForm({
     return (
         <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
             <div>
-                <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-2">
-                    <User className="inline w-4 h-4 mr-2" />
-                    Pseudo
-                </label>
-                <input
-                    type="text"
-                    id="username"
-                    data-testid="username-input"
+                <UsernameSelector
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={setUsername}
+                    id="username"
+                    name="username"
                     placeholder="Choisissez votre pseudo..."
-                    maxLength={20}
-                    className="input input-bordered input-lg w-full"
                     required
                 />
             </div>

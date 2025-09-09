@@ -6,8 +6,8 @@
  * and can be used to infer TypeScript types.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QuizCreationResponseSchema = exports.QuizTemplatesResponseSchema = exports.QuizTemplateResponseSchema = exports.GameTemplateUpdateResponseSchema = exports.GameTemplateCreationResponseSchema = exports.GameTemplatesResponseSchema = exports.GameTemplateResponseSchema = exports.QuestionsCountResponseSchema = exports.QuestionsFiltersResponseSchema = exports.QuestionUidsResponseSchema = exports.QuestionsListResponseSchema = exports.QuestionsResponseSchema = exports.QuestionResponseSchema = exports.QuestionCreationResponseSchema = exports.GameInstancesByTemplateResponseSchema = exports.TeacherActiveGamesResponseSchema = exports.LeaderboardResponseSchema = exports.GameStateResponseSchema = exports.GameStatusUpdateResponseSchema = exports.GameJoinResponseSchema = exports.GameCreationResponseSchema = exports.UniversalLoginResponseSchema = exports.ErrorResponseSchema = exports.LogoutResponseSchema = exports.TeacherUpgradeResponseSchema = exports.ProfileUpdateResponseSchema = exports.AuthStatusResponseSchema = exports.UpgradeAccountResponseSchema = exports.RegisterResponseSchema = exports.LoginResponseSchema = exports.SetQuestionRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.RenameGameInstanceRequestSchema = exports.RenameGameTemplateRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.TeacherUpgradeRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
-exports.GetPracticeQuestionsApiResponseSchema = exports.GetPracticeSessionsApiResponseSchema = exports.GetPracticeSessionApiResponseSchema = exports.CreatePracticeSessionApiResponseSchema = exports.GetPracticeQuestionsApiRequestSchema = exports.UpdatePracticeSessionApiRequestSchema = exports.GetPracticeSessionsApiRequestSchema = exports.CreatePracticeSessionApiRequestSchema = exports.GetPracticeSessionStatePayloadSchema = exports.EndPracticeSessionPayloadSchema = exports.RetryPracticeQuestionPayloadSchema = exports.GetNextPracticeQuestionPayloadSchema = exports.SubmitPracticeAnswerPayloadSchema = exports.StartPracticeSessionPayloadSchema = exports.CreatePracticeSessionResponseSchema = exports.CreatePracticeSessionRequestSchema = exports.PracticeSessionSchema = exports.PracticeStatisticsSchema = exports.PracticeQuestionDataSchema = exports.PracticeAnswerSchema = exports.PracticeSettingsSchema = exports.SuccessResponseSchema = exports.MyTournamentsResponseSchema = exports.TournamentListItemSchema = exports.TournamentVerificationResponseSchema = exports.TournamentCodeResponseSchema = exports.TeacherQuizQuestionsResponseSchema = exports.QuizListResponseSchema = exports.QuizTemplateQuestionResponseSchema = exports.QuizTemplateDeleteResponseSchema = exports.QuizTemplateUpdateResponseSchema = exports.QuizTemplateCreationResponseSchema = void 0;
+exports.GameTemplateCreationResponseSchema = exports.GameTemplatesResponseSchema = exports.GameTemplateResponseSchema = exports.QuestionsCountResponseSchema = exports.QuestionsFiltersResponseSchema = exports.FilterOptionSchema = exports.QuestionUidsResponseSchema = exports.QuestionsListResponseSchema = exports.QuestionsResponseSchema = exports.QuestionResponseSchema = exports.QuestionCreationResponseSchema = exports.GameInstancesByTemplateResponseSchema = exports.TeacherActiveGamesResponseSchema = exports.LeaderboardResponseSchema = exports.GameStateResponseSchema = exports.GameStatusUpdateResponseSchema = exports.GameJoinResponseSchema = exports.GameCreationResponseSchema = exports.UniversalLoginResponseSchema = exports.ErrorResponseSchema = exports.LogoutResponseSchema = exports.TeacherUpgradeResponseSchema = exports.ProfileUpdateResponseSchema = exports.AuthStatusResponseSchema = exports.UpgradeAccountResponseSchema = exports.RegisterResponseSchema = exports.LoginResponseSchema = exports.SetQuestionRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.RenameGameInstanceRequestSchema = exports.RenameGameTemplateRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.ResendEmailVerificationRequestSchema = exports.VerifyEmailRequestSchema = exports.SendEmailVerificationRequestSchema = exports.TeacherUpgradeRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
+exports.GetPracticeQuestionsApiResponseSchema = exports.GetPracticeSessionsApiResponseSchema = exports.GetPracticeSessionApiResponseSchema = exports.CreatePracticeSessionApiResponseSchema = exports.GetPracticeQuestionsApiRequestSchema = exports.UpdatePracticeSessionApiRequestSchema = exports.GetPracticeSessionsApiRequestSchema = exports.CreatePracticeSessionApiRequestSchema = exports.GetPracticeSessionStatePayloadSchema = exports.EndPracticeSessionPayloadSchema = exports.RetryPracticeQuestionPayloadSchema = exports.GetNextPracticeQuestionPayloadSchema = exports.SubmitPracticeAnswerPayloadSchema = exports.StartPracticeSessionPayloadSchema = exports.CreatePracticeSessionResponseSchema = exports.CreatePracticeSessionRequestSchema = exports.PracticeSessionSchema = exports.PracticeStatisticsSchema = exports.PracticeQuestionDataSchema = exports.PracticeAnswerSchema = exports.PracticeSettingsSchema = exports.SuccessResponseSchema = exports.MyTournamentsResponseSchema = exports.TournamentListItemSchema = exports.TournamentVerificationResponseSchema = exports.TournamentCodeResponseSchema = exports.TeacherQuizQuestionsResponseSchema = exports.QuizListResponseSchema = exports.QuizTemplateQuestionResponseSchema = exports.QuizTemplateDeleteResponseSchema = exports.QuizTemplateUpdateResponseSchema = exports.QuizTemplateCreationResponseSchema = exports.QuizCreationResponseSchema = exports.QuizTemplatesResponseSchema = exports.QuizTemplateResponseSchema = exports.GameTemplateUpdateResponseSchema = void 0;
 const zod_1 = require("zod");
 const question_zod_1 = require("../quiz/question.zod");
 const game_zod_1 = require("../core/game.zod");
@@ -24,7 +24,7 @@ exports.RegisterRequestSchema = zod_1.z.object({
     username: zod_1.z.string().min(3, 'Username must be at least 3 characters'),
     email: zod_1.z.string().email('Invalid email format').optional(),
     password: zod_1.z.string().min(6, 'Password must be at least 6 characters').optional(), // Optional for guest users
-    role: zod_1.z.enum(['STUDENT', 'TEACHER']).optional(),
+    role: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     gradeLevel: zod_1.z.string().optional(),
     avatar: zod_1.z.string().optional(),
     cookieId: zod_1.z.string().optional(),
@@ -37,7 +37,7 @@ exports.UpgradeAccountRequestSchema = zod_1.z.object({
     cookieId: zod_1.z.string().min(1, 'Cookie ID is required'),
     email: zod_1.z.string().email('Invalid email format'),
     password: zod_1.z.string().min(6, 'Password must be at least 6 characters'),
-    targetRole: zod_1.z.enum(['STUDENT', 'TEACHER']).optional(),
+    targetRole: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     adminPassword: zod_1.z.string().optional()
 });
 exports.PasswordResetRequestSchema = zod_1.z.object({
@@ -53,6 +53,15 @@ exports.ProfileUpdateRequestSchema = zod_1.z.object({
 });
 exports.TeacherUpgradeRequestSchema = zod_1.z.object({
     adminPassword: zod_1.z.string().min(1, 'Admin password is required')
+});
+exports.SendEmailVerificationRequestSchema = zod_1.z.object({
+    email: zod_1.z.string().email('Invalid email format')
+});
+exports.VerifyEmailRequestSchema = zod_1.z.object({
+    token: zod_1.z.string().min(1, 'Verification token is required')
+});
+exports.ResendEmailVerificationRequestSchema = zod_1.z.object({
+    email: zod_1.z.string().email('Invalid email format')
 });
 // --- Game API Request Schemas ---
 exports.CreateGameRequestSchema = zod_1.z.object({
@@ -148,7 +157,7 @@ const ApiUserSchema = zod_1.z.object({
     username: zod_1.z.string(),
     email: zod_1.z.string().optional(),
     avatar: zod_1.z.string(),
-    role: zod_1.z.enum(['STUDENT', 'TEACHER'])
+    role: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST'])
 });
 // Auth Response Schemas
 exports.LoginResponseSchema = zod_1.z.object({
@@ -170,8 +179,9 @@ exports.LoginResponseSchema = zod_1.z.object({
 exports.RegisterResponseSchema = zod_1.z.object({
     success: zod_1.z.boolean(),
     message: zod_1.z.string(),
-    token: zod_1.z.string(),
-    user: ApiUserSchema
+    token: zod_1.z.string().optional(), // Optional for email verification cases
+    user: ApiUserSchema,
+    requiresEmailVerification: zod_1.z.boolean().optional() // Indicates email verification needed
 });
 exports.UpgradeAccountResponseSchema = zod_1.z.object({
     success: zod_1.z.boolean(),
@@ -285,10 +295,17 @@ exports.QuestionUidsResponseSchema = zod_1.z.object({
     questionUids: zod_1.z.array(zod_1.z.string()),
     total: zod_1.z.number()
 });
+// FilterOption schema for enhanced filters with compatibility information
+exports.FilterOptionSchema = zod_1.z.object({
+    value: zod_1.z.string(),
+    label: zod_1.z.string().optional(),
+    isCompatible: zod_1.z.boolean()
+});
 exports.QuestionsFiltersResponseSchema = zod_1.z.object({
-    gradeLevel: zod_1.z.array(zod_1.z.string().nullable()),
-    disciplines: zod_1.z.array(zod_1.z.string()),
-    themes: zod_1.z.array(zod_1.z.string())
+    gradeLevel: zod_1.z.array(exports.FilterOptionSchema),
+    disciplines: zod_1.z.array(exports.FilterOptionSchema),
+    themes: zod_1.z.array(exports.FilterOptionSchema),
+    tags: zod_1.z.array(exports.FilterOptionSchema).optional()
 });
 exports.QuestionsCountResponseSchema = zod_1.z.object({
     count: zod_1.z.number()

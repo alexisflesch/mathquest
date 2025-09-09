@@ -159,6 +159,7 @@ model GameParticipant {
 enum UserRole {
   STUDENT
   TEACHER
+  GUEST
 }
 
 enum PlayMode {

@@ -255,7 +255,8 @@ exports.Prisma.JsonNullValueFilter = {
 };
 exports.UserRole = exports.$Enums.UserRole = {
   STUDENT: 'STUDENT',
-  TEACHER: 'TEACHER'
+  TEACHER: 'TEACHER',
+  GUEST: 'GUEST'
 };
 
 exports.PlayMode = exports.$Enums.PlayMode = {

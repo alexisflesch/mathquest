@@ -9,6 +9,7 @@ import AuthModeToggle, { AuthMode } from '../../components/auth/AuthModeToggle';
 import GuestForm from '../../components/auth/GuestForm';
 import StudentAuthForm from '../../components/auth/StudentAuthForm';
 import AvatarGrid from '../../components/ui/AvatarGrid';
+import UsernameSelector from '../../components/ui/UsernameSelector';
 import Image from 'next/image';
 import InfinitySpin from '@/components/InfinitySpin';
 import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
@@ -28,6 +29,7 @@ function LoginPageInner() {
     const [isTeacherSignup, setIsTeacherSignup] = useState(false);
     const [adminPassword, setAdminPassword] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('');
+    const [accountUsername, setAccountUsername] = useState('');
 
     // Email verification modal state
     const [showEmailVerificationModal, setShowEmailVerificationModal] = useState(false);
@@ -279,18 +281,15 @@ function LoginPageInner() {
                                 )}
                                 {studentAuthMode === 'signup' && (
                                     <div>
-                                        <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                                            <User className="inline w-4 h-4 mr-2" />
-                                            Pseudo
-                                        </label>
-                                        <input
-                                            type="text"
+                                        <UsernameSelector
                                             id="username"
                                             name="username"
-                                            maxLength={20}
-                                            className="input input-bordered input-lg w-full"
+                                            value={accountUsername}
+                                            onChange={setAccountUsername}
                                             required
                                         />
+                                        {/* keep a hidden input so the existing form handler (form.username.value) still works */}
+                                        <input type="hidden" name="username" value={accountUsername} />
                                     </div>
                                 )}
                                 {studentAuthMode === 'signup' && (

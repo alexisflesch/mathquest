@@ -24,7 +24,7 @@ exports.RegisterRequestSchema = zod_1.z.object({
     username: zod_1.z.string().min(3, 'Username must be at least 3 characters'),
     email: zod_1.z.string().email('Invalid email format').optional(),
     password: zod_1.z.string().min(6, 'Password must be at least 6 characters').optional(), // Optional for guest users
-    role: zod_1.z.enum(['STUDENT', 'TEACHER']).optional(),
+    role: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     gradeLevel: zod_1.z.string().optional(),
     avatar: zod_1.z.string().optional(),
     cookieId: zod_1.z.string().optional(),
@@ -37,7 +37,7 @@ exports.UpgradeAccountRequestSchema = zod_1.z.object({
     cookieId: zod_1.z.string().min(1, 'Cookie ID is required'),
     email: zod_1.z.string().email('Invalid email format'),
     password: zod_1.z.string().min(6, 'Password must be at least 6 characters'),
-    targetRole: zod_1.z.enum(['STUDENT', 'TEACHER']).optional(),
+    targetRole: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     adminPassword: zod_1.z.string().optional()
 });
 exports.PasswordResetRequestSchema = zod_1.z.object({
@@ -157,7 +157,7 @@ const ApiUserSchema = zod_1.z.object({
     username: zod_1.z.string(),
     email: zod_1.z.string().optional(),
     avatar: zod_1.z.string(),
-    role: zod_1.z.enum(['STUDENT', 'TEACHER'])
+    role: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST'])
 });
 // Auth Response Schemas
 exports.LoginResponseSchema = zod_1.z.object({

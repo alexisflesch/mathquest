@@ -16,6 +16,7 @@ export interface JoinGamePayload {
     userId: string;
     username: string;
     avatarEmoji?: string;
+    isDiffered?: boolean;
 }
 /**
  * @deprecated Use JoinGamePayload instead

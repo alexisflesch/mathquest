@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import { User, Camera } from 'lucide-react';
 import AvatarGrid from '../ui/AvatarGrid';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import UsernameSelector from '../ui/UsernameSelector';
 
 interface ProfileFormProps {
     initialUsername: string;
@@ -13,6 +13,7 @@ interface ProfileFormProps {
     className?: string;
 }
 
+
 export default function ProfileForm({
     initialUsername,
     initialAvatar,
@@ -20,30 +21,39 @@ export default function ProfileForm({
     isLoading = false,
     className = ""
 }: ProfileFormProps) {
-    const [username, setUsername] = useState(initialUsername);
+    // Split initialUsername into firstname and suffix
+    const match = initialUsername.match(/^(.+?)\s([A-Z0-9])$/);
+    const initialFirstname = match ? match[1] : initialUsername;
+    const initialSuffix = match ? match[2] : '';
+
+    const [username, setUsername] = useState(initialFirstname);
+    const [suffix, setSuffix] = useState(initialSuffix);
     const [selectedAvatar, setSelectedAvatar] = useState(initialAvatar);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onSave({ username: username.trim(), avatar: selectedAvatar });
+        // Compose username as "Firstname Suffix" if suffix exists
+        const finalUsername = suffix ? `${username} ${suffix}` : username;
+        await onSave({ username: finalUsername.trim(), avatar: selectedAvatar });
     };
 
-    const hasChanges = username.trim() !== initialUsername || selectedAvatar !== initialAvatar;
+    const hasChanges = (suffix ? `${username} ${suffix}` : username).trim() !== initialUsername || selectedAvatar !== initialAvatar;
 
     return (
         <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
             <div>
-                <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                    <User className="inline w-4 h-4 mr-2" />
-                    Nom d&apos;utilisateur
-                </label>
-                <input
-                    type="text"
-                    id="username"
+                <UsernameSelector
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    maxLength={20}
-                    className="input input-bordered input-lg w-full"
+                    onChange={val => {
+                        // Split val into firstname and suffix
+                        const m = val.match(/^(.+?)\s([A-Z0-9])$/);
+                        setUsername(m ? m[1] : val);
+                        setSuffix(m ? m[2] : '');
+                    }}
+                    suffix={suffix}
+                    onSuffixChange={setSuffix}
+                    id="username"
+                    name="username"
                     required
                 />
             </div>

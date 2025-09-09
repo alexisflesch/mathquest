@@ -10,6 +10,7 @@ const validation_1 = require("@/middleware/validation");
 const userService_1 = require("@/core/services/userService");
 const client_1 = require("@/db/generated/client");
 const avatarUtils_1 = require("@/utils/avatarUtils");
+const usernameValidator_1 = require("@/utils/usernameValidator");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
@@ -248,6 +249,12 @@ async function handleTeacherRegister(req, res) {
         res.status(400).json({ error: 'Username and password are required' });
         return;
     }
+    // Validate username format (must be a valid French firstname + optional character)
+    const usernameValidation = (0, usernameValidator_1.validateUsername)(username);
+    if (!usernameValidation.isValid) {
+        res.status(400).json({ error: usernameValidation.error || 'Invalid username format' });
+        return;
+    }
     if (password.length < 6) {
         res.status(400).json({ error: 'Password must be at least 6 characters long' });
         return;
@@ -331,6 +338,15 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
             res.status(400).json({
                 success: false,
                 error: 'Username is required'
+            });
+            return;
+        }
+        // Validate username format (must be a valid French firstname + optional character)
+        const usernameValidation = (0, usernameValidator_1.validateUsername)(username);
+        if (!usernameValidation.isValid) {
+            res.status(400).json({
+                success: false,
+                error: usernameValidation.error || 'Invalid username format'
             });
             return;
         }

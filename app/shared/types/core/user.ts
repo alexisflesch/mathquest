@@ -3,7 +3,7 @@
  */
 
 // User roles - should match Prisma schema enum
-export type UserRole = 'STUDENT' | 'TEACHER'; // Use union type instead of enum for Prisma compatibility
+export type UserRole = 'STUDENT' | 'TEACHER' | 'GUEST'; // Use union type instead of enum for Prisma compatibility
 
 // Base user interface
 export interface User {

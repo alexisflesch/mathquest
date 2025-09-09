@@ -4,6 +4,7 @@ import { validateRequestBody } from '@/middleware/validation';
 import { UserService } from '@/core/services/userService';
 import { UserRole } from '@/db/generated/client';
 import { validateAvatar, getRandomAvatar, AllowedAvatar, isValidAvatar } from '@/utils/avatarUtils';
+import { validateUsername } from '@/utils/usernameValidator';
 import createLogger from '@/utils/logger';
 import type {
     LoginResponse,
@@ -306,6 +307,13 @@ async function handleTeacherRegister(req: Request, res: Response<RegisterRespons
         return;
     }
 
+    // Validate username format (must be a valid French firstname + optional character)
+    const usernameValidation = validateUsername(username);
+    if (!usernameValidation.isValid) {
+        res.status(400).json({ error: usernameValidation.error || 'Invalid username format' });
+        return;
+    }
+
     if (password.length < 6) {
         res.status(400).json({ error: 'Password must be at least 6 characters long' });
         return;
@@ -396,6 +404,16 @@ router.post('/register', validateRequestBody(RegisterRequestSchema), async (req:
             res.status(400).json({
                 success: false,
                 error: 'Username is required'
+            });
+            return;
+        }
+
+        // Validate username format (must be a valid French firstname + optional character)
+        const usernameValidation = validateUsername(username);
+        if (!usernameValidation.isValid) {
+            res.status(400).json({
+                success: false,
+                error: usernameValidation.error || 'Invalid username format'
             });
             return;
         }

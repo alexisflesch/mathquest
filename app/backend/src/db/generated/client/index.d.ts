@@ -70,7 +70,8 @@ export type GameParticipant = $Result.DefaultSelection<Prisma.$GameParticipantPa
 export namespace $Enums {
   export const UserRole: {
   STUDENT: 'STUDENT',
-  TEACHER: 'TEACHER'
+  TEACHER: 'TEACHER',
+  GUEST: 'GUEST'
 };
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
