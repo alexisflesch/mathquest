@@ -130,7 +130,7 @@ export default function UsernameSelector({ value = '', onChange, suffix, onSuffi
         <div className={`username-selector ${className}`}>
             <label htmlFor={id} className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
                 <User className="inline w-4 h-4 mr-2" />
-                Prénom <span className="text-[color:var(--muted-foreground)]">(obligatoire: sélectionnez dans la liste)</span>
+                Prénom <span className="text-[color:var(--muted-foreground)]">(et suffixe éventuel)</span>
             </label>
             <div className="flex flex-col sm:flex-row sm:items-start sm:gap-2">
                 <div className="relative flex-1">

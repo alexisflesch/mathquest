@@ -73,7 +73,6 @@ export const ALLOWED_ANIMAL_AVATARS = [
     '🦅', // Aigle
     '🦆', // Canard
     '🦉', // Hibou
-    '🦇', // Chauve-souris déjà listée
     '🦚', // Paon
     '🦜', // Perroquet
     '🦢', // Cygne
