@@ -89,8 +89,9 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         transition,
         zIndex: isDragging ? 10 : undefined,
         opacity: isDragging ? 0.7 : 1,
-        touchAction: 'none', // Important pour dnd-kit
-    };
+        // Allow native touch scrolling when not dragging; only disable touch-action while actively dragging
+        touchAction: isDragging ? 'none' : undefined,
+    } as React.CSSProperties;
 
     // --- États et Refs pour l'édition du timer (conservés ici) ---
     // SUPPRESSION de localTimeLeftMs pour l'affichage du timer (utilise liveTimeLeft)
@@ -370,7 +371,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
 
     // JSX pour afficher les réponses pendant l'édition
     const answersWhileEditing = editingTimer && open ? (
-        <div className="transition-all duration-300 ease-in-out overflow-hidden max-h-[500px] opacity-100">
+        <div className="transition-all duration-300 ease-in-out max-h-[500px] opacity-100">
             <ul className={`ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none no-top-border ${isActive ? "answers-selected" : ""}`} style={{ borderTop: '1px solid var(--border-color)' }}>
                 <li className="mb-2 font-medium text-base text-couleur-global-neutral-700">
                     <MathJaxWrapper>{q.text}</MathJaxWrapper>
