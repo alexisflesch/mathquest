@@ -269,8 +269,8 @@
   discipline: "Questionner le monde"
   title: "Cycle de vie"
   text: |
-    Quelle est la bonne affirmation ?
-  questionType: "single_choice"
+    Quelle sont les bonnes affirmations ?
+  questionType: "multiple_choice"
   themes: ["Le vivant"]
   tags: ["plantes et besoins vitaux"]
   timeLimit: 45
@@ -352,7 +352,7 @@
     🎺 trompette
 
     lesquels sont des objets fabriqués par l'homme ?
-  questionType: "single_choice"
+  questionType: "multiple_choice"
   themes: ["La matière et les objets"]
   tags: ["objets du quotidien"]
   timeLimit: 60
@@ -430,7 +430,7 @@
     🔵⬜⬜  
     ⬜⬜⬜  
     ⬜⬜🔵
-  questionType: "single_choice"
+  questionType: "multiple_choice"
   themes: ["L'espace"]
   tags: ["se repérer dans l'espace familier"]
   timeLimit: 60

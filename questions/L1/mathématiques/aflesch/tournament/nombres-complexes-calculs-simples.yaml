@@ -1,0 +1,122 @@
+- uid: "aflesch-mt1-nombres-complexes-b-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Calcul de partie imaginaire"
+  tags: ["forme algébrique"]
+  questionType: "numeric"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Donner la partie imaginaire de \(\displaystyle \frac{1}{i}\)
+  correctAnswer: -1
+
+
+- uid: "aflesch-mt1-nombres-complexes-b-002"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Calcul de partie imaginaire"
+  tags: ["forme algébrique"]
+  questionType: "numeric"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Donner \(\mathrm{Re}(z)\) où \[z=\frac{2}{1-i}\]
+  correctAnswer: 1
+
+
+- uid: "aflesch-mt1-nombres-complexes-b-003"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Calcul de partie imaginaire"
+  tags: ["forme algébrique", "forme exponentielle", "argument"]
+  questionType: "numeric"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Donner \(\mathrm{Im}(z)\) où \[z=4\mathrm{e}^{i\pi/3}\]
+  correctAnswer: 2
+
+
+- uid: "aflesch-mt1-nombres-complexes-b-004"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Calcul de partie imaginaire"
+  tags: ["forme algébrique", "module"]
+  questionType: "numeric"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Calculer \( \left|2+3i\right|^2\)
+  correctAnswer: 13
+
+
+- uid: "aflesch-mt1-nombres-complexes-b-005"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Calcul de partie imaginaire"
+  tags: ["forme algébrique", "module"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Vrai ou faux ? Si deux nombres complexes ont même module et même partie réelle, alors ils sont égaux.
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers: [false, true]
+  explanation: |
+    Contre-exemple: \(1+i\) et \(1-i\) ont même module et même partie réelle, mais ne sont pas égaux.
+  feedbackWaitTime: 10
+
+
+- uid: "aflesch-mt1-nombres-complexes-b-006"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Calcul de partie imaginaire"
+  tags: ["forme algébrique", "conjugué"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Vrai ou faux ? Si deux nombres complexes \(z\) et \(z'\) vérifient \(z=\bar{z'}\), alors ils ont la même partie réelle.
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers: [true, false]
+  explanation: |
+    Si \(z=\bar{z'}\), alors \(z\) et \(z'\) ont la même partie réelle, mais pas nécessairement la même partie imaginaire.
+  feedbackWaitTime: 10
+
+
+
+- uid: "aflesch-mt1-nombres-complexes-b-007"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Calcul de partie imaginaire"
+  tags: ["forme algébrique", "conjugué"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Vrai ou faux ? Si deux nombres complexes \(z\) et \(z'\) vérifient \(z=\bar{z'}\), alors ils ont la même partie imaginaire.
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers: [false, true]
+  explanation: |
+    Contre-exemple: \(z=1+i\) et \(z'=1-i\) satisfont \(z=\bar{z'}\), mais ils n'ont pas la même partie imaginaire.
+  feedbackWaitTime: 10

@@ -41,7 +41,7 @@
     - Si \(A\) admet au moins deux valeurs propres distinctes alors elle est diagonalisable dans \(\mathbb{R}\)
     - Si \(A\) est symétrique alors toutes ses valeurs propres sont simples
     - Toutes les affrimations ci-dessus sont fausses
-  correctAnswers: [false, true, false, false ]
+  correctAnswers: [false, true, false, false, false ]
 
 
 - uid: "aflesch-mt3-reduction-endomorphismes-003"

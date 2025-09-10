@@ -86,7 +86,7 @@
     - \(u_n\rightarrow 0\)
     - \(\exists \alpha>1,\, n^\alpha u_n\rightarrow 0\)
     - Aucune des réponses ci-dessus
-  correctAnswers: [false, true, false]
+  correctAnswers: [false, true, false, false]
 
 
 - uid: "aflesch-mt3-series-numeriques-005"

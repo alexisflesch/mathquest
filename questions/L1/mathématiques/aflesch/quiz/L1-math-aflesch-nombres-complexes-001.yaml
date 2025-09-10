@@ -32,7 +32,6 @@
   themes: ["Nombres complexes"]
   title: "Forme exponentielle d'un nombre négatif"
   tags: ["forme exponentielle"]
-  excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 2
@@ -54,7 +53,7 @@
   tags: ["argument"]
   excludedFrom: ["practice", "tournament"]
   questionType: "single_choice"
-  timeLimit: 60
+  timeLimit: 120
   difficulty: 2
   text: |
    Soit:
@@ -76,10 +75,9 @@
   gradeLevel: "L1"
   discipline: "Mathématiques"
   themes: ["Nombres complexes"]
-  title: "Un calcul d'argument"
+  title: "Formules du cours"
   tags: ["module", "forme algébrique", "argument"]
-  questionType: "single_choice"
-  excludedFrom: ["practice", "tournament"]
+  questionType: "multiple_choice"
   timeLimit: 60
   difficulty: 2
   text: |
@@ -101,8 +99,7 @@
   title: "Nombre de racines"
   tags: ["racines carrées"]
   questionType: "single_choice"
-  excludedFrom: ["practice", "tournament"]
-  timeLimit: 60
+  timeLimit: 30
   difficulty: 1
   text: |
     Tout nombre complexe non nul admet exactement:
@@ -122,8 +119,7 @@
   themes: ["Nombres complexes"]
   title: "Nombre de solutions d'une équation"
   questionType: "single_choice"
-  excludedFrom: ["practice", "tournament"]
-  timeLimit: 60
+  timeLimit: 30
   difficulty: 1
   text: |
     Combien l'équation d'inconnue \(z\in\mathbb{C}\) suivante admet-elle de solutions?
@@ -145,9 +141,9 @@
   themes: ["Nombres complexes"]
   title: "Cours : formule de Moivre"
   tags: ["forme exponentielle"]
-  questionType: "single_choice"
+  questionType: "multiple_choice"
   excludedFrom: ["practice", "tournament"]
-  timeLimit: 60
+  timeLimit: 90
   difficulty: 1
   text: |
     Quelle(s) formule(s) est (sont) correcte(s)?

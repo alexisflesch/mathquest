@@ -176,32 +176,57 @@ def import_questions():
                         elif q["themes"] is None or (isinstance(q["themes"], list) and len(q["themes"]) == 0):
                             missing.append("themes")
                         
-                        # Question type specific validation
                         question_type = q.get("questionType")
                         # Normalize question type for validation
                         if question_type == "multiple_choice":
                             question_type = "multipleChoice"
                         elif question_type == "single_choice":
                             question_type = "singleChoice"
-                        # Validation for multipleChoice and singleChoice
+                        # --- Ajout des vérifications demandées ---
                         if question_type in ["multipleChoice", "singleChoice"]:
                             mc_fields = ["answerOptions", "correctAnswers"]
                             mc_missing = [field for field in mc_fields if field not in q or q[field] in [None, ""] or (isinstance(q[field], list) and len(q[field]) == 0)]
                             missing.extend(mc_missing)
-                        elif question_type == "numeric":
-                            # Numeric requires correctAnswer and optionally tolerance/unit
-                            if "correctAnswer" not in q or q["correctAnswer"] is None:
-                                missing.append("correctAnswer")
-                            # Validate correctAnswer is a number
-                            if "correctAnswer" in q and q["correctAnswer"] is not None:
-                                try:
-                                    float(q["correctAnswer"])
-                                except (ValueError, TypeError):
-                                    msg = f"correctAnswer must be a number for numeric question (uid={q.get('uid')}) dans {yaml_path}"
+                            # Vérification correctAnswers
+                            answer_options = q.get("answerOptions", [])
+                            correct_answers = q.get("correctAnswers", [])
+                            if not isinstance(correct_answers, list) or not isinstance(answer_options, list):
+                                msg = f"correctAnswers et answerOptions doivent être des listes pour la question (uid={q.get('uid')}) dans {yaml_path}"
+                                print_colored('ERROR', msg)
+                                all_errors.append(msg)
+                                total_errors += 1
+                                return
+                            if len(correct_answers) != len(answer_options):
+                                msg = f"correctAnswers doit être de même longueur que answerOptions pour la question (uid={q.get('uid')}) dans {yaml_path}"
+                                print_colored('ERROR', msg)
+                                all_errors.append(msg)
+                                total_errors += 1
+                                return
+                            if not all(isinstance(b, bool) for b in correct_answers):
+                                msg = f"correctAnswers doit être un tableau de booléens pour la question (uid={q.get('uid')}) dans {yaml_path}"
+                                print_colored('ERROR', msg)
+                                all_errors.append(msg)
+                                total_errors += 1
+                                return
+                            if question_type == "singleChoice":
+                                if correct_answers.count(True) != 1:
+                                    msg = f"singleChoice : correctAnswers doit contenir exactement un booléen à True (uid={q.get('uid')}) dans {yaml_path}"
                                     print_colored('ERROR', msg)
                                     all_errors.append(msg)
                                     total_errors += 1
                                     return
+                        elif question_type == "numeric":
+                            if "correctAnswer" not in q or q["correctAnswer"] is None:
+                                missing.append("correctAnswer")
+                            # Vérification stricte du type
+                            try:
+                                float(q["correctAnswer"])
+                            except (ValueError, TypeError):
+                                msg = f"correctAnswer doit être un nombre pour une question numeric (uid={q.get('uid')}) dans {yaml_path}"
+                                print_colored('ERROR', msg)
+                                all_errors.append(msg)
+                                total_errors += 1
+                                return
                         else:
                             msg = f"Unknown questionType '{q.get('questionType')}' for question (uid={q.get('uid')}) dans {yaml_path}"
                             print_colored('ERROR', msg)

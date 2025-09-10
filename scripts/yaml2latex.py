@@ -259,7 +259,47 @@ def latex_question(q):
 
     # Ligne 4 : réponses (toujours affiché)
     opts_latex = ""
-    if env in ['choix_simple', 'choix_multiple']:
+    # --- Numeric question: check for answerOption and numeric ---
+    if env == 'numeric':
+        answer = None
+        # Prefer answerOption if present and numeric
+        if 'answerOption' in q:
+            ao = q.get('answerOption')
+            try:
+                # Accept int or float
+                if isinstance(ao, (int, float)) or (isinstance(ao, str) and ao.replace('.', '', 1).isdigit()):
+                    answer = ao
+            except Exception:
+                pass
+        if answer is None and 'correctAnswer' in q:
+            answer = q.get('correctAnswer')
+        if answer is not None:
+            opts_latex = f"\\textbf{{Réponse attendue}} : {sanitize_latex_smart(str(answer))}"
+        else:
+            opts_latex = "\\textit{Réponse numérique}"
+    # --- Single choice: ensure only one correct answer ---
+    elif env == 'choix_simple':
+        opts = q.get('answerOptions', q.get('options', []))
+        corrects = q.get('correctAnswers', [])
+        # Check that only one answer is True
+        if isinstance(corrects, list) and sum(bool(x) for x in corrects) != 1:
+            opts_latex = "\\textcolor{red}{\\textbf{Attention: une seule réponse correcte doit être sélectionnée!}}\\\n"
+        if opts:
+            opts_latex += "\\begin{enumerate}[label=\\alph*)]"
+            for i, opt in enumerate(opts):
+                txt = sanitize_preserve_emoji(str(opt))
+                correct = False
+                if isinstance(corrects, list) and i < len(corrects):
+                    correct = bool(corrects[i])
+                if correct:
+                    opts_latex += f"\n  \\item \\checkmark  {wrap_emojis(txt)}"
+                else:
+                    opts_latex += f"\n  \\item  {wrap_emojis(txt)}"
+            opts_latex += "\n\\end{enumerate}"
+        else:
+            opts_latex += "\\textit{Aucune réponse}"
+    # --- Multiple choice: keep original logic ---
+    elif env == 'choix_multiple':
         opts = q.get('answerOptions', q.get('options', []))
         corrects = q.get('correctAnswers', [])
         if opts:
@@ -276,16 +316,6 @@ def latex_question(q):
             opts_latex += "\n\\end{enumerate}"
         else:
             opts_latex = "\\textit{Aucune réponse}"
-    elif env == 'numeric':
-        # Affiche la réponse même si elle est 0 ou vide
-        if 'correctAnswer' in q:
-            answer = q.get('correctAnswer')
-            opts_latex = f"\\textbf{{Réponse attendue}} : {sanitize_latex_smart(str(answer))}"
-            # Ajoute un saut de ligne LaTeX avant l'explication si elle existe
-            # if explanation:
-            #     opts_latex += " \\newline "
-        else:
-            opts_latex = "\\textit{Réponse numérique}"
 
     # Ligne 5 : feedback (temps) si présent
     fb_latex = ""
@@ -296,8 +326,6 @@ def latex_question(q):
         fb_latex = f"\\textbf{{Explication}} ({feedback_wait_time}s) : {sanitize_preserve_emoji(explanation)}"
         if env=='numeric':
             fb_latex = "\\newline " + fb_latex
-        if temps:
-            fb_latex += f
     elif feedback:
         fb_latex = f"\\textit{{Feedback}} : {feedback}"
         if temps:

@@ -82,7 +82,7 @@
   themes: ["Intégrales généralisées"]
   tags: ["absolue convergence"]
   title: "Convergence absolue"
-  questionType: "single_choice"
+  questionType: "multiple_choice"
   timeLimit: 30
   difficulty: 2
   text: |

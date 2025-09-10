@@ -20,5 +20,5 @@
     -  \(x \leq \left\lfloor x \right\rfloor \leq x + 1\)
     -  \(\left\lfloor x \right\rfloor \leq x <  \left\lfloor x \right\rfloor + 1\)
     - ils sont tous faux
-  correctAnswers: [false, false, true, false, false]
+  correctAnswers: [false, false, true, false]
 
