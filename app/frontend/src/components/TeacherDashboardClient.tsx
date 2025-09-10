@@ -70,6 +70,17 @@ function mapToCanonicalQuestion(q: any): Question {
 }
 
 export default function TeacherDashboardClient({ code, gameId }: { code: string, gameId: string }) {
+    // Cache CSS var(--primary) value so we can use it in inline styles
+    const primaryColorRef = useRef<string | null>(null);
+    useEffect(() => {
+        try {
+            const docEl = document.documentElement;
+            const computed = window.getComputedStyle(docEl).getPropertyValue('--primary') || '';
+            primaryColorRef.current = computed.trim() || null;
+        } catch (err) {
+            primaryColorRef.current = null;
+        }
+    }, []);
     // Track if the last stats toggle was teacher-initiated
     const lastStatsToggleInitiatedByTeacher = useRef(false);
 
@@ -682,56 +693,40 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Add a projection page URL for the current code
     const projectionUrl = `/teacher/projection/${code}`;
     return (
-        <div className="teacher-content">
-            {/* Header */}
-            <div className="bg-background border-b border-[color:var(--border)] px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto py-4 sm:py-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                                <span className="text-lg sm:text-xl font-semibold text-foreground align-middle">{quizName || '...'}</span>
-                                {gameInstanceName && (
-                                    <span className="ml-2 text-base font-normal text-muted-foreground">— <span className="italic">{gameInstanceName}</span></span>
-                                )}
-                            </h1>
-                            {/* Projection page link */}
-                            <a
-                                href={projectionUrl}
-                                className="text-blue-600 underline text-sm mt-1 inline-block"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Afficher la page de projection
-                            </a>
-                            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                                <UsersRound className="w-4 h-4" />
-                                {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}
-                            </p>
-                        </div>
-                        <div className="hidden sm:block">
-                            <button
-                                className="btn btn-secondary flex items-center gap-2 whitespace-nowrap"
-                                onClick={handleEndQuiz}
-                                disabled={isDisabled}
-                            >
-                                {quizState?.ended ? 'Quiz Terminé' : 'Clôturer'}
-                            </button>
-                        </div>
-                    </div>
-                    {/* Mobile end quiz button */}
-                    <div className="sm:hidden mt-4 flex justify-end">
+        <div className="teacher-content overflow-y-auto">
+            {/* Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                {/* Header */}
+                <div className="mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                            <span className="text-lg sm:text-xl font-semibold text-foreground align-middle">{quizName || '...'}</span>
+                            {gameInstanceName && (
+                                <span className="ml-2 text-base font-normal text-muted-foreground">— <span className="italic">{gameInstanceName}</span></span>
+                            )}
+                        </h1>
                         <button
-                            className="btn btn-secondary flex items-center justify-center gap-2"
+                            className="btn btn-secondary text-sm px-3 py-1.5"
                             onClick={handleEndQuiz}
                             disabled={isDisabled}
                         >
                             {quizState?.ended ? 'Quiz Terminé' : 'Clôturer'}
                         </button>
                     </div>
+                    {/* Projection page link */}
+                    <a
+                        href={projectionUrl}
+                        className="text-blue-600 underline text-sm inline-block mb-2"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Afficher la page de projection
+                    </a>
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <UsersRound className="w-4 h-4" />
+                        {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}
+                    </p>
                 </div>
-            </div>
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {loading && (
                     <div className="flex flex-col items-center justify-center py-16">
                         <InfinitySpin size={48} />
@@ -747,12 +742,21 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             <div className="flex items-center gap-3 ml-auto">
                                 {/* Stats Toggle Button */}
                                 <button
-                                    className={`group p-2 rounded transition-colors border-2
-                                        ${showStats
-                                            ? 'bg-[color:var(--primary)] text-white border-[color:var(--primary)]'
-                                            : 'border-[color:var(--primary)] text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 hover:text-white'}
-                                        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    onClick={handleStatsToggleGlobal}
+                                    className={`group p-2 rounded transition-colors border-2 focus:outline-none focus-visible:outline-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{
+                                        backgroundColor: showStats ? (primaryColorRef.current || 'var(--primary)') : 'transparent',
+                                        color: showStats ? '#ffffff' : (primaryColorRef.current || 'var(--primary)'),
+                                        borderColor: primaryColorRef.current || undefined,
+                                    }}
+                                    onClick={(e) => {
+                                        // Trigger global toggle request
+                                        handleStatsToggleGlobal();
+                                        // Capture DOM element reference to avoid SyntheticEvent pooling and blur asynchronously
+                                        const btn = e.currentTarget as HTMLElement | null;
+                                        setTimeout(() => {
+                                            if (btn) btn.blur();
+                                        }, 0);
+                                    }}
                                     disabled={isDisabled}
                                     aria-pressed={showStats}
                                     title="Afficher/Masquer les statistiques globales"
@@ -762,8 +766,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                         className="w-6 h-6 transition-all duration-200 group-hover:stroke-white"
                                         fill="none"
                                         viewBox="0 0 24 24"
-                                        stroke="currentColor"
                                         strokeWidth="2"
+                                        // Inline stroke style to override UA / CSS pseudo-class artifacts on mobile
+                                        style={{ stroke: showStats ? '#ffffff' : (primaryColorRef.current || 'var(--primary)') }}
                                     >
                                         <rect x="3" y="10" width="4" height="11" rx="1" />
                                         <rect x="9.5" y="3" width="4" height="18" rx="1" />
@@ -772,18 +777,28 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                 </button>
                                 {/* Trophy Toggle Button */}
                                 <button
-                                    className={`group p-2 rounded transition-colors border-2
-                    ${showTrophy
-                                            ? 'bg-[color:var(--primary)] text-white border-[color:var(--primary)]'
-                                            : 'border-[color:var(--primary)] text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 hover:text-white'}
-                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    onClick={handleTrophyGlobal}
+                                    className={`group p-2 rounded transition-colors border-2 focus:outline-none focus-visible:outline-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{
+                                        backgroundColor: showTrophy ? (primaryColorRef.current || 'var(--primary)') : 'transparent',
+                                        color: showTrophy ? '#ffffff' : (primaryColorRef.current || 'var(--primary)'),
+                                        borderColor: primaryColorRef.current || undefined,
+                                    }}
+                                    onClick={(e) => {
+                                        // Trigger trophy request
+                                        handleTrophyGlobal();
+                                        // Capture DOM element reference to avoid SyntheticEvent pooling and blur asynchronously
+                                        const btn = e.currentTarget as HTMLElement | null;
+                                        setTimeout(() => {
+                                            if (btn) btn.blur();
+                                        }, 0);
+                                    }}
                                     disabled={isDisabled}
                                     aria-pressed={showTrophy}
                                     title="Afficher/Masquer le classement final et les bonnes réponses"
                                 >
                                     <Trophy className="w-6 h-6 transition-all duration-200"
                                         strokeWidth={2}
+                                        style={{ color: showTrophy ? '#ffffff' : (primaryColorRef.current || 'currentColor') }}
                                     />
                                 </button>
                                 {loading && <InfinitySpin size={32} />}
@@ -824,6 +839,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     </section>
                 )}
             </div>
+
             {/* Confirmation Dialog for Question Change */}
             <InfoModal
                 isOpen={showConfirm}
