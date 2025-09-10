@@ -283,7 +283,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
                     <div className={gameInfo?.mode === 'quiz' ? "flex gap-3 justify-center" : "flex justify-center"}>
                         {gameInfo?.mode === 'quiz' && (
                             <button
-                                onClick={() => window.open(`/teacher/dashboard/${gameInfo.mode === 'quiz' ? gameInfo.gameCode : gameInfo.gameId}`, '_blank')}
+                                onClick={() => window.open(`/teacher/dashboard/${gameInfo.mode === 'quiz' ? gameInfo.gameCode : gameInfo.gameId}`)}
                                 className="px-4 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition disabled:opacity-50 min-w-[120px]"
                             >
                                 Piloter
