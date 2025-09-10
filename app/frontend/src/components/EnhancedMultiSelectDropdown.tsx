@@ -131,6 +131,7 @@ const EnhancedMultiSelectDropdown: React.FC<EnhancedMultiSelectDropdownProps> = 
                         .map((option) => {
                             const isSelected = (selected ?? []).includes(option.value);
                             const isIncompatible = !option.isCompatible;
+                            if (!isSelected && isIncompatible) return null;
 
                             return (
                                 <label
