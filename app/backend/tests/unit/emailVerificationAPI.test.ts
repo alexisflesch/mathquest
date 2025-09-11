@@ -22,24 +22,32 @@ jest.mock('@/utils/logger', () => ({
 }));
 
 // Mock Prisma
-const mockPrismaUser = {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    update: jest.fn(),
-    create: jest.fn()
-};
-
 jest.mock('@/db/prisma', () => ({
     prisma: {
-        user: mockPrismaUser
+        user: {
+            findUnique: jest.fn(),
+            findFirst: jest.fn(),
+            update: jest.fn(),
+            create: jest.fn()
+        }
     }
 }));
+
+// Get the mocked prisma instance
+const { prisma } = require('@/db/prisma');
+const mockPrismaUser = prisma.user;
 
 // Mock crypto
 jest.mock('crypto', () => ({
     randomBytes: jest.fn(() => ({
         toString: jest.fn(() => 'mocked-token-123')
     }))
+}));
+
+// Mock JWT
+jest.mock('jsonwebtoken', () => ({
+    sign: jest.fn(() => 'mocked-jwt-token'),
+    verify: jest.fn(() => ({ userId: 'user-123', username: 'testuser', role: 'student' }))
 }));
 
 describe('Email Verification UserService Methods', () => {
