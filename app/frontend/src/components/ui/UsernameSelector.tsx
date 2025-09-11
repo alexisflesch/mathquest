@@ -71,6 +71,9 @@ export default function UsernameSelector({ value = '', onChange, suffix, onSuffi
             // Clear selection if search is empty
             setInput('');
             onChange('');
+        } else if (exactMatch) {
+            // Auto-select exact match
+            applyChange(exactMatch, (suffix ?? internalSuffix));
         }
     };
 
@@ -80,7 +83,18 @@ export default function UsernameSelector({ value = '', onChange, suffix, onSuffi
         if (s && !/^[A-Z0-9]$/.test(s)) return;
         if (onSuffixChange) onSuffixChange(s);
         setInternalSuffix(s);
-        onChange(joinName(input, s));
+
+        // Use input if available, otherwise use searchTerm if it's a valid prenom
+        let baseName = input;
+        if (!baseName && searchTerm) {
+            const exactMatch = prenoms.find(p => p.toLowerCase() === searchTerm.toLowerCase());
+            if (exactMatch) {
+                baseName = formatName(exactMatch);
+                setInput(baseName); // Set the input to the formatted name
+            }
+        }
+
+        onChange(joinName(baseName, s));
     };
 
     const clearSelection = () => {

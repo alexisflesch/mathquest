@@ -66,6 +66,50 @@
 
 ---
 
+## ✅ COMPLETED: UsernameSelector Bug Fix & Test Coverage
+
+### [COMPLETED] UsernameSelector Component Bug Fix and Frontend Test Implementation
+**Objective**: Fix critical bug in UsernameSelector component where typing a firstname without selecting from dropdown, then adding suffix resulted in incorrect username formation. Implement comprehensive test coverage to prevent regression.
+
+**Issues Identified**:
+- **Auto-Selection Bug**: `handleSearchInput` had incomplete logic for auto-selecting exact prenom matches
+- **Suffix Combination Bug**: `handleSuffix` only used `input` state, ignoring valid `searchTerm` when user didn't explicitly select from dropdown
+- **Missing Test Coverage**: No frontend tests existed for UsernameSelector component behavior
+
+**Key Features Implemented**:
+- **Auto-Selection Fix**: Added `else` clause in `handleSearchInput` to auto-select exact prenom matches
+- **Suffix Logic Enhancement**: Updated `handleSuffix` to check `searchTerm` when `input` is empty and auto-resolve valid prenoms
+- **Comprehensive Test Suite**: Created `UsernameSelector.test.tsx` with 3 test scenarios covering all user interaction patterns
+- **Bug Reproduction Test**: Initial test demonstrated the bug (expecting "Louis F" but getting " F")
+- **Edge Case Coverage**: Tests for auto-selection, dropdown selection, and suffix combination scenarios
+
+**Technical Implementation**:
+- **Component Logic**: Enhanced `handleSearchInput` with proper exact match auto-selection using `applyChange(exactMatch, suffix)`
+- **Suffix Handling**: Improved `handleSuffix` to fallback to `searchTerm` validation when `input` is empty
+- **Test Framework**: Jest + React Testing Library with proper mocking of `@shared/prenoms.json`
+- **Event Simulation**: Used `fireEvent.change` for input interactions and `fireEvent.mouseDown` for dropdown selections
+- **Async Testing**: Proper `waitFor` usage for dropdown rendering and state transitions
+
+**Status**: ✅ FULLY IMPLEMENTED AND TESTED
+**Files Created/Modified**:
+- `frontend/src/components/ui/UsernameSelector.tsx` - Fixed auto-selection and suffix combination logic
+- `frontend/src/components/ui/__tests__/UsernameSelector.test.tsx` - Comprehensive test suite with 3 passing tests
+
+**Test Results**: 3/3 tests passing ✅
+- ✓ Auto-select exact match and handle suffix correctly
+- ✓ Work correctly when selecting from dropdown then adding suffix  
+- ✓ Auto-select exact match when typing complete prenom
+
+**User Experience Impact**:
+- **Before**: Typing "Louis" then "F" resulted in username "F" (missing firstname)
+- **After**: Typing "Louis" then "F" correctly results in username "Louis F"
+- **Auto-Selection**: Typing complete prenom now immediately selects it without requiring dropdown interaction
+- **Robustness**: Component now handles all user interaction patterns correctly
+
+**Date**: 2025-09-06
+
+---
+
 ## ✅ COMPLETED: Question Filtering by Mode
 
 ### [COMPLETED] Backend and Frontend Mode-Based Question Filtering
