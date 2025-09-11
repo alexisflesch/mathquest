@@ -48,8 +48,14 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
             return { success: false, error: 'Game not found' };
         }
 
-        // FIXED: A game is deferred when status is 'completed' and available for replay
-        const isDeferred = gameInstance.status === 'completed';
+        // SECURITY FIX: Only allow joining completed games if they have explicit deferred availability
+        const isDeferred = gameInstance.status === 'completed' &&
+            (gameInstance.differedAvailableFrom || gameInstance.differedAvailableTo);
+
+        // Block joining completed quizzes without deferred availability
+        if (gameInstance.status === 'completed' && !isDeferred) {
+            return { success: false, error: 'This quiz has ended and is not available for replay' };
+        }
 
         // Check deferred mode availability
         if (isDeferred) {

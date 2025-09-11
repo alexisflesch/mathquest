@@ -33,6 +33,7 @@ export default function TournamentLeaderboardPage() {
     const [leaderboard, setLeaderboard] = useState<TournamentLeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [gameInstance, setGameInstance] = useState<any>(null);
     const [canPlayDiffered, setCanPlayDiffered] = useState(false);
     const [showReplayNotification, setShowReplayNotification] = useState(false);
     const [showQrModal, setShowQrModal] = useState(false);
@@ -61,6 +62,9 @@ export default function TournamentLeaderboardPage() {
                 const gameResponse = await makeApiRequest<{ gameInstance: unknown }>(`games/${code}`, {}, undefined, undefined);
                 logger.info('[Leaderboard] gameResponse', gameResponse);
                 if (!gameResponse || !gameResponse.gameInstance) throw new Error('Tournoi introuvable');
+
+                // Store the game instance data
+                setGameInstance(gameResponse.gameInstance);
 
                 const lb = await makeApiRequest<TournamentLeaderboardResponse>(`games/${code}/leaderboard`, {}, undefined, TournamentLeaderboardResponseSchema);
                 logger.info('[Leaderboard] leaderboard API response', lb);
@@ -203,11 +207,20 @@ export default function TournamentLeaderboardPage() {
                     </InfoModal>
                     <h1 className="card-title text-3xl mb-6 text-center">Tournoi terminé</h1>
                     <div className="w-full text-left text-base mb-4">
-                        <>
-                            Vous pouvez rejouer ce tournoi en mode asynchrone, dans les mêmes conditions que le direct.
-                            Pour ce faire,&nbsp;
-                            <Link href={`/live/${code}`} className="text-primary underline hover:text-primary/80 font-semibold" >cliquez ici.</Link>
-                        </>
+                        {/* Only show deferred play option for tournament games */}
+                        {gameInstance?.playMode === 'tournament' && canPlayDiffered && (
+                            <>
+                                Vous pouvez rejouer ce tournoi en mode asynchrone, dans les mêmes conditions que le direct.
+                                Pour ce faire,&nbsp;
+                                <Link href={`/live/${code}`} className="text-primary underline hover:text-primary/80 font-semibold" >cliquez ici.</Link>
+                            </>
+                        )}
+                        {/* Show message for quiz games */}
+                        {gameInstance?.playMode === 'quiz' && (
+                            <>
+                                Ce quiz est terminé. Les quiz ne peuvent pas être rejoués en mode différé.
+                            </>
+                        )}
                     </div>
                     <hr className="w-full border-base-300 my-2" />
                     {/* Live Scores Section */}
