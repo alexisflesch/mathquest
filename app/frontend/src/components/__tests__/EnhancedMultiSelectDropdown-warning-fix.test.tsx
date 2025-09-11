@@ -14,13 +14,13 @@ describe('EnhancedMultiSelectDropdown - Warning Signs Fix', () => {
         { value: 'another-compatible', isCompatible: true },
     ];
 
-    it('should show all options including incompatible ones with warning signs', () => {
+    it('should show warning signs for incompatible selected options', () => {
         const mockOnChange = jest.fn();
 
         render(
             <EnhancedMultiSelectDropdown
                 options={mockOptions}
-                selected={[]}
+                selected={['incompatible-option']} // Pre-select the incompatible option
                 onChange={mockOnChange}
                 label="Test Dropdown"
             />
@@ -30,9 +30,9 @@ describe('EnhancedMultiSelectDropdown - Warning Signs Fix', () => {
         const button = screen.getByRole('button');
         fireEvent.click(button);
 
-        // All options should be visible
+        // All options should be visible (compatible ones always, incompatible only if selected)
         expect(screen.getByText('compatible-option')).toBeInTheDocument();
-        expect(screen.getByText('incompatible-option')).toBeInTheDocument();
+        expect(screen.getByText('incompatible-option')).toBeInTheDocument(); // This should be visible because it's selected
         expect(screen.getByText('another-compatible')).toBeInTheDocument();
 
         // The incompatible option should have the warning triangle icon
@@ -40,7 +40,7 @@ describe('EnhancedMultiSelectDropdown - Warning Signs Fix', () => {
         expect(alertTriangle).toBeInTheDocument();
     });
 
-    it('should not filter out incompatible options', () => {
+    it('should filter out incompatible options when not selected', () => {
         const mockOnChange = jest.fn();
 
         render(
@@ -56,7 +56,13 @@ describe('EnhancedMultiSelectDropdown - Warning Signs Fix', () => {
         const button = screen.getByRole('button');
         fireEvent.click(button);
 
-        // Even when something is selected, incompatible options should still show
-        expect(screen.getByText('incompatible-option')).toBeInTheDocument();
+        // Compatible options should be visible in the dropdown list
+        const dropdownOptions = screen.getAllByText('compatible-option');
+        expect(dropdownOptions.length).toBeGreaterThan(0);
+
+        expect(screen.getByText('another-compatible')).toBeInTheDocument();
+
+        // Incompatible options should be filtered out when not selected
+        expect(screen.queryByText('incompatible-option')).not.toBeInTheDocument();
     });
 });

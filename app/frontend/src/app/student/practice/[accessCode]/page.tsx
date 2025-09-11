@@ -83,6 +83,10 @@ export default function PracticeSessionWithAccessCodePage() {
     // Stats modal state
     const [showStatsModal, setShowStatsModal] = useState(false);
 
+    // Connection status tracking
+    const [connectionLost, setConnectionLost] = useState(false);
+    const [reconnecting, setReconnecting] = useState(false);
+
     // Extract practice parameters from game instance instead of URL
     useEffect(() => {
         if (!accessCode) {
@@ -323,14 +327,48 @@ export default function PracticeSessionWithAccessCodePage() {
         }
     }, [practiceState.lastFeedback, practiceState.hasAnswered]);
 
-    // Handle socket errors
+    // Handle socket errors and connection status
     useEffect(() => {
         if (practiceState.error) {
-            setSnackbarType("error");
-            setSnackbarMessage(practiceState.error);
-            setSnackbarOpen(true);
+            const isConnectionError = practiceState.error.includes('serveur') ||
+                practiceState.error.includes('connexion') ||
+                practiceState.error.includes('réseau') ||
+                practiceState.error.includes('connection') ||
+                practiceState.error.includes('network');
+
+            if (isConnectionError) {
+                setConnectionLost(true);
+                setReconnecting(true);
+                setSnackbarMessage("Connexion perdue, tentative de reconnexion...");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+
+                // Auto-hide snackbar after 3 seconds and try to reconnect
+                setTimeout(() => {
+                    setSnackbarOpen(false);
+                    // Trigger reconnection by clearing error and attempting to restart session
+                    clearPracticeError();
+                    setReconnecting(false);
+                    setConnectionLost(false);
+                }, 3000);
+            } else {
+                // For non-connection errors, show the error normally
+                setSnackbarType("error");
+                setSnackbarMessage(practiceState.error);
+                setSnackbarOpen(true);
+            }
+        } else {
+            // Connection restored
+            if (connectionLost) {
+                setConnectionLost(false);
+                setReconnecting(false);
+                setSnackbarMessage("Connexion rétablie");
+                setSnackbarType("success");
+                setSnackbarOpen(true);
+                setTimeout(() => setSnackbarOpen(false), 2000);
+            }
         }
-    }, [practiceState.error]);
+    }, [practiceState.error, connectionLost, clearPracticeError]);
 
     // Game instance loading state
     if (loading) {
@@ -364,59 +402,40 @@ export default function PracticeSessionWithAccessCodePage() {
         return <LoadingScreen message="Connexion à la session d'entraînement..." />;
     }
 
-    // Error state with better UX
-    if (practiceState.error) {
+    // Error state with better UX - only show for non-connection errors
+    if (practiceState.error && !connectionLost) {
         const isConnectionError = practiceState.error.includes('serveur') ||
             practiceState.error.includes('connexion') ||
-            practiceState.error.includes('réseau');
+            practiceState.error.includes('réseau') ||
+            practiceState.error.includes('connection') ||
+            practiceState.error.includes('network');
 
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 flex items-center justify-center p-4">
-                <div className="text-center bg-white dark:bg-base-200 p-8 rounded-lg shadow-lg max-w-md w-full">
-                    <div className="text-red-600 dark:text-red-400 mb-4">
-                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d={isConnectionError
-                                    ? "M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                                    : "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"} />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-2">
-                        {isConnectionError ? 'Problème de connexion' : 'Erreur'}
-                    </h2>
-                    <p className="text-red-600 dark:text-red-300 mb-6">{practiceState.error}</p>
+        // Don't show error component for connection errors - handle via snackbar instead
+        if (!isConnectionError) {
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 flex items-center justify-center p-4">
+                    <div className="text-center bg-white dark:bg-base-200 p-8 rounded-lg shadow-lg max-w-md w-full">
+                        <div className="text-red-600 dark:text-red-400 mb-4">
+                            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-2">Erreur</h2>
+                        <p className="text-red-600 dark:text-red-300 mb-6">{practiceState.error}</p>
 
-                    <div className="space-y-3">
-                        {isConnectionError && (
+                        <div className="space-y-3">
                             <button
-                                onClick={() => {
-                                    clearPracticeError();
-                                    // Try to reconnect
-                                    setTimeout(() => window.location.reload(), 100);
-                                }}
-                                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                                onClick={() => window.location.reload()}
+                                className="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
                             >
-                                Réessayer la connexion
+                                Recharger la page
                             </button>
-                        )}
-
-                        <button
-                            onClick={() => router.push('/student/practice')}
-                            className="w-full bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                            Retour aux paramètres
-                        </button>
-
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                            Recharger la page
-                        </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
 
     // Session completed state
@@ -459,6 +478,18 @@ export default function PracticeSessionWithAccessCodePage() {
     // Main practice interface (exactly matching live page structure)
     return (
         <div className="main-content">
+            {/* Connection status indicator */}
+            {(connectionLost || reconnecting) && (
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+                    <div className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span className="text-sm font-medium">
+                            {reconnecting ? "Tentative de reconnexion..." : "Connexion perdue"}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Feedback Overlay - exactly like live page */}
             {showFeedbackOverlay && (
                 <div className="feedback-overlay">

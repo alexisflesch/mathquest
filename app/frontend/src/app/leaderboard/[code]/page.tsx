@@ -205,7 +205,7 @@ export default function TournamentLeaderboardPage() {
                             </div>
                         </div>
                     </InfoModal>
-                    <h1 className="card-title text-3xl mb-6 text-center">Tournoi terminé</h1>
+                    <h1 className="card-title text-3xl mb-6 text-center">{gameInstance?.playMode === 'quiz' ? 'Quiz terminé' : 'Tournoi terminé'}</h1>
                     <div className="w-full text-left text-base mb-4">
                         {/* Only show deferred play option for tournament games */}
                         {gameInstance?.playMode === 'tournament' && canPlayDiffered && (
@@ -218,7 +218,7 @@ export default function TournamentLeaderboardPage() {
                         {/* Show message for quiz games */}
                         {gameInstance?.playMode === 'quiz' && (
                             <>
-                                Ce quiz est terminé. Les quiz ne peuvent pas être rejoués en mode différé.
+                                Ce quiz est terminé. Découvrez le classement ci-dessous.
                             </>
                         )}
                     </div>
