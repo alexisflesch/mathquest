@@ -62,7 +62,9 @@ describe('VERIFY BUG FIX - Deferred Tournament Attempt Count', () => {
                 name: 'Bug Fix Test Game',
                 status: 'completed', // Deferred mode (completed game)
                 playMode: 'tournament',
-                gameTemplateId: gameTemplate.id
+                gameTemplateId: gameTemplate.id,
+                differedAvailableFrom: new Date(Date.now() - 1000 * 60 * 60), // Available from 1 hour ago
+                differedAvailableTo: new Date(Date.now() + 1000 * 60 * 60) // Available until 1 hour from now
             }
         });
     });

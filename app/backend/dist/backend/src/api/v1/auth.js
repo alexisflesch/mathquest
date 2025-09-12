@@ -56,9 +56,9 @@ exports.__setUserServiceForTesting = __setUserServiceForTesting;
  * Generic auth endpoint that handles multiple actions
  * POST /api/v1/auth
  */
-router.post('/', (0, validation_1.validateRequestBody)(schemas_1.LoginRequestSchema.or(schemas_1.RegisterRequestSchema)), async (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const { action, email, password, username } = req.body;
+        const { action } = req.body;
         switch (action) {
             case 'login':
                 await handleUniversalLogin(req, res);
@@ -585,8 +585,15 @@ router.post('/upgrade', (0, validation_1.validateRequestBody)(schemas_1.UpgradeA
         }
         // For teacher upgrade, validate admin password
         if (targetRole === 'TEACHER') {
-            // TODO: Implement admin password validation
-            logger.info('Teacher upgrade attempt', {
+            const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+            if (!adminPassword || adminPassword !== ADMIN_PASSWORD) {
+                res.status(403).json({
+                    success: false,
+                    error: 'Invalid admin password'
+                });
+                return;
+            }
+            logger.info('Teacher upgrade attempt validated', {
                 userId: existingUser.id,
                 username: existingUser.username,
                 adminPassword: !!adminPassword

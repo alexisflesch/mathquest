@@ -24,8 +24,8 @@ export function validateRequestBody<T>(schema: z.ZodSchema<T>) {
             req.body = validatedData;
             next();
         } catch (error) {
-            if (error instanceof ZodError) {
-                const validationErrors = error.errors.map(err => ({
+            if (error instanceof ZodError || (error as any)?.name === 'ZodError') {
+                const validationErrors = (error as ZodError).errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message,
                     code: err.code
@@ -63,8 +63,8 @@ export function validateRequestParams<T>(schema: z.ZodSchema<T>) {
             req.params = validatedData as any;
             next();
         } catch (error) {
-            if (error instanceof ZodError) {
-                const validationErrors = error.errors.map(err => ({
+            if (error instanceof ZodError || (error as any)?.name === 'ZodError') {
+                const validationErrors = (error as ZodError).errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message,
                     code: err.code
@@ -99,8 +99,8 @@ export function validateRequestQuery<T>(schema: z.ZodSchema<T>) {
             req.query = validatedData as any;
             next();
         } catch (error) {
-            if (error instanceof ZodError) {
-                const validationErrors = error.errors.map(err => ({
+            if (error instanceof ZodError || (error as any)?.name === 'ZodError') {
+                const validationErrors = (error as ZodError).errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message,
                     code: err.code

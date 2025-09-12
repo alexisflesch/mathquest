@@ -1,9 +1,90 @@
 import { beforeAll, afterAll, beforeEach, describe, it, expect } from '@jest/globals';
 import { prisma } from '../../src/db/prisma';
+import { redisClient } from '../../src/config/redis';
+import { joinGame } from '../../src/core/services/gameParticipant/joinService';
 
 describe('Check DB Values After Bug Test', () => {
+    let testData: any;
+
+    beforeAll(async () => {
+        await redisClient.flushall();
+    });
+
     afterAll(async () => {
+        await redisClient.flushall();
         await prisma.$disconnect();
+    });
+
+    beforeEach(async () => {
+        testData = {
+            accessCode: 'ATTEMPT-BUG-TEST',
+            gameId: 'attempt-bug-game',
+            userId: 'user-attempt-bug-test'
+        };
+
+        // Clean up (order matters due to foreign keys)
+        await prisma.gameParticipant.deleteMany({
+            where: { gameInstanceId: testData.gameId }
+        });
+        await prisma.gameInstance.deleteMany({
+            where: { id: testData.gameId }
+        });
+        await prisma.gameTemplate.deleteMany({
+            where: { creatorId: testData.userId }
+        });
+        await prisma.user.deleteMany({
+            where: { id: testData.userId }
+        });
+
+        // Create test user
+        await prisma.user.create({
+            data: {
+                id: testData.userId,
+                username: 'AttemptBugUser',
+                email: 'attemptbug@test.com',
+                role: 'STUDENT'
+            }
+        });
+
+        // Create game template and instance
+        const gameTemplate = await prisma.gameTemplate.create({
+            data: {
+                name: 'Attempt Bug Test Template',
+                description: 'Attempt Bug Test Description',
+                creator: { connect: { id: testData.userId } }
+            }
+        });
+
+        await prisma.gameInstance.create({
+            data: {
+                id: testData.gameId,
+                accessCode: testData.accessCode,
+                name: 'Attempt Bug Test Game',
+                status: 'completed', // Deferred mode (completed game)
+                playMode: 'tournament',
+                gameTemplateId: gameTemplate.id
+            }
+        });
+
+        // Create a participant with some attempts to test
+        await joinGame({
+            userId: testData.userId,
+            accessCode: testData.accessCode,
+            username: 'AttemptBugUser'
+        });
+
+        // Simulate multiple attempts by updating the participant
+        await prisma.gameParticipant.updateMany({
+            where: {
+                userId: testData.userId,
+                gameInstanceId: testData.gameId
+            },
+            data: {
+                nbAttempts: 3,
+                liveScore: 150,
+                deferredScore: 200
+            }
+        });
     });
 
     it('should check what the frontend API would see', async () => {

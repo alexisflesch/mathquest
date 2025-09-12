@@ -170,6 +170,10 @@ export const UpdateUserRequestSchema = z.object({
 export const CreateQuizTemplateRequestSchema = z.object({
     name: z.string().min(1, 'Quiz template name is required'),
     description: z.string().optional(),
+    gradeLevel: z.string().optional(),
+    themes: z.array(z.string()).min(1, 'At least one theme is required'),
+    discipline: z.string().optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
     questionUids: z.array(z.string().uuid()).min(1, 'At least one question is required'),
     settings: z.record(z.any()).optional()
 });

@@ -372,7 +372,7 @@ describe('New Scoring Strategy', () => {
             // Slow answer should have maximum penalty (70% of base score with α=0.3)
             expect(result.scoreAdded).toBeGreaterThan(baseScorePerQuestion * 0.65);
             expect(result.scoreAdded).toBeLessThan(baseScorePerQuestion * 0.75);
-        });
+        }, 20000); // 20 second timeout for this slow test
     });
 
     describe('Numeric Question Scoring', () => {

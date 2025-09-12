@@ -142,6 +142,10 @@ exports.UpdateUserRequestSchema = zod_1.z.object({
 exports.CreateQuizTemplateRequestSchema = zod_1.z.object({
     name: zod_1.z.string().min(1, 'Quiz template name is required'),
     description: zod_1.z.string().optional(),
+    gradeLevel: zod_1.z.string().optional(),
+    themes: zod_1.z.array(zod_1.z.string()).min(1, 'At least one theme is required'),
+    discipline: zod_1.z.string().optional(),
+    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
     questionUids: zod_1.z.array(zod_1.z.string().uuid()).min(1, 'At least one question is required'),
     settings: zod_1.z.record(zod_1.z.any()).optional()
 });

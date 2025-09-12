@@ -88,6 +88,9 @@ class GameInstanceService {
     async createGameInstanceUnified(data) {
         try {
             const accessCode = await this.generateUniqueAccessCode();
+            // Always clear Redis for this accessCode before creating a new game instance
+            const { clearGameRedisKeys } = await Promise.resolve().then(() => __importStar(require('./redisCleanupUtil')));
+            await clearGameRedisKeys(accessCode);
             // Set status: allow override from payload, otherwise use legacy logic
             let status;
             let differedAvailableFrom = undefined;

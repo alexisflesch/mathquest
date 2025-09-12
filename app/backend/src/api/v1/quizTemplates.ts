@@ -23,10 +23,10 @@ const router = express.Router();
 let gameTemplateServiceInstance: GameTemplateService | null = null;
 
 const getGameTemplateService = (): GameTemplateService => {
-    if (!gameTemplateServiceInstance) {
-        gameTemplateServiceInstance = new GameTemplateService();
+    if (gameTemplateServiceInstance) {
+        return gameTemplateServiceInstance;
     }
-    return gameTemplateServiceInstance;
+    return new GameTemplateService();
 };
 
 // For testing purposes only - allows tests to inject a mock service
@@ -53,14 +53,14 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuizTemplateRequestSchem
             discipline,
             description,
             defaultMode,
-            questions
+            questionUids
         } = req.body;
 
         // Basic validation
-        if (!name || !themes) {
+        if (!name || !themes || !questionUids) {
             res.status(400).type('application/json').json({
                 error: 'Required fields missing',
-                required: ['name', 'themes']
+                required: ['name', 'themes', 'questionUids']
             });
             return;
         }
@@ -72,7 +72,7 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuizTemplateRequestSchem
             discipline: discipline || '',
             description,
             defaultMode,
-            questions
+            questionUids
         });
 
         res.status(201).type('application/json').json({ gameTemplate });
@@ -174,7 +174,39 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ gameTemplates:
  * Requires teacher authentication
  */
 router.put('/:id', teacherAuth, validateRequestBody(UpdateQuizTemplateRequestSchema), async (req: Request<{ id: string }, { gameTemplate: any } | ErrorResponse, GameTemplateUpdateRequest>, res: Response<{ gameTemplate: any } | ErrorResponse>): Promise<void> => {
-    // ...existing code...
+    try {
+        if (!req.user?.userId || req.user.role !== 'TEACHER') {
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
+            return;
+        }
+
+        const { id } = req.params;
+        const updateData = {
+            id,
+            ...req.body
+        };
+
+        const updatedgameTemplate = await getGameTemplateService().updategameTemplate(
+            req.user.userId,
+            updateData
+        );
+
+        res.status(200).type('application/json').json({ gameTemplate: updatedgameTemplate });
+    } catch (error) {
+        logger.error({ error }, 'Error updating quiz template');
+
+        if (error instanceof Error && error.message.includes('not found')) {
+            res.status(404).type('application/json').json({ error: error.message });
+            return;
+        }
+
+        if (error instanceof Error && error.message.includes('permission')) {
+            res.status(403).type('application/json').json({ error: error.message });
+            return;
+        }
+
+        res.status(500).type('application/json').json({ error: 'An error occurred while updating the quiz template' });
+    }
 });
 
 /**

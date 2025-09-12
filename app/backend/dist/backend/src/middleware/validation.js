@@ -26,7 +26,7 @@ function validateRequestBody(schema) {
             next();
         }
         catch (error) {
-            if (error instanceof zod_1.ZodError) {
+            if (error instanceof zod_1.ZodError || error?.name === 'ZodError') {
                 const validationErrors = error.errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message,
@@ -62,7 +62,7 @@ function validateRequestParams(schema) {
             next();
         }
         catch (error) {
-            if (error instanceof zod_1.ZodError) {
+            if (error instanceof zod_1.ZodError || error?.name === 'ZodError') {
                 const validationErrors = error.errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message,
@@ -95,7 +95,7 @@ function validateRequestQuery(schema) {
             next();
         }
         catch (error) {
-            if (error instanceof zod_1.ZodError) {
+            if (error instanceof zod_1.ZodError || error?.name === 'ZodError') {
                 const validationErrors = error.errors.map(err => ({
                     field: err.path.join('.'),
                     message: err.message,

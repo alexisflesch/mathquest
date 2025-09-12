@@ -16,14 +16,12 @@ module.exports = {
         }]
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-    collectCoverage: true,
-    coverageDirectory: 'coverage',
-    coverageReporters: ['text', 'lcov'],
+    collectCoverage: false, // Disable coverage collection for faster tests
     // Automatically clear mock calls and instances between every test
     clearMocks: true,
     // Setup global test environment
     globalSetup: '<rootDir>/tests/support/globalSetup.ts',
-    // globalTeardown: '<rootDir>/tests/globalTeardown.ts', // Temporarily disabled
+    globalTeardown: '<rootDir>/tests/support/globalTeardown.ts',
     // Module name mapper for path aliases
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1', // <rootDir> is /home/aflesch/mathquest/app/backend/
@@ -35,6 +33,13 @@ module.exports = {
     maxWorkers: 1,
     // Force exit after tests complete to avoid hanging due to open handles
     forceExit: true,
-    // Set a timeout for tests to avoid hanging indefinitely
-    testTimeout: 60000 // Increased to 60 seconds
+    // Set a shorter timeout for tests
+    testTimeout: 10000, // Reduced to 10 seconds
+    // Skip node_modules transformation for faster startup
+    transformIgnorePatterns: [
+        'node_modules/(?!(@shared)/)'
+    ],
+    // Use faster test runner options
+    detectOpenHandles: false, // Disable to speed up
+    setupFilesAfterEnv: [], // No additional setup files needed
 };

@@ -93,9 +93,9 @@ export const __setUserServiceForTesting = (mockService: UserService): void => {
  * Generic auth endpoint that handles multiple actions
  * POST /api/v1/auth
  */
-router.post('/', validateRequestBody(LoginRequestSchema.or(RegisterRequestSchema)), async (req: Request, res: Response<LoginResponse | RegisterResponse | ErrorResponse>): Promise<void> => {
+router.post('/', async (req: Request, res: Response<LoginResponse | RegisterResponse | ErrorResponse>): Promise<void> => {
     try {
-        const { action, email, password, username } = req.body;
+        const { action } = req.body;
 
         switch (action) {
             case 'login':
@@ -666,8 +666,15 @@ router.post('/upgrade', validateRequestBody(UpgradeAccountRequestSchema), async 
 
         // For teacher upgrade, validate admin password
         if (targetRole === 'TEACHER') {
-            // TODO: Implement admin password validation
-            logger.info('Teacher upgrade attempt', {
+            const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+            if (!adminPassword || adminPassword !== ADMIN_PASSWORD) {
+                res.status(403).json({
+                    success: false,
+                    error: 'Invalid admin password'
+                });
+                return;
+            }
+            logger.info('Teacher upgrade attempt validated', {
                 userId: existingUser.id,
                 username: existingUser.username,
                 adminPassword: !!adminPassword
