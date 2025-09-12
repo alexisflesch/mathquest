@@ -8,7 +8,7 @@ module.exports = {
     ],
     transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', {
-            tsconfig: 'tsconfig.json', // Points to backend's tsconfig
+            tsconfig: 'tsconfig.tests.json', // Use test-specific tsconfig for proper path mapping
             // Add baseUrl to help ts-jest resolve paths correctly
             compilerOptions: {
                 baseUrl: './'

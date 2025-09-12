@@ -19,16 +19,15 @@
         },
         "moduleResolution": "node",
         "downlevelIteration": true,
-        "jsx": "react-jsx" // Enable JSX support for TSX files in shared examples
+        "types": ["jest", "node"], // Include Jest types for test files
     },
     "include": [
         "src/**/*",
-        "../shared/**/*.ts" // Only include shared TypeScript files, exclude .tsx examples
+        "../shared/**/*.ts",
+        "tests/**/*" // Include test files for VSCode TypeScript language server
     ],
     "exclude": [
         "node_modules",
-        "tests/**/*", // Exclude test files from production build
-        "src/tests/**/*", // Exclude test files in src directory
         "../shared/types/examples" // Exclude shared TSX examples directory
     ],
     "ts-node": {

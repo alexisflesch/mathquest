@@ -370,33 +370,57 @@ export declare const UpdateUserRequestSchema: z.ZodObject<{
 export declare const CreateQuizTemplateRequestSchema: z.ZodObject<{
     name: z.ZodString;
     description: z.ZodOptional<z.ZodString>;
+    gradeLevel: z.ZodOptional<z.ZodString>;
+    themes: z.ZodArray<z.ZodString, "many">;
+    discipline: z.ZodOptional<z.ZodString>;
+    defaultMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice", "class"]>>;
     questionUids: z.ZodArray<z.ZodString, "many">;
     settings: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
+    themes: string[];
     questionUids: string[];
+    gradeLevel?: string | undefined;
     settings?: Record<string, any> | undefined;
+    discipline?: string | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
 }, {
     name: string;
+    themes: string[];
     questionUids: string[];
+    gradeLevel?: string | undefined;
     settings?: Record<string, any> | undefined;
+    discipline?: string | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
 }>;
 export declare const UpdateQuizTemplateRequestSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    gradeLevel: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    discipline: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    defaultMode: z.ZodOptional<z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice", "class"]>>>;
     questionUids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     settings: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
 }, "strip", z.ZodTypeAny, {
+    gradeLevel?: string | undefined;
     name?: string | undefined;
     settings?: Record<string, any> | undefined;
+    discipline?: string | undefined;
+    themes?: string[] | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
     questionUids?: string[] | undefined;
 }, {
+    gradeLevel?: string | undefined;
     name?: string | undefined;
     settings?: Record<string, any> | undefined;
+    discipline?: string | undefined;
+    themes?: string[] | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
     questionUids?: string[] | undefined;
 }>;
 export declare const SetQuestionRequestSchema: z.ZodObject<{

@@ -4,11 +4,6 @@ This file documents bugs found during codebase exploration. These are not fixed 
 
 ## Potential Bugs
 
-### 1. Auth API - Password Reset Token Reuse
-- **Location**: `backend/src/api/v1/auth.ts` - `reset-password/confirm` endpoint
-- **Issue**: Password reset tokens might be reusable if not invalidated after use
-- **Impact**: Security vulnerability allowing replay attacks
-- **Evidence**: Token is used once but not marked as used in database
 
 ### 2. Socket.IO - No Rate Limiting
 - **Location**: `backend/src/sockets/index.ts`
