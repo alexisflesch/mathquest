@@ -19,7 +19,10 @@
         },
         "moduleResolution": "node",
         "downlevelIteration": true,
-        "types": ["jest", "node"], // Include Jest types for test files
+        "types": [
+            "jest",
+            "node"
+        ], // Include Jest types for test files
     },
     "include": [
         "src/**/*",

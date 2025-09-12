@@ -21,6 +21,9 @@
                 "../shared/*"
             ]
         },
-        "types": ["jest", "node"]
+        "types": [
+            "jest",
+            "node"
+        ]
     }
 }
