@@ -459,7 +459,7 @@ export class PracticeSessionService {
                 const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
 
                 // Check if selected answers match correct answers
-                const correctIndices = correctAnswers
+                const correctIndices: number[] = correctAnswers
                     .map((isCorrect: boolean, index: number) => isCorrect ? index : -1)
                     .filter((index: number) => index !== -1);
 

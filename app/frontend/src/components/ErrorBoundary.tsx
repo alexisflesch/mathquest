@@ -38,10 +38,14 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        // Safely handle different error types
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
         // Log the error to our logging service
         logger.error('React Error Boundary caught an error:', {
-            error: error.message,
-            stack: error.stack,
+            error: errorMessage,
+            stack: errorStack,
             componentStack: errorInfo.componentStack,
             props: this.props
         });
@@ -101,9 +105,9 @@ export class ErrorBoundary extends Component<Props, State> {
                                     Error Details (Development)
                                 </summary>
                                 <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-32">
-                                    {this.state.error.message}
+                                    {this.state.error instanceof Error ? this.state.error.message : String(this.state.error)}
                                     {'\n\n'}
-                                    {this.state.error.stack}
+                                    {this.state.error instanceof Error ? this.state.error.stack : 'No stack trace available'}
                                 </pre>
                             </details>
                         )}
@@ -139,9 +143,12 @@ export function withErrorBoundary<P extends object>(
  */
 export function SocketErrorBoundary({ children }: { children: ReactNode }) {
     const handleSocketError = (error: Error, errorInfo: ErrorInfo) => {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
         logger.error('Socket Error Boundary:', {
-            error: error.message,
-            stack: error.stack,
+            error: errorMessage,
+            stack: errorStack,
             componentStack: errorInfo.componentStack,
             context: 'socket_operation'
         });

@@ -22,6 +22,7 @@ module.exports = {
     // Setup global test environment
     globalSetup: '<rootDir>/tests/support/globalSetup.ts',
     globalTeardown: '<rootDir>/tests/support/globalTeardown.ts',
+    setupFiles: ['<rootDir>/tests/setupTestEnv.js'],
     // Module name mapper for path aliases
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1', // <rootDir> is /home/aflesch/mathquest/app/backend/
