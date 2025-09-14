@@ -124,7 +124,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     hideExplanation = false, // NEW: destructure hideExplanation
     keepTitleWhenExpanded = false, // NEW: destructure keepTitleWhenExpanded
 }) => {
-    // Get answers for display (handles both multiple choice and numeric questions)
+    // Determine what content to show in collapsed vs expanded states to avoid redundancy
+    const collapsedContent = question.title || question.text;
+    const shouldShowTextInExpanded = !question.title || question.title !== question.text;
+
+    // Get answers for display
     const answersForDisplay = getAnswersForDisplay(question);
 
     // Debug logging for numeric questions
@@ -285,7 +289,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
                                     }}
                                 >
-                                    <MathJaxWrapper>{question.title ? question.title : question.text}</MathJaxWrapper>
+                                    <MathJaxWrapper>{collapsedContent}</MathJaxWrapper>
                                 </span>
                             </div>
                         </div>
@@ -378,12 +382,14 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         isOpen ? "no-top-border" : ""
                                     ].join(" ")}
                                 >
-                                    <li
-                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 question-text-in-dashboards"
-                                        style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
-                                    >
-                                        <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
-                                    </li>
+                                    {shouldShowTextInExpanded && (
+                                        <li
+                                            className="mb-2 font-medium text-base text-couleur-global-neutral-700 question-text-in-dashboards"
+                                            style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                        >
+                                            <MathJaxWrapper>{question.text}</MathJaxWrapper>
+                                        </li>
+                                    )}
                                     {answersForDisplay.length > 0
                                         ? answersForDisplay.map(({ text: answerText, correct }, idx) => (
                                             <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
@@ -461,12 +467,14 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                 </ul>
                             ) : (
                                 <>
-                                    <div
-                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2 question-text-in-dashboards"
-                                        style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
-                                    >
-                                        <MathJaxWrapper>{question.text}</MathJaxWrapper>
-                                    </div>
+                                    {shouldShowTextInExpanded && (
+                                        <div
+                                            className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2 question-text-in-dashboards"
+                                            style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                        >
+                                            <MathJaxWrapper>{question.text}</MathJaxWrapper>
+                                        </div>
+                                    )}
                                     <ul
                                         className={[
                                             "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",

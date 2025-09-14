@@ -32,8 +32,11 @@ describe('UsernameSelector', () => {
         // Find the search input (when no firstname is selected yet)
         const searchInput = screen.getByPlaceholderText('Tapez les premières lettres pour chercher...');
 
-        // Type "Louis" in the search input - this should auto-select
+        // Type "Louis" in the search input
         fireEvent.change(searchInput, { target: { value: 'Louis' } });
+
+        // Press Enter to select the exact match
+        fireEvent.keyDown(searchInput, { key: 'Enter' });
 
         // The input should now show "Louis" as selected (readOnly input appears)
         await waitFor(() => {
@@ -91,8 +94,9 @@ describe('UsernameSelector', () => {
 
         const searchInput = screen.getByPlaceholderText('Tapez les premières lettres pour chercher...');
 
-        // Type complete "Louis" - this should auto-select
+        // Type complete "Louis" and press Enter to select
         fireEvent.change(searchInput, { target: { value: 'Louis' } });
+        fireEvent.keyDown(searchInput, { key: 'Enter' });
 
         // The input should now show "Louis" as selected (readOnly input appears)
         await waitFor(() => {
@@ -109,5 +113,66 @@ describe('UsernameSelector', () => {
 
         // Should correctly combine to "Louis F"
         expect(mockOnChange).toHaveBeenLastCalledWith('Louis F');
+    });
+
+    it('should auto-select typed name when clicking outside (UX improvement)', async () => {
+        render(
+            <UsernameSelector
+                value=""
+                onChange={mockOnChange}
+                onSuffixChange={mockOnSuffixChange}
+            />
+        );
+
+        const searchInput = screen.getByPlaceholderText('Tapez les premières lettres pour chercher...');
+
+        // Type "Louis" in the search input
+        fireEvent.change(searchInput, { target: { value: 'Louis' } });
+
+        // Verify dropdown is open and shows Louis
+        const louisOption = await screen.findByText('Louis');
+        expect(louisOption).toBeInTheDocument();
+
+        // Click outside the component (simulate clicking elsewhere on the page)
+        // This should now auto-select "Louis" for better UX
+        fireEvent.blur(searchInput);
+
+        // Wait for auto-selection to happen
+        await waitFor(() => {
+            // After the fix, Louis should be auto-selected
+            const selectedInput = screen.getByDisplayValue('Louis');
+            expect(selectedInput).toBeInTheDocument();
+            expect(selectedInput).toHaveAttribute('readonly');
+            expect(mockOnChange).toHaveBeenCalledWith('Louis');
+        });
+    });
+
+    it('should not auto-select when typed text is not an exact match', async () => {
+        render(
+            <UsernameSelector
+                value=""
+                onChange={mockOnChange}
+                onSuffixChange={mockOnSuffixChange}
+            />
+        );
+
+        const searchInput = screen.getByPlaceholderText('Tapez les premières lettres pour chercher...');
+
+        // Type "Lou" (partial match, not exact)
+        fireEvent.change(searchInput, { target: { value: 'Lou' } });
+
+        // Click outside the component
+        fireEvent.blur(searchInput);
+
+        // Wait and verify that no auto-selection happened
+        await waitFor(() => {
+            // Should still be the search input, not auto-selected
+            const searchInputAfterBlur = screen.queryByPlaceholderText('Tapez les premières lettres pour chercher...');
+            expect(searchInputAfterBlur).toBeInTheDocument();
+            expect(searchInputAfterBlur).toHaveValue('Lou');
+
+            // And onChange should not have been called
+            expect(mockOnChange).not.toHaveBeenCalled();
+        });
     });
 });

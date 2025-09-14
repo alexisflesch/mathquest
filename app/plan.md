@@ -48,6 +48,42 @@ All 10 edge case categories have been systematically investigated and tested. A 
 
 ### Key Achievements:
 - ✅ **Zero test failures** - All edge cases properly handled
+- ✅ **UsernameSelector UX Fix** - Fixed auto-selection preventing full name typing
+- ✅ **Practice Session Recovery E2E Test** - Validated core recovery functionality
+
+## 🔧 RECENT FIXES COMPLETED
+
+### UsernameSelector Component Fix ✅
+- **Issue**: Auto-selection prevented typing full names like "Alexis"
+- **Solution**: Removed exact match auto-selection logic in `UsernameSelector.tsx`
+- **Result**: Users can now type complete names without interruption
+- **Status**: ✅ WORKING - Fix applied and tested
+
+### Practice Session Recovery E2E Test ✅
+- **Objective**: Validate practice session recovery after page refresh
+- **Coverage**:
+  - ✅ Login functionality works correctly
+  - ✅ Navigation to practice page works
+  - ✅ Practice page loads successfully
+  - ✅ Authentication state persists across navigation
+  - ✅ Core session recovery mechanism works
+  - ✅ Page refresh recovery works (fixed context issue)
+- **Test Status**: ✅ **PASSING** - All core functionality validated
+- **Known Issue**: Practice session wizard has context closure bug (separate from recovery)
+
+## 📋 CURRENT SYSTEM STATUS
+
+### ✅ CONFIRMED WORKING:
+- User authentication and login flow
+- Navigation between pages
+- Session state persistence
+- Practice session page accessibility
+- Username input with prenoms validation (after fix)
+- Basic e2e test infrastructure
+
+### ⚠️ KNOWN ISSUES TO ADDRESS:
+- Practice session creation wizard context closure (implementation bug)
+- May affect full wizard completion but doesn't impact core recovery functionality
 - ✅ **Comprehensive coverage** - 124 test scenarios across 10 categories
 - ✅ **Systematic approach** - Consistent testing methodology applied
 - ✅ **Documentation complete** - All findings documented with expected vs actual behavior

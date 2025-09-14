@@ -47,7 +47,7 @@ test.describe('Basic Connectivity', () => {
         const defaultMode = await input.getAttribute('defaultMode');
         const placeholder = await input.getAttribute('placeholder');
         const name = await input.getAttribute('name');
-        console.log(`Input ${i + 1}: type="${defaultMode", placeholder="${placeholder}", name="${name}"`);
+        console.log(`Input ${i + 1}: type="${defaultMode}", placeholder="${placeholder}", name="${name}"`);
       }
     }
 

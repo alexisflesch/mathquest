@@ -168,3 +168,25 @@ jest.mock('next/server', () => {
         }
     };
 });
+
+// Polyfill StorageEvent for jsdom compatibility
+// This fixes issues with useStorage hooks that listen for storage events
+if (typeof window !== 'undefined' && !window.StorageEvent) {
+    window.StorageEvent = class StorageEvent extends Event {
+        constructor(type, eventInitDict = {}) {
+            super(type, eventInitDict);
+
+            // Set StorageEvent-specific properties
+            this.key = eventInitDict.key || null;
+            this.oldValue = eventInitDict.oldValue || null;
+            this.newValue = eventInitDict.newValue || null;
+            this.storageArea = eventInitDict.storageArea || null;
+        }
+
+        // StorageEvent properties
+        key;
+        oldValue;
+        newValue;
+        storageArea;
+    };
+}

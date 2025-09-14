@@ -28,12 +28,33 @@ const logger = createLogger('PracticeSessionWithAccessCode');
 // Simple user data functions for practice mode
 function getUserId(): string {
     if (typeof window === 'undefined') return 'practice-user';
-    return localStorage.getItem('mathquest_user_id') || `practice-${Date.now()}`;
+
+    // First try to get existing user ID
+    let userId = localStorage.getItem('mathquest_user_id');
+
+    // If no stored user ID, generate one and store it for stability
+    if (!userId) {
+        userId = `practice-${Date.now()}`;
+        localStorage.setItem('mathquest_user_id', userId);
+        logger.info('Generated and stored stable userId for practice session', { userId });
+    }
+
+    return userId;
 }
 
 function getUsername(): string {
     if (typeof window === 'undefined') return 'Practice User';
-    return localStorage.getItem('mathquest_username') || 'Practice User';
+
+    // First try to get existing username
+    let username = localStorage.getItem('mathquest_username');
+
+    // If no stored username, use default and store it
+    if (!username) {
+        username = 'Practice User';
+        localStorage.setItem('mathquest_username', username);
+    }
+
+    return username;
 }
 
 interface PracticeParams {
@@ -48,8 +69,22 @@ export default function PracticeSessionWithAccessCodePage() {
     const router = useRouter();
     const params = useParams();
     const accessCode = params?.accessCode as string;
-    const userId = getUserId();
-    const username = getUsername();
+
+    // Make userId stable to prevent infinite re-renders
+    const userId = useMemo(() => {
+        if (typeof window === 'undefined') return 'practice-user';
+        let storedUserId = localStorage.getItem('mathquest_user_id');
+        if (!storedUserId) {
+            storedUserId = `practice-${Date.now()}`;
+            localStorage.setItem('mathquest_user_id', storedUserId);
+        }
+        return storedUserId;
+    }, []); // Empty dependency array to make it stable
+
+    const username = useMemo(() => {
+        if (typeof window === 'undefined') return 'Practice User';
+        return localStorage.getItem('mathquest_username') || 'Practice User';
+    }, []); // Empty dependency array to make it stable
 
     // State for game instance loading (minimal public info)
     const [gameInstance, setGameInstance] = useState<PublicGameInstance | null>(null);
@@ -142,6 +177,22 @@ export default function PracticeSessionWithAccessCodePage() {
         fetchGameInstance();
     }, [accessCode, router]);
 
+    // Make settings stable to prevent infinite re-renders
+    const practiceSettings = useMemo(() => ({
+        discipline: practiceParams.discipline,
+        gradeLevel: practiceParams.level,
+        themes: practiceParams.themes,
+        questionCount: practiceParams.limit,
+        showImmediateFeedback: true,
+        allowRetry: true,
+        randomizeQuestions: false,
+        gameTemplateId: practiceParams.gameTemplateId
+    }), [practiceParams.discipline, practiceParams.level, practiceParams.themes, practiceParams.limit, practiceParams.gameTemplateId]);
+
+    // Make autoStart stable
+    const shouldAutoStart = useMemo(() => !loading && !error && practiceParams.discipline !== '',
+        [loading, error, practiceParams.discipline]);
+
     // Initialize practice session hook with auto-start when params are ready
     const {
         state: practiceState,
@@ -153,29 +204,23 @@ export default function PracticeSessionWithAccessCodePage() {
         clearError: clearPracticeError
     } = usePracticeSession({
         userId,
-        settings: {
-            discipline: practiceParams.discipline,
-            gradeLevel: practiceParams.level,
-            themes: practiceParams.themes,
-            questionCount: practiceParams.limit,
-            showImmediateFeedback: true,
-            allowRetry: true,
-            randomizeQuestions: false,
-            gameTemplateId: practiceParams.gameTemplateId
-        },
-        autoStart: !loading && !error && practiceParams.discipline !== '' // Only auto-start when we have params
+        settings: practiceSettings,
+        autoStart: shouldAutoStart
     });
 
     // Manual session start trigger (fallback) - ensure session starts when params are ready
     useEffect(() => {
         // Only start if we have valid parameters and are connected but no session exists
+        // AND there's no stored session ID (which would indicate we're trying to recover)
+        const hasStoredSession = localStorage.getItem(`practice_session_${userId}`);
         if (practiceParams.discipline && practiceParams.level &&
-            practiceState.connected && !practiceState.session && !practiceState.connecting) {
+            practiceState.connected && !practiceState.session && !practiceState.connecting &&
+            !hasStoredSession) {
             logger.debug('Manually starting practice session with params', practiceParams);
             startSession();
         }
     }, [practiceParams.discipline, practiceParams.level, practiceState.connected,
-    practiceState.session, practiceState.connecting, startSession]);
+    practiceState.session, practiceState.connecting, startSession, userId]);
 
     // Reset selected answers when question changes (like live page)
     const currentQuestionUid = practiceState.currentQuestion?.uid;

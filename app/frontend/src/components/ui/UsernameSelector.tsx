@@ -65,16 +65,8 @@ export default function UsernameSelector({ value = '', onChange, suffix, onSuffi
         setOpen(true);
         setHighlight(-1);
 
-        // If the search term exactly matches a prenom, auto-select it
-        const exactMatch = prenoms.find(p => p.toLowerCase() === v.toLowerCase());
-        if (!v) {
-            // Clear selection if search is empty
-            setInput('');
-            onChange('');
-        } else if (exactMatch) {
-            // Auto-select exact match
-            applyChange(exactMatch, (suffix ?? internalSuffix));
-        }
+        // Removed auto-selection of exact matches to allow full typing
+        // Users can select from dropdown or press Enter when ready
     };
 
     const handleSuffix = (v: string) => {
@@ -178,7 +170,19 @@ export default function UsernameSelector({ value = '', onChange, suffix, onSuffi
                             value={searchTerm}
                             onChange={e => handleSearchInput(e.target.value)}
                             onFocus={() => setOpen(true)}
-                            onBlur={() => setTimeout(() => setOpen(false), 120)}
+                            onBlur={() => {
+                                // Auto-select if the typed text is an exact match for a prenom
+                                const trimmedTerm = searchTerm.trim();
+                                if (trimmedTerm) {
+                                    const exactMatch = prenoms.find(p => p.toLowerCase() === trimmedTerm.toLowerCase());
+                                    if (exactMatch) {
+                                        applyChange(exactMatch, (suffix ?? internalSuffix));
+                                        return;
+                                    }
+                                }
+                                // Otherwise just close the dropdown after a delay
+                                setTimeout(() => setOpen(false), 120);
+                            }}
                             onKeyDown={handleKeyDown}
                             placeholder={placeholder}
                             className="input input-bordered input-lg w-full"

@@ -417,7 +417,14 @@ export default function CreateActivityPage() {
             if (reset) {
                 setQuestions(transformedQuestions);
                 setOffset(newQuestionsFromApi.length); // Use raw API response length for correct offset
-                setOpenUid(null); // Clear any expanded question when resetting the list
+
+                // Preserve expanded state if the currently expanded question is still in the new list
+                if (openUid) {
+                    const expandedQuestionStillExists = transformedQuestions.some(q => q.uid === openUid);
+                    if (!expandedQuestionStillExists) {
+                        setOpenUid(null); // Only clear if the expanded question is no longer in the list
+                    }
+                }
             } else {
                 setQuestions(prev => {
                     const existingUids = new Set(prev.map(pq => pq.uid));

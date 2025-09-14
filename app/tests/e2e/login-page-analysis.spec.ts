@@ -29,7 +29,7 @@ test.describe('Login Page Analysis', () => {
             const defaultMode = await input.getAttribute('defaultMode');
             const placeholder = await input.getAttribute('placeholder');
             const testId = await input.getAttribute('data-testid');
-            console.log(`Input ${i + 1}: type="${defaultMode", placeholder="${placeholder}", testId="${testId}"`);
+            console.log(`Input ${i + 1}: type="${defaultMode}", placeholder="${placeholder}", testId="${testId}"`);
         }
 
         // Find all links
