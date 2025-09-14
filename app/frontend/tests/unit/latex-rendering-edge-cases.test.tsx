@@ -80,9 +80,9 @@ const MathJaxWrapper: React.FC<{ content: string; className?: string; 'aria-labe
         const renderMath = async () => {
             try {
                 if (window.MathJax) {
-                if (window.MathJax.texConvert) {
-                    window.MathJax.texConvert(content);
-                }
+                    if (window.MathJax.texConvert) {
+                        window.MathJax.texConvert(content);
+                    }
                     // Then render it
                     await window.MathJax.typesetPromise();
                     setRendered(true);
