@@ -9,7 +9,7 @@
             // Render component when MathJax is not available
             render(React.createElement(MathJaxWrapper, {
                 key: 'no-mathjax',
-                children: '\\frac{1}{2}'
+                content: '\\frac{1}{2}'
             }));
 
             await waitFor(() => {
@@ -72,7 +72,7 @@ declare global {
 }
 
 // Mock MathJaxWrapper component
-const MathJaxWrapper: React.FC<{ children: string; className?: string; 'aria-label'?: string; fallbackMode?: boolean }> = ({ children, className, 'aria-label': ariaLabel, fallbackMode = false }) => {
+const MathJaxWrapper: React.FC<{ content: string; className?: string; 'aria-label'?: string; fallbackMode?: boolean }> = ({ content, className, 'aria-label': ariaLabel, fallbackMode = false }) => {
     const [rendered, setRendered] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
@@ -80,10 +80,9 @@ const MathJaxWrapper: React.FC<{ children: string; className?: string; 'aria-lab
         const renderMath = async () => {
             try {
                 if (window.MathJax) {
-                    // First validate the LaTeX expression
-                    if (window.MathJax.texConvert) {
-                        window.MathJax.texConvert(children);
-                    }
+                if (window.MathJax.texConvert) {
+                    window.MathJax.texConvert(content);
+                }
                     // Then render it
                     await window.MathJax.typesetPromise();
                     setRendered(true);
@@ -105,7 +104,7 @@ const MathJaxWrapper: React.FC<{ children: string; className?: string; 'aria-lab
                 window.MathJax.texReset();
             }
         };
-    }, [children]);
+    }, [content]);
 
     if (error) {
         if (fallbackMode) {
@@ -113,7 +112,7 @@ const MathJaxWrapper: React.FC<{ children: string; className?: string; 'aria-lab
                 'data-testid': 'fallback-content',
                 className: className,
                 'aria-label': ariaLabel
-            }, children);
+            }, content);
         } else {
             return React.createElement('div', {
                 'data-testid': 'math-error',
@@ -128,7 +127,7 @@ const MathJaxWrapper: React.FC<{ children: string; className?: string; 'aria-lab
         className: className,
         'data-rendered': rendered.toString(),
         'aria-label': ariaLabel
-    }, children);
+    }, content);
 };
 
 // Mock QuestionDisplay component that uses MathJax
@@ -137,7 +136,7 @@ const QuestionDisplay: React.FC<{ question: any }> = ({ question }) => {
         React.createElement('div', { 'data-testid': 'question-text' },
             React.createElement(MathJaxWrapper, {
                 className: 'math-content',
-                children: question.text || '',
+                content: question.text || '',
                 fallbackMode: true
             })
         )
@@ -176,7 +175,7 @@ describe('LaTeX Rendering Edge Cases', () => {
             // Render component when MathJax is not available
             render(React.createElement(MathJaxWrapper, {
                 key: 'no-mathjax',
-                children: '\\frac{1}{2}'
+                content: '\\frac{1}{2}'
             }));
 
             await waitFor(() => {
@@ -187,7 +186,7 @@ describe('LaTeX Rendering Edge Cases', () => {
         test('should handle MathJax initialization failure', async () => {
             mockMathJax.typesetPromise.mockRejectedValue(new Error('MathJax init failed'));
 
-            render(React.createElement(MathJaxWrapper, { children: '\\frac{1}{2}' }));
+            render(React.createElement(MathJaxWrapper, { content: '\\frac{1}{2}' }));
 
             await waitFor(() => {
                 expect(screen.getByTestId('math-error')).toHaveTextContent('Error: MathJax init failed');
@@ -199,7 +198,7 @@ describe('LaTeX Rendering Edge Cases', () => {
                 () => new Promise(resolve => setTimeout(resolve, 10000)) // 10 second delay
             );
 
-            render(React.createElement(MathJaxWrapper, { children: '\\frac{1}{2}' }));
+            render(React.createElement(MathJaxWrapper, { content: '\\frac{1}{2}' }));
 
             // Should still render after timeout (in real implementation, this would be handled)
             await waitFor(() => {
@@ -227,7 +226,7 @@ describe('LaTeX Rendering Edge Cases', () => {
                     throw new Error(`Invalid LaTeX: ${expr}`);
                 });
 
-                render(React.createElement(MathJaxWrapper, { children: expr }));
+                render(React.createElement(MathJaxWrapper, { content: expr }));
 
                 await waitFor(() => {
                     expect(screen.getByTestId('math-error')).toHaveTextContent(`Error: Invalid LaTeX: ${expr}`);
@@ -254,7 +253,7 @@ describe('LaTeX Rendering Edge Cases', () => {
                     throw new Error(`LaTeX syntax error: ${expr}`);
                 });
 
-                render(React.createElement(MathJaxWrapper, { children: expr }));
+                render(React.createElement(MathJaxWrapper, { content: expr }));
 
                 await waitFor(() => {
                     expect(screen.getByTestId('math-error')).toHaveTextContent(`Error: LaTeX syntax error: ${expr}`);
@@ -279,7 +278,7 @@ describe('LaTeX Rendering Edge Cases', () => {
                     throw new Error(`Undefined command: ${expr}`);
                 });
 
-                render(React.createElement(MathJaxWrapper, { children: expr }));
+                render(React.createElement(MathJaxWrapper, { content: expr }));
 
                 await waitFor(() => {
                     expect(screen.getByTestId('math-error')).toHaveTextContent(`Error: Undefined command: ${expr}`);
@@ -299,7 +298,7 @@ describe('LaTeX Rendering Edge Cases', () => {
             );
 
             const startTime = Date.now();
-            render(React.createElement(MathJaxWrapper, { children: largeExpression }));
+            render(React.createElement(MathJaxWrapper, { content: largeExpression }));
 
             await waitFor(() => {
                 expect(screen.getByTestId('math-content')).toBeInTheDocument();
@@ -322,7 +321,7 @@ describe('LaTeX Rendering Edge Cases', () => {
             ];
 
             const renders = expressions.map(expr =>
-                render(React.createElement(MathJaxWrapper, { key: expr, children: expr }))
+                render(React.createElement(MathJaxWrapper, { key: expr, content: expr }))
             );
 
             // All should render successfully
@@ -334,7 +333,7 @@ describe('LaTeX Rendering Edge Cases', () => {
         });
 
         test('should handle memory cleanup on unmount', async () => {
-            const { unmount } = render(React.createElement(MathJaxWrapper, { children: '\\frac{1}{2}' }));
+            const { unmount } = render(React.createElement(MathJaxWrapper, { content: '\\frac{1}{2}' }));
 
             await waitFor(() => {
                 expect(screen.getByTestId('math-content')).toBeInTheDocument();
@@ -355,7 +354,7 @@ describe('LaTeX Rendering Edge Cases', () => {
             // First render (simulating SSR)
             mockMathJax.typesetPromise.mockRejectedValueOnce(new Error('SSR mismatch'));
 
-            render(React.createElement(MathJaxWrapper, { children: expression }));
+            render(React.createElement(MathJaxWrapper, { content: expression }));
 
             await waitFor(() => {
                 expect(screen.getByTestId('math-error')).toHaveTextContent('Error: SSR mismatch');
@@ -374,7 +373,7 @@ describe('LaTeX Rendering Edge Cases', () => {
                 throw new Error('MathJax version incompatibility');
             });
 
-            render(React.createElement(MathJaxWrapper, { children: '\\alpha + \\beta' }));
+            render(React.createElement(MathJaxWrapper, { content: '\\alpha + \\beta' }));
 
             await waitFor(() => {
                 expect(screen.getByTestId('math-error')).toHaveTextContent('Error: MathJax version incompatibility');
@@ -406,7 +405,7 @@ describe('LaTeX Rendering Edge Cases', () => {
                 return 'rendered';
             });
 
-            render(React.createElement(MathJaxWrapper, { children: mixedContent }));
+            render(React.createElement(MathJaxWrapper, { content: mixedContent }));
 
             await waitFor(() => {
                 expect(screen.getByTestId('math-error')).toHaveTextContent('Error: Invalid expression');
@@ -423,7 +422,7 @@ describe('LaTeX Rendering Edge Cases', () => {
                 return Promise.resolve();
             });
 
-            const { rerender } = render(React.createElement(MathJaxWrapper, { children: '\\frac{1}{2}' }));
+            const { rerender } = render(React.createElement(MathJaxWrapper, { content: '\\frac{1}{2}' }));
 
             // First attempt should fail
             await waitFor(() => {
@@ -431,7 +430,7 @@ describe('LaTeX Rendering Edge Cases', () => {
             });
 
             // Simulate retry by re-rendering with different key (in real implementation, this would be automatic)
-            rerender(React.createElement(MathJaxWrapper, { key: 'retry', children: '\\frac{1}{2}' }));
+            rerender(React.createElement(MathJaxWrapper, { key: 'retry', content: '\\frac{1}{2}' }));
 
             // Second attempt should succeed
             await waitFor(() => {
@@ -446,7 +445,7 @@ describe('LaTeX Rendering Edge Cases', () => {
 
             render(React.createElement(MathJaxWrapper, {
                 className: 'math-content',
-                children: expression
+                content: expression
             }));
 
             await waitFor(() => {
@@ -462,7 +461,7 @@ describe('LaTeX Rendering Edge Cases', () => {
 
             render(React.createElement(MathJaxWrapper, {
                 'aria-label': 'Einstein mass-energy equivalence formula',
-                children: expression
+                content: expression
             }));
 
             await waitFor(() => {
@@ -480,7 +479,7 @@ describe('LaTeX Rendering Edge Cases', () => {
             // Render component when MathJax is not available
             render(React.createElement(MathJaxWrapper, {
                 key: 'no-mathjax-browser',
-                children: '\\frac{1}{2}'
+                content: '\\frac{1}{2}'
             }));
 
             await waitFor(() => {
@@ -495,7 +494,7 @@ describe('LaTeX Rendering Edge Cases', () => {
             // Render component when MathJax is not available
             render(React.createElement(MathJaxWrapper, {
                 key: 'race-condition',
-                children: '\\frac{1}{2}'
+                content: '\\frac{1}{2}'
             }));
 
             // Initially should show error

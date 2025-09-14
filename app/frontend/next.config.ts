@@ -5,7 +5,7 @@ import withPWA from '@ducanh2912/next-pwa';
 const isLightBuild = process.env.LIGHT_BUILD === '1';
 const nextConfig: NextConfig = {
     eslint: isLightBuild ? { ignoreDuringBuilds: true } : {
-        dirs: ['.'],
+        dirs: ['src', 'middleware.ts', 'next-env.d.ts'], // Exclude test files from ESLint during build
         // Only show errors, not warnings during build
         ignoreDuringBuilds: false
     },

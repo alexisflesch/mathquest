@@ -442,12 +442,16 @@ class PracticeSessionService {
         const questionData = await this.getQuestionData(questionUid, session.settings);
         // Set the question index for reference
         questionData.questionIndex = session.currentQuestionIndex;
+        // Update session state to reflect the current question
+        session.currentQuestion = questionData;
+        // Store the updated session
+        await this.storeSession(session);
         logger.debug({
             sessionId,
             questionUid,
             questionIndex: session.currentQuestionIndex,
             totalQuestions: session.questionPool.length
-        }, 'Retrieved next practice question');
+        }, 'Retrieved and set next practice question');
         return questionData;
     }
     /**
