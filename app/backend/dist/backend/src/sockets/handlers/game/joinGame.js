@@ -342,14 +342,22 @@ function joinGameHandler(io, socket) {
                         const targetRooms = gameInstance.status === 'active' ?
                             [`game_${accessCode}`, `lobby_${accessCode}`] : // Broadcast to game and lobby rooms when active
                             [socket.id]; // Only to the specific socket when pending
-                        // CRITICAL FIX: Sync snapshot with live data when late joiner joins active game
-                        if (gameInstance.status === 'active') {
+                        // CRITICAL FIX: Only sync snapshot for initial load, NOT for active games
+                        // Late joiners should NOT trigger automatic leaderboard updates in quiz mode
+                        if (gameInstance.status !== 'active') {
                             await (0, leaderboardSnapshotService_1.syncSnapshotWithLiveData)(accessCode);
                             logger.info({
                                 accessCode,
                                 userId,
-                                trigger: 'late_joiner_sync_snapshot'
-                            }, '[LATE_JOINER] Synced snapshot with live data for late joiner broadcast');
+                                trigger: 'initial_load_sync_snapshot'
+                            }, '[JOIN-LEADERBOARD] Synced snapshot with live data for initial load');
+                        }
+                        else {
+                            logger.info({
+                                accessCode,
+                                userId,
+                                trigger: 'late_joiner_skip_sync'
+                            }, '[JOIN-LEADERBOARD] Skipping snapshot sync for late joiner in active game');
                         }
                         await (0, leaderboardSnapshotService_1.emitLeaderboardFromSnapshot)(io, accessCode, targetRooms, gameInstance.status === 'active' ? 'late_joiner_broadcast' : 'join_game_initial_load');
                         logger.info({

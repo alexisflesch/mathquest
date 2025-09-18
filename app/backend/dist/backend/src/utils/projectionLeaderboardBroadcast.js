@@ -151,9 +151,9 @@ async function broadcastLeaderboardToAllRooms(io, accessCode, gameId, options = 
         let projectionLeaderboard = [];
         if (includeGameRoom) {
             // For game room (students), use snapshot to prevent live score leakage
-            const { getLeaderboardSnapshot, syncSnapshotWithLiveData } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/leaderboardSnapshotService')));
-            // CRITICAL: Sync snapshot with current live data first
-            await syncSnapshotWithLiveData(accessCode);
+            const { getLeaderboardSnapshot } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/leaderboardSnapshotService')));
+            // REMOVED: syncSnapshotWithLiveData call to prevent automatic leaderboard updates
+            // Students should only see existing snapshot data, not trigger live sync
             studentLeaderboard = await getLeaderboardSnapshot(accessCode);
             if (studentLeaderboard.length > 0) {
                 const gameRoom = `game_${accessCode}`;

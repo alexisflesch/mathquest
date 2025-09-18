@@ -307,35 +307,6 @@ export async function runGameFlow(
             }
             options.onQuestionEnd?.(i);
 
-            // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
-            // This prevents students from determining answer correctness during submission
-            try {
-                // First, sync the snapshot with current live data
-                const syncedSnapshot = await syncSnapshotWithLiveData(accessCode);
-
-                // Then emit the leaderboard from the snapshot (source of truth)
-                await emitLeaderboardFromSnapshot(
-                    io,
-                    accessCode,
-                    [`game_${accessCode}`],
-                    'after_question_end'
-                );
-
-                logger.info({
-                    accessCode,
-                    event: 'leaderboard_update',
-                    questionUid: questions[i].uid,
-                    leaderboardCount: syncedSnapshot.length,
-                    timing: 'after_question_end'
-                }, '[SECURITY] Emitted secure leaderboard_update after question timer expired using snapshot');
-            } catch (leaderboardError) {
-                logger.error({
-                    accessCode,
-                    questionUid: questions[i].uid,
-                    error: leaderboardError
-                }, '[SECURITY] Error emitting secure leaderboard update');
-            }
-
             // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
             // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
             // If batch scoring is needed, refactor to use canonical logic per participant/answer.

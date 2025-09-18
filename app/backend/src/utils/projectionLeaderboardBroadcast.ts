@@ -153,10 +153,10 @@ export async function broadcastLeaderboardToAllRooms(
 
         if (includeGameRoom) {
             // For game room (students), use snapshot to prevent live score leakage
-            const { getLeaderboardSnapshot, syncSnapshotWithLiveData } = await import('@/core/services/gameParticipant/leaderboardSnapshotService');
+            const { getLeaderboardSnapshot } = await import('@/core/services/gameParticipant/leaderboardSnapshotService');
 
-            // CRITICAL: Sync snapshot with current live data first
-            await syncSnapshotWithLiveData(accessCode);
+            // REMOVED: syncSnapshotWithLiveData call to prevent automatic leaderboard updates
+            // Students should only see existing snapshot data, not trigger live sync
             studentLeaderboard = await getLeaderboardSnapshot(accessCode);
 
             if (studentLeaderboard.length > 0) {
