@@ -894,8 +894,11 @@ router.get('/status', auth_1.optionalAuth, async (req, res) => {
         if (userRole === 'TEACHER') {
             authState = 'teacher';
         }
+        else if (userRole === 'GUEST') {
+            authState = 'guest';
+        }
         else if (userRole === 'STUDENT') {
-            // Check if user has email (actual student) or no email (guest)
+            // Check if user has email (actual student) or no email (legacy guest)
             authState = user?.email ? 'student' : 'guest';
         }
         // Legacy fields for backward compatibility

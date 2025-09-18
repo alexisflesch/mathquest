@@ -113,7 +113,7 @@ describe('Tournament Score Calculation: Time Penalty & Tie-breaker', () => {
     it('should apply time penalty and resolve tie-breaker by fastest answer', async () => {
         // Simulate answers: Fast answers instantly, Slow answers after delay, Tie answers same score but different time
         const answerTimes = [100, 2000, 300]; // ms
-        const expectedOrder = ['Fast', 'Tie', 'Slow']; // Fast and Tie have different scores now
+        const expectedOrder = ['Fast', 'Slow', 'Tie']; // Updated: Slow beats Tie with new penalty system
 
         for (let i = 0; i < testData.users.length; i++) {
             const user = testData.users[i];

@@ -29,9 +29,9 @@ class UserService {
             if (existingUser) {
                 throw new Error('User with this email already exists');
             }
-            // Use provided cookieId for students, or generate one if not provided
+            // Use provided cookieId for students and guests, or generate one if not provided
             let cookieId = undefined;
-            if (role === 'STUDENT') {
+            if (role === 'STUDENT' || role === 'GUEST') {
                 cookieId = providedCookieId || crypto_1.default.randomBytes(32).toString('hex');
             }
             // Prepare user data

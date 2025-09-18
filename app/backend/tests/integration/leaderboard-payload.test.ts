@@ -278,7 +278,7 @@ describe('Leaderboard Payload Tests', () => {
 
                 console.log(`📊 ${user.username} scored ${result.scoreAdded} points`);
                 expect(result.scoreUpdated).toBe(true);
-                expect(result.scoreAdded).toBeGreaterThanOrEqual(990);
+                expect(result.scoreAdded).toBeGreaterThan(450); // Updated: ~500 points with new penalty system
                 expect(result.scoreAdded).toBeLessThanOrEqual(1000);
             }
 

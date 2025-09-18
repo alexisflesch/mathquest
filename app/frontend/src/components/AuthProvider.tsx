@@ -170,31 +170,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     error: dbError instanceof Error ? dbError.message : 'Unknown error'
                 });
 
-                // Try to get the existing user by cookieId through the auth status endpoint
+                // Try to get the existing user by cookieId through the players/cookie endpoint
                 try {
-                    const statusResult = await makeApiRequest<AuthStatusResponse>(
-                        'auth/status',
+                    const lookupResult = await makeApiRequest<{ user: { id: string; username: string; email?: string; role: string; avatarEmoji: string; createdAt: string } }>(
+                        `players/cookie/${cookieId}`,
                         {},
-                        undefined,
-                        AuthStatusResponseSchema
+                        undefined
                     );
-                    if (statusResult && statusResult.user && statusResult.user.id) {
+                    if (lookupResult && lookupResult.user && lookupResult.user.id) {
                         // Found existing user - use their userId
                         setUserState('guest');
                         setUserProfile({
                             username,
                             avatar,
                             cookieId,
-                            userId: statusResult.user.id
+                            userId: lookupResult.user.id
                         });
 
-                        logger.info('Found existing guest user, profile updated with userId', {
-                            username, avatar, cookieId, userId: statusResult.user.id
+                        logger.info('Found existing guest user via players/cookie endpoint', {
+                            username, avatar, cookieId, userId: lookupResult.user.id
                         });
                         return;
                     }
                 } catch (lookupError) {
-                    logger.warn('Could not lookup existing user', { lookupError });
+                    logger.warn('Could not lookup existing user via players/cookie endpoint', { lookupError });
                 }
 
                 // If we can't find the user, create profile without userId

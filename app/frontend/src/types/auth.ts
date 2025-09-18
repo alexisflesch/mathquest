@@ -6,7 +6,7 @@
  */
 
 // Import shared auth types instead of defining duplicates
-import type { UserState, GuestProfileData } from '@shared/types';
+import type { UserState } from '@shared/types/auth';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Re-export shared types for convenience

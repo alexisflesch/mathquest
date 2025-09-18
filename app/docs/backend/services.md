@@ -32,6 +32,18 @@ This document catalogs the main service classes in the MathQuest backend (`backe
   - `submitAnswer(userId, accessCode, data)`: Submit an answer for a participant.
   - `getParticipants(gameId)`: List all participants in a game.
 
+## ScoringService
+- **Purpose:** Handle all scoring calculations, time penalties, and answer evaluation.
+- **Key Methods:**
+  - `calculateAnswerScore(question, answer, serverTimeSpent, totalPresentationTime, accessCode)`: Calculate score with time penalties.
+  - `submitAnswerWithScoring(gameId, userId, answerData, isDeferred)`: Submit answer and update scores.
+  - `checkAnswerCorrectness(question, answer)`: Validate answer correctness.
+- **Key Features:**
+  - Dynamic penalty system for restarted questions (see [Time Penalty Behavior](time-penalty-behavior.md))
+  - Balanced multiple-choice scoring (rewards precision, penalizes guessing)
+  - Logarithmic time penalties (gentle curve, max 30-50% penalty)
+  - Game scaling to exactly 1000 total points
+
 ## UserService
 - **Purpose:** Manage user registration, login, upgrade, and authentication.
 - **Key Methods:**

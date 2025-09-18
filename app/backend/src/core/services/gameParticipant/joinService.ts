@@ -69,20 +69,55 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
         // Determine participant status based on game state
         const participantStatus = gameInstance.status === 'pending' ? ParticipantStatus.PENDING : ParticipantStatus.ACTIVE;
 
-        // Upsert user - only create new users, never update existing user profiles
-        const updatedUser = await prisma.user.upsert({
-            where: { id: userId },
-            update: {
-                // Never update username/avatarEmoji during game join - these should only be updated via profile API
-            },
-            create: {
-                id: userId,
-                username: username || `guest-${userId.substring(0, 8)}`,
-                role: 'STUDENT',
-                avatarEmoji: avatarEmoji || null,
-                studentProfile: { create: { cookieId: `cookie-${userId}` } }
-            }
+        // Determine if userId is a cookieId (for guest users whose registration failed)
+        const isCookieId = userId.startsWith('guest_') || userId.startsWith('temp_');
+
+        let existingUser = null;
+        if (isCookieId) {
+            // Look up user by cookieId in studentProfile
+            existingUser = await prisma.user.findFirst({
+                where: {
+                    studentProfile: {
+                        cookieId: userId
+                    }
+                }
+            });
+        } else {
+            // Look up user by id
+            existingUser = await prisma.user.findUnique({
+                where: { id: userId }
+            });
+        }
+
+        let targetUserId = existingUser?.id;
+
+        if (!existingUser) {
+            // Create new user
+            const newUser = await prisma.user.create({
+                data: {
+                    id: isCookieId ? undefined : userId, // Let Prisma generate ID if userId is a cookieId
+                    username: username || `guest-${userId.substring(0, 8)}`,
+                    role: isCookieId ? 'GUEST' : 'STUDENT',
+                    avatarEmoji: avatarEmoji || null,
+                    studentProfile: { create: { cookieId: isCookieId ? userId : `cookie-${userId}` } }
+                }
+            });
+            targetUserId = newUser.id;
+        }
+
+        if (!targetUserId) {
+            return { success: false, error: 'Failed to determine user ID' };
+        }
+
+        // Get the final user data
+        const finalUser = await prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: { username: true, avatarEmoji: true }
         });
+
+        if (!finalUser) {
+            return { success: false, error: 'User not found after creation' };
+        }
 
         // --- UNIFIED PARTICIPANT LOGIC ---
         // Use transaction to prevent race conditions and ensure unique constraint
@@ -92,7 +127,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                 where: {
                     gameInstanceId_userId: {
                         gameInstanceId: gameInstance.id,
-                        userId
+                        userId: targetUserId
                     }
                 },
                 include: { user: true }
@@ -122,7 +157,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                             include: { user: true }
                         });
                         logger.info({
-                            userId,
+                            userId: targetUserId,
                             accessCode,
                             participantId: existing.id,
                             newAttemptNumber,
@@ -142,7 +177,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                             },
                             include: { user: true }
                         });
-                        logger.info({ userId, accessCode, participantId: existing.id }, 'Reconnected to ongoing deferred session');
+                        logger.info({ userId: targetUserId, accessCode, participantId: existing.id }, 'Reconnected to ongoing deferred session');
                         return updated;
                     }
                 } else {
@@ -155,7 +190,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                         },
                         include: { user: true }
                     });
-                    logger.info({ userId, accessCode, participantId: existing.id, status: participantStatus }, 'Updated existing participant status');
+                    logger.info({ userId: targetUserId, accessCode, participantId: existing.id, status: participantStatus }, 'Updated existing participant status');
                     return updated;
                 }
             } else {
@@ -163,7 +198,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                 const newParticipant = await tx.gameParticipant.create({
                     data: {
                         gameInstanceId: gameInstance.id,
-                        userId,
+                        userId: targetUserId,
                         status: isDeferred ? ParticipantStatus.ACTIVE : participantStatus,
                         nbAttempts: 1,
                         liveScore: 0,
@@ -173,7 +208,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                     include: { user: true }
                 });
                 logger.info({
-                    userId,
+                    userId: targetUserId,
                     accessCode,
                     participantId: newParticipant.id,
                     status: newParticipant.status,
@@ -195,12 +230,12 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
         }, '[DEBUG] Join bonus condition check');
 
         if (!isDeferred && participant.status === ParticipantStatus.PENDING) {
-            const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
+            const joinOrderBonus = await assignJoinOrderBonus(accessCode, targetUserId);
             if (joinOrderBonus > 0) {
                 const leaderboardUser: Omit<LeaderboardEntry, 'rank'> = {
-                    userId,
-                    username: updatedUser.username, // 🐛 FIX: Use actual username from database instead of fallback
-                    avatarEmoji: updatedUser.avatarEmoji || undefined,
+                    userId: targetUserId,
+                    username: finalUser.username,
+                    avatarEmoji: finalUser.avatarEmoji || undefined,
                     score: joinOrderBonus,
                     attemptCount: participant.nbAttempts,
                     participationId: participant.id

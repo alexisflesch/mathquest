@@ -105,7 +105,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
             } catch (error) {
                 logger.error({ error, userId }, 'Error fetching teacher tournaments');
             }
-        } else if ((userRole === 'STUDENT' || !userRole) && (cookieId || userId)) {
+        } else if (userRole === 'STUDENT' || userRole === 'GUEST' || (!userRole && (cookieId || userId))) {
             // For students/guests, get tournaments they participated in
             try {
                 // Find user by cookieId if provided, otherwise use userId
@@ -124,15 +124,24 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                 }
 
                 if (targetUserId) {
-                    // Get games the user participated in
+                    // Get games the user participated in OR initiated (for practice sessions)
                     const participatedGames = await prisma.gameInstance.findMany({
                         where: {
                             playMode: mode as any,
-                            participants: {
-                                some: {
-                                    userId: targetUserId
-                                }
-                            }
+                            OR: [
+                                // Games they participated in
+                                {
+                                    participants: {
+                                        some: {
+                                            userId: targetUserId
+                                        }
+                                    }
+                                },
+                                // For practice sessions, also include games they initiated
+                                ...(mode === 'practice' ? [{
+                                    initiatorUserId: targetUserId
+                                }] : [])
+                            ]
                         },
                         select: {
                             id: true,

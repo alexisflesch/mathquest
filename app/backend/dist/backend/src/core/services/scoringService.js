@@ -23,11 +23,12 @@ const logger = (0, logger_1.default)('ScoringService');
  * Core scoring calculation with new balanced scoring system
  * @param question Question object with timeLimit and other properties
  * @param answer User's submitted answer
- * @param serverTimeSpent Time spent in milliseconds (server-calculated)
+ * @param serverTimeSpent Time spent in current timer session (milliseconds)
+ * @param totalPresentationTime Total time since question was first presented (milliseconds)
  * @param accessCode Game access code to get total questions for scaling
  * @returns Score for this answer
  */
-async function calculateAnswerScore(question, answer, serverTimeSpent, accessCode) {
+async function calculateAnswerScore(question, answer, serverTimeSpent, totalPresentationTime, accessCode) {
     if (!question)
         return { score: 0, timePenalty: 0 };
     // Get total questions for game scaling (default to 10 if not available)
@@ -140,12 +141,57 @@ async function calculateAnswerScore(question, answer, serverTimeSpent, accessCod
     }
     const timeLimitSeconds = timeLimit / 1000;
     const serverTimeSpentSeconds = Math.max(0, serverTimeSpent / 1000);
+    // FIX: Use total presentation time for penalty calculation to ensure fairness after timer restarts
+    const totalPresentationSeconds = Math.max(0, totalPresentationTime / 1000);
+    // Get restart count to determine penalty caps
+    let restartCount = 0;
+    if (accessCode) {
+        try {
+            const timerKey = `mathquest:timer:${accessCode}:${question.uid}`;
+            const timerData = await redis_1.redisClient.get(timerKey);
+            if (timerData) {
+                const parsed = JSON.parse(timerData);
+                restartCount = parsed.restartCount || 0;
+            }
+        }
+        catch (error) {
+            logger.warn({ error, accessCode, questionUid: question.uid }, 'Failed to get restart count from timer, using default of 0');
+        }
+    }
+    // NEW: Dynamic penalty caps based on restart count
+    // First session (restartCount=0): 0-30% penalty
+    // Second session (restartCount=1): 30-50% penalty (starts from 30%)
+    // Third+ session (restartCount>=2): capped at 50% penalty
+    let basePenaltyPercent = 0.0; // 0% base penalty for first session
+    let maxPenaltyPercent = 0.3; // 30% max penalty for first session
+    if (restartCount === 1) {
+        // Second session: start from 30%, go up to 50%
+        basePenaltyPercent = 0.3; // Start from 30%
+        maxPenaltyPercent = 0.5; // Go up to 50%
+    }
+    else if (restartCount >= 2) {
+        // Third+ session: capped at 50%
+        basePenaltyPercent = 0.5; // Fixed at 50%
+        maxPenaltyPercent = 0.5; // Capped at 50%
+    }
+    // Calculate time penalty factor based on current session time (not total presentation time for restarts)
+    let effectiveTimeSpent = serverTimeSpentSeconds;
+    if (restartCount >= 1) {
+        // For restarted sessions, use current session time, not total presentation time
+        effectiveTimeSpent = serverTimeSpentSeconds;
+    }
+    else {
+        // For first session, use server time spent (not total presentation time)
+        effectiveTimeSpent = serverTimeSpentSeconds;
+    }
     // Logarithmic time penalty: time_penalty_factor = min(1, log(t + 1) / log(T + 1))
-    const alpha = 0.3; // 30% maximum penalty
-    const timePenaltyFactor = Math.min(1, Math.log(serverTimeSpentSeconds + 1) / Math.log(timeLimitSeconds + 1));
+    const timePenaltyFactor = Math.min(1, Math.log(effectiveTimeSpent + 1) / Math.log(timeLimitSeconds + 1));
+    // Calculate penalty with dynamic caps
+    const penaltyRange = maxPenaltyPercent - basePenaltyPercent;
+    const dynamicPenaltyPercent = basePenaltyPercent + (penaltyRange * timePenaltyFactor);
     // Final score calculation
     const scoreBeforePenalty = baseScorePerQuestion * correctnessScore;
-    const timePenalty = scoreBeforePenalty * alpha * timePenaltyFactor;
+    const timePenalty = scoreBeforePenalty * dynamicPenaltyPercent;
     const finalScore = Math.max(0, scoreBeforePenalty - timePenalty);
     logger.info({
         questionType: question.questionType,
@@ -153,14 +199,20 @@ async function calculateAnswerScore(question, answer, serverTimeSpent, accessCod
         baseScorePerQuestion,
         correctnessScore,
         serverTimeSpentSeconds,
+        totalPresentationSeconds, // Log both times for debugging
+        effectiveTimeSpent,
         timeLimitSeconds,
+        restartCount,
+        basePenaltyPercent,
+        maxPenaltyPercent,
+        dynamicPenaltyPercent,
         timePenaltyFactor,
-        alpha,
         scoreBeforePenalty,
         timePenalty,
         finalScore,
-        answer
-    }, 'New scoring calculation details');
+        answer,
+        note: 'NEW: Dynamic penalty caps based on restart count - First session: 0-30%, Second: 30-50%, Third+: 50% cap'
+    }, 'New scoring calculation with dynamic penalty caps for restarted questions');
     return {
         score: Math.round(finalScore * 100) / 100, // Round to 2 decimal places
         timePenalty: Math.round(timePenalty * 100) / 100
@@ -304,7 +356,7 @@ function checkAnswerCorrectness(question, answer) {
  * @param attemptCountOverride Optional attempt count override for deferred sessions
  * @returns Score result with details
  */
-async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDeferredOverride, attemptCountOverride) {
+async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDeferredOverride, attemptCountOverride, totalPresentationMs) {
     try {
         logger.info({
             gameInstanceId,
@@ -507,13 +559,23 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
         }
         // Calculate server-side timing (SECURITY FIX: always use CanonicalTimerService)
         let serverTimeSpent = 0;
+        let totalPresentationTime = 0;
         let timerDebugInfo = {};
         const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
         const playMode = gameInstance.playMode;
         const accessCode = gameInstance.accessCode;
         const questionUid = answerData.questionUid;
         if (playMode !== 'practice') {
+            // Get both current session time AND total presentation time
             serverTimeSpent = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, playMode, isDeferred, userId, attemptCountForTimer);
+            // Get total time since question was first presented (for fair penalty calculation)
+            // FIX: Use provided totalPresentationMs if available, otherwise fall back to canonical timer service
+            if (totalPresentationMs !== undefined) {
+                totalPresentationTime = totalPresentationMs;
+            }
+            else {
+                totalPresentationTime = await canonicalTimerService.getTotalPresentationTimeMs(accessCode, questionUid, playMode, isDeferred, userId, attemptCountForTimer);
+            }
             // Use canonical public timer key util for all modes
             const timerKey = (0, timerKeyUtil_1.getTimerKey)({
                 accessCode,
@@ -539,19 +601,21 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
                 attemptCount,
                 attemptCountForTimer,
                 serverTimeSpent,
+                totalPresentationTime,
                 timerState,
                 timerKey,
-                note: '[MODERN] CanonicalTimerService.getElapsedTimeMs used for penalty, using canonical attemptCount in all modes.'
+                note: '[MODERN] CanonicalTimerService.getElapsedTimeMs and getTotalPresentationTimeMs used for penalty, using canonical attemptCount in all modes.'
             };
         }
         else {
             serverTimeSpent = 0;
+            totalPresentationTime = 0;
             timerDebugInfo = { playMode, note: 'Practice mode: no timer' };
         }
         // [LOG REMOVED] Noisy timer/mode diagnostic
         // Calculate if answer is correct for Redis storage
         const isCorrect = checkAnswerCorrectness(question, answerData.answer);
-        const { score: newScore, timePenalty } = await calculateAnswerScore(question, answerData.answer, serverTimeSpent, gameInstance.accessCode);
+        const { score: newScore, timePenalty } = await calculateAnswerScore(question, answerData.answer, serverTimeSpent, totalPresentationTime, gameInstance.accessCode);
         logger.info({
             gameInstanceId,
             userId,
@@ -559,11 +623,12 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             newScore,
             timePenalty,
             serverTimeSpent,
+            totalPresentationTime,
             isDeferred,
             playMode: gameInstance?.playMode,
             attemptCount,
             timerDebugInfo
-        }, '[TIME_PENALTY] Calculated score and time penalty (canonical)');
+        }, '[TIME_PENALTY] Calculated score and time penalty (canonical) with presentation time fix');
         // Replace previous score for this question (not increment)
         let scoreDelta = newScore - previousScore;
         // ANTI-CHEATING: Store scores in Redis only during game, not in database

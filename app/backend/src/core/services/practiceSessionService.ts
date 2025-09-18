@@ -278,6 +278,57 @@ export class PracticeSessionService {
                 session.status = 'completed';
                 session.completedAt = new Date();
                 session.currentQuestion = undefined;
+
+                // Create gameInstance record for completed practice session
+                try {
+                    // Generate a unique access code for the practice session
+                    const accessCode = `PRACTICE-${Date.now()}-${sessionId.slice(-4).toUpperCase()}`;
+
+                    // Create gameInstance record
+                    const gameInstance = await prisma.gameInstance.create({
+                        data: {
+                            accessCode,
+                            name: `Session d'entraînement - ${session.settings.discipline || 'Général'}`,
+                            status: 'completed',
+                            playMode: 'practice',
+                            initiatorUserId: session.userId,
+                            startedAt: session.startedAt,
+                            endedAt: session.completedAt,
+                            gameTemplateId: session.settings.gameTemplateId || '06a46ed3-63ad-4a3a-91d2-ae4292590206', // All Modes Test Template from test DB
+                            settings: JSON.parse(JSON.stringify({
+                                practiceSettings: session.settings,
+                                statistics: session.statistics
+                            }))
+                        }
+                    });
+
+                    // Create gameParticipant record using the gameInstance.id
+                    await prisma.gameParticipant.create({
+                        data: {
+                            gameInstanceId: gameInstance.id,
+                            userId: session.userId,
+                            status: 'COMPLETED',
+                            joinedAt: session.startedAt,
+                            liveScore: session.statistics.correctAnswers * 10, // 10 points per correct answer
+                            deferredScore: session.statistics.correctAnswers * 10
+                        }
+                    });
+
+                    logger.info({
+                        sessionId,
+                        accessCode,
+                        userId: session.userId
+                    }, 'Created gameInstance record for completed practice session');
+
+                } catch (dbError) {
+                    logger.error({
+                        sessionId,
+                        userId: session.userId,
+                        error: dbError
+                    }, 'Failed to create gameInstance record for practice session');
+                    // Don't fail the session end if DB creation fails
+                }
+
                 await this.storeSession(session);
             }
 

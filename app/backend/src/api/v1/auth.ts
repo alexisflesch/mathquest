@@ -1010,8 +1010,10 @@ router.get('/status', optionalAuth, async (req: Request, res: Response<AuthStatu
         let authState: 'teacher' | 'student' | 'guest' = 'student';
         if (userRole === 'TEACHER') {
             authState = 'teacher';
+        } else if (userRole === 'GUEST') {
+            authState = 'guest';
         } else if (userRole === 'STUDENT') {
-            // Check if user has email (actual student) or no email (guest)
+            // Check if user has email (actual student) or no email (legacy guest)
             authState = user?.email ? 'student' : 'guest';
         }
 

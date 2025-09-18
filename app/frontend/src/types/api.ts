@@ -317,7 +317,7 @@ export const PlayerCookieResponseSchema = z.object({
         id: z.string(),
         username: z.string(),
         email: z.string().optional(),
-        role: z.enum(['STUDENT', 'TEACHER']),
+        role: z.enum(['STUDENT', 'TEACHER', 'GUEST']),
         avatarEmoji: z.string(),
         createdAt: z.string()
     })

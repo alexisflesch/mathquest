@@ -145,7 +145,7 @@ describe('Edge Cases - Timer and Scoring', () => {
             }));
 
             const result = await calculateAnswerScore(
-                question, answer, serverTimeSpent, 'test-code'
+                question, answer, serverTimeSpent, serverTimeSpent, 'test-code'
             );
 
             // Should handle zero time limit gracefully
@@ -169,7 +169,7 @@ describe('Edge Cases - Timer and Scoring', () => {
             }));
 
             const result = await calculateAnswerScore(
-                question, answer, serverTimeSpent, 'test-code'
+                question, answer, serverTimeSpent, serverTimeSpent, 'test-code'
             );
 
             // Should handle negative time gracefully (clamp to 0)
@@ -193,7 +193,7 @@ describe('Edge Cases - Timer and Scoring', () => {
             }));
 
             const result = await calculateAnswerScore(
-                question, answer, serverTimeSpent, 'test-code'
+                question, answer, serverTimeSpent, serverTimeSpent, 'test-code'
             );
 
             // Should handle extremely long time (maximum penalty)
@@ -288,7 +288,7 @@ describe('Edge Cases - Timer and Scoring', () => {
             }));
 
             const result = await calculateAnswerScore(
-                question, answer, 45000, 'test-code' // 45 seconds spent
+                question, answer, 45000, 45000, 'test-code' // 45 seconds spent
             );
 
             // Should handle partial credit with time penalty

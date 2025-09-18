@@ -284,4 +284,26 @@ Time penalty progression (30s limit):
 5. **Balanced Design:** Discourages guessing while rewarding knowledge
 6. **Future-Proof:** Scalable design accommodates any question count or duration
 
+## 🔄 Enhanced Time Penalty for Restarted Questions
+
+**Date:** September 16, 2025  
+**Status:** ✅ Completed  
+**Documentation:** See [`time-penalty-behavior.md`](../backend/docs/time-penalty-behavior.md)
+
+### Overview
+The basic time penalty system (0-30%) has been enhanced with dynamic penalty caps for questions that are restarted by teachers. This prevents students from gaming the system by waiting for timer restarts to reduce their penalties.
+
+### Key Features
+- **Session-based penalties:** Different penalty ranges based on restart count
+- **Fair restart handling:** Pause time between sessions is ignored
+- **Anti-gaming protection:** Students cannot wait for restarts to get better scores
+- **Backward compatibility:** Original first-session answers maintain their scores
+
+### Penalty Ranges
+- **First session:** 0-30% penalty (original behavior)
+- **Second session:** 30-50% penalty (starts from 30%)
+- **Third+ sessions:** 50% penalty cap (prevents excessive penalties)
+
+For complete technical details and implementation, see the [Time Penalty Behavior documentation](../backend/docs/time-penalty-behavior.md).
+
 The new scoring strategy represents a significant improvement in fairness, performance, and user experience for the MathQuest platform.

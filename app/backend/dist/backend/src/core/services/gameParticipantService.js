@@ -124,13 +124,15 @@ class GameParticipantService {
      * @param data The answer data
      * @param isDeferredOverride Optional override for deferred mode detection
      * @param attemptCountOverride Optional attempt count override for deferred sessions
+     * @param totalPresentationMs Optional total presentation time for fair penalty calculation
      * @returns The scoring result with details
      */
-    async submitAnswer(gameInstanceId, userId, data, isDeferredOverride, attemptCountOverride) {
+    async submitAnswer(gameInstanceId, userId, data, isDeferredOverride, attemptCountOverride, totalPresentationMs) {
         try {
             // Use the new scoring service for all answer submissions
             const scoreResult = await scoringService_1.ScoringService.submitAnswerWithScoring(gameInstanceId, userId, data, isDeferredOverride, // PATCH: propagate override
-            attemptCountOverride // NEW: propagate attempt count override
+            attemptCountOverride, // NEW: propagate attempt count override
+            totalPresentationMs // FIX: Pass total presentation time for fair penalty calculation
             );
             if (!scoreResult.scoreUpdated && scoreResult.message === 'Participant not found') {
                 return {

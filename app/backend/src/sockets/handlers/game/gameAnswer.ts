@@ -175,6 +175,7 @@ export function gameAnswerHandler(
 
             // Compute time penalty using canonical timer for all modes
             let canonicalElapsedMs: number | undefined = undefined;
+            let totalPresentationMs: number | undefined = undefined;
             let timeSpentForSubmission: number = 0;
             if (timer) {
                 if (timer.totalPlayTimeMs !== undefined && timer.lastStateChange !== undefined) {
@@ -185,9 +186,18 @@ export function gameAnswerHandler(
                     }
                     timeSpentForSubmission = canonicalElapsedMs ?? 0;
                 }
+
+                // FIX: Also calculate total presentation time for fair penalty calculation
+                if (timer.questionPresentedAt) {
+                    totalPresentationMs = Date.now() - timer.questionPresentedAt;
+                } else if (timer.startedAt) {
+                    // Fallback for timers created before the fix
+                    totalPresentationMs = Date.now() - timer.startedAt;
+                }
             }
             if (gameInstance.playMode === 'practice') {
                 timeSpentForSubmission = 0;
+                totalPresentationMs = 0;
             }
             // Submit answer using the new scoring service (handles duplicates and scoring)
             const submissionResult = await participantService.submitAnswer(gameInstance.id, userId, {
@@ -197,7 +207,8 @@ export function gameAnswerHandler(
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
             }, isDeferred, // PATCH: propagate deferred mode
-                context.attemptCount // NEW: Pass attempt count for deferred sessions
+                context.attemptCount, // NEW: Pass attempt count for deferred sessions
+                totalPresentationMs // FIX: Pass total presentation time for fair penalty calculation
             );
             scoringPerformed = true;
             scoringMode = (gameInstance.status === 'completed') ? 'DEFERRED' : gameInstance.playMode;

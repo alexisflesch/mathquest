@@ -140,15 +140,21 @@ class CanonicalTimerService {
                 logger.info({ accessCode, questionUid, prev, timer, now }, '[TIMER_DEBUG][startTimer] Resuming from paused state');
             }
             else {
+                // FIX: Preserve questionPresentedAt when restarting timer
+                // This ensures time penalties are calculated from original presentation time
+                const questionPresentedAt = prev.questionPresentedAt || prev.startedAt || now;
+                const currentRestartCount = (prev.restartCount || 0) + 1;
                 timer = {
                     questionUid,
                     status: 'play',
-                    startedAt: now,
-                    totalPlayTimeMs: 0,
+                    startedAt: now, // Reset timer start time
+                    totalPlayTimeMs: 0, // Reset play time for this session
                     lastStateChange: now,
-                    durationMs
+                    durationMs,
+                    questionPresentedAt, // Preserve original presentation time
+                    restartCount: currentRestartCount // Increment restart count
                 };
-                logger.info({ accessCode, questionUid, timer, now }, '[TIMER_DEBUG][startTimer] Not paused, starting fresh');
+                logger.info({ accessCode, questionUid, timer, now, questionPresentedAt, currentRestartCount }, '[TIMER_DEBUG][startTimer] Restarting timer with preserved presentation time and incremented restart count');
             }
         }
         else {
@@ -158,7 +164,9 @@ class CanonicalTimerService {
                 startedAt: now,
                 totalPlayTimeMs: 0,
                 lastStateChange: now,
-                durationMs
+                durationMs,
+                questionPresentedAt: now, // First time question is presented
+                restartCount: 0 // Initialize restart count for first session
             };
             logger.info({ accessCode, questionUid, timer, now }, '[TIMER_DEBUG][startTimer] No previous timer, starting fresh');
         }
@@ -252,7 +260,8 @@ class CanonicalTimerService {
                 questionUid,
                 timestamp: now,
                 timerEndDateMs: 0,
-                localTimeLeftMs: durationMs
+                localTimeLeftMs: durationMs,
+                restartCount: 0 // Default restart count for new timers
             };
         }
         const timer = JSON.parse(raw);
@@ -381,6 +390,32 @@ class CanonicalTimerService {
             timerState: timer
         }, '[TIMER_DEBUG][getElapsedTimeMs] Final elapsed calculation');
         return elapsed;
+    }
+    /**
+     * Get the total time elapsed since question was first presented to students
+     * This is used for fair time penalty calculation, ensuring restarts don't reset penalties
+     */
+    async getTotalPresentationTimeMs(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
+        if (playMode === 'practice')
+            return 0;
+        // Get duration from question for getTimer call
+        let durationMs = 30000; // fallback
+        try {
+            const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
+            if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+                durationMs = question.timeLimit * 1000;
+            }
+        }
+        catch (err) {
+            logger.error({ questionUid, err }, '[CANONICAL_TIMER_SERVICE] Failed to fetch duration for getTotalPresentationTimeMs');
+        }
+        const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount, durationMs);
+        if (!timer)
+            return 0;
+        // Use questionPresentedAt if available, otherwise fall back to startedAt
+        const presentationStart = timer.questionPresentedAt || timer.startedAt || Date.now();
+        const now = Date.now();
+        return Math.max(0, now - presentationStart);
     }
     /**
      * Reset timer for a question (e.g., on new question), handling all modes.

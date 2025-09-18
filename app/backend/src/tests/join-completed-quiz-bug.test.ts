@@ -16,7 +16,9 @@ jest.mock('../db/prisma', () => ({
             update: jest.fn()
         },
         user: {
+            findFirst: jest.fn(),
             findUnique: jest.fn(),
+            create: jest.fn(),
             upsert: jest.fn()
         },
         $transaction: jest.fn()
@@ -81,27 +83,41 @@ import { joinGame } from '../core/services/gameParticipant/joinService';
 
 const mockPrisma = require('../db/prisma').prisma;
 const mockHasOngoingDeferredSession = require('../core/services/gameParticipant/deferredTimerUtils').hasOngoingDeferredSession;
+const mockAssignJoinOrderBonus = require('../utils/joinOrderBonus').assignJoinOrderBonus;
+const mockAddUserToSnapshot = require('../core/services/gameParticipant/leaderboardSnapshotService').addUserToSnapshot;
 
 describe('Join Completed Quiz Bug', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Set up default mock returns
+        mockAssignJoinOrderBonus.mockResolvedValue(0);
+        mockAddUserToSnapshot.mockResolvedValue(null);
     });
 
     it('should return error when trying to join a completed quiz without deferred availability', async () => {
         // Mock a completed quiz without deferred availability (both dates null)
-        mockPrisma.gameInstance.findUnique.mockResolvedValue({
-            id: 'test-game-id',
-            name: 'Test Quiz',
-            status: 'completed',
-            playMode: 'quiz',
-            differedAvailableFrom: null,
-            differedAvailableTo: null,
-            gameTemplate: { name: 'Test Template' }
+        mockPrisma.gameInstance.findUnique.mockImplementation((args: any) => {
+            if (args.where.accessCode === 'TEST123') {
+                return Promise.resolve({
+                    id: 'test-game-id',
+                    name: 'Test Quiz',
+                    status: 'completed',
+                    playMode: 'quiz',
+                    differedAvailableFrom: null,
+                    differedAvailableTo: null,
+                    gameTemplate: { name: 'Test Template' }
+                });
+            }
+            return Promise.resolve(null);
         });
 
-        mockPrisma.user.upsert.mockResolvedValue({
+        mockPrisma.user.findFirst.mockResolvedValue(null);
+        mockPrisma.user.findUnique.mockResolvedValue(null);
+        mockPrisma.user.create.mockResolvedValue({
             id: 'test-user-id',
-            username: 'TestUser'
+            username: 'TestUser',
+            role: 'STUDENT'
         });
 
         mockHasOngoingDeferredSession.mockResolvedValue(false);
@@ -133,23 +149,32 @@ describe('Join Completed Quiz Bug', () => {
             gameTemplate: { name: 'Test Template' }
         });
 
-        mockPrisma.user.upsert.mockResolvedValue({
+        // Mock user as already existing
+        mockPrisma.user.findFirst.mockResolvedValue(null);
+        mockPrisma.user.findUnique.mockResolvedValue({
             id: 'test-user-id',
-            username: 'TestUser'
+            username: 'TestUser',
+            role: 'STUDENT'
         });
 
         mockHasOngoingDeferredSession.mockResolvedValue(false);
 
         // Mock the transaction to succeed
-        mockPrisma.$transaction.mockResolvedValue({
-            id: 'participant-id',
-            userId: 'test-user-id',
-            gameInstanceId: 'test-game-id',
-            liveScore: 0,
-            deferredScore: 0,
-            nbAttempts: 0,
-            status: 'active',
-            joinedAt: new Date()
+        mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+            return Promise.resolve({
+                id: 'participant-id',
+                userId: 'test-user-id',
+                gameInstanceId: 'test-game-id',
+                liveScore: 0,
+                deferredScore: 0,
+                nbAttempts: 0,
+                status: 'active',
+                joinedAt: new Date(),
+                user: {
+                    username: 'TestUser',
+                    avatarEmoji: null
+                }
+            });
         });
 
         const result = await joinGame({
@@ -174,21 +199,30 @@ describe('Join Completed Quiz Bug', () => {
             gameTemplate: { name: 'Test Template' }
         });
 
-        mockPrisma.user.upsert.mockResolvedValue({
+        // Mock user as already existing
+        mockPrisma.user.findFirst.mockResolvedValue(null);
+        mockPrisma.user.findUnique.mockResolvedValue({
             id: 'test-user-id',
-            username: 'TestUser'
+            username: 'TestUser',
+            role: 'STUDENT'
         });
 
         // Mock the transaction to succeed
-        mockPrisma.$transaction.mockResolvedValue({
-            id: 'participant-id',
-            userId: 'test-user-id',
-            gameInstanceId: 'test-game-id',
-            liveScore: 0,
-            deferredScore: 0,
-            nbAttempts: 0,
-            status: 'active',
-            joinedAt: new Date()
+        mockPrisma.$transaction.mockImplementation(async (callback: any) => {
+            return Promise.resolve({
+                id: 'participant-id',
+                userId: 'test-user-id',
+                gameInstanceId: 'test-game-id',
+                liveScore: 0,
+                deferredScore: 0,
+                nbAttempts: 0,
+                status: 'active',
+                joinedAt: new Date(),
+                user: {
+                    username: 'TestUser',
+                    avatarEmoji: null
+                }
+            });
         });
 
         const result = await joinGame({
@@ -203,7 +237,12 @@ describe('Join Completed Quiz Bug', () => {
 
     it('should return error when game not found', async () => {
         // Mock game not found
-        mockPrisma.gameInstance.findUnique.mockResolvedValue(null);
+        mockPrisma.gameInstance.findUnique.mockImplementation((args: any) => {
+            if (args.where.accessCode === 'NONEXISTENT') {
+                return Promise.resolve(null);
+            }
+            return Promise.resolve(null);
+        });
 
         const result = await joinGame({
             userId: 'test-user-id',

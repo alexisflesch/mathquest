@@ -46,6 +46,7 @@ describe('New Scoring Strategy - Unit Tests', () => {
                 question,
                 [0, 2], // Select A and C (both correct)
                 1000, // 1 second
+                1000, // total presentation time (same as time spent for this test)
                 accessCode
             );
 
@@ -82,6 +83,7 @@ describe('New Scoring Strategy - Unit Tests', () => {
                 question,
                 [0], // Select only A (correct)
                 2000, // 2 seconds
+                2000, // total presentation time (same as time spent for this test)
                 accessCode
             );
 
@@ -119,6 +121,7 @@ describe('New Scoring Strategy - Unit Tests', () => {
                 question,
                 [0, 1], // A (correct) and B (wrong)
                 1000,
+                1000, // total presentation time (same as time spent for this test)
                 accessCode
             );
 
@@ -151,6 +154,7 @@ describe('New Scoring Strategy - Unit Tests', () => {
                 question,
                 42,
                 1000,
+                1000, // total presentation time (same as time spent for this test)
                 accessCode
             );
 
@@ -181,9 +185,9 @@ describe('New Scoring Strategy - Unit Tests', () => {
             };
 
             // Test different time penalties
-            const fastAnswer = await ScoringService.calculateAnswerScore(question, 10, 500, accessCode); // 0.5s
-            const mediumAnswer = await ScoringService.calculateAnswerScore(question, 10, 15000, accessCode); // 15s
-            const slowAnswer = await ScoringService.calculateAnswerScore(question, 10, 30000, accessCode); // 30s (max)
+            const fastAnswer = await ScoringService.calculateAnswerScore(question, 10, 500, 500, accessCode); // 0.5s
+            const mediumAnswer = await ScoringService.calculateAnswerScore(question, 10, 15000, 15000, accessCode); // 15s
+            const slowAnswer = await ScoringService.calculateAnswerScore(question, 10, 30000, 30000, accessCode); // 30s (max)
 
             // Fast answer should have higher score than medium, medium higher than slow
             expect(fastAnswer.score).toBeGreaterThan(mediumAnswer.score);
@@ -212,6 +216,7 @@ describe('New Scoring Strategy - Unit Tests', () => {
                 question,
                 5,
                 1000,
+                1000, // total presentation time (same as time spent for this test)
                 accessCode
             );
 
