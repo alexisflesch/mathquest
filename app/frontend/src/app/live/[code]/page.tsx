@@ -28,19 +28,16 @@ import QuestionDisplay from '../components/QuestionDisplay';
 import LobbyDisplay from '../components/LobbyDisplay';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { motion } from 'framer-motion';
-import type { GameParticipant } from '@shared/types/core/participant';
+import type { LeaderboardEntry, GameParticipant } from '@shared/types/core/participant';
+import { ParticipantStatus } from '@shared/types/core/participant';
 import LobbyLayout from '@/components/LobbyLayout';
+import { LobbyParticipantListPayload } from '@shared/types/lobbyParticipantListPayload';
 
 // Logging
 const logger = createLogger('LiveGamePage');
 
 // Stable empty objects to prevent re-renders
-const EMPTY_LEADERBOARD: any[] = [];
-
-interface UnifiedParticipantListPayload {
-    participants: GameParticipant[];
-    creator: GameParticipant;
-}
+const EMPTY_LEADERBOARD: LeaderboardEntry[] = [];
 
 interface LobbyUIState {
     participants: GameParticipant[];
@@ -137,11 +134,11 @@ export default function LiveGamePage() {
         if (!userId || !stableLeaderboard.length) {
             return { score: 0, rank: null, totalPlayers: 0 };
         }
-        const sorted = [...stableLeaderboard].sort((a: any, b: any) => b.score - a.score);
-        const entry = sorted.find((e: any) => e.userId === userId);
+        const sorted = [...stableLeaderboard].sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score);
+        const entry = sorted.find((e: LeaderboardEntry) => e.userId === userId);
         return {
             score: entry?.score || 0,
-            rank: entry ? sorted.findIndex((e: any) => e.userId === userId) + 1 : null,
+            rank: entry ? sorted.findIndex((e: LeaderboardEntry) => e.userId === userId) + 1 : null,
             totalPlayers: sorted.length
         };
     }, [userId, stableLeaderboard]);
@@ -172,9 +169,38 @@ export default function LiveGamePage() {
     // Lobby events
     useEffect(() => {
         if (!socket) return;
-        const handleParticipantsList = (payload: UnifiedParticipantListPayload) => {
+        const handleParticipantsList = (payload: LobbyParticipantListPayload) => {
+            // Map LobbyParticipant to GameParticipant for compatibility
+            const mappedParticipants: GameParticipant[] = payload.participants.map(p => ({
+                id: p.userId || '', // Use userId as id, fallback to empty string
+                userId: p.userId || '',
+                username: p.username,
+                avatarEmoji: p.avatarEmoji,
+                score: 0, // Default score for lobby
+                socketId: undefined,
+                online: true,
+                joinedAt: Date.now(),
+                isDeferred: false,
+                status: ParticipantStatus.PENDING,
+                attemptCount: 0,
+                cookieId: undefined
+            }));
+            const mappedCreator: GameParticipant = {
+                id: payload.creator.userId,
+                userId: payload.creator.userId,
+                username: payload.creator.username,
+                avatarEmoji: payload.creator.avatarEmoji,
+                score: 0,
+                socketId: undefined,
+                online: true,
+                joinedAt: Date.now(),
+                isDeferred: false,
+                status: ParticipantStatus.PENDING,
+                attemptCount: 0,
+                cookieId: undefined
+            };
             setLobbyState(prev => ({
-                ...prev, participants: payload.participants, creator: payload.creator
+                ...prev, participants: mappedParticipants, creator: mappedCreator
             }));
         };
         const handleCountdownTick = (payload: { countdown: number }) => {

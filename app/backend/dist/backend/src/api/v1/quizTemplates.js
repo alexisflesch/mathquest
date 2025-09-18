@@ -120,7 +120,17 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
             take: Number(pageSize)
         };
         const result = await getGameTemplateService().getgameTemplates(req.user.userId, filters, pagination);
-        res.status(200).type('application/json').json(result);
+        // Transform to match GameTemplatesResponse structure
+        const response = {
+            gameTemplates: result.gameTemplates,
+            meta: {
+                total: result.total,
+                page: Number(page),
+                pageSize: Number(pageSize),
+                totalPages: result.totalPages
+            }
+        };
+        res.status(200).type('application/json').json(response);
     }
     catch (error) {
         logger.error({ error }, 'Error fetching quiz templates');
@@ -144,7 +154,10 @@ router.put('/:id', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(sch
             ...req.body
         };
         const updatedgameTemplate = await getGameTemplateService().updategameTemplate(req.user.userId, updateData);
-        res.status(200).type('application/json').json({ gameTemplate: updatedgameTemplate });
+        res.status(200).type('application/json').json({
+            message: 'Quiz template updated successfully',
+            gameTemplate: updatedgameTemplate
+        });
     }
     catch (error) {
         logger.error({ error }, 'Error updating quiz template');

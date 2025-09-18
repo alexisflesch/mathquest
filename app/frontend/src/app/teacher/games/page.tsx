@@ -12,24 +12,10 @@ import InfinitySpin from '@/components/InfinitySpin';
 import InlineEdit from '@/components/ui/InlineEdit';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import StartActivityModal from '@/components/StartActivityModal';
+import { GameTemplate, GameInstance } from '@shared/types/core/game';
 
 // Interface for game template from backend
-interface GameTemplate {
-  id: string;
-  name: string;
-  gradeLevel: string | null;
-  themes: string[];
-  discipline: string | null;
-  description: string | null;
-  defaultMode: string | null;
-  createdAt: string;
-  updatedAt: string;
-  creatorId: string;
-  questions?: Array<{
-    id: string;
-    sequence: number;
-  }>;
-}
+// Using shared GameTemplate type instead
 
 // Response interface for fetching game templates
 interface GameTemplatesResponse {
@@ -37,19 +23,7 @@ interface GameTemplatesResponse {
 }
 
 // Interface for game instance
-interface GameInstance {
-  id: string;
-  name: string;
-  accessCode: string | null;
-  playMode: 'quiz' | 'tournament' | 'practice';
-  status: 'pending' | 'active' | 'paused' | 'completed' | 'archived';
-  createdAt: string;
-  startedAt: string | null;
-  endedAt: string | null;
-  playerCount?: number;
-  differedAvailableFrom?: string | null;
-  differedAvailableTo?: string | null;
-}
+// Using shared GameInstance type instead
 
 // ActivityCard Component
 interface ActivityCardProps {
@@ -155,8 +129,8 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                 <div className="flex items-center gap-4 flex-wrap">
                   <span className="flex items-center gap-1">
                     <Clock size={14} />
-                    <span className="hidden sm:inline">{formatDate(template.createdAt)}</span>
-                    <span className="inline sm:hidden">{formatDate(template.createdAt, { dateOnly: true })}</span>
+                    <span className="hidden sm:inline">{formatDate(template.createdAt.toISOString())}</span>
+                    <span className="inline sm:hidden">{formatDate(template.createdAt.toISOString(), { dateOnly: true })}</span>
                   </span>
                   {template.questions && (
                     <span className="flex items-center gap-1">
@@ -281,9 +255,9 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                               instance.status === 'completed' ? '' : 'Annulée';
                           subtext = instance.accessCode ? `${instance.accessCode}` : '';
                           if (subtext && instance.createdAt) {
-                            subtext += ` • ${formatDate(instance.createdAt)}`;
+                            subtext += ` • ${formatDate(instance.createdAt.toISOString())}`;
                           } else if (instance.createdAt) {
-                            subtext = formatDate(instance.createdAt);
+                            subtext = formatDate(instance.createdAt.toISOString());
                           }
                         }
 
@@ -387,7 +361,7 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onDeleteInstance(instance.id, `${instance.playMode === 'quiz' ? 'Quiz' : instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'} - ${formatDate(instance.createdAt)}`);
+                                    onDeleteInstance(instance.id, `${instance.playMode === 'quiz' ? 'Quiz' : instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'} - ${formatDate(instance.createdAt.toISOString())}`);
                                   }}
                                   className="p-1 text-[color:var(--alert)] hover:bg-[color:var(--alert)] hover:bg-opacity-10 rounded transition-colors group"
                                   title="Supprimer cette session"

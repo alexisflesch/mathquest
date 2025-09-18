@@ -29,6 +29,7 @@ import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { Clock, GripVertical, X, ShoppingCart, Plus } from 'lucide-react';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { Question } from '@shared/types/core/question'; // Use canonical shared type
+import { GameInstance } from '@shared/types/core/game';
 
 // Filter request interface
 interface FilterQuestionRequest {
@@ -58,27 +59,7 @@ interface ActivityMeta {
     };
 }
 
-// Interface for game instance from API
-interface GameInstance {
-    id: string;
-    name: string;
-    accessCode: string;
-    status: string;
-    playMode: 'quiz' | 'tournament' | 'practice';
-    settings: any;
-    gameTemplate: {
-        id: string;
-        name: string;
-        themes: string[];
-        discipline: string;
-        gradeLevel: string;
-        questions: Array<{
-            id: string;
-            sequence: number;
-            question: Question;
-        }>;
-    };
-}
+// Using shared GameInstance type instead
 
 // Sortable cart question component
 function SortableCartQuestion({
@@ -229,27 +210,29 @@ export default function EditActivityPage() {
             setGameData(gameInstance);
 
             // Pre-fill the form with existing data
-            setActivityMeta({
-                discipline: gameInstance.gameTemplate.discipline,
-                gradeLevel: gameInstance.gameTemplate.gradeLevel,
-                themes: gameInstance.gameTemplate.themes,
-                levels: [gameInstance.gameTemplate.gradeLevel], // Convert to array
-                name: gameInstance.name,
-                playMode: gameInstance.playMode,
-                settings: gameInstance.settings || {
-                    timeMultiplier: 1,
-                    showLeaderboard: true
-                }
-            });
+            if (gameInstance.gameTemplate) {
+                setActivityMeta({
+                    discipline: gameInstance.gameTemplate.discipline || '',
+                    gradeLevel: gameInstance.gameTemplate.gradeLevel || '',
+                    themes: gameInstance.gameTemplate.themes,
+                    levels: [gameInstance.gameTemplate.gradeLevel || ''].filter(Boolean), // Convert to array
+                    name: gameInstance.name,
+                    playMode: gameInstance.playMode as 'quiz' | 'tournament' | 'practice', // Type assertion for compatibility
+                    settings: gameInstance.settings || {
+                        timeMultiplier: 1,
+                        showLeaderboard: true
+                    }
+                });
 
-            // Convert existing questions to cart format
-            const existingQuestions: CartQuestion[] = gameInstance.gameTemplate.questions
-                .sort((a: any, b: any) => a.sequence - b.sequence)
-                .map((item: any, index: number) => ({
-                    ...item.question,
-                    cartId: `existing-${index}`
-                }));
-            setSelectedQuestions(existingQuestions);
+                // Convert existing questions to cart format
+                const existingQuestions: CartQuestion[] = (gameInstance.gameTemplate.questions || [])
+                    .sort((a: any, b: any) => a.sequence - b.sequence)
+                    .map((item: any, index: number) => ({
+                        ...item.question,
+                        cartId: `existing-${index}`
+                    }));
+                setSelectedQuestions(existingQuestions);
+            }
 
             // Fetch available filters
             await fetchFilters();
@@ -355,7 +338,10 @@ export default function EditActivityPage() {
             }
 
             // Step 1: Update the game template with new questions and metadata
-            await makeApiRequest(`game-templates/${gameData?.gameTemplate.id}`, {
+            if (!gameData?.gameTemplate?.id) {
+                throw new Error('Game template ID is missing');
+            }
+            await makeApiRequest(`game-templates/${gameData.gameTemplate.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

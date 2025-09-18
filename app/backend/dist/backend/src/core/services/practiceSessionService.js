@@ -193,12 +193,18 @@ class PracticeSessionService {
             }, 'Practice answer submitted');
             // Return structured feedback result
             const result = {
+                sessionId,
+                questionUid: answerData.questionUid,
                 isCorrect,
-                correctAnswers,
+                correctAnswers: correctAnswers.map(ans => ans === 1), // Convert number[] to boolean[]
                 numericCorrectAnswer: numericCorrectAnswer || undefined,
                 explanation: undefined, // Can be added later from question data
-                pointsEarned: isCorrect ? 10 : 0, // Simple scoring system
-                updatedSession: session
+                canRetry: !isCorrect, // Allow retry if incorrect
+                statistics: {
+                    questionsAnswered: session.statistics.questionsAttempted,
+                    correctCount: session.statistics.correctAnswers,
+                    accuracyPercentage: session.statistics.accuracyPercentage
+                }
             };
             return result;
         }

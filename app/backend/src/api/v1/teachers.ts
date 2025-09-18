@@ -4,8 +4,9 @@ import { UserRole } from '@/db/generated/client';
 import { teacherAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
 import type {
-    ErrorResponse
-} from '@shared/types/api/requests';
+    ErrorResponse,
+    TeacherProfileResponse
+} from '@shared/types/api/responses';
 
 // Create a route-specific logger
 const logger = createLogger('TeachersAPI');
@@ -31,7 +32,7 @@ export const __setUserServiceForTesting = (mockService: UserService): void => {
  * Get the authenticated teacher's profile
  * GET /api/v1/teachers/profile
  */
-router.get('/profile', teacherAuth, async (req: Request, res: Response<{ user: any } | ErrorResponse>): Promise<void> => {
+router.get('/profile', teacherAuth, async (req: Request, res: Response<TeacherProfileResponse | ErrorResponse>): Promise<void> => {
     try {
         // Expect req.user to have userId (set by auth middleware)
         if (!req.user?.userId) {
@@ -43,7 +44,16 @@ router.get('/profile', teacherAuth, async (req: Request, res: Response<{ user: a
             res.status(404).json({ error: 'Teacher not found' });
             return;
         }
-        res.status(200).json({ user });
+        // Return user data without sensitive information
+        const publicUser = {
+            id: user.id,
+            username: user.username,
+            email: user.email || undefined,
+            role: user.role,
+            avatarEmoji: user.avatarEmoji || '🐼', // Default to panda if null
+            createdAt: user.createdAt.toISOString()
+        };
+        res.status(200).json({ user: publicUser });
     } catch (error) {
         logger.error({ error }, 'Error fetching teacher profile');
         res.status(500).json({ error: 'An error occurred fetching the profile' });

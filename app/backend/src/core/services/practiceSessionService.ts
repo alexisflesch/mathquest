@@ -16,32 +16,9 @@ import {
     PracticeSessionStatus,
     PracticeStatistics
 } from '@shared/types/practice/session';
+import { SubmitPracticeAnswerPayload, PracticeAnswerFeedbackPayload } from '@shared/types/practice/events';
 
 const logger = createLogger('PracticeSessionService');
-
-/**
- * Request interface for submitting practice answers
- */
-interface SubmitAnswerRequest {
-    questionUid: string;
-    selectedAnswers: number[];
-    timeSpentMs: number;
-}
-
-/**
- * Response interface for practice answer submission
- */
-interface SubmitAnswerResult {
-    isCorrect: boolean;
-    correctAnswers: number[];
-    numericCorrectAnswer?: {
-        correctAnswer: number;
-        tolerance?: number;
-    };
-    explanation?: string;
-    pointsEarned: number;
-    updatedSession: PracticeSession;
-}
 
 /**
  * Service for managing practice sessions
@@ -176,7 +153,7 @@ export class PracticeSessionService {
     /**
      * Submit an answer for the current question
      */
-    async submitAnswer(sessionId: string, answerData: SubmitAnswerRequest): Promise<SubmitAnswerResult> {
+    async submitAnswer(sessionId: string, answerData: SubmitPracticeAnswerPayload): Promise<PracticeAnswerFeedbackPayload> {
         try {
             const session = await this.getSession(sessionId);
 
@@ -246,13 +223,19 @@ export class PracticeSessionService {
             }, 'Practice answer submitted');
 
             // Return structured feedback result
-            const result: SubmitAnswerResult = {
+            const result: PracticeAnswerFeedbackPayload = {
+                sessionId,
+                questionUid: answerData.questionUid,
                 isCorrect,
-                correctAnswers,
+                correctAnswers: correctAnswers.map(ans => ans === 1), // Convert number[] to boolean[]
                 numericCorrectAnswer: numericCorrectAnswer || undefined,
                 explanation: undefined, // Can be added later from question data
-                pointsEarned: isCorrect ? 10 : 0, // Simple scoring system
-                updatedSession: session
+                canRetry: !isCorrect, // Allow retry if incorrect
+                statistics: {
+                    questionsAnswered: session.statistics.questionsAttempted,
+                    correctCount: session.statistics.correctAnswers,
+                    accuracyPercentage: session.statistics.accuracyPercentage
+                }
             };
 
             return result;

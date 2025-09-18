@@ -96,8 +96,8 @@ async function emitParticipantList(io, accessCode) {
             creatorUsername: creator.username,
             isCreatorInParticipants: participants.some(p => p.userId === creator.userId)
         }, '[PARTICIPANT_LIST] Creator info loaded from database');
-        // For now, send in the format the frontend expects (LobbyParticipantListPayload)
-        // TODO: Update frontend to handle UnifiedParticipantListPayload
+        // Send in the format the frontend expects (LobbyParticipantListPayload)
+        // Using shared LobbyParticipantListPayload type for consistency
         const lobbyPayload = {
             participants: participants.map(p => ({
                 userId: p.userId,

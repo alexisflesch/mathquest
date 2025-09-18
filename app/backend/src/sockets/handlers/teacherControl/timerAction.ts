@@ -1,15 +1,5 @@
 import type { Server as SocketIOServer, Socket } from 'socket.io';
 import type { ZodError } from 'zod';
-// Canonical timer event payload type matching Zod schema and projection handler
-interface CanonicalTimerUpdatePayload {
-    timer: any; // GameTimerState, but allow any for now to avoid circular import issues
-    questionUid: string;
-    questionIndex: number;
-    totalQuestions: number;
-    answersLocked: boolean;
-    gameId?: string;
-    serverTime: number; // Backend timestamp at emission
-}
 import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
 import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
@@ -191,7 +181,7 @@ interface CanonicalTimerRoom {
     extra?: Record<string, unknown>;
 }
 // (already imported above)
-type CanonicalDashboardTimerUpdatedPayload = CanonicalTimerUpdatePayload;
+type CanonicalDashboardTimerUpdatedPayload = z.infer<typeof dashboardTimerUpdatedPayloadSchema>;
 function emitCanonicalTimerEvents(
     io: SocketIOServer,
     rooms: CanonicalTimerRoom[],
@@ -208,7 +198,6 @@ function emitCanonicalTimerEvents(
         questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : -1,
         totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 0,
         answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
-        gameId: payloadBase.gameId,
         serverTime: Date.now()
     };
     const validation = dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
@@ -899,7 +888,6 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 questionIndex: typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1,
                 totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0,
                 answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
-                gameId,
                 serverTime: Date.now()
             });
             logger.info({

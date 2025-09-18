@@ -196,7 +196,6 @@ function emitCanonicalTimerEvents(io, rooms, payloadBase) {
         questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : -1,
         totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 0,
         answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
-        gameId: payloadBase.gameId,
         serverTime: Date.now()
     };
     const validation = socketEvents_zod_2.dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
@@ -832,7 +831,6 @@ function timerActionHandler(io, socket) {
                 questionIndex: typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1,
                 totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0,
                 answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
-                gameId,
                 serverTime: Date.now()
             });
             logger.info({

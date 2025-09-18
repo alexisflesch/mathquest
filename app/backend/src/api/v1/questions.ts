@@ -6,10 +6,15 @@ import createLogger from '@/utils/logger';
 import { questionSchema, questionCreationSchema, questionUpdateSchema } from '../../../../shared/types/quiz/question.zod';
 import type { Question } from '@shared/types/quiz/question';
 import type {
+    QuestionCreationResponse,
+    QuestionResponse
+} from '@shared/types/api/responses';
+import type { QuestionsResponse } from '@shared/types/api/schemas';
+import type { ErrorResponse } from '@shared/types/api/requests';
+import type {
     QuestionCreationRequest,
     QuestionUpdateRequest,
-    QuestionSearchRequest,
-    ErrorResponse
+    QuestionSearchRequest
 } from '@shared/types/api/requests';
 import {
     CreateQuestionRequestSchema,
@@ -41,7 +46,7 @@ export const __setQuestionServiceForTesting = (mockService: QuestionService): vo
  * POST /api/v1/questions
  * Requires teacher authentication
  */
-router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), async (req: Request<{}, { question: any } | ErrorResponse, QuestionCreationRequest>, res: Response<{ question: any } | ErrorResponse>): Promise<void> => {
+router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), async (req: Request<{}, QuestionCreationResponse | ErrorResponse, QuestionCreationRequest>, res: Response<QuestionCreationResponse | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
@@ -158,7 +163,7 @@ router.get('/list', async (req: Request, res: Response<string[] | ErrorResponse>
  * Get a question by ID
  * GET /api/v1/questions/:uid
  */
-router.get('/:uid', optionalAuth, async (req: Request, res: Response<{ question: any } | ErrorResponse>): Promise<void> => {
+router.get('/:uid', optionalAuth, async (req: Request, res: Response<QuestionResponse | ErrorResponse>): Promise<void> => {
     try {
         const { uid } = req.params;
 
@@ -187,7 +192,7 @@ router.get('/:uid', optionalAuth, async (req: Request, res: Response<{ question:
  * GET /api/v1/questions
  * REQUIRES TEACHER AUTHENTICATION - Contains complete question data including answers
  */
-router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any[], total: number, page: number, pageSize: number, totalPages: number } | ErrorResponse>): Promise<void> => {
+router.get('/', teacherAuth, async (req: Request, res: Response<QuestionsResponse | ErrorResponse>): Promise<void> => {
     try {
         logger.info('Starting questions endpoint request');
         const {
