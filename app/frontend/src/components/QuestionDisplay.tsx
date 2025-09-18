@@ -461,7 +461,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                             className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                             style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
                                         >
-                                            <span className="font-semibold">Justification :</span> {question.explanation}
+                                            <span className="font-semibold">Justification :</span> <MathJaxWrapper>{question.explanation}</MathJaxWrapper>
                                         </div>
                                     )}
                                 </ul>
@@ -552,7 +552,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                 className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                                 style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
                                             >
-                                                <span className="font-semibold">Justification :</span> {question.explanation}
+                                                <span className="font-semibold">Justification :</span> <MathJaxWrapper>{question.explanation}</MathJaxWrapper>
                                             </div>
                                         )}
                                     </ul>

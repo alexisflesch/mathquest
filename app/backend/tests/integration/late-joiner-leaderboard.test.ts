@@ -7,7 +7,7 @@
  */
 
 // Set up environment variables for testing
-process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest";
+process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest_test";
 process.env.REDIS_URL = "redis://localhost:6379";
 process.env.JWT_SECRET = "your key should be long and secure";
 process.env.ADMIN_PASSWORD = "abc";

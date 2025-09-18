@@ -125,6 +125,8 @@ export default function LiveGamePage() {
 
     // Track answered questions by UID to allow re-answering when teacher restarts same question
     const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+    const [hasEncounteredFirstQuestion, setHasEncounteredFirstQuestion] = useState(false);
+    const [firstQuestionIndex, setFirstQuestionIndex] = useState<number | null>(null);
 
     // Stable leaderboard
     const stableLeaderboard = useMemo(() => {
@@ -236,6 +238,14 @@ export default function LiveGamePage() {
             setShowFeedbackOverlay(false);
         }
     }, [gameState.currentQuestion?.uid, gameState.phase, gameState.gameMode, gameState.lastAnswerFeedback]);
+
+    // Track first question encountered for FAB display logic
+    useEffect(() => {
+        if (gameState.currentQuestion && !hasEncounteredFirstQuestion) {
+            setHasEncounteredFirstQuestion(true);
+            setFirstQuestionIndex(gameState.questionIndex);
+        }
+    }, [gameState.currentQuestion, hasEncounteredFirstQuestion, gameState.questionIndex]);
 
     // Game mode
     const gameMode = useMemo(() => {
@@ -485,6 +495,9 @@ export default function LiveGamePage() {
                 leaderboardLength={stableLeaderboard.length}
                 userRank={userLeaderboardData.rank}
                 userScore={userLeaderboardData.score}
+                isQuestionCompleted={gameState.phase !== 'question'}
+                questionIndex={gameState.questionIndex}
+                isFirstQuestionOfSession={firstQuestionIndex !== null && gameState.questionIndex === firstQuestionIndex}
                 onOpen={handleLeaderboardOpen}
             />
 

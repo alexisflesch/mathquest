@@ -9,12 +9,12 @@
  */
 
 // Set up environment variables for testing
-process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest";
+process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest_test";
 process.env.REDIS_URL = "redis://localhost:6379";
-process.env.JWT_SECRET = "your key should be long and secure";
-process.env.ADMIN_PASSWORD = "abc";
-process.env.PORT = "3007";
-process.env.LOG_LEVEL = "info";
+process.env.JWT_SECRET = "test_jwt_secret";
+process.env.ADMIN_PASSWORD = "test_admin";
+process.env.PORT = "3001";
+process.env.LOG_LEVEL = "error";
 
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';

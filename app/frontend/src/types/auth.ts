@@ -32,6 +32,7 @@ export interface AuthContextType {
     isTeacher: boolean;
     isLoading: boolean;
     teacherId?: string;
+    authError?: string | null;
 
     // Méthodes principales
     refreshAuth: (force?: boolean) => void;

@@ -199,27 +199,34 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
         });
         // --- JOIN BONUS SNAPSHOT LOGIC ---
         // Only apply join bonus for live/pending participants (not deferred reconnections)
+        // Also handle late joiners to active games
         logger.info({
             userId,
             accessCode,
             isDeferred,
             participantStatus: participant.status,
-            joinBonusCondition: !isDeferred && participant.status === participant_1.ParticipantStatus.PENDING,
-            gameInstanceStatus: gameInstance.status
+            gameInstanceStatus: gameInstance.status,
+            joinBonusCondition: !isDeferred && (participant.status === participant_1.ParticipantStatus.PENDING || gameInstance.status === 'active'),
+            logPoint: 'JOIN_BONUS_CONDITION_CHECK'
         }, '[DEBUG] Join bonus condition check');
-        if (!isDeferred && participant.status === participant_1.ParticipantStatus.PENDING) {
+        if (!isDeferred && (participant.status === participant_1.ParticipantStatus.PENDING || gameInstance.status === 'active')) {
+            // For active games, late joiners should be added to snapshot with their join bonus
+            // For pending games, new joiners get join bonus
             const joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, targetUserId);
-            if (joinOrderBonus > 0) {
+            if (joinOrderBonus > 0 || gameInstance.status === 'active') {
+                // For active games, use the join bonus as the score
+                // For pending games, use join bonus (will be updated with real scores later)
+                const snapshotScore = gameInstance.status === 'active' ? joinOrderBonus : joinOrderBonus;
                 const leaderboardUser = {
                     userId: targetUserId,
                     username: finalUser.username,
                     avatarEmoji: finalUser.avatarEmoji || undefined,
-                    score: joinOrderBonus,
+                    score: snapshotScore,
                     attemptCount: participant.nbAttempts,
                     participationId: participant.id
                 };
                 // Add to snapshot and emit to projection page via socket
-                const updatedSnapshot = await (0, leaderboardSnapshotService_1.addUserToSnapshot)(accessCode, leaderboardUser, joinOrderBonus);
+                const updatedSnapshot = await (0, leaderboardSnapshotService_1.addUserToSnapshot)(accessCode, leaderboardUser, snapshotScore);
                 // Emit to projection room if snapshot was updated
                 if (updatedSnapshot) {
                     const io = (0, sockets_1.getIO)();

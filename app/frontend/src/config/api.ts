@@ -70,7 +70,12 @@ export async function makeApiRequest<T>(
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         // Handle structured error responses from backend
         const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-        throw new Error(errorMessage);
+
+        // Include status code in error for better error detection
+        const enhancedError = new Error(`${response.status}: ${errorMessage}`);
+        (enhancedError as any).statusCode = response.status;
+
+        throw enhancedError;
     }
 
     // Handle 204 No Content responses (successful deletion with no body)

@@ -18,6 +18,7 @@ jest.mock('@/core/services/emailService');
 jest.mock('@/utils/usernameValidator');
 jest.mock('@/utils/avatarUtils');
 jest.mock('jsonwebtoken');
+jest.mock('@/db/prisma');
 
 // Mock jsonwebtoken
 const mockJwt = jest.mocked(require('jsonwebtoken'));
@@ -34,6 +35,37 @@ mockJwt.verify.mockImplementation((token: string) => {
     throw new Error('Invalid token');
 });
 mockJwt.sign.mockReturnValue('mock-jwt-token');
+
+// Mock Prisma
+const mockPrisma = jest.mocked(require('@/db/prisma'));
+mockPrisma.prisma = {
+    user: {
+        findUnique: jest.fn().mockImplementation((query: any) => {
+            if (query.where.id === 'user-123') {
+                return Promise.resolve({
+                    id: 'user-123',
+                    username: 'testuser',
+                    role: 'STUDENT'
+                });
+            }
+            if (query.where.id === 'teacher-123') {
+                return Promise.resolve({
+                    id: 'teacher-123',
+                    username: 'testteacher',
+                    role: 'TEACHER'
+                });
+            }
+            if (query.where.id === 'student-123') {
+                return Promise.resolve({
+                    id: 'student-123',
+                    username: 'teststudent',
+                    role: 'STUDENT'
+                });
+            }
+            return Promise.resolve(null);
+        })
+    }
+} as any;
 
 // Mock getRandomAvatar to return consistent values
 const mockAvatarUtils = jest.mocked(require('@/utils/avatarUtils'));

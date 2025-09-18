@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import createLogger from '@/utils/logger';
+import { prisma } from '@/db/prisma';
 
 // Create a middleware-specific logger
 const logger = createLogger('Auth');
@@ -27,7 +28,7 @@ declare global {
 /**
  * Authentication middleware for teacher routes
  */
-export const teacherAuth = (req: Request, res: Response, next: NextFunction): void => {
+export const teacherAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         let token: string | undefined;
 
@@ -64,8 +65,31 @@ export const teacherAuth = (req: Request, res: Response, next: NextFunction): vo
         // Verify the token
         const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-        // Attach user info to request
-        req.user = decoded;
+        // Validate that the user actually exists in the database
+        const userExists = await prisma.user.findUnique({
+            where: { id: decoded.userId },
+            select: { id: true, username: true, role: true }
+        });
+
+        if (!userExists) {
+            logger.warn({
+                userId: decoded.userId,
+                username: decoded.username,
+                role: decoded.role
+            }, 'Authentication failed: User from JWT token does not exist in database');
+            res.status(401).json({ error: 'Invalid user credentials' });
+            return;
+        }
+
+        // Update the decoded payload with the actual user data from database
+        const validatedUser: JwtPayload = {
+            userId: userExists.id,
+            username: userExists.username || decoded.username,
+            role: userExists.role
+        };
+
+        // Attach validated user info to request
+        req.user = validatedUser;
 
         next();
     } catch (error) {
@@ -79,7 +103,7 @@ export const teacherAuth = (req: Request, res: Response, next: NextFunction): vo
  * Optional authentication middleware
  * Will set req.user if a valid token is provided but won't reject the request if no token is provided
  */
-export const optionalAuth = (req: Request, res: Response, next: NextFunction) => {
+export const optionalAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         let token: string | undefined;
 
@@ -124,8 +148,30 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction) =>
         // Verify the token
         const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-        // Attach user info to request
-        req.user = decoded;
+        // Validate that the user actually exists in the database
+        const userExists = await prisma.user.findUnique({
+            where: { id: decoded.userId },
+            select: { id: true, username: true, role: true }
+        });
+
+        if (!userExists) {
+            // Invalid user, but we still continue without authentication
+            logger.debug({
+                userId: decoded.userId,
+                username: decoded.username
+            }, 'Invalid user in optional authentication - continuing without auth');
+            return next();
+        }
+
+        // Update the decoded payload with the actual user data from database
+        const validatedUser: JwtPayload = {
+            userId: userExists.id,
+            username: userExists.username || decoded.username,
+            role: userExists.role
+        };
+
+        // Attach validated user info to request
+        req.user = validatedUser;
     } catch (error) {
         // Invalid token, but we still continue without authentication
         logger.debug({ error }, 'Invalid token in optional authentication');

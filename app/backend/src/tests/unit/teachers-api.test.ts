@@ -26,6 +26,31 @@ jest.mock('jsonwebtoken', () => ({
     sign: jest.fn(() => 'mock-jwt-token')
 }));
 
+// Mock Prisma
+jest.mock('@/db/prisma');
+const mockPrisma = jest.mocked(require('@/db/prisma'));
+mockPrisma.prisma = {
+    user: {
+        findUnique: jest.fn().mockImplementation((query: any) => {
+            if (query.where.id === 'teacher-123') {
+                return Promise.resolve({
+                    id: 'teacher-123',
+                    username: 'testteacher',
+                    role: 'TEACHER'
+                });
+            }
+            if (query.where.id === 'student-123') {
+                return Promise.resolve({
+                    id: 'student-123',
+                    username: 'teststudent',
+                    role: 'STUDENT'
+                });
+            }
+            return Promise.resolve(null);
+        })
+    }
+} as any;
+
 const mockUserService = UserService as jest.MockedClass<typeof UserService>;
 
 describe('Teachers API - Teacher Profile Management', () => {

@@ -294,8 +294,8 @@ describe('Participant Preservation & Snapshot Security: Real Handler Tests', () 
                 includeProjectionRoom: false
             });
 
-            // Verify: Snapshot is synced before broadcasting
-            expect(syncSnapshotWithLiveData).toHaveBeenCalledWith('TEST123');
+            // Verify: syncSnapshotWithLiveData is NOT called (security fix - prevents automatic updates)
+            expect(syncSnapshotWithLiveData).not.toHaveBeenCalled();
 
             // Verify: Students (game room) get snapshot data
             expect(io.to).toHaveBeenCalledWith('game_TEST123');

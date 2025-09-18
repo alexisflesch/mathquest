@@ -13,6 +13,9 @@ interface LeaderboardFABProps {
     leaderboardLength: number;
     userRank: number | null;
     userScore: number;
+    isQuestionCompleted: boolean;
+    questionIndex: number;
+    isFirstQuestionOfSession: boolean;
     onOpen: () => void;
 }
 
@@ -23,6 +26,9 @@ const LeaderboardFAB = React.memo(({
     leaderboardLength,
     userRank,
     userScore,
+    isQuestionCompleted,
+    questionIndex,
+    isFirstQuestionOfSession,
     onOpen
 }: LeaderboardFABProps) => {
     // Re-render logging for LeaderboardFAB
@@ -56,19 +62,33 @@ const LeaderboardFAB = React.memo(({
         zIndex: 150,
     };
 
-    // If only one entry, show points and disable modal
-    const showRank = leaderboardLength > 1;
-    const handleClick = showRank ? onOpen : undefined;
+    // For single players: always show score
+    // For multiple players: show ranking
+    const isSinglePlayer = leaderboardLength === 1;
+    const showScore = isSinglePlayer;
+
+    // For first question: don't show until completed
+    // For subsequent questions: show immediately
+    const shouldHideForFirstQuestion = isFirstQuestionOfSession && !isQuestionCompleted;
+
+    if (shouldHideForFirstQuestion) {
+        return null;
+    }
+
+    const handleClick = !isSinglePlayer ? onOpen : undefined;
+
+    // Use Math.floor for rounding (no decimals)
+    const flooredScore = Math.floor(userScore);
 
     // Animation key changes when rank or points change
-    const animationKey = showRank ? `rank-${userRank}` : `score-${userScore}`;
+    const animationKey = showScore ? `score-${flooredScore}` : `rank-${userRank}`;
 
     return (
         <button
             onClick={handleClick}
             className={isMobile ? mobileClasses : desktopClasses}
             style={isMobile ? mobileStyle : desktopStyle}
-            aria-label={showRank ? "Voir le classement complet" : "Points"}
+            aria-label={isSinglePlayer ? "Points" : "Voir le classement complet"}
         >
             <motion.div
                 key={animationKey}
@@ -86,7 +106,7 @@ const LeaderboardFAB = React.memo(({
                 <Trophy className="w-5 h-5" />
             </motion.div>
             <span className="text-md font-bold">
-                {showRank ? `#${userRank}` : `${userScore} pts`}
+                {showScore ? `${flooredScore} pts` : `#${userRank}`}
             </span>
         </button>
     );

@@ -6,6 +6,7 @@ import { logger, getCurrentLogLevel, setLogLevel, LogLevel } from '@/clientLogge
 import { MathJaxContext } from 'better-react-mathjax';
 import AppNav from '@/components/AppNav';
 import InfinitySpin from '@/components/InfinitySpin';
+import AuthErrorBanner from '@/components/AuthErrorBanner';
 
 // Loading screen component
 function LoadingScreen() {
@@ -57,6 +58,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
     return (
         <>
+            <AuthErrorBanner />
             <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
             <main className={`min-h-screen transition-all ease-in-out pt-14 md:pt-0 ${sidebarCollapsed ? 'md:ml-12' : 'md:ml-64'}`} style={{ transitionDuration: '220ms' }}>
                 {children}

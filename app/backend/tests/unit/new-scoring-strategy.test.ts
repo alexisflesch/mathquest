@@ -1,6 +1,6 @@
 // Set Redis URL before importing modules that depend on it
 process.env.REDIS_URL = "redis://localhost:6379";
-process.env.DATABASE_URL = "postgresql://postgres:password@localhost:5432/mathquest_test";
+process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest_test";
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { redisClient } from '../../src/config/redis';

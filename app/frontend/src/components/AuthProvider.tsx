@@ -93,11 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isStudent, setIsStudent] = useState(false);
     const [isTeacher, setIsTeacher] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [authError, setAuthError] = useState<string | null>(null);
     const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
 
     // Auth refresh caching to prevent excessive API calls
     const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
     const AUTH_CACHE_DURATION = 30000; // 30 seconds cache
+    const MAX_LOADING_TIME = 10000; // 10 seconds max loading time
 
     // Utility methods
     const canCreateQuiz = useCallback(() => {
@@ -603,6 +605,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLastAuthCheck(now);
         logger.info('Refreshing authentication state', { force, shouldShowLoading });
 
+        // Set up loading timeout to prevent infinite loading
+        let loadingTimeout: NodeJS.Timeout | null = null;
+        if (shouldShowLoading) {
+            loadingTimeout = setTimeout(() => {
+                logger.warn('Auth refresh timeout reached, forcing completion');
+                setIsLoading(false);
+            }, MAX_LOADING_TIME);
+        }
+
         let detectedState: UserState = 'anonymous';
         let profile: UserProfile = {};
         let studentLoggedIn = false;
@@ -748,6 +759,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     detectedState = 'student';
                     studentLoggedIn = true;
                     teacherLoggedIn = false;
+                } else {
+                    // No fallback tokens, explicitly set anonymous state
+                    detectedState = 'anonymous';
+                    profile = {};
+                    studentLoggedIn = false;
+                    teacherLoggedIn = false;
                 }
             }
 
@@ -760,6 +777,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
         } catch (error) {
             logger.error('Error fetching auth status:', error);
+
+            // Check if this is a cookie-related error (401/403) or network error with cookies present
+            const isAuthError = error instanceof Error &&
+                ((error.message.includes('401') || error.message.includes('403')) ||
+                    (error as any).statusCode === 401 ||
+                    (error as any).statusCode === 403 ||
+                    error.message.includes('Unauthorized') ||
+                    error.message.includes('Forbidden'));
+
+            // Also treat network errors as potential auth issues when cookies are present
+            const hasCookies = typeof window !== 'undefined' &&
+                (document.cookie.includes('authToken=') || document.cookie.includes('teacherToken='));
+            const isNetworkError = error instanceof ReferenceError && error.message.includes('fetch') ||
+                error instanceof TypeError && error.message.includes('fetch');
+
+            const shouldClearAuth = isAuthError || (isNetworkError && hasCookies);
+
+            if (shouldClearAuth) {
+                logger.warn('Authentication error detected, clearing invalid cookies', {
+                    isAuthError,
+                    isNetworkError,
+                    hasCookies
+                });
+
+                // Clear invalid cookies to prevent repeated failures
+                if (typeof window !== 'undefined') {
+                    // Clear auth-related cookies
+                    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    document.cookie = 'teacherToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+                    // Clear localStorage auth data if cookies are invalid
+                    localStorage.removeItem(STORAGE_KEYS.TEACHER_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+                    localStorage.removeItem(STORAGE_KEYS.AVATAR);
+                    localStorage.removeItem(STORAGE_KEYS.COOKIE_ID);
+
+                    logger.info('Cleared invalid authentication data');
+                }
+
+                // Force anonymous state when cookies are invalid
+                detectedState = 'anonymous';
+                profile = {};
+                studentLoggedIn = false;
+                teacherLoggedIn = false;
+
+                // Set user-friendly error message
+                setAuthError('Votre session a expiré. Veuillez vous reconnecter.');
+            } else if (isNetworkError) {
+                // Network error without cookies - still clear localStorage to prevent guest fallback
+                logger.warn('Network error detected, clearing localStorage to prevent stale guest data', {
+                    isNetworkError,
+                    hasCookies: false
+                });
+
+                if (typeof window !== 'undefined') {
+                    // Clear localStorage auth data to prevent fallback to stale guest state
+                    localStorage.removeItem(STORAGE_KEYS.TEACHER_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+                    localStorage.removeItem(STORAGE_KEYS.AVATAR);
+                    localStorage.removeItem(STORAGE_KEYS.COOKIE_ID);
+
+                    logger.info('Cleared localStorage due to network error');
+                }
+
+                // Force anonymous state when network fails
+                detectedState = 'anonymous';
+                profile = {};
+                studentLoggedIn = false;
+                teacherLoggedIn = false;
+
+                // Set network error message
+                setAuthError('Problème de connexion. Vérifiez votre connexion internet.');
+            }
+
+            // Clear loading timeout if it exists
+            if (loadingTimeout) {
+                clearTimeout(loadingTimeout);
+            }
         }
 
         // Update all states
@@ -770,6 +865,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAuthenticated(studentLoggedIn || teacherLoggedIn);
         setTeacherId(fetchedTeacherId);
         setIsLoading(false);
+
+        // Clear any previous auth errors on successful refresh
+        setAuthError(null);
+
+        // Clear loading timeout if it exists
+        if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+        }
 
         logger.info('Refreshed Auth State', {
             userState: detectedState,
@@ -782,7 +885,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         refreshAuth(true); // Initial check on mount - force refresh
-    }, [refreshAuth]);
+    }, []); // Remove refreshAuth dependency to prevent multiple calls
 
     // Log state changes for debugging
     useEffect(() => {
@@ -1002,6 +1105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isTeacher,
         isLoading,
         teacherId,
+
+        // Error state
+        authError,
 
         // Methods
         refreshAuth,

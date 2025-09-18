@@ -83,6 +83,14 @@ class GameTemplateService {
         return gameTemplate;
     }
     async creategameTemplate(userId, data) {
+        // Validate that the creator user exists
+        const creator = await prisma_1.prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, username: true }
+        });
+        if (!creator) {
+            throw new Error(`Creator user with ID ${userId} does not exist`);
+        }
         const { questions, questionUids, ...rest } = data;
         // Convert questionUids to questions format if provided
         let questionData = questions;
@@ -94,6 +102,7 @@ class GameTemplateService {
         }
         logger.info({
             userId,
+            creatorUsername: creator.username,
             questionData,
             rest,
             fullCreateData: {
