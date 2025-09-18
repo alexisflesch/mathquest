@@ -149,9 +149,9 @@ npm run type-check         # Check types in all modules
 npm run type-check:all     # Comprehensive type checking
 
 # Testing & Quality
-npm run test               # Run all tests
+npm run test:e2e           # Run end-to-end tests
+npm run test:e2e:ui        # Run e2e tests with UI
 npm run lint               # Lint all code
-./test-auth-flow.sh        # Test authentication flow
 ```
 
 ---
@@ -176,7 +176,7 @@ npm run lint               # Lint all code
 - **ALWAYS update both client and server** when changing cookie names or auth flow
 - **TEST the complete auth flow** after any auth-related changes:
   ```bash
-  ./test-auth-flow.sh  # Run this script after auth changes
+  npm run test:e2e  # Run end-to-end tests to verify auth flow
   ```
 - **Check AuthProvider compatibility** when updating auth API endpoints
 
@@ -210,12 +210,12 @@ npm run lint               # Lint all code
 - Use the documentation as your primary source of truth.
 - Keep the codebase clean, maintainable, and well-documented.
 - Communicate and confirm before making significant changes.
-- **Run `./test-auth-flow.sh` after any authentication changes.**
+- **Run `npm run test:e2e` after any authentication changes.**
 
 ## Debug Commands
 ```bash
 # Test authentication flow
-./test-auth-flow.sh
+npm run test:e2e
 
 # Search for potential issues
 grep -r "mathquest_teacher" --include="*.ts" --include="*.tsx" .

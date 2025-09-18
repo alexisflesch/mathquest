@@ -28,6 +28,7 @@
     "@types/node": "^22.15.17",
     "babel-preset-react-app": "^10.1.0",
     "concurrently": "^8.2.2",
+    "ts-prune": "^0.10.3",
     "typescript": "^5.8.3"
   },
   "dependencies": {

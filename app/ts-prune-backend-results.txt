@@ -1,0 +1,768 @@
+home/aflesch/mathquest/app/shared/logger.ts:123 - default
+src/server.ts:152 - default
+home/aflesch/mathquest/app/shared/constants/avatars.ts:128 - AnimalAvatar
+home/aflesch/mathquest/app/shared/constants/avatars.ts:129 - ExtraAvatar
+home/aflesch/mathquest/app/shared/types/api.ts:12 - ApiSchemas (used in module)
+home/aflesch/mathquest/app/shared/types/api.ts:12 - ApiRequests (used in module)
+home/aflesch/mathquest/app/shared/types/api.ts:12 - ApiResponses (used in module)
+home/aflesch/mathquest/app/shared/types/api.ts:16 - LoginRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:17 - RegisterRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:18 - CreateGameRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:19 - GameJoinRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:20 - GameStatusUpdateRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:21 - CreateGameTemplateRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:22 - UpdateGameTemplateRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:23 - CreateQuestionRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:24 - UpdateQuestionRequestSchema
+home/aflesch/mathquest/app/shared/types/api.ts:25 - QuestionsResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:26 - GameCreationResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:27 - QuizListResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:28 - QuizCreationResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:29 - QuestionsFiltersResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:30 - GameTemplateCreationResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:31 - TournamentCodeResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:32 - QuestionsCountResponseSchema
+home/aflesch/mathquest/app/shared/types/api.ts:37 - LoginResponse
+home/aflesch/mathquest/app/shared/types/api.ts:38 - RegisterResponse
+home/aflesch/mathquest/app/shared/types/api.ts:39 - UpgradeAccountResponse
+home/aflesch/mathquest/app/shared/types/api.ts:40 - AuthStatusResponse
+home/aflesch/mathquest/app/shared/types/api.ts:41 - ProfileUpdateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:42 - TeacherUpgradeResponse
+home/aflesch/mathquest/app/shared/types/api.ts:43 - LogoutResponse
+home/aflesch/mathquest/app/shared/types/api.ts:44 - ErrorResponse
+home/aflesch/mathquest/app/shared/types/api.ts:45 - GameCreationResponse
+home/aflesch/mathquest/app/shared/types/api.ts:46 - GameJoinResponse
+home/aflesch/mathquest/app/shared/types/api.ts:47 - GameStatusUpdateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:48 - GameStateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:49 - LeaderboardResponse
+home/aflesch/mathquest/app/shared/types/api.ts:50 - TeacherActiveGamesResponse
+home/aflesch/mathquest/app/shared/types/api.ts:51 - GameInstancesByTemplateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:52 - QuestionCreationResponse
+home/aflesch/mathquest/app/shared/types/api.ts:53 - QuestionResponse
+home/aflesch/mathquest/app/shared/types/api.ts:54 - QuestionsResponse
+home/aflesch/mathquest/app/shared/types/api.ts:55 - QuestionsListResponse
+home/aflesch/mathquest/app/shared/types/api.ts:56 - QuestionUidsResponse
+home/aflesch/mathquest/app/shared/types/api.ts:57 - QuestionsFiltersResponse
+home/aflesch/mathquest/app/shared/types/api.ts:58 - QuestionsCountResponse
+home/aflesch/mathquest/app/shared/types/api.ts:59 - GameTemplateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:60 - GameTemplatesResponse
+home/aflesch/mathquest/app/shared/types/api.ts:61 - GameTemplateCreationResponse
+home/aflesch/mathquest/app/shared/types/api.ts:62 - GameTemplateUpdateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:63 - QuizTemplateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:64 - QuizTemplatesResponse
+home/aflesch/mathquest/app/shared/types/api.ts:65 - QuizCreationResponse
+home/aflesch/mathquest/app/shared/types/api.ts:66 - QuizTemplateCreationResponse
+home/aflesch/mathquest/app/shared/types/api.ts:67 - QuizTemplateUpdateResponse
+home/aflesch/mathquest/app/shared/types/api.ts:68 - QuizTemplateDeleteResponse
+home/aflesch/mathquest/app/shared/types/api.ts:69 - QuizTemplateQuestionResponse
+home/aflesch/mathquest/app/shared/types/api.ts:70 - QuizListResponse
+home/aflesch/mathquest/app/shared/types/api.ts:71 - TeacherQuizQuestionsResponse
+home/aflesch/mathquest/app/shared/types/api.ts:72 - TournamentCodeResponse
+home/aflesch/mathquest/app/shared/types/api.ts:73 - TournamentVerificationResponse
+home/aflesch/mathquest/app/shared/types/api.ts:74 - SuccessResponse
+home/aflesch/mathquest/app/shared/types/api.ts:75 - UniversalLoginResponse
+home/aflesch/mathquest/app/shared/types/api.ts:79 - Question
+home/aflesch/mathquest/app/shared/types/api.ts:82 - ApiResponse (used in module)
+home/aflesch/mathquest/app/shared/types/api.ts:89 - ApiRequest
+home/aflesch/mathquest/app/shared/types/api.ts:96 - PaginatedResponse
+home/aflesch/mathquest/app/shared/types/api.ts:105 - ApiError
+home/aflesch/mathquest/app/shared/types/api.ts:112 - ValidationError
+home/aflesch/mathquest/app/shared/types/auth.ts:6 - AuthUser (used in module)
+home/aflesch/mathquest/app/shared/types/auth.ts:14 - AuthState
+home/aflesch/mathquest/app/shared/types/auth.ts:21 - LoginCredentials (used in module)
+home/aflesch/mathquest/app/shared/types/auth.ts:26 - RegisterData (used in module)
+home/aflesch/mathquest/app/shared/types/auth.ts:33 - UserState
+home/aflesch/mathquest/app/shared/types/auth.ts:35 - UserStateInfo
+home/aflesch/mathquest/app/shared/types/auth.ts:41 - UserProfile
+home/aflesch/mathquest/app/shared/types/auth.ts:47 - AuthContextType
+home/aflesch/mathquest/app/shared/types/auth.ts:56 - GuestProfileData
+home/aflesch/mathquest/app/shared/types/enhancedFilters.ts:6 - FilterOption (used in module)
+home/aflesch/mathquest/app/shared/types/enhancedFilters.ts:13 - EnhancedFilters (used in module)
+home/aflesch/mathquest/app/shared/types/enhancedFilters.ts:23 - EnhancedFiltersResponse
+home/aflesch/mathquest/app/shared/types/index.ts:14 - TournamentQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:15 - QuizQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:27 - TEACHER_EVENTS
+home/aflesch/mathquest/app/shared/types/index.ts:28 - GAME_EVENTS
+home/aflesch/mathquest/app/shared/types/index.ts:29 - TOURNAMENT_EVENTS
+home/aflesch/mathquest/app/shared/types/index.ts:30 - LOBBY_EVENTS
+home/aflesch/mathquest/app/shared/types/index.ts:31 - PROJECTOR_EVENTS
+home/aflesch/mathquest/app/shared/types/index.ts:32 - SOCKET_EVENTS
+home/aflesch/mathquest/app/shared/types/index.ts:36 - BaseQuizState
+home/aflesch/mathquest/app/shared/types/index.ts:36 - ExtendedQuizState
+home/aflesch/mathquest/app/shared/types/index.ts:37 - TournamentState
+home/aflesch/mathquest/app/shared/types/index.ts:28 - BaseParticipant
+home/aflesch/mathquest/app/shared/types/index.ts:29 - GameParticipant
+home/aflesch/mathquest/app/shared/types/index.ts:30 - TournamentParticipant
+home/aflesch/mathquest/app/shared/types/index.ts:31 - LeaderboardEntry
+home/aflesch/mathquest/app/shared/types/index.ts:32 - ParticipantData
+home/aflesch/mathquest/app/shared/types/index.ts:36 - TimerStatus
+home/aflesch/mathquest/app/shared/types/index.ts:37 - TimerRole
+home/aflesch/mathquest/app/shared/types/index.ts:38 - BaseTimer
+home/aflesch/mathquest/app/shared/types/index.ts:39 - Chrono
+home/aflesch/mathquest/app/shared/types/index.ts:40 - QuestionTimer
+home/aflesch/mathquest/app/shared/types/index.ts:41 - GameTimerState
+home/aflesch/mathquest/app/shared/types/index.ts:42 - TimerConfig
+home/aflesch/mathquest/app/shared/types/index.ts:43 - TimerUpdatePayload
+home/aflesch/mathquest/app/shared/types/index.ts:44 - GameTimerUpdatePayload
+home/aflesch/mathquest/app/shared/types/index.ts:45 - TimerActionPayload
+home/aflesch/mathquest/app/shared/types/index.ts:49 - BaseAnswer
+home/aflesch/mathquest/app/shared/types/index.ts:50 - GameAnswer
+home/aflesch/mathquest/app/shared/types/index.ts:51 - TournamentAnswer
+home/aflesch/mathquest/app/shared/types/index.ts:52 - AnswerSubmissionPayload
+home/aflesch/mathquest/app/shared/types/index.ts:53 - AnswerResponsePayload
+home/aflesch/mathquest/app/shared/types/index.ts:54 - AnswerResult
+home/aflesch/mathquest/app/shared/types/index.ts:55 - AnswerStats
+home/aflesch/mathquest/app/shared/types/index.ts:56 - QuestionAnswerSummary
+home/aflesch/mathquest/app/shared/types/index.ts:60 - UserRole
+home/aflesch/mathquest/app/shared/types/index.ts:61 - User
+home/aflesch/mathquest/app/shared/types/index.ts:62 - PublicUser
+home/aflesch/mathquest/app/shared/types/index.ts:63 - UserRegistrationData
+home/aflesch/mathquest/app/shared/types/index.ts:64 - UserLoginData
+home/aflesch/mathquest/app/shared/types/index.ts:65 - UserProfileUpdate
+home/aflesch/mathquest/app/shared/types/index.ts:66 - UserUpgradeData
+home/aflesch/mathquest/app/shared/types/index.ts:70 - PlayMode
+home/aflesch/mathquest/app/shared/types/index.ts:71 - GameTemplate
+home/aflesch/mathquest/app/shared/types/index.ts:72 - GameInstance
+home/aflesch/mathquest/app/shared/types/index.ts:73 - GameParticipantRecord
+home/aflesch/mathquest/app/shared/types/index.ts:74 - GameTemplateCreationData
+home/aflesch/mathquest/app/shared/types/index.ts:75 - GameTemplateUpdateData
+home/aflesch/mathquest/app/shared/types/index.ts:76 - GameInstanceCreationData
+home/aflesch/mathquest/app/shared/types/index.ts:77 - GameInstanceUpdateData
+home/aflesch/mathquest/app/shared/types/index.ts:81 - BaseQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:82 - Question
+home/aflesch/mathquest/app/shared/types/index.ts:83 - ClientQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:84 - QuestionCreationPayload
+home/aflesch/mathquest/app/shared/types/index.ts:85 - QuestionUpdatePayload
+home/aflesch/mathquest/app/shared/types/index.ts:65 - UserState
+home/aflesch/mathquest/app/shared/types/index.ts:68 - GuestProfileData
+home/aflesch/mathquest/app/shared/types/index.ts:75 - AuthResponse
+home/aflesch/mathquest/app/shared/types/index.ts:104 - GameState
+home/aflesch/mathquest/app/shared/types/index.ts:140 - FullGameStateResponse
+home/aflesch/mathquest/app/shared/types/index.ts:157 - GameStatus
+home/aflesch/mathquest/app/shared/types/index.ts:12 - ParticipationType
+home/aflesch/mathquest/app/shared/types/index.ts:21 - ParticipantStatus
+home/aflesch/mathquest/app/shared/types/index.ts:145 - SocketParticipantData
+home/aflesch/mathquest/app/shared/types/index.ts:151 - LeaderboardEntryData
+home/aflesch/mathquest/app/shared/types/index.ts:172 - LegacyChrono
+home/aflesch/mathquest/app/shared/types/index.ts:181 - LegacyTimerState
+home/aflesch/mathquest/app/shared/types/index.ts:143 - GameAnswerPayload
+home/aflesch/mathquest/app/shared/types/index.ts:151 - AnswerSubmissionPayloadSchema
+home/aflesch/mathquest/app/shared/types/index.ts:52 - NumericQuestionData
+home/aflesch/mathquest/app/shared/types/index.ts:62 - MultipleChoiceQuestionData
+home/aflesch/mathquest/app/shared/types/index.ts:103 - MultipleChoiceQuestionCreationPayload
+home/aflesch/mathquest/app/shared/types/index.ts:112 - NumericQuestionCreationPayload
+home/aflesch/mathquest/app/shared/types/index.ts:17 - GameIdentificationPayload
+home/aflesch/mathquest/app/shared/types/index.ts:27 - JoinDashboardPayload
+home/aflesch/mathquest/app/shared/types/index.ts:32 - StartTimerPayload
+home/aflesch/mathquest/app/shared/types/index.ts:40 - PauseTimerPayload
+home/aflesch/mathquest/app/shared/types/index.ts:45 - SetQuestionPayload
+home/aflesch/mathquest/app/shared/types/index.ts:54 - LockAnswersPayload
+home/aflesch/mathquest/app/shared/types/index.ts:62 - EndGamePayload
+home/aflesch/mathquest/app/shared/types/index.ts:71 - DashboardQuestionChangedPayload
+home/aflesch/mathquest/app/shared/types/index.ts:80 - DashboardTimerUpdatedPayload
+home/aflesch/mathquest/app/shared/types/index.ts:93 - DashboardAnswersLockChangedPayload
+home/aflesch/mathquest/app/shared/types/index.ts:100 - DashboardGameStatusChangedPayload
+home/aflesch/mathquest/app/shared/types/index.ts:108 - DashboardParticipantUpdatePayload
+home/aflesch/mathquest/app/shared/types/index.ts:115 - DashboardAnswerStatsUpdatePayload
+home/aflesch/mathquest/app/shared/types/index.ts:131 - DashboardJoinedPayload
+home/aflesch/mathquest/app/shared/types/index.ts:143 - ConnectedCountPayload
+home/aflesch/mathquest/app/shared/types/index.ts:151 - ShowCorrectAnswersPayload
+home/aflesch/mathquest/app/shared/types/index.ts:166 - ToggleProjectionStatsPayload
+home/aflesch/mathquest/app/shared/types/index.ts:178 - QuestionForDashboard
+home/aflesch/mathquest/app/shared/types/index.ts:186 - GameControlStatePayload
+home/aflesch/mathquest/app/shared/types/index.ts:13 - JoinTournamentPayload
+home/aflesch/mathquest/app/shared/types/index.ts:23 - TournamentAnswerPayload
+home/aflesch/mathquest/app/shared/types/index.ts:31 - StartTournamentPayload
+home/aflesch/mathquest/app/shared/types/index.ts:36 - PauseTournamentPayload
+home/aflesch/mathquest/app/shared/types/index.ts:40 - ResumeTournamentPayload
+home/aflesch/mathquest/app/shared/types/index.ts:49 - SetTimerPayload
+home/aflesch/mathquest/app/shared/types/index.ts:55 - UpdateTournamentCodePayload
+home/aflesch/mathquest/app/shared/types/index.ts:61 - QuizTimerActionPayload
+home/aflesch/mathquest/app/shared/types/index.ts:63 - LockUnlockPayload
+home/aflesch/mathquest/app/shared/types/index.ts:72 - EndQuizPayload
+home/aflesch/mathquest/app/shared/types/index.ts:80 - GameEndedPayload
+home/aflesch/mathquest/app/shared/types/index.ts:92 - RoomJoinedPayload
+home/aflesch/mathquest/app/shared/types/index.ts:97 - RoomLeftPayload
+home/aflesch/mathquest/app/shared/types/index.ts:105 - SocketEventHandler
+home/aflesch/mathquest/app/shared/types/index.ts:119 - DashboardSetQuestionPayload
+home/aflesch/mathquest/app/shared/types/index.ts:137 - ProjectionShowStatsPayload
+home/aflesch/mathquest/app/shared/types/index.ts:14 - isBaseQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:30 - isQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:37 - getQuestionText
+home/aflesch/mathquest/app/shared/types/index.ts:47 - getQuestionAnswers
+home/aflesch/mathquest/app/shared/types/index.ts:11 - Logger
+home/aflesch/mathquest/app/shared/types/index.ts:21 - ScoreCalculationResult
+home/aflesch/mathquest/app/shared/types/index.ts:10 - createTypeError
+home/aflesch/mathquest/app/shared/types/index.ts:26 - assertType
+home/aflesch/mathquest/app/shared/types/index.ts:41 - assertDefined
+home/aflesch/mathquest/app/shared/types/index.ts:54 - withDefault
+home/aflesch/mathquest/app/shared/types/index.ts:61 - safeGet
+home/aflesch/mathquest/app/shared/types/index.ts:41 - mapToStandardQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:78 - mapToStandardAnswer
+home/aflesch/mathquest/app/shared/types/index.ts:88 - cloneQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:14 - QuestionLike
+home/aflesch/mathquest/app/shared/types/index.ts:32 - AnswerLike
+home/aflesch/mathquest/app/shared/types/index.ts:43 - validateSchema
+home/aflesch/mathquest/app/shared/types/index.ts:170 - createValidator
+home/aflesch/mathquest/app/shared/types/index.ts:9 - SchemaFieldType
+home/aflesch/mathquest/app/shared/types/index.ts:18 - SchemaField
+home/aflesch/mathquest/app/shared/types/index.ts:29 - Schema
+home/aflesch/mathquest/app/shared/types/index.ts:34 - ValidationResult
+home/aflesch/mathquest/app/shared/types/index.ts:11 - answerSchema
+home/aflesch/mathquest/app/shared/types/index.ts:23 - baseQuestionSchema
+home/aflesch/mathquest/app/shared/types/index.ts:63 - questionSchema
+home/aflesch/mathquest/app/shared/types/index.ts:115 - validateAnswer
+home/aflesch/mathquest/app/shared/types/index.ts:116 - validateBaseQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:117 - validateQuestion
+home/aflesch/mathquest/app/shared/types/index.ts:12 - QUESTION_TYPES
+home/aflesch/mathquest/app/shared/types/index.ts:13 - TIMEOUT_CONSTANTS
+home/aflesch/mathquest/app/shared/types/index.ts:14 - isValidQuestionType
+home/aflesch/mathquest/app/shared/types/index.ts:18 - GAME_TIMING
+home/aflesch/mathquest/app/shared/types/index.ts:19 - getCorrectAnswersDisplayTime
+home/aflesch/mathquest/app/shared/types/index.ts:20 - getFeedbackDisplayTime
+home/aflesch/mathquest/app/shared/types/index.ts:23 - QuestionType
+home/aflesch/mathquest/app/shared/types/index.ts:23 - TimeoutConstant
+home/aflesch/mathquest/app/shared/types/index.ts:24 - GameTimingConstant
+home/aflesch/mathquest/app/shared/types/lobbyParticipantListPayload.ts:3 - lobbyParticipantSchema (used in module)
+home/aflesch/mathquest/app/shared/types/lobbyParticipantListPayload.ts:9 - lobbyParticipantListPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/lobbyParticipantListPayload.ts:18 - LobbyParticipant
+home/aflesch/mathquest/app/shared/types/lobbyParticipantsListPayloadSchema.ts:5 - lobbyParticipantsListPayloadSchema
+home/aflesch/mathquest/app/shared/types/question.zod.ts:4 - answerSchema (used in module)
+home/aflesch/mathquest/app/shared/types/question.zod.ts:9 - baseQuestionSchema
+home/aflesch/mathquest/app/shared/types/socket.ts:11 - SocketEvents (used in module)
+home/aflesch/mathquest/app/shared/types/socket.ts:11 - SocketPayloads (used in module)
+home/aflesch/mathquest/app/shared/types/socket.ts:11 - DashboardPayloads (used in module)
+home/aflesch/mathquest/app/shared/types/socket.ts:15 - ServerToClientEvents
+home/aflesch/mathquest/app/shared/types/socket.ts:16 - ClientToServerEvents
+home/aflesch/mathquest/app/shared/types/socket.ts:17 - InterServerEvents
+home/aflesch/mathquest/app/shared/types/socket.ts:18 - SocketData
+home/aflesch/mathquest/app/shared/types/socket.ts:19 - JoinGamePayload
+home/aflesch/mathquest/app/shared/types/socket.ts:20 - GameStateUpdatePayload
+home/aflesch/mathquest/app/shared/types/socket.ts:21 - PlayerJoinedGamePayload
+home/aflesch/mathquest/app/shared/types/socket.ts:22 - ErrorPayload
+home/aflesch/mathquest/app/shared/types/socket.ts:23 - NotificationPayload
+home/aflesch/mathquest/app/shared/types/socket.ts:27 - SocketResponse
+home/aflesch/mathquest/app/shared/types/socket.ts:34 - SocketError
+home/aflesch/mathquest/app/shared/types/socket.ts:40 - RoomInfo
+home/aflesch/mathquest/app/shared/types/socket.ts:47 - ConnectionStatus
+home/aflesch/mathquest/app/shared/types/socket.ts:55 - JoinRoomEvent
+home/aflesch/mathquest/app/shared/types/socket.ts:64 - LeaveRoomEvent
+home/aflesch/mathquest/app/shared/types/socket.ts:69 - GameUpdateEvent
+home/aflesch/mathquest/app/shared/types/socket.ts:76 - SocketConfig
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:15 - FeedbackPayload
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:66 - TimerUpdatePayload (used in module)
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:66 - TimerActionPayload (used in module)
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:69 - GameAnswerPayload (used in module)
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:92 - GameAlreadyPlayedPayload (used in module)
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:181 - JoinProjectorPayload
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:188 - LeaveProjectorPayload
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:328 - TournamentQuestion
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:333 - AnswerReceivedPayload (used in module)
+home/aflesch/mathquest/app/shared/types/socketEvents.ts:344 - TeacherToServerEvents
+home/aflesch/mathquest/app/shared/types/socketEvents.zod.dashboard.ts:6 - questionForDashboardSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socketEvents.zod.dashboard.ts:41 - showCorrectAnswersPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socketEvents.zod.dashboard.ts:49 - ShowCorrectAnswersPayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:7 - isTimerUpdatePayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:14 - createSafeEventHandler
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:33 - isGameJoinedPayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:39 - isGameStateUpdatePayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:44 - isErrorPayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:50 - isQuestionData
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:57 - isParticipantData
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:64 - validateEventPayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:73 - isLiveQuestionPayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:79 - isCorrectAnswersPayload
+home/aflesch/mathquest/app/shared/types/socketTypeGuards.ts:86 - CorrectAnswersPayload (used in module)
+src/config/gameModes.ts:3 - GAME_MODES (used in module)
+src/config/gameModes.ts:18 - GameModeType
+src/middleware/validation.ts:59 - validateRequestParams
+src/middleware/validation.ts:95 - validateRequestQuery
+src/sockets/index.ts:65 - closeSocketIORedisClients
+src/sockets/index.ts:89 - configureSocketServer
+src/sockets/index.ts:103 - registerHandlers
+src/utils/avatarUtils.ts:14 - ALLOWED_ANIMAL_AVATARS (used in module)
+src/utils/avatarUtils.ts:14 - EXTRA_ALLOWED_AVATARS (used in module)
+src/utils/avatarUtils.ts:14 - ALL_ALLOWED_AVATARS (used in module)
+src/utils/deferredUtils.ts:8 - isDeferredTournament
+src/utils/deferredUtils.ts:42 - isDeferredAvailable
+src/utils/gameAuthorization.ts:141 - GameAccessOptionsSchema (used in module)
+src/utils/gameAuthorization.ts:149 - GameAccessOptions (used in module)
+src/utils/joinOrderBonus.ts:118 - getJoinOrder
+src/utils/joinOrderBonus.ts:133 - clearJoinOrder
+src/utils/logger.ts:195 - flushLogger
+src/utils/redisCleanup.ts:137 - getGameRedisKeyPatterns
+src/utils/usernameValidator.ts:123 - getValidPrenoms
+src/utils/usernameValidator.ts:132 - formatUsername
+tests/support/globalSetup.ts:2 - default
+tests/support/globalTeardown.ts:2 - default
+home/aflesch/mathquest/app/shared/types/api/publicGameInstance.ts:15 - PublicGameInstanceSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/requests.ts:17 - CreateGameRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:19 - GameStatusUpdateRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:20 - CreateGameTemplateRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:21 - UpdateGameTemplateRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:24 - CreateQuestionRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:25 - UpdateQuestionRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:26 - UpdateUserRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:27 - CreateQuizTemplateRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:28 - UpdateQuizTemplateRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:42 - LoginRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:43 - RegisterRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:44 - CreateGameRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:45 - GameJoinRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:46 - GameStatusUpdateRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:47 - CreateGameTemplateRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:48 - UpdateGameTemplateRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:49 - RenameGameTemplateRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:50 - RenameGameInstanceRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:51 - CreateQuestionRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:52 - UpdateQuestionRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:53 - UpdateUserRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:54 - CreateQuizTemplateRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:55 - UpdateQuizTemplateRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:56 - UpgradeAccountRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:57 - PasswordResetRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:58 - PasswordResetConfirmRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:59 - ProfileUpdateRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:60 - TeacherUpgradeRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:61 - SendEmailVerificationRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:62 - VerifyEmailRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:63 - ResendEmailVerificationRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:64 - SetQuestionRequestSchema
+home/aflesch/mathquest/app/shared/types/api/requests.ts:72 - TeacherRegisterRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:166 - PlayerJoinGameRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:172 - PlayerAnswerRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:180 - TeacherLoginRequest
+home/aflesch/mathquest/app/shared/types/api/requests.ts:200 - SuccessResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:144 - PublicUserResponse (used in module)
+home/aflesch/mathquest/app/shared/types/api/responses.ts:169 - GameInstanceWithTemplateResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:251 - QuestionUidsResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:256 - QuestionFiltersResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:289 - QuizTemplateResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:293 - QuizTemplatesResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:301 - QuizTemplateCreationResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:305 - QuizTemplateUpdateResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:309 - QuizTemplateDeleteResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:313 - QuizTemplateQuestionResponse
+home/aflesch/mathquest/app/shared/types/api/responses.ts:328 - SuccessResponse
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:201 - LoginResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:218 - RegisterResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:226 - UpgradeAccountResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:233 - AuthStatusResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:244 - ProfileUpdateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:250 - TeacherUpgradeResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:257 - LogoutResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:263 - ErrorResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:271 - UniversalLoginResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:294 - GameJoinResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:300 - GameStatusUpdateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:304 - GameStateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:323 - LeaderboardResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:327 - TeacherActiveGamesResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:331 - GameInstancesByTemplateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:337 - QuestionCreationResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:341 - QuestionResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:354 - QuestionsListResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:356 - QuestionUidsResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:362 - FilterOptionSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:399 - GameTemplateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:403 - GameTemplatesResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:417 - GameTemplateUpdateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:424 - QuizTemplateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:428 - QuizTemplatesResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:440 - QuizTemplateCreationResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:442 - QuizTemplateUpdateResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:446 - QuizTemplateDeleteResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:450 - QuizTemplateQuestionResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:462 - TeacherQuizQuestionsResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:476 - TournamentVerificationResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:509 - SuccessResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:538 - UpgradeRequest
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:587 - PracticeSettingsSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:598 - PracticeAnswerSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:608 - PracticeQuestionDataSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:646 - PracticeStatisticsSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:657 - PracticeSessionSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:680 - CreatePracticeSessionResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:687 - StartPracticeSessionPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:696 - SubmitPracticeAnswerPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:703 - GetNextPracticeQuestionPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:708 - RetryPracticeQuestionPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:713 - EndPracticeSessionPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:718 - GetPracticeSessionStatePayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:723 - CreatePracticeSessionApiRequestSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:728 - GetPracticeSessionsApiRequestSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:735 - UpdatePracticeSessionApiRequestSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:740 - GetPracticeQuestionsApiRequestSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:749 - CreatePracticeSessionApiResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:756 - GetPracticeSessionApiResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:763 - GetPracticeSessionsApiResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:776 - GetPracticeQuestionsApiResponseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:785 - PracticeSettings
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:786 - PracticeAnswer
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:787 - PracticeQuestionData
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:788 - PracticeStatistics
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:789 - PracticeSession
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:790 - CreatePracticeSessionRequest
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:791 - CreatePracticeSessionResponse
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:792 - StartPracticeSessionPayload
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:793 - SubmitPracticeAnswerPayload
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:794 - GetNextPracticeQuestionPayload
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:795 - RetryPracticeQuestionPayload
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:796 - EndPracticeSessionPayload
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:797 - GetPracticeSessionStatePayload
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:798 - CreatePracticeSessionApiRequest
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:799 - GetPracticeSessionsApiRequest
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:800 - UpdatePracticeSessionApiRequest
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:801 - GetPracticeQuestionsApiRequest
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:802 - GetPracticeSessionApiResponse
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:803 - GetPracticeSessionsApiResponse
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:804 - GetPracticeQuestionsApiResponse
+home/aflesch/mathquest/app/shared/types/api/schemas.ts:805 - CreatePracticeSessionApiResponse
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:6 - PlayModeSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:9 - GameTemplateBaseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:25 - GameInstanceBaseSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:45 - GameParticipantRecordSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:67 - GameTemplateCreationDataSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:77 - GameTemplateUpdateDataSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:86 - GameInstanceCreationDataSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:98 - GameInstanceUpdateDataSchema (used in module)
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:108 - PlayMode
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:109 - GameTemplate
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:110 - GameInstance
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:111 - GameParticipantRecord
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:112 - GameTemplateCreationData
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:113 - GameTemplateUpdateData
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:114 - GameInstanceCreationData
+home/aflesch/mathquest/app/shared/types/core/game.zod.ts:115 - GameInstanceUpdateData
+home/aflesch/mathquest/app/shared/types/core/leaderboardEntry.zod.ts:19 - LeaderboardEntry
+home/aflesch/mathquest/app/shared/types/core/timer.zod.ts:11 - timerActionPayloadSchema
+home/aflesch/mathquest/app/shared/types/core/timer.zod.ts:36 - GameTimerStateSchema
+home/aflesch/mathquest/app/shared/types/core/timer.zod.ts:37 - GameTimerStateZ
+home/aflesch/mathquest/app/shared/types/practice/api.ts:15 - CreatePracticeSessionApiRequest
+home/aflesch/mathquest/app/shared/types/practice/api.ts:23 - GetPracticeSessionsApiRequest
+home/aflesch/mathquest/app/shared/types/practice/api.ts:35 - UpdatePracticeSessionApiRequest
+home/aflesch/mathquest/app/shared/types/practice/api.ts:47 - CreatePracticeSessionApiResponse
+home/aflesch/mathquest/app/shared/types/practice/api.ts:59 - GetPracticeSessionApiResponse
+home/aflesch/mathquest/app/shared/types/practice/api.ts:71 - GetPracticeSessionsApiResponse
+home/aflesch/mathquest/app/shared/types/practice/api.ts:94 - UpdatePracticeSessionApiResponse
+home/aflesch/mathquest/app/shared/types/practice/api.ts:106 - DeletePracticeSessionApiResponse
+home/aflesch/mathquest/app/shared/types/practice/api.ts:122 - GetPracticeAnalyticsApiRequest
+home/aflesch/mathquest/app/shared/types/practice/api.ts:136 - PracticeAnalytics (used in module)
+home/aflesch/mathquest/app/shared/types/practice/api.ts:174 - GetPracticeAnalyticsApiResponse
+home/aflesch/mathquest/app/shared/types/practice/api.ts:190 - GetPracticeQuestionsApiRequest
+home/aflesch/mathquest/app/shared/types/practice/api.ts:204 - GetPracticeQuestionsApiResponse
+home/aflesch/mathquest/app/shared/types/practice/api.ts:222 - PracticeApiErrorResponse
+home/aflesch/mathquest/app/shared/types/practice/session.ts:149 - CreatePracticeSessionRequest
+home/aflesch/mathquest/app/shared/types/practice/session.ts:173 - PracticeSessionUpdate
+home/aflesch/mathquest/app/shared/types/quiz/question.ts:10 - Answer (used in module)
+home/aflesch/mathquest/app/shared/types/quiz/question.zod.ts:59 - Question
+home/aflesch/mathquest/app/shared/types/quiz/question.zod.ts:63 - QuestionCreationData
+home/aflesch/mathquest/app/shared/types/quiz/question.zod.ts:67 - QuestionUpdateData
+home/aflesch/mathquest/app/shared/types/quiz/state.ts:11 - Chrono (used in module)
+home/aflesch/mathquest/app/shared/types/quiz/state.ts:11 - QuestionTimer (used in module)
+home/aflesch/mathquest/app/shared/types/quiz/state.zod.ts:4 - chronoSchema (used in module)
+home/aflesch/mathquest/app/shared/types/quiz/state.zod.ts:12 - questionTimerSchema (used in module)
+home/aflesch/mathquest/app/shared/types/quiz/state.zod.ts:21 - baseQuizStateSchema (used in module)
+home/aflesch/mathquest/app/shared/types/quiz/state.zod.ts:29 - extendedQuizStateSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:4 - setQuestionPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:12 - timerActionPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:22 - setTimerPayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:28 - lockUnlockPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:34 - endQuizPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:41 - closeQuestionPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:47 - joinQuizPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:58 - getQuizStatePayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:62 - pauseResumePayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:68 - joinTournamentPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:78 - tournamentAnswerPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:86 - updateTournamentCodePayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:91 - updateAvatarPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:97 - quizTimerActionPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:99 - gameTimerUpdatePayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:111 - startTournamentPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:116 - pauseTournamentPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:120 - resumeTournamentPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:126 - gameControlStatePayloadSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:140 - GameControlStatePayload
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:143 - SetTimerPayload
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:144 - UpdateTournamentCodePayload
+home/aflesch/mathquest/app/shared/types/socket/payloads.zod.ts:147 - ProjectionShowStatsPayloadSchema
+home/aflesch/mathquest/app/shared/types/socket/projectionShowStats.ts:5 - MultipleChoiceStatsSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socket/projectionShowStats.ts:12 - NumericStatsSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socket/projectionShowStats.ts:19 - ProjectionShowStatsStatsSchema (used in module)
+home/aflesch/mathquest/app/shared/types/socket/projectionShowStats.ts:35 - MultipleChoiceStats
+home/aflesch/mathquest/app/shared/types/socket/projectionShowStats.ts:36 - NumericStats
+home/aflesch/mathquest/app/shared/types/tournament/participant.ts:10 - Participant
+home/aflesch/mathquest/app/shared/types/tournament/participant.ts:13 - LeaderboardEntry
+home/aflesch/mathquest/app/shared/types/tournament/participant.zod.ts:14 - tournamentAnswerSchema (used in module)
+home/aflesch/mathquest/app/shared/types/tournament/participant.zod.ts:27 - tournamentParticipantSchema
+home/aflesch/mathquest/app/shared/types/tournament/participant.zod.ts:31 - leaderboardEntrySchema
+home/aflesch/mathquest/app/shared/types/tournament/question.ts:28 - isTournamentQuestion
+home/aflesch/mathquest/app/shared/types/tournament/question.ts:45 - getQuestionUid
+home/aflesch/mathquest/app/shared/types/tournament/question.ts:61 - getQuestionText
+home/aflesch/mathquest/app/shared/types/tournament/question.ts:80 - getQuestionAnswers
+home/aflesch/mathquest/app/shared/types/tournament/state.ts:14 - QuestionTimerState (used in module)
+home/aflesch/mathquest/app/shared/types/tournament/state.ts:24 - QuestionState
+home/aflesch/mathquest/app/shared/types/tournament/state.ts:67 - TournamentStateContainer
+home/aflesch/mathquest/app/shared/types/tournament/state.zod.ts:4 - questionTimerStateSchema
+home/aflesch/mathquest/app/shared/types/tournament/state.zod.ts:11 - questionStateSchema
+src/api/v1/players.ts:28 - __setUserServiceForTesting
+src/core/services/authService.ts:16 - AuthService (used in module)
+src/core/services/authService.ts:131 - authService
+src/core/services/emailService.ts:435 - emailService
+src/core/services/gameInstanceService.ts:7 - GameInstanceCreationData (used in module)
+src/core/services/gameInstanceService.ts:12 - GameStatusUpdateData (used in module)
+src/core/services/gameInstanceService.ts:17 - GameInstanceUnifiedCreationData (used in module)
+src/core/services/gameParticipantService.ts:11 - SubmitAnswerData (used in module)
+src/core/services/gameTemplateService.ts:9 - StudentGameTemplateCreationData (used in module)
+src/core/services/practiceService.ts:17 - PracticeService (used in module)
+src/core/services/practiceService.ts:136 - practiceService
+src/core/services/quizTemplateService.ts:8 - gameTemplateCreationData (used in module)
+src/core/services/quizTemplateService.ts:21 - gameTemplateUpdateData (used in module)
+src/core/services/quizTemplateService.ts:34 - gameTemplateService
+src/core/services/scoringService.ts:397 - submitAnswerWithScoring (used in module)
+src/core/services/scoringService.ts:17 - ScoreResult (used in module)
+src/core/services/socketService.ts:17 - SocketService (used in module)
+src/core/services/socketService.ts:172 - socketService
+src/core/services/timerKeyUtil.ts:4 - TimerKeyParams (used in module)
+src/sockets/handlers/gameHandler.ts:9 - gameHandler (used in module)
+src/sockets/handlers/practiceSessionHandler.ts:531 - default
+src/sockets/handlers/sharedScore.ts:20 - calculateScore
+src/sockets/handlers/teacherControlHandler.ts:13 - teacherControlHandler (used in module)
+src/sockets/handlers/tournamentHandler.ts:289 - default
+src/sockets/utils/roomUtils.ts:136 - roomExists
+src/core/services/gameParticipant/finalizeService.ts:13 - finalizeParticipation
+src/core/services/gameParticipant/logging.ts:9 - logParticipationEvent
+src/core/services/gameParticipant/scoreService.ts:13 - DifferedParticipationSchema (used in module)
+src/core/services/gameParticipant/scoreService.ts:22 - DifferedParticipation (used in module)
+src/core/services/gameParticipant/scoreService.ts:192 - validateDifferedParticipation
+src/core/services/gameStateService/getCurrentLiveQuestionPayload.ts:10 - getCurrentLiveQuestionPayload
+src/db/generated/client/client.d.ts:13 - PrismaPromise
+src/db/generated/client/client.d.ts:20 - User
+src/db/generated/client/client.d.ts:25 - TeacherProfile
+src/db/generated/client/client.d.ts:30 - StudentProfile
+src/db/generated/client/client.d.ts:35 - Question
+src/db/generated/client/client.d.ts:40 - MultipleChoiceQuestion
+src/db/generated/client/client.d.ts:45 - NumericQuestion
+src/db/generated/client/client.d.ts:50 - GameTemplate
+src/db/generated/client/client.d.ts:55 - QuestionsInGameTemplate
+src/db/generated/client/client.d.ts:60 - GameInstance
+src/db/generated/client/client.d.ts:65 - GameParticipant
+src/db/generated/client/client.d.ts:70 - $Enums
+src/db/generated/client/client.d.ts:101 - UserRole
+src/db/generated/client/client.d.ts:105 - PlayMode
+src/db/generated/client/client.d.ts:109 - ParticipantStatus
+src/db/generated/client/client.d.ts:127 - PrismaClient
+src/db/generated/client/client.d.ts:339 - Prisma
+src/db/generated/client/edge.d.ts:13 - PrismaPromise
+src/db/generated/client/edge.d.ts:20 - User
+src/db/generated/client/edge.d.ts:25 - TeacherProfile
+src/db/generated/client/edge.d.ts:30 - StudentProfile
+src/db/generated/client/edge.d.ts:35 - Question
+src/db/generated/client/edge.d.ts:40 - MultipleChoiceQuestion
+src/db/generated/client/edge.d.ts:45 - NumericQuestion
+src/db/generated/client/edge.d.ts:50 - GameTemplate
+src/db/generated/client/edge.d.ts:55 - QuestionsInGameTemplate
+src/db/generated/client/edge.d.ts:60 - GameInstance
+src/db/generated/client/edge.d.ts:65 - GameParticipant
+src/db/generated/client/edge.d.ts:70 - $Enums
+src/db/generated/client/edge.d.ts:101 - UserRole
+src/db/generated/client/edge.d.ts:105 - PlayMode
+src/db/generated/client/edge.d.ts:109 - ParticipantStatus
+src/db/generated/client/edge.d.ts:127 - PrismaClient
+src/db/generated/client/edge.d.ts:339 - Prisma
+src/db/generated/client/wasm.d.ts:13 - PrismaPromise
+src/db/generated/client/wasm.d.ts:20 - User
+src/db/generated/client/wasm.d.ts:25 - TeacherProfile
+src/db/generated/client/wasm.d.ts:30 - StudentProfile
+src/db/generated/client/wasm.d.ts:35 - Question
+src/db/generated/client/wasm.d.ts:40 - MultipleChoiceQuestion
+src/db/generated/client/wasm.d.ts:45 - NumericQuestion
+src/db/generated/client/wasm.d.ts:50 - GameTemplate
+src/db/generated/client/wasm.d.ts:55 - QuestionsInGameTemplate
+src/db/generated/client/wasm.d.ts:60 - GameInstance
+src/db/generated/client/wasm.d.ts:65 - GameParticipant
+src/db/generated/client/wasm.d.ts:70 - $Enums
+src/db/generated/client/wasm.d.ts:101 - UserRole
+src/db/generated/client/wasm.d.ts:105 - PlayMode
+src/db/generated/client/wasm.d.ts:109 - ParticipantStatus
+src/db/generated/client/wasm.d.ts:127 - PrismaClient
+src/db/generated/client/wasm.d.ts:339 - Prisma
+src/sockets/handlers/game/gameAnswer.ts:37 - GameAnswerPayload
+src/sockets/handlers/game/gameAnswer.ts:40 - GameAnswerContext (used in module)
+src/sockets/handlers/game/helpers.ts:19 - getAllParticipants
+src/sockets/handlers/game/helpers.ts:37 - sendFirstQuestionAndStartTimer
+src/sockets/handlers/game/helpers.ts:10 - GAME_KEY_PREFIX
+src/sockets/handlers/game/helpers.ts:11 - PARTICIPANTS_KEY_PREFIX (used in module)
+src/sockets/handlers/game/helpers.ts:12 - ANSWERS_KEY_PREFIX
+src/sockets/handlers/game/index.ts:15 - registerGameHandlers
+src/sockets/handlers/game/index.ts:300 - registerTournamentHandlers
+src/sockets/handlers/game/joinGame.ts:39 - JoinGamePayload (used in module)
+src/sockets/handlers/game/joinGame.ts:40 - GameJoinedPayload (used in module)
+src/sockets/handlers/game/joinGame.ts:41 - PlayerJoinedGamePayload
+src/sockets/handlers/game/joinGame.ts:42 - ErrorPayload (used in module)
+src/sockets/handlers/game/joinGame.ts:43 - GameAlreadyPlayedPayload
+src/sockets/handlers/game/requestParticipants.ts:9 - RequestParticipantsPayload (used in module)
+src/sockets/handlers/game/types.ts:4 - JoinGamePayload
+src/sockets/handlers/game/types.ts:5 - GameAnswerPayload
+src/sockets/handlers/teacherControl/index.ts:66 - default
+src/sockets/handlers/teacherControl/pauseTimer.ts:93 - default
+src/sockets/handlers/teacherControl/types.ts:29 - PauseTimerPayload (used in module)
+src/sockets/handlers/teacherControl/types.ts:34 - DashboardQuestionChangedPayload (used in module)
+src/sockets/handlers/teacherControl/types.ts:35 - DashboardTimerUpdatedPayload (used in module)
+src/sockets/handlers/teacherControl/types.ts:36 - DashboardAnswersLockChangedPayload (used in module)
+src/sockets/handlers/teacherControl/types.ts:37 - DashboardGameStatusChangedPayload (used in module)
+src/sockets/handlers/teacherControl/types.ts:38 - DashboardParticipantUpdatePayload (used in module)
+src/sockets/handlers/teacherControl/types.ts:39 - DashboardAnswerStatsUpdatePayload (used in module)
+src/sockets/handlers/teacherControl/types.ts:46 - TimerState
+src/sockets/handlers/tournament/index.ts:11 - default
+src/db/generated/client/runtime/index-browser.d.ts:21 - Decimal (used in module)
+src/db/generated/client/runtime/index-browser.d.ts:294 - getRuntime
+src/db/generated/client/runtime/index-browser.d.ts:322 - makeStrictEnum
+src/db/generated/client/runtime/index-browser.d.ts:340 - objectEnumValues
+src/db/generated/client/runtime/index-browser.d.ts:360 - Public (used in module)
+src/db/generated/client/runtime/library.d.ts:310 - createParam
+src/db/generated/client/runtime/library.d.ts:707 - defineDmmfProperty
+src/db/generated/client/runtime/library.d.ts:721 - deserializeJsonResponse
+src/db/generated/client/runtime/library.d.ts:723 - deserializeRawResult
+src/db/generated/client/runtime/library.d.ts:827 - dmmfToRuntimeDataModel
+src/db/generated/client/runtime/library.d.ts:1530 - getPrismaClient (used in module)
+src/db/generated/client/runtime/library.d.ts:1777 - getRuntime (used in module)
+src/db/generated/client/runtime/library.d.ts:1968 - isTypedSql
+src/db/generated/client/runtime/library.d.ts:2150 - makeStrictEnum
+src/db/generated/client/runtime/library.d.ts:2152 - makeTypedQueryFactory
+src/db/generated/client/runtime/library.d.ts:2451 - Param (used in module)
+src/db/generated/client/runtime/library.d.ts:3074 - serializeJsonQuery
+src/db/generated/client/runtime/library.d.ts:3643 - warnEnvConflicts
+src/db/generated/client/runtime/library.d.ts:26 - Action (used in module)
+src/db/generated/client/runtime/library.d.ts:39 - Aggregate (used in module)
+src/db/generated/client/runtime/library.d.ts:41 - AllModelsToStringIndex (used in module)
+src/db/generated/client/runtime/library.d.ts:53 - ApplyOmit (used in module)
+src/db/generated/client/runtime/library.d.ts:57 - Args (used in module)
+src/db/generated/client/runtime/library.d.ts:69 - Args_3
+src/db/generated/client/runtime/library.d.ts:138 - Call (used in module)
+src/db/generated/client/runtime/library.d.ts:146 - Cast (used in module)
+src/db/generated/client/runtime/library.d.ts:150 - ClientArg (used in module)
+src/db/generated/client/runtime/library.d.ts:154 - ClientArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:158 - ClientBuiltInProp (used in module)
+src/db/generated/client/runtime/library.d.ts:160 - ClientOptionDef (used in module)
+src/db/generated/client/runtime/library.d.ts:164 - ClientOtherOps (used in module)
+src/db/generated/client/runtime/library.d.ts:237 - Compute (used in module)
+src/db/generated/client/runtime/library.d.ts:241 - ComputeDeep (used in module)
+src/db/generated/client/runtime/library.d.ts:306 - Count (used in module)
+src/db/generated/client/runtime/library.d.ts:390 - Debug
+src/db/generated/client/runtime/library.d.ts:697 - DefaultArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:699 - DefaultSelection (used in module)
+src/db/generated/client/runtime/library.d.ts:725 - DevTypeMapDef (used in module)
+src/db/generated/client/runtime/library.d.ts:739 - DevTypeMapFnDef (used in module)
+src/db/generated/client/runtime/library.d.ts:847 - DynamicClientExtensionArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:857 - DynamicClientExtensionThis (used in module)
+src/db/generated/client/runtime/library.d.ts:871 - DynamicClientExtensionThisBuiltin (used in module)
+src/db/generated/client/runtime/library.d.ts:888 - DynamicModelExtensionArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:911 - DynamicModelExtensionFluentApi (used in module)
+src/db/generated/client/runtime/library.d.ts:919 - DynamicModelExtensionFnResult (used in module)
+src/db/generated/client/runtime/library.d.ts:921 - DynamicModelExtensionFnResultBase (used in module)
+src/db/generated/client/runtime/library.d.ts:923 - DynamicModelExtensionFnResultNull (used in module)
+src/db/generated/client/runtime/library.d.ts:925 - DynamicModelExtensionOperationFn (used in module)
+src/db/generated/client/runtime/library.d.ts:927 - DynamicModelExtensionThis (used in module)
+src/db/generated/client/runtime/library.d.ts:940 - DynamicQueryExtensionArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:953 - DynamicQueryExtensionCb (used in module)
+src/db/generated/client/runtime/library.d.ts:955 - DynamicQueryExtensionCbArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:964 - DynamicQueryExtensionCbArgsArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:967 - DynamicResultExtensionArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:976 - DynamicResultExtensionData (used in module)
+src/db/generated/client/runtime/library.d.ts:980 - DynamicResultExtensionNeeds (used in module)
+src/db/generated/client/runtime/library.d.ts:991 - EmptyToUnknown (used in module)
+src/db/generated/client/runtime/library.d.ts:1140 - Equals (used in module)
+src/db/generated/client/runtime/library.d.ts:1242 - Exact (used in module)
+src/db/generated/client/runtime/library.d.ts:1288 - ExtendsHook (used in module)
+src/db/generated/client/runtime/library.d.ts:1322 - ExtensionArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:1373 - ExtractGlobalOmit (used in module)
+src/db/generated/client/runtime/library.d.ts:1444 - Fn (used in module)
+src/db/generated/client/runtime/library.d.ts:1472 - GetAggregateResult (used in module)
+src/db/generated/client/runtime/library.d.ts:1480 - GetBatchResult (used in module)
+src/db/generated/client/runtime/library.d.ts:1484 - GetCountResult (used in module)
+src/db/generated/client/runtime/library.d.ts:1490 - GetFindResult (used in module)
+src/db/generated/client/runtime/library.d.ts:1506 - GetGroupByResult (used in module)
+src/db/generated/client/runtime/library.d.ts:1516 - GetOmit (used in module)
+src/db/generated/client/runtime/library.d.ts:1520 - GetPayloadResult (used in module)
+src/db/generated/client/runtime/library.d.ts:1522 - GetPayloadResultExtensionKeys (used in module)
+src/db/generated/client/runtime/library.d.ts:1524 - GetPayloadResultExtensionObject (used in module)
+src/db/generated/client/runtime/library.d.ts:1676 - GetPrismaClientConfig (used in module)
+src/db/generated/client/runtime/library.d.ts:1749 - GetResult (used in module)
+src/db/generated/client/runtime/library.d.ts:1785 - GetSelect (used in module)
+src/db/generated/client/runtime/library.d.ts:1904 - InternalArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:1972 - itxClientDenyList
+src/db/generated/client/runtime/library.d.ts:1985 - JsArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:1992 - JsInputValue (used in module)
+src/db/generated/client/runtime/library.d.ts:2007 - JsonBatchQuery (used in module)
+src/db/generated/client/runtime/library.d.ts:2014 - JsonConvertible (used in module)
+src/db/generated/client/runtime/library.d.ts:2036 - JsonQuery (used in module)
+src/db/generated/client/runtime/library.d.ts:2057 - JsOutputValue (used in module)
+src/db/generated/client/runtime/library.d.ts:2061 - JsPromise (used in module)
+src/db/generated/client/runtime/library.d.ts:2186 - MergeExtArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2209 - MetricsClient (used in module)
+src/db/generated/client/runtime/library.d.ts:2295 - ModelArg (used in module)
+src/db/generated/client/runtime/library.d.ts:2299 - ModelArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2305 - ModelKey (used in module)
+src/db/generated/client/runtime/library.d.ts:2331 - ModelQueryOptionsCb (used in module)
+src/db/generated/client/runtime/library.d.ts:2333 - ModelQueryOptionsCbArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2345 - NameArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2349 - Narrow (used in module)
+src/db/generated/client/runtime/library.d.ts:2353 - Narrowable (used in module)
+src/db/generated/client/runtime/library.d.ts:2355 - NeverToUnknown (used in module)
+src/db/generated/client/runtime/library.d.ts:2364 - ObjectEnumValue (used in module)
+src/db/generated/client/runtime/library.d.ts:2371 - objectEnumValues
+src/db/generated/client/runtime/library.d.ts:2386 - Omission (used in module)
+src/db/generated/client/runtime/library.d.ts:2391 - Omit (used in module)
+src/db/generated/client/runtime/library.d.ts:2393 - OmitValue (used in module)
+src/db/generated/client/runtime/library.d.ts:2395 - Operation (used in module)
+src/db/generated/client/runtime/library.d.ts:2397 - OperationPayload (used in module)
+src/db/generated/client/runtime/library.d.ts:2410 - Optional (used in module)
+src/db/generated/client/runtime/library.d.ts:2416 - OptionalFlat (used in module)
+src/db/generated/client/runtime/library.d.ts:2420 - OptionalKeys (used in module)
+src/db/generated/client/runtime/library.d.ts:2428 - Or (used in module)
+src/db/generated/client/runtime/library.d.ts:2457 - PatchFlat (used in module)
+src/db/generated/client/runtime/library.d.ts:2459 - Path (used in module)
+src/db/generated/client/runtime/library.d.ts:2461 - Payload (used in module)
+src/db/generated/client/runtime/library.d.ts:2469 - PayloadToResult (used in module)
+src/db/generated/client/runtime/library.d.ts:2476 - Pick (used in module)
+src/db/generated/client/runtime/library.d.ts:2500 - PrismaClientOptions (used in module)
+src/db/generated/client/runtime/library.d.ts:2585 - PrismaPromise (used in module)
+src/db/generated/client/runtime/library.d.ts:2651 - PrivateResultType (used in module)
+src/db/generated/client/runtime/library.d.ts:2785 - QueryOptions (used in module)
+src/db/generated/client/runtime/library.d.ts:2793 - QueryOptionsCb (used in module)
+src/db/generated/client/runtime/library.d.ts:2795 - QueryOptionsCbArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2813 - RawParameters (used in module)
+src/db/generated/client/runtime/library.d.ts:2818 - RawQueryArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2834 - RawValue (used in module)
+src/db/generated/client/runtime/library.d.ts:2836 - ReadonlyDeep (used in module)
+src/db/generated/client/runtime/library.d.ts:2847 - Record (used in module)
+src/db/generated/client/runtime/library.d.ts:2849 - RenameAndNestPayloadKeys (used in module)
+src/db/generated/client/runtime/library.d.ts:2917 - RequiredExtensionArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2918 - UserArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2920 - RequiredKeys (used in module)
+src/db/generated/client/runtime/library.d.ts:2931 - Result (used in module)
+src/db/generated/client/runtime/library.d.ts:2944 - Result_2
+src/db/generated/client/runtime/library.d.ts:2977 - ResultArg (used in module)
+src/db/generated/client/runtime/library.d.ts:2981 - ResultArgs (used in module)
+src/db/generated/client/runtime/library.d.ts:2987 - ResultArgsFieldCompute (used in module)
+src/db/generated/client/runtime/library.d.ts:2989 - ResultFieldDefinition (used in module)
+src/db/generated/client/runtime/library.d.ts:2996 - Return (used in module)
+src/db/generated/client/runtime/library.d.ts:2998 - RuntimeDataModel (used in module)
+src/db/generated/client/runtime/library.d.ts:3053 - Select (used in module)
+src/db/generated/client/runtime/library.d.ts:3055 - SelectablePayloadFields (used in module)
+src/db/generated/client/runtime/library.d.ts:3065 - SelectField (used in module)
+src/db/generated/client/runtime/library.d.ts:3072 - Selection
+src/db/generated/client/runtime/library.d.ts:3095 - skip (used in module)
+src/db/generated/client/runtime/library.d.ts:3386 - SqlDriverAdapterFactory (used in module)
+src/db/generated/client/runtime/library.d.ts:3433 - ToTuple (used in module)
+src/db/generated/client/runtime/library.d.ts:3526 - TypedSql (used in module)
+src/db/generated/client/runtime/library.d.ts:3533 - TypeMapCbDef (used in module)
+src/db/generated/client/runtime/library.d.ts:3538 - TypeMapDef (used in module)
+src/db/generated/client/runtime/library.d.ts:3572 - UnknownTypedSql (used in module)
+src/db/generated/client/runtime/library.d.ts:3576 - UnwrapPayload (used in module)
+src/db/generated/client/runtime/library.d.ts:3586 - UnwrapPromise (used in module)
+src/db/generated/client/runtime/library.d.ts:3588 - UnwrapTuple (used in module)
+src/db/generated/client/runtime/library.d.ts:3641 - Value (used in module)
+src/db/generated/client/runtime/library.d.ts:3645 - warnOnce
