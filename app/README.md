@@ -27,6 +27,26 @@ npm run dev
 
 ---
 
+## 💾 **Memory Optimization for VPS Deployment**
+
+**🚀 Optimized for cheap VPS environments with automatic memory management**
+
+### **Quick VPS Deployment**
+```bash
+# Memory-optimized build and start
+bash build-vps.sh && bash start-all.sh
+```
+
+### **Memory Configuration**
+- **Frontend**: 256MB limit with lazy loading
+- **Backend**: 512MB limit with monitoring
+- **Build**: Low-memory mode available
+- **Monitoring**: Automatic restart on memory limits
+
+📖 **Complete Guide**: [Memory Optimization Guide](MEMORY_OPTIMIZATION_GUIDE.md)
+
+---
+
 ## 🎉 **PROJECT STATUS: MODERNIZATION COMPLETE**
 
 **✅ Type Safety & Socket Event Modernization Completed (June 14, 2025)**
