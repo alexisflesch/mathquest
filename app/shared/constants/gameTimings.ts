@@ -51,7 +51,7 @@ export type GameTimingConstant = typeof GAME_TIMING[keyof typeof GAME_TIMING];
 /**
  * Helper function to get correct answers display time for a play mode
  */
-export function getCorrectAnswersDisplayTime(playMode: 'quiz' | 'tournament' | 'practice' | 'class'): number {
+export function getCorrectAnswersDisplayTime(playMode: 'quiz' | 'tournament' | 'practice'): number {
     return GAME_TIMING.CORRECT_ANSWERS_DISPLAY[playMode.toUpperCase() as keyof typeof GAME_TIMING.CORRECT_ANSWERS_DISPLAY] || GAME_TIMING.CORRECT_ANSWERS_DISPLAY.QUIZ;
 }
 

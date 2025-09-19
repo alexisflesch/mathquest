@@ -71,7 +71,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response<MyTournamentsRe
                         code: game.accessCode,
                         name: game.name || 'Tournoi sans nom',
                         statut: game.status,
-                        playMode: mode as 'quiz' | 'tournament' | 'practice' | 'class', // Add playMode to response
+                        playMode: mode as 'quiz' | 'tournament' | 'practice', // Add playMode to response
                         createdAt: game.createdAt.toISOString(),
                         date_debut: game.startedAt?.toISOString() || null,
                         date_fin: game.endedAt?.toISOString() || null,
@@ -194,7 +194,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response<MyTournamentsRe
                             code: game.accessCode,
                             name: game.name || 'Tournoi sans nom',
                             statut: game.status,
-                            playMode: mode as 'quiz' | 'tournament' | 'practice' | 'class', // Add playMode to response
+                            playMode: mode as 'quiz' | 'tournament' | 'practice', // Add playMode to response
                             createdAt: game.createdAt.toISOString(),
                             date_debut: game.startedAt?.toISOString() || null,
                             date_fin: game.endedAt?.toISOString() || null,

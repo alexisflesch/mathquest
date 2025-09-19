@@ -50,7 +50,7 @@ All API endpoints should use runtime validation with Zod schemas for type safety
 export const CreateGameRequestSchema = z.object({
     name: z.string().min(1, 'Game name is required'),
     gameTemplateId: z.string().uuid('Invalid game template ID').optional(),
-    playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
+    playMode: z.enum(['quiz', 'tournament', 'practice']),
     settings: z.record(z.any()).optional()
 });
 

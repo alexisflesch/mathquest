@@ -404,7 +404,7 @@ describe('Socket.IO Performance', () => {
         // Load testing implementation
     });
 
-    it('should maintain <100ms response time under load', async () => {
+    it('should maintain &lt;100ms response time under load', async () => {
         // Performance benchmarking
     });
 });
@@ -477,5 +477,4 @@ io.engine.clientsCount
 io.sockets.adapter.rooms
 ```
 
-This performance documentation should be regularly updated as new optimizations are implemented and monitoring capabilities are enhanced.</content>
-<parameter name="filePath">/home/aflesch/mathquest/vuepress/docs/performance-monitoring.md
+This performance documentation should be regularly updated as new optimizations are implemented and monitoring capabilities are enhanced.

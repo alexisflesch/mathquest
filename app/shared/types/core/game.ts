@@ -2,7 +2,7 @@
  * Game-related shared types
  */
 
-export type PlayMode = 'quiz' | 'tournament' | 'practice' | 'class'; // Use union type for Prisma compatibility
+export type PlayMode = 'quiz' | 'tournament' | 'practice'; // Use union type for Prisma compatibility
 
 export interface GameTemplate {
     id: string;

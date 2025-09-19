@@ -3,7 +3,7 @@
  */
 import { z } from 'zod';
 
-export const PlayModeSchema = z.enum(['quiz', 'tournament', 'practice', 'class']);
+export const PlayModeSchema = z.enum(['quiz', 'tournament', 'practice']);
 
 // Base schemas without circular references
 export const GameTemplateBaseSchema = z.object({

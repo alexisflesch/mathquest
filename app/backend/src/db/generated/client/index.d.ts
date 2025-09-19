@@ -80,8 +80,7 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 export const PlayMode: {
   quiz: 'quiz',
   tournament: 'tournament',
-  practice: 'practice',
-  class: 'class'
+  practice: 'practice'
 };
 
 export type PlayMode = (typeof PlayMode)[keyof typeof PlayMode]

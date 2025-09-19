@@ -277,8 +277,7 @@ export default function LiveGamePage() {
     const gameMode = useMemo(() => {
         switch (gameState.gameMode) {
             case 'practice': return 'practice';
-            case 'quiz':
-            case 'class': return 'quiz';
+            case 'quiz': return 'quiz';
             case 'tournament':
             default: return 'tournament';
         }

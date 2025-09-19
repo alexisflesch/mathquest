@@ -166,7 +166,6 @@ enum PlayMode {
   quiz
   tournament
   practice
-  class
 }
 
 enum ParticipantStatus {

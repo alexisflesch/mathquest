@@ -262,8 +262,7 @@ exports.UserRole = exports.$Enums.UserRole = {
 exports.PlayMode = exports.$Enums.PlayMode = {
   quiz: 'quiz',
   tournament: 'tournament',
-  practice: 'practice',
-  class: 'class'
+  practice: 'practice'
 };
 
 exports.ParticipantStatus = exports.$Enums.ParticipantStatus = {

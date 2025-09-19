@@ -390,5 +390,4 @@ For security-related concerns or incidents:
 - **Reporting**: Use designated security reporting channels
 - **Response Time**: Critical security issues addressed within 24 hours
 
-This security documentation should be reviewed and updated regularly to reflect current security practices and emerging threats.</content>
-<parameter name="filePath">/home/aflesch/mathquest/vuepress/docs/security.md
+This security documentation should be reviewed and updated regularly to reflect current security practices and emerging threats.

@@ -98,7 +98,7 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData; // Detailed information about the participant who joined
     gameStatus: 'pending' | 'active' | 'completed' | 'archived'; // Current status of the game
-    gameMode: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode: 'tournament' | 'quiz' | 'practice';
     differedAvailableFrom?: string; // ISO string
     differedAvailableTo?: string;   // ISO string
     // Potentially include initial game state info here if needed immediately on join
@@ -133,7 +133,7 @@ export interface GameStateUpdatePayload {
     totalQuestions?: number;
     timer?: number;
     participants?: ParticipantData[];
-    gameMode?: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode?: 'tournament' | 'quiz' | 'practice';
 }
 
 export interface QuestionData {

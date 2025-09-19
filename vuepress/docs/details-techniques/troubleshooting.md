@@ -485,7 +485,7 @@ bash start-all.sh
 pg_dump -U postgre -h localhost mathquest > backup.sql
 
 # Restore from backup
-psql -U postgre -h localhost mathquest < backup.sql
+psql -U postgre -h localhost mathquest &lt; backup.sql
 ```
 
 ## Getting Help
@@ -574,5 +574,4 @@ pg_dump -U postgre mathquest > "backup_$DATE.sql"
 ls backup_*.sql | head -n -7 | xargs rm -f
 ```
 
-This troubleshooting guide should be updated as new issues are discovered and resolved.</content>
-<parameter name="filePath">/home/aflesch/mathquest/vuepress/docs/troubleshooting.md
+This troubleshooting guide should be updated as new issues are discovered and resolved.

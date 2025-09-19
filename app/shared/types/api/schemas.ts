@@ -81,7 +81,7 @@ export const ResendEmailVerificationRequestSchema = z.object({
 export const CreateGameRequestSchema = z.object({
     name: z.string().min(1, 'Game name is required'),
     gameTemplateId: z.string().uuid('Invalid game template ID').optional(),
-    playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
+    playMode: z.enum(['quiz', 'tournament', 'practice']),
     settings: z.record(z.any()).optional(),
     differedAvailableFrom: z.string().datetime().optional(),
     differedAvailableTo: z.string().datetime().optional(),
@@ -113,7 +113,7 @@ export const CreateGameTemplateRequestSchema = z.object({
     themes: z.array(z.string()).min(1, 'At least one theme is required'),
     discipline: z.string().optional(),
     description: z.string().optional(),
-    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: z.array(z.string()).min(1, 'At least one question is required') // Temporarily allow any string format
 });
 
@@ -123,7 +123,7 @@ export const UpdateGameTemplateRequestSchema = z.object({
     themes: z.array(z.string()).optional(),
     discipline: z.string().optional(),
     description: z.string().optional(),
-    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: z.array(z.string()).optional() // Temporarily allow any string format
 });
 
@@ -173,7 +173,7 @@ export const CreateQuizTemplateRequestSchema = z.object({
     gradeLevel: z.string().optional(),
     themes: z.array(z.string()).min(1, 'At least one theme is required'),
     discipline: z.string().optional(),
-    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: z.array(z.string().uuid()).min(1, 'At least one question is required'),
     settings: z.record(z.any()).optional()
 });
@@ -386,7 +386,7 @@ const ApiGameTemplateSchema = z.object({
     themes: z.array(z.string()),
     discipline: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
-    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).nullable().optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).nullable().optional(),
     createdAt: z.coerce.date(),
     updatedAt: z.coerce.date(),
     creatorId: z.string(),
@@ -485,7 +485,7 @@ export const TournamentListItemSchema = z.object({
     code: z.string(),
     name: z.string(),
     statut: z.string(), // Consider stricter enum if possible
-    playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
+    playMode: z.enum(['quiz', 'tournament', 'practice']),
     createdAt: z.string(),
     date_debut: z.string().nullable(),
     date_fin: z.string().nullable(),
