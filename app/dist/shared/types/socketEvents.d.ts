@@ -107,18 +107,6 @@ export interface GetParticipantsPayload {
     accessCode: string;
 }
 /**
- * Payload for joining a projection session
- */
-export interface JoinProjectorPayload {
-    gameId: string;
-}
-/**
- * Payload for leaving a projection session
- */
-export interface LeaveProjectorPayload {
-    gameId: string;
-}
-/**
  * Shared payload for joining live games (both quiz and tournament modes)
  */
 export interface SharedJoinPayload {
@@ -310,13 +298,4 @@ export interface AnswerReceivedPayload {
     correct?: boolean;
     correctAnswers?: boolean[];
     explanation?: string;
-}
-/**
- * Teacher to Server Events
- */
-export interface TeacherToServerEvents {
-    /**
-     * Teacher requests to reveal the full leaderboard (trophy button)
-     */
-    reveal_leaderboard: (payload: RevealLeaderboardPayload) => void;
 }

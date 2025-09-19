@@ -17,12 +17,12 @@ export declare const NumericStatsSchema: z.ZodObject<{
     values: z.ZodArray<z.ZodNumber, "many">;
     totalAnswers: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    type: "numeric";
     values: number[];
+    type: "numeric";
     totalAnswers: number;
 }, {
-    type: "numeric";
     values: number[];
+    type: "numeric";
     totalAnswers: number;
 }>;
 export declare const ProjectionShowStatsStatsSchema: z.ZodUnion<[z.ZodRecord<z.ZodString, z.ZodNumber>, z.ZodObject<{
@@ -42,12 +42,12 @@ export declare const ProjectionShowStatsStatsSchema: z.ZodUnion<[z.ZodRecord<z.Z
     values: z.ZodArray<z.ZodNumber, "many">;
     totalAnswers: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    type: "numeric";
     values: number[];
+    type: "numeric";
     totalAnswers: number;
 }, {
-    type: "numeric";
     values: number[];
+    type: "numeric";
     totalAnswers: number;
 }>]>;
 export declare const ProjectionShowStatsPayloadSchema: z.ZodObject<{
@@ -70,40 +70,40 @@ export declare const ProjectionShowStatsPayloadSchema: z.ZodObject<{
         values: z.ZodArray<z.ZodNumber, "many">;
         totalAnswers: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        type: "numeric";
         values: number[];
+        type: "numeric";
         totalAnswers: number;
     }, {
-        type: "numeric";
         values: number[];
+        type: "numeric";
         totalAnswers: number;
     }>]>;
     timestamp: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
+    timestamp: number;
     stats: Record<string, number> | {
         type: "multipleChoice";
         stats: Record<string, number>;
         totalUsers: number;
     } | {
-        type: "numeric";
         values: number[];
+        type: "numeric";
         totalAnswers: number;
     };
     show: boolean;
-    timestamp: number;
     questionUid?: string | undefined;
 }, {
+    timestamp: number;
     stats: Record<string, number> | {
         type: "multipleChoice";
         stats: Record<string, number>;
         totalUsers: number;
     } | {
-        type: "numeric";
         values: number[];
+        type: "numeric";
         totalAnswers: number;
     };
     show: boolean;
-    timestamp: number;
     questionUid?: string | undefined;
 }>;
 export type ProjectionShowStatsPayload = z.infer<typeof ProjectionShowStatsPayloadSchema>;

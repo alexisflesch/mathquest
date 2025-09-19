@@ -5,13 +5,13 @@ export declare const timerUpdatePayloadSchema: z.ZodObject<{
     durationMs: z.ZodOptional<z.ZodNumber>;
     serverTime: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    timeLeftMs: number | null;
     running: boolean;
+    timeLeftMs: number | null;
     serverTime: number;
     durationMs?: number | undefined;
 }, {
-    timeLeftMs: number | null;
     running: boolean;
+    timeLeftMs: number | null;
     serverTime: number;
     durationMs?: number | undefined;
 }>;
@@ -20,12 +20,12 @@ export declare const gameTimerStateSchema: z.ZodObject<{
     timerEndDateMs: z.ZodNumber;
     questionUid: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    status: "run" | "pause" | "stop";
     questionUid: string;
+    status: "run" | "pause" | "stop";
     timerEndDateMs: number;
 }, {
-    status: "run" | "pause" | "stop";
     questionUid: string;
+    status: "run" | "pause" | "stop";
     timerEndDateMs: number;
 }>;
 export declare const dashboardTimerUpdatedPayloadSchema: z.ZodObject<{
@@ -34,12 +34,12 @@ export declare const dashboardTimerUpdatedPayloadSchema: z.ZodObject<{
         timerEndDateMs: z.ZodNumber;
         questionUid: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     }, {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     }>;
     questionUid: z.ZodString;
@@ -48,25 +48,25 @@ export declare const dashboardTimerUpdatedPayloadSchema: z.ZodObject<{
     answersLocked: z.ZodBoolean;
     serverTime: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    questionIndex: number;
     questionUid: string;
     serverTime: number;
     timer: {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     };
+    questionIndex: number;
     totalQuestions: number;
     answersLocked: boolean;
 }, {
-    questionIndex: number;
     questionUid: string;
     serverTime: number;
     timer: {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     };
+    questionIndex: number;
     totalQuestions: number;
     answersLocked: boolean;
 }>;
@@ -76,12 +76,12 @@ export declare const gameTimerUpdatePayloadSchema: z.ZodObject<{
         timerEndDateMs: z.ZodNumber;
         questionUid: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     }, {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     }>;
     questionUid: z.ZodString;
@@ -90,25 +90,25 @@ export declare const gameTimerUpdatePayloadSchema: z.ZodObject<{
     answersLocked: z.ZodBoolean;
     serverTime: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    questionIndex: number;
     questionUid: string;
     serverTime: number;
     timer: {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     };
+    questionIndex: number;
     totalQuestions: number;
     answersLocked: boolean;
 }, {
-    questionIndex: number;
     questionUid: string;
     serverTime: number;
     timer: {
-        status: "run" | "pause" | "stop";
         questionUid: string;
+        status: "run" | "pause" | "stop";
         timerEndDateMs: number;
     };
+    questionIndex: number;
     totalQuestions: number;
     answersLocked: boolean;
 }>;
@@ -154,16 +154,16 @@ export declare const timerActionPayloadSchema: z.ZodObject<{
      */
     durationMs: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    action: "run" | "pause" | "stop" | "edit";
     accessCode: string;
     questionUid: string;
+    action: "run" | "pause" | "stop" | "edit";
     durationMs?: number | undefined;
     timerEndDateMs?: number | undefined;
     targetTimeMs?: number | undefined;
 }, {
-    action: "run" | "pause" | "stop" | "edit";
     accessCode: string;
     questionUid: string;
+    action: "run" | "pause" | "stop" | "edit";
     durationMs?: number | undefined;
     timerEndDateMs?: number | undefined;
     targetTimeMs?: number | undefined;
@@ -192,15 +192,15 @@ export declare const joinGamePayloadSchema: z.ZodObject<{
     avatarEmoji: z.ZodOptional<z.ZodString>;
     isDiffered: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
-    userId: string;
     accessCode: string;
+    userId: string;
+    username: string;
     avatarEmoji?: string | undefined;
     isDiffered?: boolean | undefined;
 }, {
-    username: string;
-    userId: string;
     accessCode: string;
+    userId: string;
+    username: string;
     avatarEmoji?: string | undefined;
     isDiffered?: boolean | undefined;
 }>;
@@ -208,11 +208,11 @@ export declare const leaveGamePayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
     userId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    userId: string;
     accessCode: string;
+    userId: string;
 }, {
-    userId: string;
     accessCode: string;
+    userId: string;
 }>;
 export declare const participantDataSchema: z.ZodObject<{
     id: z.ZodString;
@@ -226,26 +226,26 @@ export declare const participantDataSchema: z.ZodObject<{
     socketId: z.ZodOptional<z.ZodString>;
     attemptCount: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
     userId: string;
+    username: string;
     id: string;
     score: number;
     status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
     avatarEmoji?: string | undefined;
-    socketId?: string | undefined;
     online?: boolean | undefined;
     joinedAt?: string | number | undefined;
+    socketId?: string | undefined;
     attemptCount?: number | undefined;
 }, {
-    username: string;
     userId: string;
+    username: string;
     id: string;
     score: number;
     status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
     avatarEmoji?: string | undefined;
-    socketId?: string | undefined;
     online?: boolean | undefined;
     joinedAt?: string | number | undefined;
+    socketId?: string | undefined;
     attemptCount?: number | undefined;
 }>;
 export declare const gameAnswerPayloadSchema: z.ZodObject<{
@@ -255,16 +255,16 @@ export declare const gameAnswerPayloadSchema: z.ZodObject<{
     answer: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>;
     timeSpent: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    userId: string;
     accessCode: string;
+    userId: string;
     questionUid: string;
-    answer: string | number | string[] | number[];
+    answer: string | number | number[] | string[];
     timeSpent: number;
 }, {
-    userId: string;
     accessCode: string;
+    userId: string;
     questionUid: string;
-    answer: string | number | string[] | number[];
+    answer: string | number | number[] | string[];
     timeSpent: number;
 }>;
 export declare const errorPayloadSchema: z.ZodObject<{
@@ -300,52 +300,52 @@ export declare const playerJoinedGamePayloadSchema: z.ZodObject<{
         socketId: z.ZodOptional<z.ZodString>;
         attemptCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     participant: {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     };
 }, {
     participant: {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     };
 }>;
@@ -354,10 +354,10 @@ export declare const notificationPayloadSchema: z.ZodObject<{
     defaultMode: z.ZodEnum<["info", "warning", "error", "success"]>;
 }, "strip", z.ZodTypeAny, {
     message: string;
-    defaultMode: "success" | "error" | "info" | "warning";
+    defaultMode: "info" | "warning" | "error" | "success";
 }, {
     message: string;
-    defaultMode: "success" | "error" | "info" | "warning";
+    defaultMode: "info" | "warning" | "error" | "success";
 }>;
 export declare const questionDataForStudentSchema: z.ZodEffects<z.ZodObject<{
     uid: z.ZodString;
@@ -383,65 +383,65 @@ export declare const questionDataForStudentSchema: z.ZodEffects<z.ZodObject<{
     }>>;
     answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }>, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }>;
 export declare const questionDataForTeacherSchema: z.ZodObject<{
     uid: z.ZodString;
@@ -469,55 +469,55 @@ export declare const questionDataForTeacherSchema: z.ZodObject<{
         unit: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         correctAnswer: number;
-        tolerance?: number | undefined;
         unit?: string | undefined;
+        tolerance?: number | undefined;
     }, {
         correctAnswer: number;
-        tolerance?: number | undefined;
         unit?: string | undefined;
+        tolerance?: number | undefined;
     }>>;
     correctAnswers: z.ZodOptional<z.ZodArray<z.ZodBoolean, "many">>;
     explanation: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
-    answerOptions?: string[] | undefined;
     explanation?: string | undefined;
+    answerOptions?: string[] | undefined;
     correctAnswers?: boolean[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
         correctAnswers: boolean[];
     } | undefined;
     numericQuestion?: {
         correctAnswer: number;
-        tolerance?: number | undefined;
         unit?: string | undefined;
+        tolerance?: number | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
-    answerOptions?: string[] | undefined;
     explanation?: string | undefined;
+    answerOptions?: string[] | undefined;
     correctAnswers?: boolean[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
         correctAnswers: boolean[];
     } | undefined;
     numericQuestion?: {
         correctAnswer: number;
-        tolerance?: number | undefined;
         unit?: string | undefined;
+        tolerance?: number | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }>;
 /** @deprecated Use questionDataForStudentSchema or questionDataForTeacherSchema */
 export declare const questionDataSchema: z.ZodEffects<z.ZodObject<{
@@ -544,65 +544,65 @@ export declare const questionDataSchema: z.ZodEffects<z.ZodObject<{
     }>>;
     answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }>, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }, {
-    text: string;
     uid: string;
+    text: string;
     questionType: string;
     timeLimit: number;
-    currentQuestionIndex?: number | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    totalQuestions?: number | undefined;
+    currentQuestionIndex?: number | undefined;
     multipleChoiceQuestion?: {
         answerOptions: string[];
     } | undefined;
     numericQuestion?: {
         unit?: string | undefined;
     } | undefined;
-    totalQuestions?: number | undefined;
 }>;
 export declare const leaderboardEntryDataSchema: z.ZodObject<{
     userId: z.ZodString;
@@ -611,14 +611,14 @@ export declare const leaderboardEntryDataSchema: z.ZodObject<{
     score: z.ZodNumber;
     rank: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
     userId: string;
+    username: string;
     score: number;
     avatarEmoji?: string | undefined;
     rank?: number | undefined;
 }, {
-    username: string;
     userId: string;
+    username: string;
     score: number;
     avatarEmoji?: string | undefined;
     rank?: number | undefined;
@@ -631,15 +631,15 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
         avatarEmoji: z.ZodOptional<z.ZodString>;
         isDiffered: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
-        userId: string;
         accessCode: string;
+        userId: string;
+        username: string;
         avatarEmoji?: string | undefined;
         isDiffered?: boolean | undefined;
     }, {
-        username: string;
-        userId: string;
         accessCode: string;
+        userId: string;
+        username: string;
         avatarEmoji?: string | undefined;
         isDiffered?: boolean | undefined;
     }>], z.ZodUnknown>, z.ZodVoid>;
@@ -650,16 +650,16 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
         answer: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>;
         timeSpent: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        userId: string;
         accessCode: string;
+        userId: string;
         questionUid: string;
-        answer: string | number | string[] | number[];
+        answer: string | number | number[] | string[];
         timeSpent: number;
     }, {
-        userId: string;
         accessCode: string;
+        userId: string;
         questionUid: string;
-        answer: string | number | string[] | number[];
+        answer: string | number | number[] | string[];
         timeSpent: number;
     }>], z.ZodUnknown>, z.ZodVoid>;
     request_participants: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
@@ -674,13 +674,13 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
         questionUid: z.ZodString;
         questionIndex: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        questionIndex: number;
         accessCode: string;
         questionUid: string;
+        questionIndex: number;
     }, {
-        questionIndex: number;
         accessCode: string;
         questionUid: string;
+        questionIndex: number;
     }>], z.ZodUnknown>, z.ZodVoid>;
     teacher_timer_action: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         accessCode: z.ZodString;
@@ -702,16 +702,16 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
          */
         durationMs: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
     }, {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
@@ -735,31 +735,31 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
     }>], z.ZodUnknown>, z.ZodVoid>;
 }, "strip", z.ZodTypeAny, {
     join_game: (args_0: {
-        username: string;
-        userId: string;
         accessCode: string;
+        userId: string;
+        username: string;
         avatarEmoji?: string | undefined;
         isDiffered?: boolean | undefined;
     }, ...args: unknown[]) => void;
     game_answer: (args_0: {
-        userId: string;
         accessCode: string;
+        userId: string;
         questionUid: string;
-        answer: string | number | string[] | number[];
+        answer: string | number | number[] | string[];
         timeSpent: number;
     }, ...args: unknown[]) => void;
     request_participants: (args_0: {
         accessCode: string;
     }, ...args: unknown[]) => void;
     teacher_set_question: (args_0: {
-        questionIndex: number;
         accessCode: string;
         questionUid: string;
+        questionIndex: number;
     }, ...args: unknown[]) => void;
     teacher_timer_action: (args_0: {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
@@ -773,31 +773,31 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
 }, {
     join_game: (args_0: {
-        username: string;
-        userId: string;
         accessCode: string;
+        userId: string;
+        username: string;
         avatarEmoji?: string | undefined;
         isDiffered?: boolean | undefined;
     }, ...args: unknown[]) => void;
     game_answer: (args_0: {
-        userId: string;
         accessCode: string;
+        userId: string;
         questionUid: string;
-        answer: string | number | string[] | number[];
+        answer: string | number | number[] | string[];
         timeSpent: number;
     }, ...args: unknown[]) => void;
     request_participants: (args_0: {
         accessCode: string;
     }, ...args: unknown[]) => void;
     teacher_set_question: (args_0: {
-        questionIndex: number;
         accessCode: string;
         questionUid: string;
+        questionIndex: number;
     }, ...args: unknown[]) => void;
     teacher_timer_action: (args_0: {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
@@ -818,16 +818,16 @@ export declare const socketDataSchema: z.ZodObject<{
     accessCode: z.ZodOptional<z.ZodString>;
     currentGameRoom: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    accessCode?: string | undefined;
+    userId?: string | undefined;
     username?: string | undefined;
     role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-    userId?: string | undefined;
-    accessCode?: string | undefined;
     currentGameRoom?: string | undefined;
 }, {
+    accessCode?: string | undefined;
+    userId?: string | undefined;
     username?: string | undefined;
     role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-    userId?: string | undefined;
-    accessCode?: string | undefined;
     currentGameRoom?: string | undefined;
 }>;
 export declare const gameJoinedPayloadSchema: z.ZodObject<{
@@ -844,26 +844,26 @@ export declare const gameJoinedPayloadSchema: z.ZodObject<{
         socketId: z.ZodOptional<z.ZodString>;
         attemptCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }>;
     gameStatus: z.ZodEnum<["pending", "active", "completed", "archived"]>;
@@ -871,38 +871,38 @@ export declare const gameJoinedPayloadSchema: z.ZodObject<{
     differedAvailableFrom: z.ZodOptional<z.ZodString>;
     differedAvailableTo: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    accessCode: string;
     participant: {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     };
-    accessCode: string;
-    gameStatus: "pending" | "completed" | "active" | "archived";
+    gameStatus: "pending" | "active" | "completed" | "archived";
     gameMode: "quiz" | "tournament" | "practice" | "class";
     differedAvailableFrom?: string | undefined;
     differedAvailableTo?: string | undefined;
 }, {
+    accessCode: string;
     participant: {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     };
-    accessCode: string;
-    gameStatus: "pending" | "completed" | "active" | "archived";
+    gameStatus: "pending" | "active" | "completed" | "archived";
     gameMode: "quiz" | "tournament" | "practice" | "class";
     differedAvailableFrom?: string | undefined;
     differedAvailableTo?: string | undefined;
@@ -912,12 +912,12 @@ export declare const requestNextQuestionPayloadSchema: z.ZodObject<{
     userId: z.ZodString;
     currentQuestionUid: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    userId: string;
     accessCode: string;
+    userId: string;
     currentQuestionUid: string;
 }, {
-    userId: string;
     accessCode: string;
+    userId: string;
     currentQuestionUid: string;
 }>;
 export declare const correctAnswersPayloadSchema: z.ZodObject<{
@@ -990,65 +990,65 @@ export declare const gameStateUpdatePayloadSchema: z.ZodObject<{
         }>>;
         answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>>;
     questionIndex: z.ZodOptional<z.ZodNumber>;
     totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -1065,26 +1065,26 @@ export declare const gameStateUpdatePayloadSchema: z.ZodObject<{
         socketId: z.ZodOptional<z.ZodString>;
         attemptCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }>, "many">>;
     gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
@@ -1114,65 +1114,65 @@ export declare const gameStateUpdatePayloadSchema: z.ZodObject<{
         }>>;
         answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>>;
     questionIndex: z.ZodOptional<z.ZodNumber>;
     totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -1189,26 +1189,26 @@ export declare const gameStateUpdatePayloadSchema: z.ZodObject<{
         socketId: z.ZodOptional<z.ZodString>;
         attemptCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }>, "many">>;
     gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
@@ -1238,65 +1238,65 @@ export declare const gameStateUpdatePayloadSchema: z.ZodObject<{
         }>>;
         answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>>;
     questionIndex: z.ZodOptional<z.ZodNumber>;
     totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -1313,26 +1313,26 @@ export declare const gameStateUpdatePayloadSchema: z.ZodObject<{
         socketId: z.ZodOptional<z.ZodString>;
         attemptCount: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }, {
-        username: string;
         userId: string;
+        username: string;
         id: string;
         score: number;
         status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
         avatarEmoji?: string | undefined;
-        socketId?: string | undefined;
         online?: boolean | undefined;
         joinedAt?: string | number | undefined;
+        socketId?: string | undefined;
         attemptCount?: number | undefined;
     }>, "many">>;
     gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
@@ -1397,38 +1397,38 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             accessCode: z.ZodOptional<z.ZodOptional<z.ZodString>>;
             currentGameRoom: z.ZodOptional<z.ZodOptional<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
+            accessCode?: string | undefined;
+            userId?: string | undefined;
             username?: string | undefined;
             role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-            userId?: string | undefined;
-            accessCode?: string | undefined;
             currentGameRoom?: string | undefined;
         }, {
+            accessCode?: string | undefined;
+            userId?: string | undefined;
             username?: string | undefined;
             role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-            userId?: string | undefined;
-            accessCode?: string | undefined;
             currentGameRoom?: string | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
+        socketId: string;
+        timestamp: string;
         user: {
+            accessCode?: string | undefined;
+            userId?: string | undefined;
             username?: string | undefined;
             role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-            userId?: string | undefined;
-            accessCode?: string | undefined;
             currentGameRoom?: string | undefined;
         };
-        timestamp: string;
-        socketId: string;
     }, {
+        socketId: string;
+        timestamp: string;
         user: {
+            accessCode?: string | undefined;
+            userId?: string | undefined;
             username?: string | undefined;
             role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-            userId?: string | undefined;
-            accessCode?: string | undefined;
             currentGameRoom?: string | undefined;
         };
-        timestamp: string;
-        socketId: string;
     }>], z.ZodUnknown>, z.ZodVoid>;
     game_joined: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         accessCode: z.ZodString;
@@ -1444,26 +1444,26 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>;
         gameStatus: z.ZodEnum<["pending", "active", "completed", "archived"]>;
@@ -1471,38 +1471,38 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         differedAvailableFrom: z.ZodOptional<z.ZodString>;
         differedAvailableTo: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
+        accessCode: string;
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
-        accessCode: string;
-        gameStatus: "pending" | "completed" | "active" | "archived";
+        gameStatus: "pending" | "active" | "completed" | "archived";
         gameMode: "quiz" | "tournament" | "practice" | "class";
         differedAvailableFrom?: string | undefined;
         differedAvailableTo?: string | undefined;
     }, {
+        accessCode: string;
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
-        accessCode: string;
-        gameStatus: "pending" | "completed" | "active" | "archived";
+        gameStatus: "pending" | "active" | "completed" | "archived";
         gameMode: "quiz" | "tournament" | "practice" | "class";
         differedAvailableFrom?: string | undefined;
         differedAvailableTo?: string | undefined;
@@ -1531,65 +1531,65 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         }>>;
         answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }>], z.ZodUnknown>, z.ZodVoid>;
     answer_received: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         questionUid: z.ZodString;
@@ -1618,30 +1618,30 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             score: z.ZodNumber;
             rank: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
             rank?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
             rank?: number | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         leaderboard: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
             rank?: number | undefined;
         }[];
     }, {
         leaderboard: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
             rank?: number | undefined;
@@ -1660,52 +1660,52 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
     }, {
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
     }>], z.ZodUnknown>, z.ZodVoid>;
@@ -1732,52 +1732,52 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         participants: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }[];
     }, {
         participants: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }[];
     }>], z.ZodUnknown>, z.ZodVoid>;
@@ -1807,65 +1807,65 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             }>>;
             answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>>;
         questionIndex: z.ZodOptional<z.ZodNumber>;
         totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -1882,26 +1882,26 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>, "many">>;
         gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
@@ -1931,65 +1931,65 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             }>>;
             answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>>;
         questionIndex: z.ZodOptional<z.ZodNumber>;
         totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -2006,26 +2006,26 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>, "many">>;
         gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
@@ -2055,65 +2055,65 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             }>>;
             answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>>;
         questionIndex: z.ZodOptional<z.ZodNumber>;
         totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -2130,26 +2130,26 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>, "many">>;
         gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
@@ -2160,13 +2160,13 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         durationMs: z.ZodOptional<z.ZodNumber>;
         serverTime: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        timeLeftMs: number | null;
         running: boolean;
+        timeLeftMs: number | null;
         serverTime: number;
         durationMs?: number | undefined;
     }, {
-        timeLeftMs: number | null;
         running: boolean;
+        timeLeftMs: number | null;
         serverTime: number;
         durationMs?: number | undefined;
     }>], z.ZodUnknown>, z.ZodVoid>;
@@ -2209,10 +2209,10 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         defaultMode: z.ZodEnum<["info", "warning", "error", "success"]>;
     }, "strip", z.ZodTypeAny, {
         message: string;
-        defaultMode: "success" | "error" | "info" | "warning";
+        defaultMode: "info" | "warning" | "error" | "success";
     }, {
         message: string;
-        defaultMode: "success" | "error" | "info" | "warning";
+        defaultMode: "info" | "warning" | "error" | "success";
     }>], z.ZodUnknown>, z.ZodVoid>;
     game_control_question_set: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         questionIndex: z.ZodNumber;
@@ -2236,7 +2236,6 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             timeRemaining?: number | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
-        questionIndex: number;
         timer: {
             startedAt: number;
             duration: number;
@@ -2244,8 +2243,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             pausedAt?: number | undefined;
             timeRemaining?: number | undefined;
         };
+        questionIndex: number;
     }, {
-        questionIndex: number;
         timer: {
             startedAt: number;
             duration: number;
@@ -2253,6 +2252,7 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             pausedAt?: number | undefined;
             timeRemaining?: number | undefined;
         };
+        questionIndex: number;
     }>], z.ZodUnknown>, z.ZodVoid>;
     game_control_question_ended: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         questionUid: z.ZodString;
@@ -2303,21 +2303,21 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             avatarEmoji: z.ZodOptional<z.ZodString>;
             score: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
         }>, "many">>;
     }, "strip", z.ZodTypeAny, {
         questionUid: string;
         leaderboard?: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
         }[] | undefined;
@@ -2325,8 +2325,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, {
         questionUid: string;
         leaderboard?: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
         }[] | undefined;
@@ -2372,16 +2372,16 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
          */
         durationMs: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
     }, {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
@@ -2451,50 +2451,50 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     connect: (...args: unknown[]) => void;
     disconnect: (args_0: string, ...args: unknown[]) => void;
     connection_established: (args_0: {
+        socketId: string;
+        timestamp: string;
         user: {
+            accessCode?: string | undefined;
+            userId?: string | undefined;
             username?: string | undefined;
             role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-            userId?: string | undefined;
-            accessCode?: string | undefined;
             currentGameRoom?: string | undefined;
         };
-        timestamp: string;
-        socketId: string;
     }, ...args: unknown[]) => void;
     game_joined: (args_0: {
+        accessCode: string;
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
-        accessCode: string;
-        gameStatus: "pending" | "completed" | "active" | "archived";
+        gameStatus: "pending" | "active" | "completed" | "archived";
         gameMode: "quiz" | "tournament" | "practice" | "class";
         differedAvailableFrom?: string | undefined;
         differedAvailableTo?: string | undefined;
     }, ...args: unknown[]) => void;
     game_question: (args_0: {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, ...args: unknown[]) => void;
     answer_received: (args_0: {
         questionUid: string;
@@ -2505,8 +2505,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     leaderboard_update: (args_0: {
         leaderboard: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
             rank?: number | undefined;
@@ -2514,15 +2514,15 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     player_joined_game: (args_0: {
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
     }, ...args: unknown[]) => void;
@@ -2532,15 +2532,15 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     game_participants: (args_0: {
         participants: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }[];
     }, ...args: unknown[]) => void;
@@ -2570,65 +2570,65 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             }>>;
             answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>>;
         questionIndex: z.ZodOptional<z.ZodNumber>;
         totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -2645,33 +2645,33 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>, "many">>;
         gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
     }, z.ZodAny, "strip">, ...args: unknown[]) => void;
     timer_update: (args_0: {
-        timeLeftMs: number | null;
         running: boolean;
+        timeLeftMs: number | null;
         serverTime: number;
         durationMs?: number | undefined;
     }, ...args: unknown[]) => void;
@@ -2691,10 +2691,9 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     notification: (args_0: {
         message: string;
-        defaultMode: "success" | "error" | "info" | "warning";
+        defaultMode: "info" | "warning" | "error" | "success";
     }, ...args: unknown[]) => void;
     game_control_question_set: (args_0: {
-        questionIndex: number;
         timer: {
             startedAt: number;
             duration: number;
@@ -2702,6 +2701,7 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             pausedAt?: number | undefined;
             timeRemaining?: number | undefined;
         };
+        questionIndex: number;
     }, ...args: unknown[]) => void;
     game_control_question_ended: (args_0: {
         questionUid: string;
@@ -2716,8 +2716,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     question_ended: (args_0: {
         questionUid: string;
         leaderboard?: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
         }[] | undefined;
@@ -2732,9 +2732,9 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         accessCode: string;
     }, ...args: unknown[]) => void;
     timer_action: (args_0: {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
@@ -2763,50 +2763,50 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     connect: (...args: unknown[]) => void;
     disconnect: (args_0: string, ...args: unknown[]) => void;
     connection_established: (args_0: {
+        socketId: string;
+        timestamp: string;
         user: {
+            accessCode?: string | undefined;
+            userId?: string | undefined;
             username?: string | undefined;
             role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-            userId?: string | undefined;
-            accessCode?: string | undefined;
             currentGameRoom?: string | undefined;
         };
-        timestamp: string;
-        socketId: string;
     }, ...args: unknown[]) => void;
     game_joined: (args_0: {
+        accessCode: string;
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
-        accessCode: string;
-        gameStatus: "pending" | "completed" | "active" | "archived";
+        gameStatus: "pending" | "active" | "completed" | "archived";
         gameMode: "quiz" | "tournament" | "practice" | "class";
         differedAvailableFrom?: string | undefined;
         differedAvailableTo?: string | undefined;
     }, ...args: unknown[]) => void;
     game_question: (args_0: {
-        text: string;
         uid: string;
+        text: string;
         questionType: string;
         timeLimit: number;
-        currentQuestionIndex?: number | undefined;
         title?: string | undefined;
         answerOptions?: string[] | undefined;
+        totalQuestions?: number | undefined;
+        currentQuestionIndex?: number | undefined;
         multipleChoiceQuestion?: {
             answerOptions: string[];
         } | undefined;
         numericQuestion?: {
             unit?: string | undefined;
         } | undefined;
-        totalQuestions?: number | undefined;
     }, ...args: unknown[]) => void;
     answer_received: (args_0: {
         questionUid: string;
@@ -2817,8 +2817,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     leaderboard_update: (args_0: {
         leaderboard: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
             rank?: number | undefined;
@@ -2826,15 +2826,15 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     player_joined_game: (args_0: {
         participant: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         };
     }, ...args: unknown[]) => void;
@@ -2844,15 +2844,15 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     game_participants: (args_0: {
         participants: {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }[];
     }, ...args: unknown[]) => void;
@@ -2882,65 +2882,65 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             }>>;
             answerOptions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }, {
-            text: string;
             uid: string;
+            text: string;
             questionType: string;
             timeLimit: number;
-            currentQuestionIndex?: number | undefined;
             title?: string | undefined;
             answerOptions?: string[] | undefined;
+            totalQuestions?: number | undefined;
+            currentQuestionIndex?: number | undefined;
             multipleChoiceQuestion?: {
                 answerOptions: string[];
             } | undefined;
             numericQuestion?: {
                 unit?: string | undefined;
             } | undefined;
-            totalQuestions?: number | undefined;
         }>>;
         questionIndex: z.ZodOptional<z.ZodNumber>;
         totalQuestions: z.ZodOptional<z.ZodNumber>;
@@ -2957,33 +2957,33 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             socketId: z.ZodOptional<z.ZodString>;
             attemptCount: z.ZodOptional<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }, {
-            username: string;
             userId: string;
+            username: string;
             id: string;
             score: number;
             status?: "PENDING" | "ACTIVE" | "COMPLETED" | "LEFT" | undefined;
             avatarEmoji?: string | undefined;
-            socketId?: string | undefined;
             online?: boolean | undefined;
             joinedAt?: string | number | undefined;
+            socketId?: string | undefined;
             attemptCount?: number | undefined;
         }>, "many">>;
         gameMode: z.ZodOptional<z.ZodEnum<["tournament", "quiz", "practice", "class"]>>;
     }, z.ZodAny, "strip">, ...args: unknown[]) => void;
     timer_update: (args_0: {
-        timeLeftMs: number | null;
         running: boolean;
+        timeLeftMs: number | null;
         serverTime: number;
         durationMs?: number | undefined;
     }, ...args: unknown[]) => void;
@@ -3003,10 +3003,9 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     notification: (args_0: {
         message: string;
-        defaultMode: "success" | "error" | "info" | "warning";
+        defaultMode: "info" | "warning" | "error" | "success";
     }, ...args: unknown[]) => void;
     game_control_question_set: (args_0: {
-        questionIndex: number;
         timer: {
             startedAt: number;
             duration: number;
@@ -3014,6 +3013,7 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             pausedAt?: number | undefined;
             timeRemaining?: number | undefined;
         };
+        questionIndex: number;
     }, ...args: unknown[]) => void;
     game_control_question_ended: (args_0: {
         questionUid: string;
@@ -3028,8 +3028,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     question_ended: (args_0: {
         questionUid: string;
         leaderboard?: {
-            username: string;
             userId: string;
+            username: string;
             score: number;
             avatarEmoji?: string | undefined;
         }[] | undefined;
@@ -3044,9 +3044,9 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         accessCode: string;
     }, ...args: unknown[]) => void;
     timer_action: (args_0: {
-        action: "run" | "pause" | "stop" | "edit";
         accessCode: string;
         questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
         durationMs?: number | undefined;
         timerEndDateMs?: number | undefined;
         targetTimeMs?: number | undefined;
@@ -3072,63 +3072,12 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         feedbackRemaining: z.ZodNumber;
     }, z.ZodAny, "strip">, ...args: unknown[]) => void;
 }>;
-export declare const startTimerPayloadSchema: z.ZodEffects<z.ZodObject<{
-    gameId: z.ZodOptional<z.ZodString>;
-    accessCode: z.ZodOptional<z.ZodString>;
-    durationMs: z.ZodNumber;
-}, "strip", z.ZodTypeAny, {
-    durationMs: number;
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}, {
-    durationMs: number;
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}>, {
-    durationMs: number;
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}, {
-    durationMs: number;
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}>;
-export declare const pauseTimerPayloadSchema: z.ZodEffects<z.ZodObject<{
-    gameId: z.ZodOptional<z.ZodString>;
-    accessCode: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}, {
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}>, {
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}, {
-    accessCode?: string | undefined;
-    gameId?: string | undefined;
-}>;
 export declare const startTournamentPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
 }, {
     accessCode: string;
-}>;
-export declare const joinProjectorPayloadSchema: z.ZodObject<{
-    gameId: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    gameId: string;
-}, {
-    gameId: string;
-}>;
-export declare const leaveProjectorPayloadSchema: z.ZodObject<{
-    gameId: z.ZodString;
-}, "strip", z.ZodTypeAny, {
-    gameId: string;
-}, {
-    gameId: string;
 }>;
 /**
  * @deprecated Use joinGamePayloadSchema instead
@@ -3139,14 +3088,14 @@ export declare const joinLobbyPayloadSchema: z.ZodObject<{
     username: z.ZodString;
     avatarEmoji: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
-    userId: string;
     accessCode: string;
+    userId: string;
+    username: string;
     avatarEmoji?: string | undefined;
 }, {
-    username: string;
-    userId: string;
     accessCode: string;
+    userId: string;
+    username: string;
     avatarEmoji?: string | undefined;
 }>;
 /**
@@ -3176,11 +3125,11 @@ export declare const startGamePayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
     userId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    userId: string;
     accessCode: string;
+    userId: string;
 }, {
-    userId: string;
     accessCode: string;
+    userId: string;
 }>;
 export declare const requestParticipantsPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
@@ -3196,17 +3145,17 @@ export declare const sharedJoinPayloadSchema: z.ZodObject<{
     avatarEmoji: z.ZodOptional<z.ZodString>;
     playMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice"]>>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
-    userId: string;
     accessCode: string;
-    playMode?: "quiz" | "tournament" | "practice" | undefined;
+    userId: string;
+    username: string;
     avatarEmoji?: string | undefined;
+    playMode?: "quiz" | "tournament" | "practice" | undefined;
 }, {
-    username: string;
-    userId: string;
     accessCode: string;
-    playMode?: "quiz" | "tournament" | "practice" | undefined;
+    userId: string;
+    username: string;
     avatarEmoji?: string | undefined;
+    playMode?: "quiz" | "tournament" | "practice" | undefined;
 }>;
 export declare const sharedAnswerPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
@@ -3216,17 +3165,17 @@ export declare const sharedAnswerPayloadSchema: z.ZodObject<{
     timeSpent: z.ZodNumber;
     playMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice"]>>;
 }, "strip", z.ZodTypeAny, {
-    userId: string;
     accessCode: string;
+    userId: string;
     questionUid: string;
-    answer: string | number | string[] | number[];
+    answer: string | number | number[] | string[];
     timeSpent: number;
     playMode?: "quiz" | "tournament" | "practice" | undefined;
 }, {
-    userId: string;
     accessCode: string;
+    userId: string;
     questionUid: string;
-    answer: string | number | string[] | number[];
+    answer: string | number | number[] | string[];
     timeSpent: number;
     playMode?: "quiz" | "tournament" | "practice" | undefined;
 }>;
@@ -3254,18 +3203,18 @@ export declare const gameEndedPayloadSchema: z.ZodObject<{
     total: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
-    score?: number | undefined;
-    total?: number | undefined;
     totalQuestions?: number | undefined;
+    score?: number | undefined;
     correct?: number | undefined;
     endedAt?: string | undefined;
+    total?: number | undefined;
 }, {
     accessCode: string;
-    score?: number | undefined;
-    total?: number | undefined;
     totalQuestions?: number | undefined;
+    score?: number | undefined;
     correct?: number | undefined;
     endedAt?: string | undefined;
+    total?: number | undefined;
 }>;
 export declare const connectionEstablishedPayloadSchema: z.ZodObject<{
     socketId: z.ZodString;
@@ -3279,46 +3228,46 @@ export declare const connectionEstablishedPayloadSchema: z.ZodObject<{
         practiceSessionId: z.ZodOptional<z.ZodOptional<z.ZodString>>;
         practiceUserId: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
+        accessCode?: string | undefined;
+        userId?: string | undefined;
         username?: string | undefined;
         role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-        userId?: string | undefined;
-        accessCode?: string | undefined;
         currentGameRoom?: string | undefined;
         practiceSessionId?: string | undefined;
         practiceUserId?: string | undefined;
     }, {
+        accessCode?: string | undefined;
+        userId?: string | undefined;
         username?: string | undefined;
         role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-        userId?: string | undefined;
-        accessCode?: string | undefined;
         currentGameRoom?: string | undefined;
         practiceSessionId?: string | undefined;
         practiceUserId?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
+    socketId: string;
+    timestamp: string;
     user: {
+        accessCode?: string | undefined;
+        userId?: string | undefined;
         username?: string | undefined;
         role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-        userId?: string | undefined;
-        accessCode?: string | undefined;
         currentGameRoom?: string | undefined;
         practiceSessionId?: string | undefined;
         practiceUserId?: string | undefined;
     };
-    timestamp: string;
-    socketId: string;
 }, {
+    socketId: string;
+    timestamp: string;
     user: {
+        accessCode?: string | undefined;
+        userId?: string | undefined;
         username?: string | undefined;
         role?: "STUDENT" | "TEACHER" | "GUEST" | undefined;
-        userId?: string | undefined;
-        accessCode?: string | undefined;
         currentGameRoom?: string | undefined;
         practiceSessionId?: string | undefined;
         practiceUserId?: string | undefined;
     };
-    timestamp: string;
-    socketId: string;
 }>;
 export declare const revealLeaderboardPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;

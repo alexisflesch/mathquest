@@ -4,13 +4,13 @@ export declare const gameTimerStateSchema: z.ZodObject<{
     timerEndDateMs: z.ZodNumber;
     questionUid: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    questionUid: string;
     status: "run" | "pause" | "stop";
     timerEndDateMs: number;
-    questionUid: string;
 }, {
+    questionUid: string;
     status: "run" | "pause" | "stop";
     timerEndDateMs: number;
-    questionUid: string;
 }>;
 export declare const timerActionPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
@@ -35,15 +35,15 @@ export declare const timerActionPayloadSchema: z.ZodObject<{
      */
     durationMs: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    questionUid: string;
     accessCode: string;
+    questionUid: string;
     action: "run" | "pause" | "stop" | "edit";
     durationMs?: number | undefined;
     timerEndDateMs?: number | undefined;
     targetTimeMs?: number | undefined;
 }, {
-    questionUid: string;
     accessCode: string;
+    questionUid: string;
     action: "run" | "pause" | "stop" | "edit";
     durationMs?: number | undefined;
     timerEndDateMs?: number | undefined;

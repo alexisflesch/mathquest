@@ -57,6 +57,24 @@ app.get('/health', (req: Request, res: Response) => {
     res.status(200).send('OK');
 });
 
+// Memory monitoring endpoint for VPS monitoring
+app.get('/health/memory', (req: Request, res: Response) => {
+    const memUsage = process.memoryUsage();
+    const uptime = process.uptime();
+
+    res.status(200).json({
+        status: 'OK',
+        memory: {
+            used: Math.round(memUsage.heapUsed / 1024 / 1024),
+            total: Math.round(memUsage.heapTotal / 1024 / 1024),
+            external: Math.round(memUsage.external / 1024 / 1024),
+            rss: Math.round(memUsage.rss / 1024 / 1024)
+        },
+        uptime: Math.round(uptime),
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Mount API routes, but ensure /api/socket.io is not intercepted by apiRouter
 app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith('/socket.io')) { // req.path is relative to the mount point '/api'
@@ -127,6 +145,28 @@ if (process.env.NODE_ENV !== 'test') {
         logger.info(`Access from your local network: http://${localIp}:${port}`);
         logger.error('Forced error log at startup (should appear in error.log and combined.log)');
         logger.info('Forced info log at startup (should appear in combined.log)');
+
+        // Memory monitoring for VPS optimization
+        const memUsage = process.memoryUsage();
+        logger.info(`Memory at startup: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB used, ${Math.round(memUsage.heapTotal / 1024 / 1024)}MB total`);
+
+        // Periodic memory monitoring (every 5 minutes)
+        setInterval(() => {
+            const mem = process.memoryUsage();
+            const usedMB = Math.round(mem.heapUsed / 1024 / 1024);
+            const totalMB = Math.round(mem.heapTotal / 1024 / 1024);
+            const externalMB = Math.round(mem.external / 1024 / 1024);
+
+            logger.info(`Memory check: ${usedMB}MB used, ${totalMB}MB total, ${externalMB}MB external`);
+
+            // Warn if memory usage is getting high (>80% of limit)
+            if (process.env.NODE_OPTIONS?.includes('--max-old-space-size')) {
+                const maxOldSpace = process.env.NODE_OPTIONS.match(/--max-old-space-size=(\d+)/)?.[1];
+                if (maxOldSpace && usedMB > parseInt(maxOldSpace) * 0.8) {
+                    logger.warn(`High memory usage detected: ${usedMB}MB used of ${maxOldSpace}MB limit`);
+                }
+            }
+        }, 5 * 60 * 1000); // Every 5 minutes
     });
 } else {
     // For test environment, we'll manually control server start/stop

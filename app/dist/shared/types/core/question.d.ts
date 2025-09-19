@@ -74,16 +74,6 @@ export interface Question extends BaseQuestion {
  * Question for client display
  * Question data optimized for frontend rendering
  */
-export interface ClientQuestion extends BaseQuestion {
-    multipleChoiceQuestion?: MultipleChoiceQuestionData;
-    numericQuestion?: NumericQuestionData;
-    answerOptions?: string[];
-    correctAnswers?: boolean[];
-    /** Current question index in sequence */
-    currentQuestionIndex?: number;
-    /** Total questions in sequence */
-    totalQuestions?: number;
-}
 /**
  * Question creation payload for multiple choice questions
  */

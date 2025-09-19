@@ -36,11 +36,6 @@ export interface UserLoginData {
     email: string;
     password: string;
 }
-export interface UserProfileUpdate {
-    username?: string;
-    avatarEmoji?: string;
-    email?: string;
-}
 export interface UserUpgradeData {
     email: string;
     password: string;

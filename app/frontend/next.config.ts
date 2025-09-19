@@ -77,10 +77,13 @@ export default withBundleAnalyzer({
                 options: {
                     cacheName: 'offlineCache',
                     expiration: {
-                        maxEntries: 200,
+                        maxEntries: 100, // Reduced from 200 to save memory
+                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
                     },
                 },
             },
         ],
+        cleanupOutdatedCaches: true, // Clean up old cache versions
+        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024, // 2MB limit per file
     },
 })(nextConfig));

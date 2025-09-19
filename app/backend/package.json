@@ -4,7 +4,8 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc && npx prisma generate && cp -r src/db/generated dist/backend/src/db/",
-    "start": "node -r dotenv/config dist/backend/src/server.js",
+    "start:memory-limited": "node --max-old-space-size=256 --max-semi-space-size=64 --max-new-space-size=32 -r dotenv/config dist/backend/src/server.js",
+    "start:ultra-limited": "node --max-old-space-size=128 --max-semi-space-size=32 --max-new-space-size=16 -r dotenv/config dist/backend/src/server.js",
     "dev": "nodemon src/server.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
@@ -14,7 +15,8 @@
     "test:init-db": "node tests/support/initTestDb.js",
     "test:clean": "npm run test:init-db && jest",
     "type-check": "tsc --project tsconfig.json --noEmit --pretty",
-    "cleanup:redis": "npx ts-node scripts/cleanup-redis-game.ts"
+    "dev:memory": "nodemon --max-old-space-size=256 src/server.ts",
+    "monitor:memory": "node -e \"setInterval(() => { const mem = process.memoryUsage(); console.log(new Date().toISOString(), 'Memory:', Math.round(mem.heapUsed / 1024 / 1024) + 'MB used,', Math.round(mem.heapTotal / 1024 / 1024) + 'MB total,', Math.round(mem.external / 1024 / 1024) + 'MB external'); }, 30000);\""
   },
   "_moduleAliases": {
     "@": "dist/backend/src",

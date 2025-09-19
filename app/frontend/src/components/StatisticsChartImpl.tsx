@@ -54,6 +54,8 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
                 resizeObserver.disconnect();
             };
         }
+
+        return () => {}; // Return empty cleanup function
     }, []);
 
     // Calculate statistics
@@ -63,7 +65,7 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
         const sorted = [...data].sort((a, b) => a - b);
         const n = sorted.length;
         const mean = sorted.reduce((sum, val) => sum + val, 0) / n;
-        const median = n % 2 === 0 ? (sorted[n/2 - 1] + sorted[n/2]) / 2 : sorted[Math.floor(n/2)];
+        const median = n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[Math.floor(n / 2)];
         const min = sorted[0];
         const max = sorted[n - 1];
 
@@ -129,13 +131,13 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
                     name: 'Stem Plot'
                 }];
 
-            default: // 'auto' - box plot
+            case 'auto': // 'auto' - box plot
                 return [{
                     type: 'box' as const,
                     y: hideOutliers ? stats.nonOutliers : stats.sorted,
                     name: 'Values',
                     marker: { color: navbarColor },
-                    boxpoints: 'all',
+                    boxpoints: 'all' as const,
                     jitter: 0.3,
                     pointpos: -1.8
                 }];
@@ -151,20 +153,22 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
             font: { size: 16 }
         },
         xaxis: {
-            title: chartType === 'stem' ? 'Stem' : 'Value',
+            title: {
+                text: chartType === 'stem' ? 'Stem' : 'Value'
+            },
             showgrid: true
         },
         yaxis: {
-            title: chartType === 'stem' ? 'Leaf Count' : 'Value',
+            title: {
+                text: chartType === 'stem' ? 'Leaf Count' : 'Value'
+            },
             showgrid: true
         },
         margin: { l: 50, r: 50, t: 50, b: 50 },
         showlegend: false,
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)'
-    }), [chartType]);
-
-    if (!stats) {
+    }), [chartType]);    if (!stats) {
         return (
             <div className="flex items-center justify-center p-8 text-gray-500">
                 No data available
@@ -179,11 +183,10 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
                 <div className={`flex ${layout === 'left' ? 'flex-col space-y-2' : 'flex-wrap gap-2'}`}>
                     <button
                         onClick={() => setChartType('auto')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            chartType === 'auto'
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${chartType === 'auto'
                                 ? 'bg-blue-100 text-blue-700 border border-blue-300'
                                 : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         <ChartNoAxesColumn className="w-4 h-4" />
                         <span>Box Plot</span>
@@ -191,11 +194,10 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
 
                     <button
                         onClick={() => setChartType('histogram')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            chartType === 'histogram'
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${chartType === 'histogram'
                                 ? 'bg-blue-100 text-blue-700 border border-blue-300'
                                 : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         <BarChart3 className="w-4 h-4" />
                         <span>Histogram</span>
@@ -203,11 +205,10 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
 
                     <button
                         onClick={() => setChartType('stem')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            chartType === 'stem'
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${chartType === 'stem'
                                 ? 'bg-blue-100 text-blue-700 border border-blue-300'
                                 : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         <Settings2 className="w-4 h-4" />
                         <span>Stem Plot</span>
@@ -217,11 +218,10 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
                 <div className={`flex ${layout === 'left' ? 'flex-col space-y-2' : 'flex-wrap gap-2'}`}>
                     <button
                         onClick={() => setHideOutliers(!hideOutliers)}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            hideOutliers
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${hideOutliers
                                 ? 'bg-orange-100 text-orange-700 border border-orange-300'
                                 : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         {hideOutliers ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                         <span>{hideOutliers ? 'Show' : 'Hide'} Outliers</span>

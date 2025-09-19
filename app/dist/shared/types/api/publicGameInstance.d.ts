@@ -42,11 +42,11 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
         gameTemplateId?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
+    accessCode: string;
     status: string;
     playMode: string;
-    accessCode: string;
-    name?: string | undefined;
     linkedQuizId?: string | null | undefined;
+    name?: string | undefined;
     practiceSettings?: {
         gradeLevel: string;
         discipline: string;
@@ -58,11 +58,11 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
         gameTemplateId?: string | undefined;
     } | undefined;
 }, {
+    accessCode: string;
     status: string;
     playMode: string;
-    accessCode: string;
-    name?: string | undefined;
     linkedQuizId?: string | null | undefined;
+    name?: string | undefined;
     practiceSettings?: {
         gradeLevel: string;
         discipline: string;
