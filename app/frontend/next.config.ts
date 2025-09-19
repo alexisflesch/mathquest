@@ -1,8 +1,11 @@
 import path from "path";
 import type { NextConfig } from "next";
 import withPWA from '@ducanh2912/next-pwa';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const isLightBuild = process.env.LIGHT_BUILD === '1';
+const isAnalyze = process.env.ANALYZE === 'true';
+
 const nextConfig: NextConfig = {
     eslint: isLightBuild ? { ignoreDuringBuilds: true } : {
         dirs: ['src', 'middleware.ts', 'next-env.d.ts'], // Exclude test files from ESLint during build
@@ -57,7 +60,9 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default withPWA({
+export default withBundleAnalyzer({
+    enabled: isAnalyze,
+})(withPWA({
     dest: 'public',
     disable: process.env.NODE_ENV === 'development',
     register: true,
@@ -78,4 +83,4 @@ export default withPWA({
             },
         ],
     },
-})(nextConfig);
+})(nextConfig));

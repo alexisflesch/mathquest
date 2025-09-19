@@ -173,22 +173,6 @@ export interface GetParticipantsPayload {
     accessCode: string;
 }
 
-// ===== Projector Event Payloads =====
-
-/**
- * Payload for joining a projection session
- */
-export interface JoinProjectorPayload {
-    gameId: string;
-}
-
-/**
- * Payload for leaving a projection session
- */
-export interface LeaveProjectorPayload {
-    gameId: string;
-}
-
 // ===== Shared Live Handler Payloads =====
 
 /**
@@ -338,13 +322,4 @@ export interface AnswerReceivedPayload {
     explanation?: string;
 }
 
-/**
- * Teacher to Server Events
- */
-export interface TeacherToServerEvents {
-    /**
-     * Teacher requests to reveal the full leaderboard (trophy button)
-     */
-    reveal_leaderboard: (payload: RevealLeaderboardPayload) => void;
-    // ...existing events
-}
+

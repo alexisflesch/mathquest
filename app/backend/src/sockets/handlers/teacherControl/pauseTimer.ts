@@ -4,7 +4,6 @@ import gameStateService from '@/core/services/gameStateService';
 import createLogger from '@/utils/logger';
 import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import { GameTimerState } from '@shared/types/core/timer';
-import { pauseTimerPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload, GameTimerUpdatePayload } from '@shared/types/socketEvents';
 import { redisClient } from '@/config/redis';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';

@@ -27,19 +27,6 @@ export interface GameIdentificationPayload {
 export interface JoinDashboardPayload extends GameIdentificationPayload { }
 
 /**
- * Payload for starting a timer (semantically distinct from pausing)
- */
-export interface StartTimerPayload extends GameIdentificationPayload {
-    /** Duration in seconds to set for the timer */
-    duration: number;
-}
-
-/**
- * Payload for pausing a timer (semantically distinct from joining dashboard)
- */
-export interface PauseTimerPayload extends GameIdentificationPayload { }
-
-/**
  * Consolidated SetQuestionPayload with consistent naming
  */
 export interface SetQuestionPayload {
@@ -100,13 +87,6 @@ export interface DashboardAnswersLockChangedPayload {
 export interface DashboardGameStatusChangedPayload {
     status: 'pending' | 'active' | 'paused' | 'completed';
     ended?: boolean;  // Additional flag for clarity
-}
-
-/**
- * Dashboard participant count update
- */
-export interface DashboardParticipantUpdatePayload {
-    participantCount: number;
 }
 
 /**

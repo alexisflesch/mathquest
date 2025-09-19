@@ -9,7 +9,6 @@ exports.createTypeError = createTypeError;
 exports.assertType = assertType;
 exports.assertDefined = assertDefined;
 exports.withDefault = withDefault;
-exports.safeGet = safeGet;
 /**
  * Creates a standard type error message with predefined structure
  */
@@ -44,10 +43,4 @@ function assertDefined(value, context) {
  */
 function withDefault(value, defaultValue) {
     return value === undefined || value === null ? defaultValue : value;
-}
-/**
- * Safely access a property that might be undefined
- */
-function safeGet(obj, key, defaultValue) {
-    return obj ? withDefault(obj[key], defaultValue) : defaultValue;
 }

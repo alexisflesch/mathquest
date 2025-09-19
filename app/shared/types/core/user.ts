@@ -47,13 +47,6 @@ export interface UserLoginData {
     password: string;
 }
 
-// User profile update interface
-export interface UserProfileUpdate {
-    username?: string;
-    avatarEmoji?: string;
-    email?: string;
-}
-
 // User upgrade data interface
 export interface UserUpgradeData {
     email: string;

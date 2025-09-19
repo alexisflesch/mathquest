@@ -166,23 +166,3 @@ export interface TimerActionPayload {
  * Legacy timer interfaces for backward compatibility
  */
 
-/**
- * @deprecated Use BaseTimer instead
- */
-export interface LegacyChrono {
-    timeLeft: number | null;
-    running: boolean;
-    status?: TimerStatus;
-}
-
-/**
- * @deprecated Use GameTimerState instead
- */
-export interface LegacyTimerState {
-    status: TimerStatus;
-    timeLeft: number;
-    duration: number;
-    questionUid: string | null | undefined;
-    timestamp: number | null;
-    localTimeLeft: number | null;
-}

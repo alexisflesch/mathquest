@@ -1,0 +1,640 @@
+backend/src/server.ts:152 - default
+shared/types/index.ts:14 - TournamentQuestion
+shared/types/index.ts:25 - TEACHER_EVENTS
+shared/types/index.ts:26 - GAME_EVENTS
+shared/types/index.ts:27 - TOURNAMENT_EVENTS
+shared/types/index.ts:28 - LOBBY_EVENTS
+shared/types/index.ts:29 - PROJECTOR_EVENTS
+shared/types/index.ts:30 - SOCKET_EVENTS
+shared/types/index.ts:34 - BaseQuizState
+shared/types/index.ts:34 - ExtendedQuizState
+shared/types/index.ts:28 - BaseParticipant
+shared/types/index.ts:29 - GameParticipant
+shared/types/index.ts:30 - TournamentParticipant
+shared/types/index.ts:31 - LeaderboardEntry
+shared/types/index.ts:32 - ParticipantData
+shared/types/index.ts:36 - TimerStatus
+shared/types/index.ts:37 - TimerRole
+shared/types/index.ts:38 - BaseTimer
+shared/types/index.ts:39 - Chrono
+shared/types/index.ts:40 - QuestionTimer
+shared/types/index.ts:41 - GameTimerState
+shared/types/index.ts:42 - TimerConfig
+shared/types/index.ts:43 - TimerUpdatePayload
+shared/types/index.ts:44 - GameTimerUpdatePayload
+shared/types/index.ts:45 - TimerActionPayload
+shared/types/index.ts:49 - BaseAnswer
+shared/types/index.ts:50 - GameAnswer
+shared/types/index.ts:51 - TournamentAnswer
+shared/types/index.ts:52 - AnswerSubmissionPayload
+shared/types/index.ts:53 - AnswerResponsePayload
+shared/types/index.ts:54 - AnswerStats
+shared/types/index.ts:55 - QuestionAnswerSummary
+shared/types/index.ts:59 - UserRole
+shared/types/index.ts:60 - User
+shared/types/index.ts:61 - PublicUser
+shared/types/index.ts:62 - UserRegistrationData
+shared/types/index.ts:63 - UserLoginData
+shared/types/index.ts:64 - UserUpgradeData
+shared/types/index.ts:68 - PlayMode
+shared/types/index.ts:69 - GameTemplate
+shared/types/index.ts:70 - GameInstance
+shared/types/index.ts:71 - GameParticipantRecord
+shared/types/index.ts:72 - GameTemplateCreationData
+shared/types/index.ts:73 - GameTemplateUpdateData
+shared/types/index.ts:74 - GameInstanceCreationData
+shared/types/index.ts:78 - BaseQuestion
+shared/types/index.ts:79 - Question
+shared/types/index.ts:80 - QuestionCreationPayload
+shared/types/index.ts:81 - QuestionUpdatePayload
+shared/types/index.ts:58 - UserState
+shared/types/index.ts:61 - GuestProfileData
+shared/types/index.ts:68 - AuthResponse
+shared/types/index.ts:94 - GameState
+shared/types/index.ts:130 - GameStatus
+shared/types/index.ts:12 - ParticipationType
+shared/types/index.ts:21 - ParticipantStatus
+shared/types/index.ts:145 - SocketParticipantData
+shared/types/index.ts:151 - LeaderboardEntryData
+shared/types/index.ts:124 - GameAnswerPayload
+shared/types/index.ts:132 - AnswerSubmissionPayloadSchema
+shared/types/index.ts:52 - NumericQuestionData
+shared/types/index.ts:62 - MultipleChoiceQuestionData
+shared/types/index.ts:89 - MultipleChoiceQuestionCreationPayload
+shared/types/index.ts:98 - NumericQuestionCreationPayload
+shared/types/index.ts:17 - GameIdentificationPayload
+shared/types/index.ts:27 - JoinDashboardPayload
+shared/types/index.ts:32 - SetQuestionPayload
+shared/types/index.ts:41 - LockAnswersPayload
+shared/types/index.ts:49 - EndGamePayload
+shared/types/index.ts:58 - DashboardQuestionChangedPayload
+shared/types/index.ts:67 - DashboardTimerUpdatedPayload
+shared/types/index.ts:80 - DashboardAnswersLockChangedPayload
+shared/types/index.ts:87 - DashboardGameStatusChangedPayload
+shared/types/index.ts:95 - DashboardAnswerStatsUpdatePayload
+shared/types/index.ts:111 - DashboardJoinedPayload
+shared/types/index.ts:123 - ConnectedCountPayload
+shared/types/index.ts:131 - ShowCorrectAnswersPayload
+shared/types/index.ts:146 - ToggleProjectionStatsPayload
+shared/types/index.ts:158 - QuestionForDashboard
+shared/types/index.ts:166 - GameControlStatePayload
+shared/types/index.ts:13 - StartTournamentPayload
+shared/types/index.ts:23 - SetTimerPayload
+shared/types/index.ts:29 - UpdateTournamentCodePayload
+shared/types/index.ts:35 - QuizTimerActionPayload
+shared/types/index.ts:40 - GameEndedPayload
+shared/types/index.ts:72 - ProjectionShowStatsPayload
+shared/types/index.ts:11 - Logger
+shared/types/index.ts:14 - Answer
+shared/types/index.ts:43 - validateSchema
+shared/types/index.ts:170 - createValidator
+shared/types/index.ts:9 - SchemaFieldType
+shared/types/index.ts:18 - SchemaField
+shared/types/index.ts:29 - Schema
+shared/types/index.ts:34 - ValidationResult
+shared/types/index.ts:11 - answerSchema
+shared/types/index.ts:23 - validateAnswer
+shared/types/index.ts:12 - QUESTION_TYPES
+shared/types/index.ts:13 - TIMEOUT_CONSTANTS
+shared/types/index.ts:14 - isValidQuestionType
+shared/types/index.ts:18 - GAME_TIMING
+shared/types/index.ts:19 - getCorrectAnswersDisplayTime
+shared/types/index.ts:20 - getFeedbackDisplayTime
+shared/types/index.ts:23 - QuestionType
+shared/types/index.ts:23 - TimeoutConstant
+shared/types/index.ts:24 - GameTimingConstant
+shared/types/lobbyParticipantListPayload.ts:3 - lobbyParticipantSchema (used in module)
+shared/types/lobbyParticipantListPayload.ts:9 - lobbyParticipantListPayloadSchema (used in module)
+shared/types/lobbyParticipantListPayload.ts:18 - LobbyParticipant
+shared/types/socketEvents.ts:15 - FeedbackPayload
+shared/types/socketEvents.ts:43 - JoinGamePayload (used in module)
+shared/types/socketEvents.ts:66 - TimerUpdatePayload (used in module)
+shared/types/socketEvents.ts:66 - TimerActionPayload (used in module)
+shared/types/socketEvents.ts:69 - GameAnswerPayload (used in module)
+shared/types/socketEvents.ts:92 - GameAlreadyPlayedPayload (used in module)
+shared/types/socketEvents.ts:108 - PlayerJoinedGamePayload (used in module)
+shared/types/socketEvents.ts:116 - NotificationPayload (used in module)
+shared/types/socketEvents.ts:129 - GameStateUpdatePayload (used in module)
+shared/types/socketEvents.ts:312 - TournamentQuestion
+shared/types/socketEvents.ts:317 - AnswerReceivedPayload (used in module)
+shared/types/socketEvents.zod.dashboard.ts:6 - questionForDashboardSchema (used in module)
+shared/types/socketEvents.zod.dashboard.ts:41 - showCorrectAnswersPayloadSchema (used in module)
+shared/types/socketEvents.zod.dashboard.ts:49 - ShowCorrectAnswersPayload
+backend/src/config/gameModes.ts:3 - GAME_MODES (used in module)
+backend/src/config/gameModes.ts:18 - GameModeType
+backend/src/middleware/validation.ts:59 - validateRequestParams
+backend/src/middleware/validation.ts:95 - validateRequestQuery
+backend/src/sockets/index.ts:65 - closeSocketIORedisClients
+backend/src/sockets/index.ts:89 - configureSocketServer
+backend/src/sockets/index.ts:103 - registerHandlers
+backend/src/utils/avatarUtils.ts:14 - ALLOWED_ANIMAL_AVATARS (used in module)
+backend/src/utils/avatarUtils.ts:14 - EXTRA_ALLOWED_AVATARS (used in module)
+backend/src/utils/avatarUtils.ts:14 - ALL_ALLOWED_AVATARS (used in module)
+backend/src/utils/deferredUtils.ts:8 - isDeferredTournament
+backend/src/utils/deferredUtils.ts:42 - isDeferredAvailable
+backend/src/utils/gameAuthorization.ts:141 - GameAccessOptionsSchema (used in module)
+backend/src/utils/gameAuthorization.ts:149 - GameAccessOptions (used in module)
+backend/src/utils/joinOrderBonus.ts:118 - getJoinOrder
+backend/src/utils/joinOrderBonus.ts:133 - clearJoinOrder
+backend/src/utils/logger.ts:195 - flushLogger
+backend/src/utils/redisCleanup.ts:137 - getGameRedisKeyPatterns
+backend/src/utils/usernameValidator.ts:123 - getValidPrenoms
+backend/src/utils/usernameValidator.ts:132 - formatUsername
+shared/types/api/publicGameInstance.ts:15 - PublicGameInstanceSchema (used in module)
+shared/types/api/requests.ts:17 - CreateGameRequest
+shared/types/api/requests.ts:19 - GameStatusUpdateRequest
+shared/types/api/requests.ts:20 - CreateGameTemplateRequest
+shared/types/api/requests.ts:21 - UpdateGameTemplateRequest
+shared/types/api/requests.ts:24 - CreateQuestionRequest
+shared/types/api/requests.ts:25 - UpdateQuestionRequest
+shared/types/api/requests.ts:26 - UpdateUserRequest
+shared/types/api/requests.ts:27 - CreateQuizTemplateRequest
+shared/types/api/requests.ts:28 - UpdateQuizTemplateRequest
+shared/types/api/requests.ts:42 - LoginRequestSchema
+shared/types/api/requests.ts:43 - RegisterRequestSchema
+shared/types/api/requests.ts:44 - CreateGameRequestSchema
+shared/types/api/requests.ts:45 - GameJoinRequestSchema
+shared/types/api/requests.ts:46 - GameStatusUpdateRequestSchema
+shared/types/api/requests.ts:47 - CreateGameTemplateRequestSchema
+shared/types/api/requests.ts:48 - UpdateGameTemplateRequestSchema
+shared/types/api/requests.ts:49 - RenameGameTemplateRequestSchema
+shared/types/api/requests.ts:50 - RenameGameInstanceRequestSchema
+shared/types/api/requests.ts:51 - CreateQuestionRequestSchema
+shared/types/api/requests.ts:52 - UpdateQuestionRequestSchema
+shared/types/api/requests.ts:53 - UpdateUserRequestSchema
+shared/types/api/requests.ts:54 - CreateQuizTemplateRequestSchema
+shared/types/api/requests.ts:55 - UpdateQuizTemplateRequestSchema
+shared/types/api/requests.ts:56 - UpgradeAccountRequestSchema
+shared/types/api/requests.ts:57 - PasswordResetRequestSchema
+shared/types/api/requests.ts:58 - PasswordResetConfirmRequestSchema
+shared/types/api/requests.ts:59 - ProfileUpdateRequestSchema
+shared/types/api/requests.ts:60 - TeacherUpgradeRequestSchema
+shared/types/api/requests.ts:61 - SendEmailVerificationRequestSchema
+shared/types/api/requests.ts:62 - VerifyEmailRequestSchema
+shared/types/api/requests.ts:63 - ResendEmailVerificationRequestSchema
+shared/types/api/requests.ts:64 - SetQuestionRequestSchema
+shared/types/api/requests.ts:72 - TeacherRegisterRequest
+shared/types/api/requests.ts:166 - PlayerJoinGameRequest
+shared/types/api/requests.ts:172 - PlayerAnswerRequest
+shared/types/api/requests.ts:180 - TeacherLoginRequest
+shared/types/api/requests.ts:200 - SuccessResponse
+shared/types/api/responses.ts:144 - PublicUserResponse (used in module)
+shared/types/api/responses.ts:169 - GameInstanceWithTemplateResponse
+shared/types/api/responses.ts:251 - QuestionUidsResponse
+shared/types/api/responses.ts:256 - QuestionFiltersResponse
+shared/types/api/responses.ts:289 - QuizTemplateResponse
+shared/types/api/responses.ts:293 - QuizTemplatesResponse
+shared/types/api/responses.ts:301 - QuizTemplateCreationResponse
+shared/types/api/responses.ts:305 - QuizTemplateUpdateResponse
+shared/types/api/responses.ts:309 - QuizTemplateDeleteResponse
+shared/types/api/responses.ts:313 - QuizTemplateQuestionResponse
+shared/types/api/responses.ts:328 - SuccessResponse
+shared/types/api/schemas.ts:201 - LoginResponseSchema (used in module)
+shared/types/api/schemas.ts:218 - RegisterResponseSchema (used in module)
+shared/types/api/schemas.ts:226 - UpgradeAccountResponseSchema (used in module)
+shared/types/api/schemas.ts:233 - AuthStatusResponseSchema (used in module)
+shared/types/api/schemas.ts:244 - ProfileUpdateResponseSchema (used in module)
+shared/types/api/schemas.ts:250 - TeacherUpgradeResponseSchema (used in module)
+shared/types/api/schemas.ts:257 - LogoutResponseSchema (used in module)
+shared/types/api/schemas.ts:263 - ErrorResponseSchema (used in module)
+shared/types/api/schemas.ts:271 - UniversalLoginResponseSchema (used in module)
+shared/types/api/schemas.ts:290 - GameCreationResponseSchema (used in module)
+shared/types/api/schemas.ts:294 - GameJoinResponseSchema (used in module)
+shared/types/api/schemas.ts:300 - GameStatusUpdateResponseSchema (used in module)
+shared/types/api/schemas.ts:304 - GameStateResponseSchema (used in module)
+shared/types/api/schemas.ts:323 - LeaderboardResponseSchema (used in module)
+shared/types/api/schemas.ts:327 - TeacherActiveGamesResponseSchema (used in module)
+shared/types/api/schemas.ts:331 - GameInstancesByTemplateResponseSchema (used in module)
+shared/types/api/schemas.ts:337 - QuestionCreationResponseSchema (used in module)
+shared/types/api/schemas.ts:341 - QuestionResponseSchema (used in module)
+shared/types/api/schemas.ts:345 - QuestionsResponseSchema (used in module)
+shared/types/api/schemas.ts:354 - QuestionsListResponseSchema (used in module)
+shared/types/api/schemas.ts:356 - QuestionUidsResponseSchema (used in module)
+shared/types/api/schemas.ts:362 - FilterOptionSchema (used in module)
+shared/types/api/schemas.ts:368 - QuestionsFiltersResponseSchema (used in module)
+shared/types/api/schemas.ts:375 - QuestionsCountResponseSchema (used in module)
+shared/types/api/schemas.ts:399 - GameTemplateResponseSchema (used in module)
+shared/types/api/schemas.ts:403 - GameTemplatesResponseSchema (used in module)
+shared/types/api/schemas.ts:413 - GameTemplateCreationResponseSchema (used in module)
+shared/types/api/schemas.ts:417 - GameTemplateUpdateResponseSchema (used in module)
+shared/types/api/schemas.ts:424 - QuizTemplateResponseSchema (used in module)
+shared/types/api/schemas.ts:428 - QuizTemplatesResponseSchema (used in module)
+shared/types/api/schemas.ts:436 - QuizCreationResponseSchema (used in module)
+shared/types/api/schemas.ts:440 - QuizTemplateCreationResponseSchema (used in module)
+shared/types/api/schemas.ts:442 - QuizTemplateUpdateResponseSchema (used in module)
+shared/types/api/schemas.ts:446 - QuizTemplateDeleteResponseSchema (used in module)
+shared/types/api/schemas.ts:450 - QuizTemplateQuestionResponseSchema (used in module)
+shared/types/api/schemas.ts:454 - QuizListResponseSchema (used in module)
+shared/types/api/schemas.ts:462 - TeacherQuizQuestionsResponseSchema (used in module)
+shared/types/api/schemas.ts:472 - TournamentCodeResponseSchema (used in module)
+shared/types/api/schemas.ts:476 - TournamentVerificationResponseSchema (used in module)
+shared/types/api/schemas.ts:509 - SuccessResponseSchema (used in module)
+shared/types/api/schemas.ts:538 - UpgradeRequest
+shared/types/api/schemas.ts:541 - LoginResponse
+shared/types/api/schemas.ts:542 - RegisterResponse
+shared/types/api/schemas.ts:543 - UpgradeAccountResponse
+shared/types/api/schemas.ts:544 - AuthStatusResponse
+shared/types/api/schemas.ts:545 - ProfileUpdateResponse
+shared/types/api/schemas.ts:546 - TeacherUpgradeResponse
+shared/types/api/schemas.ts:547 - LogoutResponse
+shared/types/api/schemas.ts:548 - ErrorResponse
+shared/types/api/schemas.ts:550 - GameJoinResponse
+shared/types/api/schemas.ts:551 - GameStatusUpdateResponse
+shared/types/api/schemas.ts:552 - GameStateResponse
+shared/types/api/schemas.ts:553 - LeaderboardResponse
+shared/types/api/schemas.ts:554 - TeacherActiveGamesResponse
+shared/types/api/schemas.ts:555 - GameInstancesByTemplateResponse
+shared/types/api/schemas.ts:556 - QuestionCreationResponse
+shared/types/api/schemas.ts:557 - QuestionResponse
+shared/types/api/schemas.ts:559 - QuestionsListResponse
+shared/types/api/schemas.ts:560 - QuestionUidsResponse
+shared/types/api/schemas.ts:561 - QuestionsFiltersResponse
+shared/types/api/schemas.ts:562 - QuestionsCountResponse
+shared/types/api/schemas.ts:563 - GameTemplateResponse
+shared/types/api/schemas.ts:564 - GameTemplatesResponse
+shared/types/api/schemas.ts:565 - GameTemplateCreationResponse
+shared/types/api/schemas.ts:566 - GameTemplateUpdateResponse
+shared/types/api/schemas.ts:567 - QuizTemplateResponse
+shared/types/api/schemas.ts:568 - QuizTemplatesResponse
+shared/types/api/schemas.ts:569 - QuizCreationResponse
+shared/types/api/schemas.ts:570 - QuizTemplateCreationResponse
+shared/types/api/schemas.ts:571 - QuizTemplateUpdateResponse
+shared/types/api/schemas.ts:572 - QuizTemplateDeleteResponse
+shared/types/api/schemas.ts:573 - QuizTemplateQuestionResponse
+shared/types/api/schemas.ts:574 - QuizListResponse
+shared/types/api/schemas.ts:575 - TeacherQuizQuestionsResponse
+shared/types/api/schemas.ts:576 - TournamentCodeResponse
+shared/types/api/schemas.ts:577 - TournamentVerificationResponse
+shared/types/api/schemas.ts:578 - SuccessResponse
+shared/types/api/schemas.ts:579 - UniversalLoginResponse
+shared/types/api/schemas.ts:587 - PracticeSettingsSchema (used in module)
+shared/types/api/schemas.ts:598 - PracticeAnswerSchema (used in module)
+shared/types/api/schemas.ts:608 - PracticeQuestionDataSchema (used in module)
+shared/types/api/schemas.ts:646 - PracticeStatisticsSchema (used in module)
+shared/types/api/schemas.ts:657 - PracticeSessionSchema (used in module)
+shared/types/api/schemas.ts:680 - CreatePracticeSessionResponseSchema (used in module)
+shared/types/api/schemas.ts:687 - StartPracticeSessionPayloadSchema (used in module)
+shared/types/api/schemas.ts:696 - SubmitPracticeAnswerPayloadSchema (used in module)
+shared/types/api/schemas.ts:703 - GetNextPracticeQuestionPayloadSchema (used in module)
+shared/types/api/schemas.ts:708 - RetryPracticeQuestionPayloadSchema (used in module)
+shared/types/api/schemas.ts:713 - EndPracticeSessionPayloadSchema (used in module)
+shared/types/api/schemas.ts:718 - GetPracticeSessionStatePayloadSchema (used in module)
+shared/types/api/schemas.ts:723 - CreatePracticeSessionApiRequestSchema (used in module)
+shared/types/api/schemas.ts:728 - GetPracticeSessionsApiRequestSchema (used in module)
+shared/types/api/schemas.ts:735 - UpdatePracticeSessionApiRequestSchema (used in module)
+shared/types/api/schemas.ts:740 - GetPracticeQuestionsApiRequestSchema (used in module)
+shared/types/api/schemas.ts:749 - CreatePracticeSessionApiResponseSchema (used in module)
+shared/types/api/schemas.ts:756 - GetPracticeSessionApiResponseSchema (used in module)
+shared/types/api/schemas.ts:763 - GetPracticeSessionsApiResponseSchema (used in module)
+shared/types/api/schemas.ts:776 - GetPracticeQuestionsApiResponseSchema (used in module)
+shared/types/api/schemas.ts:785 - PracticeSettings
+shared/types/api/schemas.ts:786 - PracticeAnswer
+shared/types/api/schemas.ts:787 - PracticeQuestionData
+shared/types/api/schemas.ts:788 - PracticeStatistics
+shared/types/api/schemas.ts:789 - PracticeSession
+shared/types/api/schemas.ts:790 - CreatePracticeSessionRequest
+shared/types/api/schemas.ts:791 - CreatePracticeSessionResponse
+shared/types/api/schemas.ts:792 - StartPracticeSessionPayload
+shared/types/api/schemas.ts:793 - SubmitPracticeAnswerPayload
+shared/types/api/schemas.ts:794 - GetNextPracticeQuestionPayload
+shared/types/api/schemas.ts:795 - RetryPracticeQuestionPayload
+shared/types/api/schemas.ts:796 - EndPracticeSessionPayload
+shared/types/api/schemas.ts:797 - GetPracticeSessionStatePayload
+shared/types/api/schemas.ts:798 - CreatePracticeSessionApiRequest
+shared/types/api/schemas.ts:799 - GetPracticeSessionsApiRequest
+shared/types/api/schemas.ts:800 - UpdatePracticeSessionApiRequest
+shared/types/api/schemas.ts:801 - GetPracticeQuestionsApiRequest
+shared/types/api/schemas.ts:802 - GetPracticeSessionApiResponse
+shared/types/api/schemas.ts:803 - GetPracticeSessionsApiResponse
+shared/types/api/schemas.ts:804 - GetPracticeQuestionsApiResponse
+shared/types/api/schemas.ts:805 - CreatePracticeSessionApiResponse
+shared/types/core/game.zod.ts:6 - PlayModeSchema (used in module)
+shared/types/core/game.zod.ts:9 - GameTemplateBaseSchema (used in module)
+shared/types/core/game.zod.ts:25 - GameInstanceBaseSchema (used in module)
+shared/types/core/game.zod.ts:45 - GameParticipantRecordSchema (used in module)
+shared/types/core/game.zod.ts:67 - GameTemplateCreationDataSchema (used in module)
+shared/types/core/game.zod.ts:77 - GameTemplateUpdateDataSchema (used in module)
+shared/types/core/game.zod.ts:86 - GameInstanceCreationDataSchema (used in module)
+shared/types/core/game.zod.ts:98 - PlayMode
+shared/types/core/game.zod.ts:99 - GameTemplate
+shared/types/core/game.zod.ts:100 - GameInstance
+shared/types/core/game.zod.ts:101 - GameParticipantRecord
+shared/types/core/game.zod.ts:102 - GameTemplateCreationData
+shared/types/core/game.zod.ts:103 - GameTemplateUpdateData
+shared/types/core/game.zod.ts:104 - GameInstanceCreationData
+shared/types/core/leaderboardEntry.zod.ts:19 - LeaderboardEntry
+shared/types/core/timer.zod.ts:11 - timerActionPayloadSchema
+shared/types/core/timer.zod.ts:36 - GameTimerStateSchema
+shared/types/core/timer.zod.ts:37 - GameTimerStateZ
+shared/types/practice/api.ts:15 - CreatePracticeSessionApiRequest
+shared/types/practice/api.ts:23 - GetPracticeSessionsApiRequest
+shared/types/practice/api.ts:35 - UpdatePracticeSessionApiRequest
+shared/types/practice/api.ts:47 - CreatePracticeSessionApiResponse
+shared/types/practice/api.ts:59 - GetPracticeSessionApiResponse
+shared/types/practice/api.ts:71 - GetPracticeSessionsApiResponse
+shared/types/practice/api.ts:94 - UpdatePracticeSessionApiResponse
+shared/types/practice/api.ts:106 - DeletePracticeSessionApiResponse
+shared/types/practice/api.ts:122 - GetPracticeAnalyticsApiRequest
+shared/types/practice/api.ts:136 - PracticeAnalytics (used in module)
+shared/types/practice/api.ts:174 - GetPracticeAnalyticsApiResponse
+shared/types/practice/api.ts:190 - GetPracticeQuestionsApiRequest
+shared/types/practice/api.ts:204 - GetPracticeQuestionsApiResponse
+shared/types/practice/api.ts:222 - PracticeApiErrorResponse
+shared/types/practice/session.ts:149 - CreatePracticeSessionRequest
+shared/types/practice/session.ts:173 - PracticeSessionUpdate
+shared/types/quiz/question.ts:10 - Answer (used in module)
+shared/types/quiz/question.zod.ts:59 - Question
+shared/types/quiz/question.zod.ts:63 - QuestionCreationData
+shared/types/quiz/question.zod.ts:67 - QuestionUpdateData
+shared/types/quiz/state.ts:11 - Chrono (used in module)
+shared/types/quiz/state.ts:11 - QuestionTimer (used in module)
+shared/types/socket/payloads.zod.ts:4 - setQuestionPayloadSchema
+shared/types/socket/payloads.zod.ts:12 - timerActionPayloadSchema (used in module)
+shared/types/socket/payloads.zod.ts:22 - setTimerPayloadSchema (used in module)
+shared/types/socket/payloads.zod.ts:28 - closeQuestionPayloadSchema
+shared/types/socket/payloads.zod.ts:34 - joinQuizPayloadSchema
+shared/types/socket/payloads.zod.ts:45 - getQuizStatePayloadSchema
+shared/types/socket/payloads.zod.ts:49 - pauseResumePayloadSchema
+shared/types/socket/payloads.zod.ts:55 - updateTournamentCodePayloadSchema (used in module)
+shared/types/socket/payloads.zod.ts:60 - updateAvatarPayloadSchema
+shared/types/socket/payloads.zod.ts:66 - quizTimerActionPayloadSchema
+shared/types/socket/payloads.zod.ts:68 - gameTimerUpdatePayloadSchema
+shared/types/socket/payloads.zod.ts:80 - startTournamentPayloadSchema
+shared/types/socket/payloads.zod.ts:87 - gameControlStatePayloadSchema (used in module)
+shared/types/socket/payloads.zod.ts:101 - GameControlStatePayload
+shared/types/socket/payloads.zod.ts:104 - SetTimerPayload
+shared/types/socket/payloads.zod.ts:105 - UpdateTournamentCodePayload
+shared/types/socket/payloads.zod.ts:108 - ProjectionShowStatsPayloadSchema
+shared/types/socket/projectionShowStats.ts:5 - MultipleChoiceStatsSchema (used in module)
+shared/types/socket/projectionShowStats.ts:12 - NumericStatsSchema (used in module)
+shared/types/socket/projectionShowStats.ts:19 - ProjectionShowStatsStatsSchema (used in module)
+shared/types/socket/projectionShowStats.ts:35 - MultipleChoiceStats
+shared/types/socket/projectionShowStats.ts:36 - NumericStats
+shared/types/tournament/participant.ts:10 - Participant
+shared/types/tournament/participant.ts:13 - LeaderboardEntry
+shared/types/tournament/question.ts:28 - isTournamentQuestion
+shared/types/tournament/question.ts:45 - getQuestionUid
+shared/types/tournament/question.ts:61 - getQuestionText
+shared/types/tournament/question.ts:80 - getQuestionAnswers
+shared/types/tournament/state.ts:14 - QuestionTimerState (used in module)
+shared/types/tournament/state.ts:24 - QuestionState
+shared/types/tournament/state.ts:33 - TournamentState (used in module)
+shared/types/tournament/state.ts:67 - TournamentStateContainer
+backend/src/api/v1/players.ts:28 - __setUserServiceForTesting
+backend/src/core/services/authService.ts:16 - AuthService (used in module)
+backend/src/core/services/authService.ts:131 - authService
+backend/src/core/services/emailService.ts:435 - emailService
+backend/src/core/services/gameInstanceService.ts:7 - GameInstanceCreationData (used in module)
+backend/src/core/services/gameInstanceService.ts:12 - GameStatusUpdateData (used in module)
+backend/src/core/services/gameInstanceService.ts:17 - GameInstanceUnifiedCreationData (used in module)
+backend/src/core/services/gameParticipantService.ts:11 - SubmitAnswerData (used in module)
+backend/src/core/services/gameTemplateService.ts:9 - StudentGameTemplateCreationData (used in module)
+backend/src/core/services/practiceService.ts:17 - PracticeService (used in module)
+backend/src/core/services/practiceService.ts:136 - practiceService
+backend/src/core/services/quizTemplateService.ts:8 - gameTemplateCreationData (used in module)
+backend/src/core/services/quizTemplateService.ts:21 - gameTemplateUpdateData (used in module)
+backend/src/core/services/quizTemplateService.ts:34 - gameTemplateService
+backend/src/core/services/scoringService.ts:397 - submitAnswerWithScoring (used in module)
+backend/src/core/services/scoringService.ts:17 - ScoreResult (used in module)
+backend/src/core/services/socketService.ts:17 - SocketService (used in module)
+backend/src/core/services/socketService.ts:172 - socketService
+backend/src/core/services/timerKeyUtil.ts:4 - TimerKeyParams (used in module)
+backend/src/sockets/handlers/gameHandler.ts:9 - gameHandler (used in module)
+backend/src/sockets/handlers/practiceSessionHandler.ts:531 - default
+backend/src/sockets/handlers/sharedScore.ts:20 - calculateScore
+backend/src/sockets/handlers/teacherControlHandler.ts:13 - teacherControlHandler (used in module)
+backend/src/sockets/handlers/tournamentHandler.ts:289 - default
+backend/src/sockets/utils/roomUtils.ts:136 - roomExists
+backend/src/core/services/gameParticipant/finalizeService.ts:13 - finalizeParticipation
+backend/src/core/services/gameParticipant/logging.ts:9 - logParticipationEvent
+backend/src/core/services/gameParticipant/scoreService.ts:13 - DifferedParticipationSchema (used in module)
+backend/src/core/services/gameParticipant/scoreService.ts:22 - DifferedParticipation (used in module)
+backend/src/core/services/gameParticipant/scoreService.ts:192 - validateDifferedParticipation
+backend/src/core/services/gameStateService/getCurrentLiveQuestionPayload.ts:10 - getCurrentLiveQuestionPayload
+backend/src/db/generated/client/client.d.ts:13 - PrismaPromise
+backend/src/db/generated/client/client.d.ts:20 - User
+backend/src/db/generated/client/client.d.ts:25 - TeacherProfile
+backend/src/db/generated/client/client.d.ts:30 - StudentProfile
+backend/src/db/generated/client/client.d.ts:35 - Question
+backend/src/db/generated/client/client.d.ts:40 - MultipleChoiceQuestion
+backend/src/db/generated/client/client.d.ts:45 - NumericQuestion
+backend/src/db/generated/client/client.d.ts:50 - GameTemplate
+backend/src/db/generated/client/client.d.ts:55 - QuestionsInGameTemplate
+backend/src/db/generated/client/client.d.ts:60 - GameInstance
+backend/src/db/generated/client/client.d.ts:65 - GameParticipant
+backend/src/db/generated/client/client.d.ts:70 - $Enums
+backend/src/db/generated/client/client.d.ts:101 - UserRole
+backend/src/db/generated/client/client.d.ts:105 - PlayMode
+backend/src/db/generated/client/client.d.ts:109 - ParticipantStatus
+backend/src/db/generated/client/client.d.ts:127 - PrismaClient
+backend/src/db/generated/client/client.d.ts:339 - Prisma
+backend/src/db/generated/client/edge.d.ts:13 - PrismaPromise
+backend/src/db/generated/client/edge.d.ts:20 - User
+backend/src/db/generated/client/edge.d.ts:25 - TeacherProfile
+backend/src/db/generated/client/edge.d.ts:30 - StudentProfile
+backend/src/db/generated/client/edge.d.ts:35 - Question
+backend/src/db/generated/client/edge.d.ts:40 - MultipleChoiceQuestion
+backend/src/db/generated/client/edge.d.ts:45 - NumericQuestion
+backend/src/db/generated/client/edge.d.ts:50 - GameTemplate
+backend/src/db/generated/client/edge.d.ts:55 - QuestionsInGameTemplate
+backend/src/db/generated/client/edge.d.ts:60 - GameInstance
+backend/src/db/generated/client/edge.d.ts:65 - GameParticipant
+backend/src/db/generated/client/edge.d.ts:70 - $Enums
+backend/src/db/generated/client/edge.d.ts:101 - UserRole
+backend/src/db/generated/client/edge.d.ts:105 - PlayMode
+backend/src/db/generated/client/edge.d.ts:109 - ParticipantStatus
+backend/src/db/generated/client/edge.d.ts:127 - PrismaClient
+backend/src/db/generated/client/edge.d.ts:339 - Prisma
+backend/src/db/generated/client/wasm.d.ts:13 - PrismaPromise
+backend/src/db/generated/client/wasm.d.ts:20 - User
+backend/src/db/generated/client/wasm.d.ts:25 - TeacherProfile
+backend/src/db/generated/client/wasm.d.ts:30 - StudentProfile
+backend/src/db/generated/client/wasm.d.ts:35 - Question
+backend/src/db/generated/client/wasm.d.ts:40 - MultipleChoiceQuestion
+backend/src/db/generated/client/wasm.d.ts:45 - NumericQuestion
+backend/src/db/generated/client/wasm.d.ts:50 - GameTemplate
+backend/src/db/generated/client/wasm.d.ts:55 - QuestionsInGameTemplate
+backend/src/db/generated/client/wasm.d.ts:60 - GameInstance
+backend/src/db/generated/client/wasm.d.ts:65 - GameParticipant
+backend/src/db/generated/client/wasm.d.ts:70 - $Enums
+backend/src/db/generated/client/wasm.d.ts:101 - UserRole
+backend/src/db/generated/client/wasm.d.ts:105 - PlayMode
+backend/src/db/generated/client/wasm.d.ts:109 - ParticipantStatus
+backend/src/db/generated/client/wasm.d.ts:127 - PrismaClient
+backend/src/db/generated/client/wasm.d.ts:339 - Prisma
+backend/src/sockets/handlers/game/gameAnswer.ts:37 - GameAnswerPayload
+backend/src/sockets/handlers/game/gameAnswer.ts:40 - GameAnswerContext (used in module)
+backend/src/sockets/handlers/game/helpers.ts:19 - getAllParticipants
+backend/src/sockets/handlers/game/helpers.ts:37 - sendFirstQuestionAndStartTimer
+backend/src/sockets/handlers/game/helpers.ts:10 - GAME_KEY_PREFIX
+backend/src/sockets/handlers/game/helpers.ts:11 - PARTICIPANTS_KEY_PREFIX (used in module)
+backend/src/sockets/handlers/game/helpers.ts:12 - ANSWERS_KEY_PREFIX
+backend/src/sockets/handlers/game/index.ts:15 - registerGameHandlers
+backend/src/sockets/handlers/game/index.ts:300 - registerTournamentHandlers
+backend/src/sockets/handlers/game/joinGame.ts:39 - JoinGamePayload (used in module)
+backend/src/sockets/handlers/game/joinGame.ts:40 - GameJoinedPayload (used in module)
+backend/src/sockets/handlers/game/joinGame.ts:41 - PlayerJoinedGamePayload
+backend/src/sockets/handlers/game/joinGame.ts:42 - ErrorPayload (used in module)
+backend/src/sockets/handlers/game/joinGame.ts:43 - GameAlreadyPlayedPayload
+backend/src/sockets/handlers/game/requestParticipants.ts:9 - RequestParticipantsPayload (used in module)
+backend/src/sockets/handlers/game/types.ts:4 - JoinGamePayload
+backend/src/sockets/handlers/game/types.ts:5 - GameAnswerPayload
+backend/src/sockets/handlers/teacherControl/index.ts:66 - default
+backend/src/sockets/handlers/teacherControl/pauseTimer.ts:92 - default
+backend/src/sockets/handlers/teacherControl/types.ts:29 - DashboardQuestionChangedPayload (used in module)
+backend/src/sockets/handlers/teacherControl/types.ts:30 - DashboardTimerUpdatedPayload (used in module)
+backend/src/sockets/handlers/teacherControl/types.ts:31 - DashboardAnswersLockChangedPayload (used in module)
+backend/src/sockets/handlers/teacherControl/types.ts:32 - DashboardGameStatusChangedPayload (used in module)
+backend/src/sockets/handlers/teacherControl/types.ts:33 - DashboardAnswerStatsUpdatePayload (used in module)
+backend/src/sockets/handlers/teacherControl/types.ts:40 - TimerState
+backend/src/sockets/handlers/tournament/index.ts:11 - default
+backend/src/db/generated/client/runtime/index-browser.d.ts:21 - Decimal (used in module)
+backend/src/db/generated/client/runtime/index-browser.d.ts:294 - getRuntime
+backend/src/db/generated/client/runtime/index-browser.d.ts:322 - makeStrictEnum
+backend/src/db/generated/client/runtime/index-browser.d.ts:340 - objectEnumValues
+backend/src/db/generated/client/runtime/index-browser.d.ts:360 - Public (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:310 - createParam
+backend/src/db/generated/client/runtime/library.d.ts:707 - defineDmmfProperty
+backend/src/db/generated/client/runtime/library.d.ts:721 - deserializeJsonResponse
+backend/src/db/generated/client/runtime/library.d.ts:723 - deserializeRawResult
+backend/src/db/generated/client/runtime/library.d.ts:827 - dmmfToRuntimeDataModel
+backend/src/db/generated/client/runtime/library.d.ts:1530 - getPrismaClient (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1777 - getRuntime (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1968 - isTypedSql
+backend/src/db/generated/client/runtime/library.d.ts:2150 - makeStrictEnum
+backend/src/db/generated/client/runtime/library.d.ts:2152 - makeTypedQueryFactory
+backend/src/db/generated/client/runtime/library.d.ts:2451 - Param (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3074 - serializeJsonQuery
+backend/src/db/generated/client/runtime/library.d.ts:3643 - warnEnvConflicts
+backend/src/db/generated/client/runtime/library.d.ts:26 - Action (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:39 - Aggregate (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:41 - AllModelsToStringIndex (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:53 - ApplyOmit (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:57 - Args (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:69 - Args_3
+backend/src/db/generated/client/runtime/library.d.ts:138 - Call (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:146 - Cast (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:150 - ClientArg (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:154 - ClientArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:158 - ClientBuiltInProp (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:160 - ClientOptionDef (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:164 - ClientOtherOps (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:237 - Compute (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:241 - ComputeDeep (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:306 - Count (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:390 - Debug
+backend/src/db/generated/client/runtime/library.d.ts:697 - DefaultArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:699 - DefaultSelection (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:725 - DevTypeMapDef (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:739 - DevTypeMapFnDef (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:847 - DynamicClientExtensionArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:857 - DynamicClientExtensionThis (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:871 - DynamicClientExtensionThisBuiltin (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:888 - DynamicModelExtensionArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:911 - DynamicModelExtensionFluentApi (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:919 - DynamicModelExtensionFnResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:921 - DynamicModelExtensionFnResultBase (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:923 - DynamicModelExtensionFnResultNull (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:925 - DynamicModelExtensionOperationFn (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:927 - DynamicModelExtensionThis (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:940 - DynamicQueryExtensionArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:953 - DynamicQueryExtensionCb (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:955 - DynamicQueryExtensionCbArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:964 - DynamicQueryExtensionCbArgsArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:967 - DynamicResultExtensionArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:976 - DynamicResultExtensionData (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:980 - DynamicResultExtensionNeeds (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:991 - EmptyToUnknown (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1140 - Equals (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1242 - Exact (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1288 - ExtendsHook (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1322 - ExtensionArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1373 - ExtractGlobalOmit (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1444 - Fn (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1472 - GetAggregateResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1480 - GetBatchResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1484 - GetCountResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1490 - GetFindResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1506 - GetGroupByResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1516 - GetOmit (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1520 - GetPayloadResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1522 - GetPayloadResultExtensionKeys (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1524 - GetPayloadResultExtensionObject (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1676 - GetPrismaClientConfig (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1749 - GetResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1785 - GetSelect (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1904 - InternalArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1972 - itxClientDenyList
+backend/src/db/generated/client/runtime/library.d.ts:1985 - JsArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:1992 - JsInputValue (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2007 - JsonBatchQuery (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2014 - JsonConvertible (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2036 - JsonQuery (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2057 - JsOutputValue (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2061 - JsPromise (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2186 - MergeExtArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2209 - MetricsClient (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2295 - ModelArg (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2299 - ModelArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2305 - ModelKey (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2331 - ModelQueryOptionsCb (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2333 - ModelQueryOptionsCbArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2345 - NameArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2349 - Narrow (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2353 - Narrowable (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2355 - NeverToUnknown (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2364 - ObjectEnumValue (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2371 - objectEnumValues
+backend/src/db/generated/client/runtime/library.d.ts:2386 - Omission (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2391 - Omit (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2393 - OmitValue (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2395 - Operation (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2397 - OperationPayload (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2410 - Optional (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2416 - OptionalFlat (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2420 - OptionalKeys (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2428 - Or (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2457 - PatchFlat (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2459 - Path (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2461 - Payload (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2469 - PayloadToResult (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2476 - Pick (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2500 - PrismaClientOptions (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2585 - PrismaPromise (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2651 - PrivateResultType (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2785 - QueryOptions (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2793 - QueryOptionsCb (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2795 - QueryOptionsCbArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2813 - RawParameters (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2818 - RawQueryArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2834 - RawValue (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2836 - ReadonlyDeep (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2847 - Record (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2849 - RenameAndNestPayloadKeys (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2917 - RequiredExtensionArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2918 - UserArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2920 - RequiredKeys (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2931 - Result (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2944 - Result_2
+backend/src/db/generated/client/runtime/library.d.ts:2977 - ResultArg (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2981 - ResultArgs (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2987 - ResultArgsFieldCompute (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2989 - ResultFieldDefinition (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2996 - Return (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:2998 - RuntimeDataModel (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3053 - Select (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3055 - SelectablePayloadFields (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3065 - SelectField (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3072 - Selection
+backend/src/db/generated/client/runtime/library.d.ts:3095 - skip (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3386 - SqlDriverAdapterFactory (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3433 - ToTuple (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3526 - TypedSql (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3533 - TypeMapCbDef (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3538 - TypeMapDef (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3572 - UnknownTypedSql (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3576 - UnwrapPayload (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3586 - UnwrapPromise (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3588 - UnwrapTuple (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3641 - Value (used in module)
+backend/src/db/generated/client/runtime/library.d.ts:3645 - warnOnce

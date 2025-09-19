@@ -467,34 +467,9 @@ export const serverToClientEventsSchema = z.object({
   feedback: z.function().args(feedbackPayloadSchema).returns(z.void()),
 });
 
-// Additional teacher control schemas
-export const startTimerPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }).optional(),
-  accessCode: z.string().min(1, { message: "Access code cannot be empty." }).optional(),
-  durationMs: z.number().int().positive({ message: "durationMs must be a positive integer (ms)." }),
-}).refine(data => data.gameId || data.accessCode, {
-  message: "Either gameId or accessCode must be provided.",
-});
-
-export const pauseTimerPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }).optional(),
-  accessCode: z.string().min(1, { message: "Access code cannot be empty." }).optional(),
-}).refine(data => data.gameId || data.accessCode, {
-  message: "Either gameId or accessCode must be provided.",
-});
-
 // Tournament schemas
 export const startTournamentPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
-});
-
-// Projector schemas
-export const joinProjectorPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }),
-});
-
-export const leaveProjectorPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }),
 });
 
 // DEPRECATED LOBBY SCHEMAS - Use unified join flow instead

@@ -11,26 +11,7 @@ export const participantSchema = z.object({
   scoredQuestions: z.record(z.number()).optional(),
 });
 
-export const tournamentAnswerSchema = z.object({
-  questionUid: z.string().optional(),
-  answerIdx: z.union([z.number(), z.array(z.number())]).optional(),
-  value: z.any().optional(),
-  timestamp: z.number().optional(),
-  clientTimestamp: z.number().optional(),
-  score: z.number().optional(),
-  timePenalty: z.number().optional(),
-  baseScore: z.number().optional(),
-  timeMs: z.number().optional(),
-  isCorrect: z.boolean().optional(),
-});
-
-export const tournamentParticipantSchema = participantSchema.extend({
-  answers: z.array(tournamentAnswerSchema).optional(),
-});
-
-export const leaderboardEntrySchema = z.object({
-  id: z.string(),
-  username: z.string(),
-  avatar: z.string().optional(),
-  score: z.number(),
-});
+// Removed unused schemas:
+// - tournamentAnswerSchema (only used within this file)
+// - tournamentParticipantSchema (never imported)
+// - leaderboardEntrySchema (duplicate of core/leaderboardEntry.zod.ts)

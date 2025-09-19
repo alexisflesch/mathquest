@@ -87,25 +87,6 @@ export interface AnswerResponsePayload {
 }
 
 /**
- * Answer result interface
- * Comprehensive answer result with all computed data
- */
-export interface AnswerResult {
-    /** Original answer submission */
-    answer: GameAnswer;
-    /** Whether answer is correct */
-    isCorrect: boolean;
-    /** Score awarded */
-    score: number;
-    /** Time penalty applied */
-    timePenalty?: number;
-    /** Feedback message */
-    feedback?: string;
-    /** Explanation text */
-    explanation?: string;
-}
-
-/**
  * Answer statistics interface
  * Aggregated statistics for answer analysis
  */

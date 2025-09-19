@@ -9,9 +9,7 @@ export * from './gameTimings';
 
 // Re-export commonly used constants for convenience
 export {
-    QUESTION_TYPES,
-    TIMEOUT_CONSTANTS,
-    isValidQuestionType
+    QUESTION_TYPES
 } from './questionTypes';
 
 export {
@@ -20,5 +18,5 @@ export {
     getFeedbackDisplayTime
 } from './gameTimings';
 
-export type { QuestionType, TimeoutConstant } from './questionTypes';
+export type { QuestionType } from './questionTypes';
 export type { GameTimingConstant } from './gameTimings';

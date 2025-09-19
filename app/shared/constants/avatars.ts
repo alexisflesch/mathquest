@@ -125,6 +125,4 @@ export const EXTRA_ALLOWED_AVATARS = [
 export const ALL_ALLOWED_AVATARS = [...ALLOWED_ANIMAL_AVATARS, ...EXTRA_ALLOWED_AVATARS] as const;
 
 // Types
-export type AnimalAvatar = typeof ALLOWED_ANIMAL_AVATARS[number];
-export type ExtraAvatar = typeof EXTRA_ALLOWED_AVATARS[number];
 export type AllowedAvatar = typeof ALL_ALLOWED_AVATARS[number];

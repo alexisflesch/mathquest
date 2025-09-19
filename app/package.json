@@ -29,7 +29,8 @@
     "babel-preset-react-app": "^10.1.0",
     "concurrently": "^8.2.2",
     "ts-prune": "^0.10.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "webpack-bundle-analyzer": "^4.10.2"
   },
   "dependencies": {
     "zod": "3.24.4"

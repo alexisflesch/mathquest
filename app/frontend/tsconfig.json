@@ -32,9 +32,6 @@
             "@shared/*": [
                 "../shared/*"
             ],
-            "@logger": [
-                "../shared/logger.ts"
-            ],
             "@db": [
                 "../backend-backup/db/index.ts"
             ],
