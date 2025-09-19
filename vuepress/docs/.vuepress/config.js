@@ -23,6 +23,7 @@ export default defineUserConfig({
       { text: "Utilisation de l'appli", link: "/utilisation/" },
       { text: "Écriture de questions", link: "/questions-yaml/" },
       { text: "Installation", link: "/installation/" },
+      { text: "Détails techniques", link: "/details-techniques/" },
     ],
 
     sidebar: {
@@ -51,6 +52,22 @@ export default defineUserConfig({
             '/utilisation/quiz.md',
             '/utilisation/tournoi.md',
             '/utilisation/entrainement.md',
+          ],
+        },
+      ],
+      '/details-techniques/': [
+        {
+          text: 'Détails techniques (utilisateurs avancés seulement)',
+          children: [
+            '/details-techniques/README.md',
+            '/details-techniques/architecture.md',
+            '/details-techniques/database.md',
+            '/details-techniques/scoring.md',
+            '/details-techniques/backend-services.md',
+            '/details-techniques/api.md',
+            '/details-techniques/configuration.md',
+            '/details-techniques/tests.md',
+            '/details-techniques/deployement.md',
           ],
         },
       ],
