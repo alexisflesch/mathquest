@@ -593,9 +593,9 @@ describe('Socket UI State Integration', () => {
             mockSocketHook.socket = mockSocket;
             mockSocketHook.gameState = {
                 ...mockSocketHook.gameState,
-                currentQuestion: { 
-                    uid: 'q1', 
-                    text: 'Test Question', 
+                currentQuestion: {
+                    uid: 'q1',
+                    text: 'Test Question',
                     questionType: 'singleChoice',
                     multipleChoiceQuestion: {
                         answerOptions: [
@@ -630,9 +630,9 @@ describe('Socket UI State Integration', () => {
             mockSocketHook.gameState = {
                 ...mockSocketHook.gameState,
                 gameStatus: 'active',
-                currentQuestion: { 
-                    uid: 'q1', 
-                    text: 'Test Question', 
+                currentQuestion: {
+                    uid: 'q1',
+                    text: 'Test Question',
                     questionType: 'singleChoice',
                     multipleChoiceQuestion: {
                         answerOptions: [
@@ -687,9 +687,9 @@ describe('Socket UI State Integration', () => {
             mockSocketHook.gameState = {
                 ...mockSocketHook.gameState,
                 gameStatus: 'active',
-                currentQuestion: { 
-                    uid: 'q1', 
-                    text: 'Test Question', 
+                currentQuestion: {
+                    uid: 'q1',
+                    text: 'Test Question',
                     questionType: 'singleChoice',
                     multipleChoiceQuestion: {
                         answerOptions: [
