@@ -4,12 +4,24 @@ import React from 'react';
 const Plot = React.forwardRef((props, ref) => {
     return React.createElement('div', {
         ref,
-        'data-testid': 'plotly-mock',
-        'data-plot-data': JSON.stringify(props.data || []),
-        'data-plot-layout': JSON.stringify(props.layout || {}),
-        'data-plot-config': JSON.stringify(props.config || {}),
+        'data-testid': 'plotly-chart',
+        'data-chart-data': JSON.stringify(props.data || []),
+        'data-chart-layout': JSON.stringify(props.layout || {}),
+        'data-chart-config': JSON.stringify(props.config || {}),
         style: { width: '100%', height: '400px', ...props.style }
-    }, 'Plotly Chart Mock');
+    },
+        // Also create nested elements with different testids for tests that expect them
+        React.createElement('div', {
+            'data-testid': 'chart-data',
+            'data-chart-data': JSON.stringify(props.data || []),
+            'data-chart-layout': JSON.stringify(props.layout || {}),
+            'data-chart-config': JSON.stringify(props.config || {})
+        }, 'Chart Data Mock'),
+        React.createElement('div', {
+            'data-testid': 'chart-layout',
+            'data-chart-layout': JSON.stringify(props.layout || {})
+        }, 'Chart Layout Mock')
+    );
 });
 
 Plot.displayName = 'PlotlyMock';

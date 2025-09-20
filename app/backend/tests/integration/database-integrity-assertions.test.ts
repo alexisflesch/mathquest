@@ -88,12 +88,27 @@ describe('Database Integrity Assertions', () => {
     });
 
     afterAll(async () => {
-        // Clean up database in reverse order to avoid foreign key constraints
-        await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: testGameInstanceId } });
-        await prisma.gameInstance.deleteMany({ where: { id: testGameInstanceId } });
-        await prisma.gameTemplate.deleteMany({ where: { id: testGameTemplateId } });
-        await prisma.studentProfile.deleteMany({ where: { id: testUserId } });
-        await prisma.user.deleteMany({ where: { id: testUserId } });
+        // Clean up in reverse dependency order to avoid foreign key constraints
+        await prisma.gameParticipant.deleteMany({
+            where: { userId: { startsWith: 'test_user_' } }
+        });
+
+        await prisma.gameInstance.deleteMany({
+            where: { initiatorUserId: { startsWith: 'test_user_' } }
+        });
+
+        await prisma.gameTemplate.deleteMany({
+            where: { creatorId: { startsWith: 'test_user_' } }
+        });
+
+        // Delete student profiles before users (foreign key constraint)
+        await prisma.studentProfile.deleteMany({
+            where: { id: { startsWith: 'test_user_' } }
+        });
+
+        await prisma.user.deleteMany({
+            where: { id: { startsWith: 'test_user_' } }
+        });
 
         await prisma.$disconnect();
     });
@@ -608,6 +623,606 @@ describe('Database Integrity Assertions', () => {
             expect(parsedTypes.fieldValidations.username.violations).toBe(0);
             expect(parsedTypes.formatValidation.json_fields.valid).toBe(true);
             expect(parsedTypes.typeStats.invalidFields).toBe(0);
+        });
+    });
+
+    describe('GameTemplate deletion constraints', () => {
+        it('should prevent deletion of GameTemplate with active instances', async () => {
+            const templateWithActiveGameId = `template_active_${Date.now()}`;
+            const activeGameId = `active_game_${Date.now()}`;
+            const participantId = `participant_${Date.now()}`;
+
+            // Create a game template
+            await prisma.gameTemplate.create({
+                data: {
+                    id: templateWithActiveGameId,
+                    name: 'Template With Active Game',
+                    description: 'Template that cannot be deleted while games are active',
+                    creatorId: testUserId,
+                    defaultMode: 'practice'
+                }
+            });
+
+            // Create an active game instance using this template
+            await prisma.gameInstance.create({
+                data: {
+                    id: activeGameId,
+                    name: 'Active Game Instance',
+                    accessCode: `active_${Date.now()}`,
+                    gameTemplateId: templateWithActiveGameId,
+                    initiatorUserId: testUserId,
+                    status: 'ACTIVE',
+                    playMode: 'practice',
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date()
+                }
+            });
+
+            // Add a participant to make it truly "active"
+            await prisma.gameParticipant.create({
+                data: {
+                    id: participantId,
+                    userId: testUserId,
+                    gameInstanceId: activeGameId,
+                    liveScore: 25,
+                    joinedAt: new Date(),
+                    status: 'ACTIVE'
+                }
+            });
+
+            // Attempt to delete the template (should fail due to foreign key constraint)
+            await expect(
+                prisma.gameTemplate.delete({
+                    where: { id: templateWithActiveGameId }
+                })
+            ).rejects.toThrow();
+
+            // Verify template still exists
+            const template = await prisma.gameTemplate.findUnique({
+                where: { id: templateWithActiveGameId }
+            });
+            expect(template).toBeDefined();
+
+            // Clean up: delete in correct order
+            await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: activeGameId } });
+            await prisma.gameInstance.deleteMany({ where: { id: activeGameId } });
+            await prisma.gameTemplate.deleteMany({ where: { id: templateWithActiveGameId } });
+        });
+
+        it('should allow deletion of GameTemplate with no active instances', async () => {
+            const templateWithoutGamesId = `template_no_games_${Date.now()}`;
+
+            // Create a game template without any games
+            await prisma.gameTemplate.create({
+                data: {
+                    id: templateWithoutGamesId,
+                    name: 'Template Without Games',
+                    description: 'Template that can be safely deleted',
+                    creatorId: testUserId,
+                    defaultMode: 'practice'
+                }
+            });
+
+            // Verify template exists
+            let template = await prisma.gameTemplate.findUnique({
+                where: { id: templateWithoutGamesId }
+            });
+            expect(template).toBeDefined();
+
+            // Delete the template (should succeed)
+            await prisma.gameTemplate.delete({
+                where: { id: templateWithoutGamesId }
+            });
+
+            // Verify template is deleted
+            template = await prisma.gameTemplate.findUnique({
+                where: { id: templateWithoutGamesId }
+            });
+            expect(template).toBeNull();
+        });
+
+        it('should allow deletion of GameTemplate after completing all games', async () => {
+            const templateWithCompletedGameId = `template_completed_${Date.now()}`;
+            const completedGameId = `completed_game_${Date.now()}`;
+            const participantId = `participant_completed_${Date.now()}`;
+
+            // Create a game template
+            await prisma.gameTemplate.create({
+                data: {
+                    id: templateWithCompletedGameId,
+                    name: 'Template With Completed Game',
+                    description: 'Template that can be deleted after games complete',
+                    creatorId: testUserId,
+                    defaultMode: 'practice'
+                }
+            });
+
+            // Create a completed game instance
+            await prisma.gameInstance.create({
+                data: {
+                    id: completedGameId,
+                    name: 'Completed Game Instance',
+                    accessCode: `completed_${Date.now()}`,
+                    gameTemplateId: templateWithCompletedGameId,
+                    initiatorUserId: testUserId,
+                    status: 'COMPLETED',
+                    playMode: 'practice',
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date(),
+                    endedAt: new Date()
+                }
+            });
+
+            // Add a completed participant
+            await prisma.gameParticipant.create({
+                data: {
+                    id: participantId,
+                    userId: testUserId,
+                    gameInstanceId: completedGameId,
+                    liveScore: 100,
+                    joinedAt: new Date(),
+                    completedAt: new Date(),
+                    status: 'COMPLETED'
+                }
+            });
+
+            // First delete the participant, then the game instance, then the template
+            // This simulates what would happen in a real cascade delete scenario
+            await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: completedGameId } });
+            await prisma.gameInstance.deleteMany({ where: { id: completedGameId } });
+
+            // Now delete the template (should succeed since no dependent records exist)
+            await prisma.gameTemplate.delete({
+                where: { id: templateWithCompletedGameId }
+            });
+
+            // Verify template is deleted
+            const template = await prisma.gameTemplate.findUnique({
+                where: { id: templateWithCompletedGameId }
+            });
+            expect(template).toBeNull();
+        });
+    });
+
+    describe('Unique constraint validation', () => {
+        it('should enforce unique access code constraints', async () => {
+            const duplicateAccessCode = `duplicate_code_${Date.now()}`;
+            const templateId1 = `template1_${Date.now()}`;
+            const templateId2 = `template2_${Date.now()}`;
+            const gameId1 = `game1_${Date.now()}`;
+            const gameId2 = `game2_${Date.now()}`;
+
+            // Create first template
+            await prisma.gameTemplate.create({
+                data: {
+                    id: templateId1,
+                    name: 'First Template',
+                    description: 'First template for duplicate access code test',
+                    creatorId: testUserId,
+                    defaultMode: 'practice'
+                }
+            });
+
+            // Create second template
+            await prisma.gameTemplate.create({
+                data: {
+                    id: templateId2,
+                    name: 'Second Template',
+                    description: 'Second template for duplicate access code test',
+                    creatorId: testUserId,
+                    defaultMode: 'practice'
+                }
+            });
+
+            // Create first game with access code
+            await prisma.gameInstance.create({
+                data: {
+                    id: gameId1,
+                    name: 'First Game',
+                    accessCode: duplicateAccessCode,
+                    gameTemplateId: templateId1,
+                    initiatorUserId: testUserId,
+                    status: 'ACTIVE',
+                    playMode: 'practice',
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date()
+                }
+            });
+
+            // Attempt to create second game with same access code (should fail)
+            await expect(
+                prisma.gameInstance.create({
+                    data: {
+                        id: gameId2,
+                        name: 'Second Game',
+                        accessCode: duplicateAccessCode, // Same access code
+                        gameTemplateId: templateId2,
+                        initiatorUserId: testUserId,
+                        status: 'ACTIVE',
+                        playMode: 'practice',
+                        settings: {
+                            gradeLevel: 'CM1',
+                            discipline: 'math',
+                            themes: ['addition'],
+                            questionCount: 5,
+                            showImmediateFeedback: true,
+                            allowRetry: false,
+                            randomizeQuestions: false
+                        },
+                        createdAt: new Date(),
+                        startedAt: new Date()
+                    }
+                })
+            ).rejects.toThrow();
+
+            // Verify only first game exists
+            const games = await prisma.gameInstance.findMany({
+                where: { accessCode: duplicateAccessCode }
+            });
+            expect(games).toHaveLength(1);
+            expect(games[0].id).toBe(gameId1);
+
+            // Clean up
+            await prisma.gameInstance.deleteMany({ where: { id: gameId1 } });
+            await prisma.gameTemplate.deleteMany({ where: { id: { in: [templateId1, templateId2] } } });
+        });
+
+        it('should enforce unique participant constraints (gameId, userId)', async () => {
+            const participantGameId = `participant_game_${Date.now()}`;
+            const participantId1 = `participant1_${Date.now()}`;
+            const participantId2 = `participant2_${Date.now()}`;
+
+            // Create game instance
+            await prisma.gameInstance.create({
+                data: {
+                    id: participantGameId,
+                    name: 'Participant Constraint Game',
+                    accessCode: `participant_${Date.now()}`,
+                    gameTemplateId: testGameTemplateId,
+                    initiatorUserId: testUserId,
+                    status: 'ACTIVE',
+                    playMode: 'practice',
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date()
+                }
+            });
+
+            // Create first participant
+            await prisma.gameParticipant.create({
+                data: {
+                    id: participantId1,
+                    userId: testUserId,
+                    gameInstanceId: participantGameId,
+                    liveScore: 50,
+                    joinedAt: new Date(),
+                    status: 'ACTIVE'
+                }
+            });
+
+            // Attempt to create second participant with same userId and gameId (should fail)
+            await expect(
+                prisma.gameParticipant.create({
+                    data: {
+                        id: participantId2,
+                        userId: testUserId, // Same user
+                        gameInstanceId: participantGameId, // Same game
+                        liveScore: 75,
+                        joinedAt: new Date(),
+                        status: 'ACTIVE'
+                    }
+                })
+            ).rejects.toThrow();
+
+            // Verify only one participant exists for this user-game combination
+            const participants = await prisma.gameParticipant.findMany({
+                where: {
+                    userId: testUserId,
+                    gameInstanceId: participantGameId
+                }
+            });
+            expect(participants).toHaveLength(1);
+            expect(participants[0].id).toBe(participantId1);
+
+            // Clean up
+            await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: participantGameId } });
+            await prisma.gameInstance.deleteMany({ where: { id: participantGameId } });
+        });
+
+        it('should handle access code uniqueness across different game statuses', async () => {
+            const reusableAccessCode = `reusable_code_${Date.now()}`;
+            const templateId = `reusable_template_${Date.now()}`;
+            const completedGameId = `completed_game_${Date.now()}`;
+            const newGameId = `new_game_${Date.now()}`;
+
+            // Create template
+            await prisma.gameTemplate.create({
+                data: {
+                    id: templateId,
+                    name: 'Reusable Access Code Template',
+                    description: 'Template for testing access code reuse',
+                    creatorId: testUserId,
+                    defaultMode: 'practice'
+                }
+            });
+
+            // Create completed game with access code
+            await prisma.gameInstance.create({
+                data: {
+                    id: completedGameId,
+                    name: 'Completed Game',
+                    accessCode: reusableAccessCode,
+                    gameTemplateId: templateId,
+                    initiatorUserId: testUserId,
+                    status: 'COMPLETED',
+                    playMode: 'practice',
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date(),
+                    endedAt: new Date()
+                }
+            });
+
+            // Attempt to create new game with same access code (should succeed for completed games)
+            await expect(
+                prisma.gameInstance.create({
+                    data: {
+                        id: newGameId,
+                        name: 'New Game With Same Code',
+                        accessCode: reusableAccessCode, // Same code as completed game
+                        gameTemplateId: templateId,
+                        initiatorUserId: testUserId,
+                        status: 'ACTIVE',
+                        playMode: 'practice',
+                        settings: {
+                            gradeLevel: 'CM1',
+                            discipline: 'math',
+                            themes: ['addition'],
+                            questionCount: 5,
+                            showImmediateFeedback: true,
+                            allowRetry: false,
+                            randomizeQuestions: false
+                        },
+                        createdAt: new Date(),
+                        startedAt: new Date()
+                    }
+                })
+            ).rejects.toThrow(); // Should still fail due to unique constraint
+
+            // Verify access code is still unique
+            const gamesWithCode = await prisma.gameInstance.findMany({
+                where: { accessCode: reusableAccessCode }
+            });
+            expect(gamesWithCode).toHaveLength(1);
+
+            // Clean up
+            await prisma.gameInstance.deleteMany({ where: { id: completedGameId } });
+            await prisma.gameTemplate.deleteMany({ where: { id: templateId } });
+        });
+    });
+
+    describe('Transactional guarantees', () => {
+        it('should maintain atomicity for question transitions', async () => {
+            const transactionGameId = `transaction_game_${Date.now()}`;
+            const questionIndex1 = 1;
+            const questionIndex2 = 2;
+
+            // Create game instance
+            await prisma.gameInstance.create({
+                data: {
+                    id: transactionGameId,
+                    name: 'Transaction Test Game',
+                    accessCode: `transaction_${Date.now()}`,
+                    gameTemplateId: testGameTemplateId,
+                    initiatorUserId: testUserId,
+                    status: 'ACTIVE',
+                    playMode: 'practice',
+                    currentQuestionIndex: questionIndex1,
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date()
+                }
+            });
+
+            // Simulate question transition in a transaction
+            const result = await prisma.$transaction(async (tx) => {
+                // Update current question
+                await tx.gameInstance.update({
+                    where: { id: transactionGameId },
+                    data: { currentQuestionIndex: questionIndex2 }
+                });
+
+                // Simulate some related operation that might fail
+                // In a real scenario, this could be updating question states, scores, etc.
+
+                return { success: true, newQuestionIndex: questionIndex2 };
+            });
+
+            // Verify transaction completed successfully
+            expect(result.success).toBe(true);
+            expect(result.newQuestionIndex).toBe(questionIndex2);
+
+            // Verify game state was updated
+            const updatedGame = await prisma.gameInstance.findUnique({
+                where: { id: transactionGameId }
+            });
+            expect(updatedGame!.currentQuestionIndex).toBe(questionIndex2);
+
+            // Clean up
+            await prisma.gameInstance.deleteMany({ where: { id: transactionGameId } });
+        });
+
+        it('should rollback on transaction failure', async () => {
+            const rollbackGameId = `rollback_game_${Date.now()}`;
+            const originalQuestionIndex = 1;
+            const newQuestionIndex = 2;
+
+            // Create game instance
+            await prisma.gameInstance.create({
+                data: {
+                    id: rollbackGameId,
+                    name: 'Rollback Test Game',
+                    accessCode: `rollback_${Date.now()}`,
+                    gameTemplateId: testGameTemplateId,
+                    initiatorUserId: testUserId,
+                    status: 'ACTIVE',
+                    playMode: 'practice',
+                    currentQuestionIndex: originalQuestionIndex,
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date()
+                }
+            });
+
+            // Attempt transaction that will fail
+            await expect(
+                prisma.$transaction(async (tx) => {
+                    // Update current question
+                    await tx.gameInstance.update({
+                        where: { id: rollbackGameId },
+                        data: { currentQuestionIndex: newQuestionIndex }
+                    });
+
+                    // Simulate failure (e.g., constraint violation)
+                    throw new Error('Simulated transaction failure');
+                })
+            ).rejects.toThrow('Simulated transaction failure');
+
+            // Verify rollback occurred - original state should be preserved
+            const gameAfterRollback = await prisma.gameInstance.findUnique({
+                where: { id: rollbackGameId }
+            });
+            expect(gameAfterRollback!.currentQuestionIndex).toBe(originalQuestionIndex);
+
+            // Clean up
+            await prisma.gameInstance.deleteMany({ where: { id: rollbackGameId } });
+        });
+
+        it('should handle concurrent question transitions safely', async () => {
+            const concurrentGameId = `concurrent_game_${Date.now()}`;
+            const questionIndex1 = 1;
+            const questionIndex2 = 2;
+
+            // Create game instance
+            await prisma.gameInstance.create({
+                data: {
+                    id: concurrentGameId,
+                    name: 'Concurrent Test Game',
+                    accessCode: `concurrent_${Date.now()}`,
+                    gameTemplateId: testGameTemplateId,
+                    initiatorUserId: testUserId,
+                    status: 'ACTIVE',
+                    playMode: 'practice',
+                    currentQuestionIndex: questionIndex1,
+                    settings: {
+                        gradeLevel: 'CM1',
+                        discipline: 'math',
+                        themes: ['addition'],
+                        questionCount: 5,
+                        showImmediateFeedback: true,
+                        allowRetry: false,
+                        randomizeQuestions: false
+                    },
+                    createdAt: new Date(),
+                    startedAt: new Date()
+                }
+            });
+
+            // Simulate concurrent operations
+            const promises = [
+                prisma.$transaction(async (tx) => {
+                    await new Promise(resolve => setTimeout(resolve, 10)); // Small delay
+                    return tx.gameInstance.update({
+                        where: { id: concurrentGameId },
+                        data: { currentQuestionIndex: questionIndex2 }
+                    });
+                }),
+                prisma.$transaction(async (tx) => {
+                    await new Promise(resolve => setTimeout(resolve, 5)); // Different delay
+                    return tx.gameInstance.update({
+                        where: { id: concurrentGameId },
+                        data: { currentQuestionIndex: questionIndex1 }
+                    });
+                })
+            ];
+
+            // Execute concurrent operations
+            const results = await Promise.allSettled(promises);
+
+            // At least one should succeed, one might fail due to optimistic locking
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+
+            expect(successful + failed).toBe(2);
+            expect(successful).toBeGreaterThan(0); // At least one should succeed
+
+            // Verify final state is consistent
+            const finalGame = await prisma.gameInstance.findUnique({
+                where: { id: concurrentGameId }
+            });
+            expect(finalGame!.currentQuestionIndex).toBeDefined();
+
+            // Clean up
+            await prisma.gameInstance.deleteMany({ where: { id: concurrentGameId } });
         });
     });
 

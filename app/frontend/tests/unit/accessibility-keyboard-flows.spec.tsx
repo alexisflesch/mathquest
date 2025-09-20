@@ -575,4 +575,326 @@ describe('Accessibility and Keyboard Flows', () => {
             expect(true).toBe(true); // Placeholder for future implementation
         });
     });
+
+    describe('Student Answer Submission - Keyboard Only Flow', () => {
+        describe('Multiple Choice Questions', () => {
+            test('should allow keyboard-only navigation and selection with Tab/Enter', async () => {
+                const user = userEvent.setup();
+                render(<TestKeyboardNavigation />);
+
+                // Start with first option focused via Tab
+                await user.tab();
+                const firstOption = screen.getByTestId('answer-option-0');
+                expect(firstOption).toHaveFocus();
+
+                // Tab to second option
+                await user.tab();
+                const secondOption = screen.getByTestId('answer-option-1');
+                expect(secondOption).toHaveFocus();
+
+                // Select with Enter
+                await user.keyboard('{Enter}');
+                expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith(
+                    mockSocketHook.gameState.currentQuestion.uid,
+                    1,
+                    expect.any(Number)
+                );
+            });
+
+            test('should allow keyboard-only navigation with arrow keys', async () => {
+                const user = userEvent.setup();
+                render(<TestKeyboardNavigation />);
+
+                // Focus first option
+                const firstOption = screen.getByTestId('answer-option-0');
+                firstOption.focus();
+                expect(firstOption).toHaveFocus();
+
+                // Navigate down with arrow key
+                await user.keyboard('{ArrowDown}');
+                const secondOption = screen.getByTestId('answer-option-1');
+                expect(secondOption).toHaveFocus();
+
+                // Navigate up with arrow key
+                await user.keyboard('{ArrowUp}');
+                expect(firstOption).toHaveFocus();
+
+                // Select with Space
+                await user.keyboard('{Space}');
+                expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith(
+                    mockSocketHook.gameState.currentQuestion.uid,
+                    0,
+                    expect.any(Number)
+                );
+            });
+
+            test('should handle arrow key navigation at boundaries', async () => {
+                const user = userEvent.setup();
+                render(<TestKeyboardNavigation />);
+
+                // Focus first option
+                const firstOption = screen.getByTestId('answer-option-0');
+                firstOption.focus();
+                expect(firstOption).toHaveFocus();
+
+                // Try to go up from first option (should stay at first)
+                await user.keyboard('{ArrowUp}');
+                expect(firstOption).toHaveFocus();
+
+                // Focus last option
+                const lastOption = screen.getByTestId('answer-option-3');
+                lastOption.focus();
+                expect(lastOption).toHaveFocus();
+
+                // Try to go down from last option (should stay at last)
+                await user.keyboard('{ArrowDown}');
+                expect(lastOption).toHaveFocus();
+            });
+        });
+
+        describe('Numeric Input Questions', () => {
+            const TestNumericInput = () => {
+                const { submitAnswer, gameState } = mockUseStudentGameSocket();
+                const [inputValue, setInputValue] = React.useState('');
+
+                const handleSubmit = React.useCallback(() => {
+                    if (inputValue.trim()) {
+                        submitAnswer(gameState.currentQuestion.uid, inputValue.trim(), Date.now());
+                    }
+                }, [inputValue, gameState, submitAnswer]);
+
+                const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmit();
+                    }
+                }, [handleSubmit]);
+
+                return (
+                    <div data-testid="numeric-input">
+                        <label htmlFor="numeric-answer" id="numeric-label">
+                            Enter your numeric answer:
+                        </label>
+                        <input
+                            id="numeric-answer"
+                            data-testid="numeric-input-field"
+                            type="text"
+                            inputMode="numeric"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            aria-labelledby="numeric-label"
+                            aria-describedby="numeric-help"
+                        />
+                        <span id="numeric-help" className="sr-only">
+                            Press Enter to submit your answer
+                        </span>
+                        <button
+                            data-testid="submit-numeric"
+                            onClick={handleSubmit}
+                            disabled={!inputValue.trim()}
+                            aria-label="Submit numeric answer"
+                        >
+                            Submit
+                        </button>
+                    </div>
+                );
+            };
+
+            test('should allow keyboard-only numeric input and submission', async () => {
+                const user = userEvent.setup();
+                render(<TestNumericInput />);
+
+                const input = screen.getByTestId('numeric-input-field');
+                const submitButton = screen.getByTestId('submit-numeric');
+
+                // Tab to input field
+                await user.tab();
+                expect(input).toHaveFocus();
+
+                // Type numeric answer
+                await user.keyboard('3.14159');
+
+                // Submit with Enter
+                await user.keyboard('{Enter}');
+                expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith(
+                    mockSocketHook.gameState.currentQuestion.uid,
+                    '3.14159',
+                    expect.any(Number)
+                );
+            });
+
+            test('should handle decimal separators in different locales', async () => {
+                const user = userEvent.setup();
+                render(<TestNumericInput />);
+
+                const input = screen.getByTestId('numeric-input-field');
+
+                // Focus input
+                input.focus();
+                expect(input).toHaveFocus();
+
+                // Test comma as decimal separator
+                await user.keyboard('3,14159');
+                await user.keyboard('{Enter}');
+
+                expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith(
+                    mockSocketHook.gameState.currentQuestion.uid,
+                    '3,14159',
+                    expect.any(Number)
+                );
+            });
+
+            test('should provide proper ARIA labels for numeric input', () => {
+                render(<TestNumericInput />);
+
+                const input = screen.getByTestId('numeric-input-field');
+                const label = screen.getByText('Enter your numeric answer:');
+                const help = screen.getByText('Press Enter to submit your answer');
+
+                expect(input).toHaveAttribute('aria-labelledby', 'numeric-label');
+                expect(input).toHaveAttribute('aria-describedby', 'numeric-help');
+                expect(input).toHaveAttribute('inputMode', 'numeric');
+                expect(help).toHaveClass('sr-only'); // Screen reader only text
+            });
+        });
+
+        describe('Multi-Correct MCQ Questions', () => {
+            const TestMultiCorrectMCQ = () => {
+                const { submitAnswer, gameState } = mockUseStudentGameSocket();
+                const [selectedAnswers, setSelectedAnswers] = React.useState<Set<number>>(new Set());
+
+                const handleToggle = React.useCallback((idx: number) => {
+                    const newSelected = new Set(selectedAnswers);
+                    if (newSelected.has(idx)) {
+                        newSelected.delete(idx);
+                    } else {
+                        newSelected.add(idx);
+                    }
+                    setSelectedAnswers(newSelected);
+                }, [selectedAnswers]);
+
+                const handleSubmit = React.useCallback(() => {
+                    if (selectedAnswers.size > 0) {
+                        submitAnswer(gameState.currentQuestion.uid, Array.from(selectedAnswers), Date.now());
+                    }
+                }, [selectedAnswers, gameState, submitAnswer]);
+
+                const handleKeyDown = React.useCallback((e: React.KeyboardEvent, optionIndex: number) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleToggle(optionIndex);
+                    }
+                }, [handleToggle]);
+
+                return (
+                    <div data-testid="multi-correct-mcq">
+                        <h1>Select all correct answers:</h1>
+                        <div role="group" aria-label="Multiple correct answer options">
+                            {['Option A', 'Option B', 'Option C', 'Option D'].map((option, index) => (
+                                <button
+                                    key={index}
+                                    data-testid={`mcq-option-${index}`}
+                                    onClick={() => handleToggle(index)}
+                                    onKeyDown={(e) => handleKeyDown(e, index)}
+                                    tabIndex={0}
+                                    role="checkbox"
+                                    aria-checked={selectedAnswers.has(index)}
+                                    aria-label={`${option}, ${selectedAnswers.has(index) ? 'selected' : 'not selected'}`}
+                                >
+                                    {option}
+                                    {selectedAnswers.has(index) && <span aria-hidden="true">✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            data-testid="submit-mcq"
+                            onClick={handleSubmit}
+                            disabled={selectedAnswers.size === 0}
+                            aria-label={`Submit ${selectedAnswers.size} selected answers`}
+                        >
+                            Submit ({selectedAnswers.size} selected)
+                        </button>
+                    </div>
+                );
+            };
+
+            test('should allow keyboard-only multi-selection with Space/Enter', async () => {
+                const user = userEvent.setup();
+                render(<TestMultiCorrectMCQ />);
+
+                // Tab to first option
+                await user.tab();
+                const firstOption = screen.getByTestId('mcq-option-0');
+                expect(firstOption).toHaveFocus();
+
+                // Select with Space
+                await user.keyboard('{Space}');
+                expect(firstOption).toHaveAttribute('aria-checked', 'true');
+
+                // Tab to second option
+                await user.tab();
+                const secondOption = screen.getByTestId('mcq-option-1');
+                expect(secondOption).toHaveFocus();
+
+                // Select with Enter
+                await user.keyboard('{Enter}');
+                expect(secondOption).toHaveAttribute('aria-checked', 'true');
+
+                // Tab to third option and deselect with Space
+                await user.tab();
+                const thirdOption = screen.getByTestId('mcq-option-2');
+                await user.keyboard('{Space}');
+                expect(thirdOption).toHaveAttribute('aria-checked', 'true');
+
+                // Deselect by pressing Space again
+                await user.keyboard('{Space}');
+                expect(thirdOption).toHaveAttribute('aria-checked', 'false');
+            });
+
+            test('should submit multiple selected answers', async () => {
+                const user = userEvent.setup();
+                render(<TestMultiCorrectMCQ />);
+
+                // Select first and third options
+                const firstOption = screen.getByTestId('mcq-option-0');
+                const thirdOption = screen.getByTestId('mcq-option-2');
+
+                firstOption.focus();
+                await user.keyboard('{Space}');
+                thirdOption.focus();
+                await user.keyboard('{Space}');
+
+                // Submit
+                const submitButton = screen.getByTestId('submit-mcq');
+                submitButton.focus();
+                await user.keyboard('{Enter}');
+
+                expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith(
+                    mockSocketHook.gameState.currentQuestion.uid,
+                    [0, 2], // Selected indices
+                    expect.any(Number)
+                );
+            });
+
+            test('should provide proper ARIA feedback for multi-selection', async () => {
+                const user = userEvent.setup();
+                render(<TestMultiCorrectMCQ />);
+
+                const firstOption = screen.getByTestId('mcq-option-0');
+
+                // Initially not selected
+                expect(firstOption).toHaveAttribute('aria-checked', 'false');
+                expect(firstOption).toHaveAttribute('aria-label', 'Option A, not selected');
+
+                // Select it
+                firstOption.focus();
+                await user.keyboard('{Space}');
+
+                // Now selected
+                expect(firstOption).toHaveAttribute('aria-checked', 'true');
+                expect(firstOption).toHaveAttribute('aria-label', 'Option A, selected');
+            });
+        });
+    });
 });

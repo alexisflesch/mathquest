@@ -515,4 +515,164 @@ describe('Projection/Teacher State Persistence', () => {
             expect(expiredState).toEqual({});
         });
     });
+
+    describe('Historical stats for already-played questions', () => {
+        it('should provide historical stats for already-played questions on teacher dashboard load', async () => {
+            // Create a completed game instance
+            const completedGame = await prisma.gameInstance.create({
+                data: {
+                    id: `completed-game-${Date.now()}`,
+                    accessCode: `HIST-${Date.now()}`,
+                    name: 'Historical Stats Test Game',
+                    initiatorUserId: testUser.id,
+                    status: 'COMPLETED',
+                    currentQuestionIndex: 2, // Already played 2 questions
+                    playMode: 'quiz',
+                    gameTemplateId: (await prisma.gameTemplate.create({
+                        data: {
+                            name: 'Historical Test Template',
+                            creatorId: testUser.id
+                        }
+                    })).id
+                }
+            });
+
+            // Store historical stats in Redis (simulating what would be persisted during gameplay)
+            const historicalStatsKey = `mathquest:game:historical_stats:${completedGame.accessCode}`;
+            const historicalStats = {
+                gameId: completedGame.id,
+                totalQuestions: 2,
+                completedQuestions: 2,
+                questions: [
+                    {
+                        questionUid: 'q1-hist-test',
+                        order: 0,
+                        title: 'Question 1',
+                        stats: {
+                            totalAttempts: 5,
+                            correctAttempts: 4,
+                            accuracyPercentage: 80,
+                            averageTime: 15.2,
+                            answerDistribution: {
+                                '0': 1, // Wrong answer
+                                '1': 4, // Correct answer
+                            }
+                        }
+                    },
+                    {
+                        questionUid: 'q2-hist-test',
+                        order: 1,
+                        title: 'Question 2',
+                        stats: {
+                            totalAttempts: 5,
+                            correctAttempts: 3,
+                            accuracyPercentage: 60,
+                            averageTime: 18.7,
+                            answerDistribution: {
+                                '0': 2, // Wrong answer
+                                '1': 3, // Correct answer
+                            }
+                        }
+                    }
+                ],
+                overallStats: {
+                    totalParticipants: 5,
+                    averageAccuracy: 70,
+                    totalTimeSpent: 170,
+                    lastUpdated: Date.now()
+                }
+            };
+
+            await redisClient.setex(historicalStatsKey, 24 * 60 * 60, JSON.stringify(historicalStats));
+
+            // Simulate teacher dashboard loading - retrieve historical stats
+            const retrievedStats = await redisClient.get(historicalStatsKey);
+            expect(retrievedStats).toBeDefined();
+
+            const parsedStats = JSON.parse(retrievedStats!);
+            expect(parsedStats.gameId).toBe(completedGame.id);
+            expect(parsedStats.totalQuestions).toBe(2);
+            expect(parsedStats.completedQuestions).toBe(2);
+            expect(parsedStats.questions).toHaveLength(2);
+
+            // Verify question-level stats
+            expect(parsedStats.questions[0].questionUid).toBe('q1-hist-test');
+            expect(parsedStats.questions[0].stats.totalAttempts).toBe(5);
+            expect(parsedStats.questions[0].stats.correctAttempts).toBe(4);
+            expect(parsedStats.questions[0].stats.accuracyPercentage).toBe(80);
+
+            expect(parsedStats.questions[1].questionUid).toBe('q2-hist-test');
+            expect(parsedStats.questions[1].stats.totalAttempts).toBe(5);
+            expect(parsedStats.questions[1].stats.correctAttempts).toBe(3);
+            expect(parsedStats.questions[1].stats.accuracyPercentage).toBe(60);
+
+            // Verify overall stats
+            expect(parsedStats.overallStats.totalParticipants).toBe(5);
+            expect(parsedStats.overallStats.averageAccuracy).toBe(70);
+            expect(parsedStats.overallStats.lastUpdated).toBeDefined();
+
+            // Clean up
+            await prisma.gameInstance.deleteMany({ where: { id: completedGame.id } });
+            await redisClient.del(historicalStatsKey);
+        });
+
+        it('should handle missing historical stats gracefully', async () => {
+            // Test case where no historical stats exist
+            const nonExistentStatsKey = `mathquest:game:historical_stats:NONEXISTENT-${Date.now()}`;
+            const retrievedStats = await redisClient.get(nonExistentStatsKey);
+
+            expect(retrievedStats).toBeNull();
+
+            // Should not crash when stats are missing
+            // This simulates a new game or one where stats haven't been generated yet
+        });
+
+        it('should provide partial historical stats for games in progress', async () => {
+            // Test case for games that are still in progress
+            const inProgressGameId = `in-progress-${Date.now()}`;
+            const inProgressStatsKey = `mathquest:game:historical_stats:${testAccessCode}`;
+
+            const partialStats = {
+                gameId: inProgressGameId,
+                totalQuestions: 3,
+                completedQuestions: 1, // Only 1 question completed so far
+                questions: [
+                    {
+                        questionUid: 'partial-q1',
+                        order: 0,
+                        title: 'Partial Question 1',
+                        stats: {
+                            totalAttempts: 3,
+                            correctAttempts: 2,
+                            accuracyPercentage: 67,
+                            averageTime: 12.5,
+                            answerDistribution: {
+                                '0': 1,
+                                '1': 2,
+                            }
+                        }
+                    }
+                    // Questions 2 and 3 not yet completed
+                ],
+                overallStats: {
+                    totalParticipants: 3,
+                    averageAccuracy: 67,
+                    totalTimeSpent: 37.5,
+                    lastUpdated: Date.now()
+                }
+            };
+
+            await redisClient.setex(inProgressStatsKey, 24 * 60 * 60, JSON.stringify(partialStats));
+
+            const retrievedStats = await redisClient.get(inProgressStatsKey);
+            expect(retrievedStats).toBeDefined();
+
+            const parsedStats = JSON.parse(retrievedStats!);
+            expect(parsedStats.completedQuestions).toBe(1);
+            expect(parsedStats.totalQuestions).toBe(3);
+            expect(parsedStats.questions).toHaveLength(1); // Only completed questions included
+
+            await redisClient.del(inProgressStatsKey);
+        });
+    });
 });

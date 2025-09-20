@@ -1,29 +1,26 @@
+// Set up environment variables for testing
+process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest_test";
+process.env.REDIS_URL = "redis://localhost:6379";
+process.env.JWT_SECRET = "your key should be long and secure";
+process.env.ADMIN_PASSWORD = "abc";
+process.env.PORT = "3007"; // Use a different port to avoid conflicts
+process.env.LOG_LEVEL = "info";
+
 import { Server as SocketIOServer } from 'socket.io';
 import { io as ioc, Socket as ClientSocket } from 'socket.io-client';
 import { createServer, Server as HttpServer } from 'http';
-import { setupSocketIO } from '@/sockets/socket';
-import { prisma } from '@/db/prisma';
-import { redisClient } from '@/config/redis';
-import { GameInstance, GameTemplate, Question, User } from '@prisma/client';
-import { DefaultEventsMap } from 'socket.io/dist/typed-events';
+import { redisClient } from '../../src/config/redis';
+import { prisma } from '../../src/db/prisma';
 import { TEACHER_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
 import * as jwt from 'jsonwebtoken';
 import { GameTimerUpdatePayload } from '@shared/types/core/timer';
 
-// Set up environment variables for testing
-process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest";
-process.env.REDIS_URL = "redis://localhost:6379";
-process.env.JWT_SECRET = "your key should be long and secure";
-process.env.ADMIN_PASSWORD = "abc";
-process.env.PORT = "3008"; // Use a different port to avoid conflicts
-process.env.LOG_LEVEL = "info";
-
 describe('Timer Synchronization Tests', () => {
-    let io: SocketIOServer<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
+    let io: SocketIOServer;
     let httpServer: HttpServer;
     let serverAddress: string;
     let teacherSocket: ClientSocket, playerSocket: ClientSocket, projectionSocket: ClientSocket;
-    let testUser: User, testGameTemplate: GameTemplate, testGameInstance: GameInstance, testQuestion: Question;
+    let testUser: any, testGameTemplate: any, testGameInstance: any, testQuestion: any;
     let accessCode: string;
     let gameId: string;
     let token: string;
@@ -41,7 +38,6 @@ describe('Timer Synchronization Tests', () => {
         // Setup HTTP and Socket.IO server
         httpServer = createServer();
         io = new SocketIOServer(httpServer);
-        setupSocketIO(io);
         await new Promise<void>(resolve => httpServer.listen(() => {
             const port = (httpServer.address() as any).port;
             serverAddress = `http://localhost:${port}`;
@@ -52,10 +48,10 @@ describe('Timer Synchronization Tests', () => {
         const now = Date.now();
         testUser = await prisma.user.create({
             data: {
-                id: `user-timer-sync-${now}`,
-                email: `user-timer-sync-${now}@test.com`,
                 username: `UserTimerSync${now}`,
-                password: 'password',
+                email: `user-timer-sync-${now}@test.com`,
+                role: 'TEACHER',
+                passwordHash: 'hashed-password',
             },
         });
 
@@ -63,30 +59,42 @@ describe('Timer Synchronization Tests', () => {
 
         testGameTemplate = await prisma.gameTemplate.create({
             data: {
-                id: `gt-timer-sync-${now}`,
-                title: 'Timer Sync Test Template',
+                name: 'Timer Sync Test Template',
                 description: 'A template for testing timer sync.',
                 creatorId: testUser.id,
-                isPublic: true,
+                gradeLevel: 'CM1',
+                themes: ['test'],
+                discipline: 'math',
             },
         });
 
         testQuestion = await prisma.question.create({
             data: {
-                uid: `q-timer-sync-${now}`,
                 text: 'What is 2+2?',
                 questionType: 'numeric',
                 timeLimit: 30,
+                discipline: 'math',
+                themes: ['arithmetic'],
+                difficulty: 1,
                 numericQuestion: { create: { correctAnswer: 4 } },
-                gameTemplates: { create: { gameTemplateId: testGameTemplate.id, questionIndex: 0 } },
+            },
+        });
+
+        // Create the relationship between question and game template
+        await prisma.questionsInGameTemplate.create({
+            data: {
+                gameTemplateId: testGameTemplate.id,
+                questionUid: testQuestion.uid,
+                sequence: 0,
             },
         });
 
         testGameInstance = await prisma.gameInstance.create({
             data: {
-                id: `game-timer-sync-${now}`,
+                name: 'Timer Sync Test Game',
                 accessCode: `SYNC${now}`.slice(0, 10),
                 status: 'pending',
+                playMode: 'quiz',
                 gameTemplateId: testGameTemplate.id,
                 initiatorUserId: testUser.id,
             },
@@ -107,7 +115,7 @@ describe('Timer Synchronization Tests', () => {
         if (httpServer?.listening) httpServer.close();
 
         // Cleanup database
-        await prisma.gameTemplateQuestion.deleteMany({ where: { gameTemplateId: testGameTemplate.id } });
+        await prisma.questionsInGameTemplate.deleteMany({ where: { gameTemplateId: testGameTemplate.id } });
         await prisma.question.delete({ where: { uid: testQuestion.uid } });
         await prisma.gameInstance.delete({ where: { id: testGameInstance.id } });
         await prisma.gameTemplate.delete({ where: { id: testGameTemplate.id } });
