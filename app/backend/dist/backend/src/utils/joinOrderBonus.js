@@ -57,6 +57,11 @@ async function assignJoinOrderBonus(accessCode, userId) {
                 currentJoinCount,
                 existingJoinOrders
             }, '⏭️ [JOIN-ORDER-BONUS] User already has join order bonus');
+            logger.info({
+                accessCode,
+                userId,
+                returnValue: 0
+            }, '✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user');
             return 0;
         }
         // Only first MAX_BONUS_RECIPIENTS get bonuses
@@ -67,6 +72,11 @@ async function assignJoinOrderBonus(accessCode, userId) {
                 currentJoinCount,
                 maxRecipients: JOIN_ORDER_CONFIG.MAX_BONUS_RECIPIENTS
             }, '🚫 [JOIN-ORDER-BONUS] Join order bonus limit reached');
+            logger.info({
+                accessCode,
+                userId,
+                returnValue: 0
+            }, '✅ [JOIN-ORDER-BONUS] Returning 0 for bonus limit reached');
             return 0;
         }
         // Add user to join order list
@@ -84,16 +94,25 @@ async function assignJoinOrderBonus(accessCode, userId) {
             totalJoinersWithBonus: currentJoinCount + 1,
             config: JOIN_ORDER_CONFIG
         }, '✅ [JOIN-ORDER-BONUS] Assigned join order bonus');
+        logger.info({
+            accessCode,
+            userId,
+            returnValue: bonusScore
+        }, '✅ [JOIN-ORDER-BONUS] Returning bonus score');
         return bonusScore;
     }
     catch (error) {
         logger.error({
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
+            error,
             accessCode,
             userId
-        }, '❌ [JOIN-ORDER-BONUS] Error assigning join order bonus');
-        return 0;
+        }, '❌ [JOIN-ORDER-BONUS] Error in assignJoinOrderBonus');
+        logger.info({
+            accessCode,
+            userId,
+            returnValue: 0
+        }, '✅ [JOIN-ORDER-BONUS] Returning 0 on error');
+        return 0; // Return 0 on error to prevent undefined
     }
 }
 /**

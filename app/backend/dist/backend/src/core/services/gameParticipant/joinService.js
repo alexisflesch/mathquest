@@ -200,23 +200,90 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
         // --- JOIN BONUS SNAPSHOT LOGIC ---
         // Only apply join bonus for live/pending participants (not deferred reconnections)
         // Also handle late joiners to active games
+        const joinBonusCondition = !isDeferred && (participant.status === participant_1.ParticipantStatus.PENDING || gameInstance.status === 'active');
         logger.info({
             userId,
             accessCode,
             isDeferred,
             participantStatus: participant.status,
             gameInstanceStatus: gameInstance.status,
-            joinBonusCondition: !isDeferred && (participant.status === participant_1.ParticipantStatus.PENDING || gameInstance.status === 'active'),
+            joinBonusCondition,
             logPoint: 'JOIN_BONUS_CONDITION_CHECK'
         }, '[DEBUG] Join bonus condition check');
-        if (!isDeferred && (participant.status === participant_1.ParticipantStatus.PENDING || gameInstance.status === 'active')) {
+        if (joinBonusCondition) {
+            logger.info({
+                userId,
+                accessCode,
+                logPoint: 'JOIN_BONUS_CONDITION_MET'
+            }, '[DEBUG] Join bonus condition met, calling assignJoinOrderBonus');
             // For active games, late joiners should be added to snapshot with their join bonus
             // For pending games, new joiners get join bonus
-            const joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, targetUserId);
-            if (joinOrderBonus > 0 || gameInstance.status === 'active') {
-                // For active games, use the join bonus as the score
+            let joinOrderBonus;
+            try {
+                joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, targetUserId);
+                logger.info({
+                    userId,
+                    accessCode,
+                    joinOrderBonus,
+                    joinOrderBonusType: typeof joinOrderBonus,
+                    logPoint: 'JOIN_BONUS_ASSIGNED'
+                }, '[DEBUG] assignJoinOrderBonus returned');
+            }
+            catch (error) {
+                logger.error({
+                    error,
+                    userId,
+                    accessCode,
+                    logPoint: 'JOIN_BONUS_ASSIGN_ERROR'
+                }, '[DEBUG] assignJoinOrderBonus threw error');
+                joinOrderBonus = 0; // Default to 0 on error
+            }
+            if (joinOrderBonus > 0) {
+                // Update participant's liveScore with the join bonus
+                logger.info({
+                    userId: targetUserId,
+                    accessCode,
+                    participantId: participant.id,
+                    currentLiveScore: participant.liveScore,
+                    joinOrderBonus,
+                    joinOrderBonusType: typeof joinOrderBonus,
+                    logPoint: 'JOIN_BONUS_BEFORE_UPDATE'
+                }, '[JOIN_BONUS] Before updating participant liveScore');
+                try {
+                    const updateData = { liveScore: Number(joinOrderBonus) };
+                    logger.info({
+                        userId: targetUserId,
+                        accessCode,
+                        updateData,
+                        logPoint: 'JOIN_BONUS_UPDATE_DATA'
+                    }, '[JOIN_BONUS] Update data being sent to Prisma');
+                    const updatedParticipant = await prisma_1.prisma.gameParticipant.update({
+                        where: { id: participant.id },
+                        data: updateData
+                    });
+                    logger.info({
+                        userId: targetUserId,
+                        accessCode,
+                        participantId: participant.id,
+                        joinOrderBonus,
+                        updatedLiveScore: updatedParticipant.liveScore,
+                        logPoint: 'JOIN_BONUS_DATABASE_UPDATE'
+                    }, '[JOIN_BONUS] Updated participant liveScore with join bonus');
+                }
+                catch (error) {
+                    logger.error({
+                        error,
+                        userId: targetUserId,
+                        accessCode,
+                        participantId: participant.id,
+                        joinOrderBonus,
+                        logPoint: 'JOIN_BONUS_UPDATE_ERROR'
+                    }, '[JOIN_BONUS] Error updating participant liveScore');
+                    throw error;
+                }
+                // For active games, use the current liveScore (which includes any previous bonus)
                 // For pending games, use join bonus (will be updated with real scores later)
-                const snapshotScore = gameInstance.status === 'active' ? joinOrderBonus : joinOrderBonus;
+                const snapshotScore = gameInstance.status === 'active' ? participant.liveScore : joinOrderBonus;
                 const leaderboardUser = {
                     userId: targetUserId,
                     username: finalUser.username,

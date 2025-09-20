@@ -12867,8 +12867,8 @@ export namespace Prisma {
     readonly id: FieldRef<"GameParticipant", 'String'>
     readonly gameInstanceId: FieldRef<"GameParticipant", 'String'>
     readonly userId: FieldRef<"GameParticipant", 'String'>
-    readonly liveScore: FieldRef<"GameParticipant", 'Int'>
-    readonly deferredScore: FieldRef<"GameParticipant", 'Int'>
+    readonly liveScore: FieldRef<"GameParticipant", 'Float'>
+    readonly deferredScore: FieldRef<"GameParticipant", 'Float'>
     readonly nbAttempts: FieldRef<"GameParticipant", 'Int'>
     readonly status: FieldRef<"GameParticipant", 'ParticipantStatus'>
     readonly joinedAt: FieldRef<"GameParticipant", 'DateTime'>
@@ -14275,8 +14275,8 @@ export namespace Prisma {
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    liveScore?: IntFilter<"GameParticipant"> | number
-    deferredScore?: IntFilter<"GameParticipant"> | number
+    liveScore?: FloatFilter<"GameParticipant"> | number
+    deferredScore?: FloatFilter<"GameParticipant"> | number
     nbAttempts?: IntFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
@@ -14309,8 +14309,8 @@ export namespace Prisma {
     NOT?: GameParticipantWhereInput | GameParticipantWhereInput[]
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    liveScore?: IntFilter<"GameParticipant"> | number
-    deferredScore?: IntFilter<"GameParticipant"> | number
+    liveScore?: FloatFilter<"GameParticipant"> | number
+    deferredScore?: FloatFilter<"GameParticipant"> | number
     nbAttempts?: IntFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
@@ -14345,8 +14345,8 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"GameParticipant"> | string
     gameInstanceId?: StringWithAggregatesFilter<"GameParticipant"> | string
     userId?: StringWithAggregatesFilter<"GameParticipant"> | string
-    liveScore?: IntWithAggregatesFilter<"GameParticipant"> | number
-    deferredScore?: IntWithAggregatesFilter<"GameParticipant"> | number
+    liveScore?: FloatWithAggregatesFilter<"GameParticipant"> | number
+    deferredScore?: FloatWithAggregatesFilter<"GameParticipant"> | number
     nbAttempts?: IntWithAggregatesFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusWithAggregatesFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeWithAggregatesFilter<"GameParticipant"> | Date | string
@@ -15083,8 +15083,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15098,8 +15098,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15122,8 +15122,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15135,8 +15135,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17243,8 +17243,8 @@ export namespace Prisma {
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    liveScore?: IntFilter<"GameParticipant"> | number
-    deferredScore?: IntFilter<"GameParticipant"> | number
+    liveScore?: FloatFilter<"GameParticipant"> | number
+    deferredScore?: FloatFilter<"GameParticipant"> | number
     nbAttempts?: IntFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
@@ -18658,8 +18658,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18671,8 +18671,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18683,8 +18683,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18864,8 +18864,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18877,8 +18877,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18889,8 +18889,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateManyWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -10,6 +10,7 @@ exports.persistLeaderboardToGameInstance = persistLeaderboardToGameInstance;
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const prisma_1 = require("@/db/prisma");
+const joinOrderBonus_1 = require("@/utils/joinOrderBonus");
 const logger = (0, logger_1.default)('LeaderboardUtils');
 /**
  * Calculate leaderboard for a game instance
@@ -70,54 +71,69 @@ async function calculateLeaderboard(accessCode) {
                 }, '⚠️ [LEADERBOARD-CALC] Failed to parse participant metadata');
             }
         });
-        // Process leaderboard entries (already sorted by score descending from ZREVRANGE)
-        const leaderboard = [];
+        // Get join order for tie resolution
+        const joinOrder = await (0, joinOrderBonus_1.getJoinOrder)(accessCode);
+        const joinOrderMap = new Map();
+        joinOrder.forEach((userId, index) => {
+            joinOrderMap.set(userId, index);
+        });
+        // Process leaderboard entries with proper tie resolution
+        const leaderboardEntries = [];
         for (let i = 0; i < leaderboardRaw.length; i += 2) {
             const userId = leaderboardRaw[i];
             const score = parseInt(leaderboardRaw[i + 1], 10);
             const metadata = participantsMetadata.get(userId);
             if (metadata) {
-                const leaderboardEntry = {
+                leaderboardEntries.push({
                     userId,
                     username: metadata.username,
                     avatarEmoji: metadata.avatarEmoji,
-                    score
-                };
-                logger.debug({
-                    accessCode,
-                    index: i / 2,
-                    userId,
                     score,
-                    metadata,
-                    leaderboardEntry
-                }, '🔍 [LEADERBOARD-CALC] Processing leaderboard entry');
-                leaderboard.push(leaderboardEntry);
+                    joinOrderIndex: joinOrderMap.get(userId) ?? 999 // Default high value for users not in join order
+                });
             }
             else {
                 // User in leaderboard but missing participant metadata (likely disconnected ACTIVE user)
                 // Include them with fallback data to preserve leaderboard continuity
-                const leaderboardEntry = {
+                leaderboardEntries.push({
                     userId,
                     username: `User-${userId.substring(0, 8)}`, // Fallback username
                     avatarEmoji: '👤', // Default emoji
-                    score
-                };
+                    score,
+                    joinOrderIndex: joinOrderMap.get(userId) ?? 999
+                });
                 logger.warn({
                     accessCode,
                     userId,
                     score,
-                    leaderboardEntry,
                     note: 'LEADERBOARD-PRESERVATION: User missing metadata but preserved in leaderboard'
                 }, '⚠️ [LEADERBOARD-CALC] No metadata found for user in leaderboard - using fallback data to preserve leaderboard');
-                leaderboard.push(leaderboardEntry);
             }
         }
+        // Sort leaderboard with proper tie resolution:
+        // 1. Primary sort: score descending
+        // 2. Secondary sort: join order ascending (earlier joiners first)
+        // 3. Tertiary sort: username ascending (alphabetical)
+        const leaderboard = leaderboardEntries.sort((a, b) => {
+            // Primary: score descending
+            if (a.score !== b.score) {
+                return b.score - a.score;
+            }
+            // Secondary: join order ascending (earlier joiners first)
+            if (a.joinOrderIndex !== b.joinOrderIndex) {
+                return a.joinOrderIndex - b.joinOrderIndex;
+            }
+            // Tertiary: username ascending (alphabetical)
+            return a.username.localeCompare(b.username);
+        });
+        // Remove the joinOrderIndex from final output
+        const finalLeaderboard = leaderboard.map(({ joinOrderIndex, ...entry }) => entry);
         logger.info({
             accessCode,
-            leaderboardCount: leaderboard.length,
-            topPlayers: leaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
+            leaderboardCount: finalLeaderboard.length,
+            topPlayers: finalLeaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
         }, '✅ [LEADERBOARD-CALC] Leaderboard calculation completed using live scores');
-        return leaderboard;
+        return finalLeaderboard;
     }
     catch (error) {
         logger.error({

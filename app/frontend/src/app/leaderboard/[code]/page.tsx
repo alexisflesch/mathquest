@@ -140,6 +140,20 @@ export default function TournamentLeaderboardPage() {
     };
     // Ribbon overlays the card
 
+    if (error) {
+        return (
+            <div className="main-content">
+                <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-6">
+                    <div className="card-body items-center gap-8">
+                        <div className="alert alert-error">
+                            <span>{error}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="main-content">
             <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-6">
@@ -280,7 +294,7 @@ export default function TournamentLeaderboardPage() {
                     {/* Deferred Scores Section */}
                     {rankedDeferred.length > 0 && (
                         <div className="w-full mt-4">
-                            <h2 className="text-lg font-bold mb-2"><span role="img" aria-label="deferred">🕒</span> Scores différés</h2>
+                            <h2 className="text-lg font-bold mb-2"><span role="img" aria-label="deferred">⏰</span> Scores différés</h2>
                             <ol className="w-full flex flex-col gap-2">
                                 {rankedDeferred.map((p, idx) => {
                                     const isCurrent = currentUserId && p.userId === currentUserId;

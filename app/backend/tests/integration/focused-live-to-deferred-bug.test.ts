@@ -22,11 +22,12 @@ describe('FOCUSED: Live→Deferred nbAttempts Bug', () => {
 
     beforeEach(async () => {
         // Setup test data
+        const timestamp = Date.now();
         testData = {
-            accessCode: 'LIVE-TO-DEFERRED-TEST',
-            gameId: 'live-to-deferred-game',
-            userId: 'user-live-to-deferred',
-            questionUid: 'question-live-to-deferred'
+            accessCode: `LIVE-TO-DEFERRED-${timestamp}`,
+            gameId: `live-to-deferred-game-${timestamp}`,
+            userId: `user-live-to-deferred-${timestamp}`,
+            questionUid: `question-live-to-deferred-${timestamp}`
         };
 
         // Clean up any existing data
@@ -50,8 +51,8 @@ describe('FOCUSED: Live→Deferred nbAttempts Bug', () => {
             update: {},
             create: {
                 id: testData.userId,
-                username: 'TestUser',
-                email: 'testuser@example.com',
+                username: `TestUser-${timestamp}`,
+                email: `testuser-${timestamp}@example.com`,
                 role: 'STUDENT'
             }
         });
