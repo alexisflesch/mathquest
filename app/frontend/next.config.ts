@@ -100,15 +100,13 @@ export default withBundleAnalyzer({
     enabled: isAnalyze,
 })(withPWA({
     dest: 'public',
-    // Ensure PWA is fully disabled in development
-    disable: process.env.NODE_ENV === 'development',
     // Re-enable SW registration in production; disabled in development
     register: process.env.NODE_ENV !== 'development',
     sw: 'sw-v3.js',
-    // Avoid caching the start URL and inline workbox to prevent extra importScripts requests
+    // Avoid caching the start URL and prevent external workbox imports
     cacheStartUrl: false,
     workboxOptions: {
-        inlineWorkboxRuntime: true,
+        importScripts: [], // Prevent external workbox script imports
         skipWaiting: true, // Force new service worker to activate immediately
         clientsClaim: true, // Take control of all clients immediately
         runtimeCaching: [

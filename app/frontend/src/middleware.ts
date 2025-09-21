@@ -52,6 +52,7 @@ export function middleware(request: NextRequest) {
         pathname === '/sitemap.xml' ||
         pathname === '/sw.js' ||
         pathname === '/sw-v2.js' ||
+        pathname === '/sw-v3.js' ||
         /^\/workbox-.*\.js$/.test(pathname) ||
         /^\/icon-.*\.png$/.test(pathname) ||
         /^\/screenshot-.*\.png$/.test(pathname) ||
