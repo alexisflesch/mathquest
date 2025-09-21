@@ -117,6 +117,22 @@ export default withBundleAnalyzer({
                 handler: 'NetworkOnly',
                 options: { cacheName: 'html-pages' },
             },
+            {
+                // Cache start URL with NetworkFirst strategy
+                urlPattern: '/',
+                handler: 'NetworkFirst',
+                options: {
+                    cacheName: 'start-url',
+                    plugins: [
+                        {
+                            cacheWillUpdate: async ({ response }) => {
+                                // Only cache successful responses
+                                return response.status === 200 ? response : null;
+                            },
+                        },
+                    ],
+                },
+            },
         ],
         cleanupOutdatedCaches: true, // Clean up old cache versions
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024, // 2MB limit per file
