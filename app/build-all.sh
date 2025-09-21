@@ -172,6 +172,14 @@ verify_staged_builds() {
     # Check if PWA files were generated
     if ls "$STAGING_DIR/frontend/public/sw-"*.js >/dev/null 2>&1; then
         echo "✅ PWA service worker generated"
+        # Diagnose whether SW references an external workbox bundle
+        SW_FILE=$(ls "$STAGING_DIR/frontend/public/sw-"*.js | head -n 1)
+        if grep -Eq "workbox-[a-f0-9]+\\.js" "$SW_FILE"; then
+            echo "⚠️  SW references external workbox bundle inside: $(basename "$SW_FILE")"
+            echo "   Ensure matching workbox-*.js is deployed (or enable inlineWorkboxRuntime)."
+        else
+            echo "✅ SW contains inlined Workbox runtime (no external workbox-*.js needed)"
+        fi
     else
         echo "⚠️  No service worker found - PWA may be disabled"
     fi
