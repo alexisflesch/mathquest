@@ -69,6 +69,14 @@ const nextConfig: NextConfig = {
                 ],
             },
             {
+                source: '/sw-v2.js',
+                headers: [
+                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+                    { key: 'Pragma', value: 'no-cache' },
+                    { key: 'Expires', value: '0' },
+                ],
+            },
+            {
                 source: '/workbox-:hash.js',
                 headers: [
                     { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
@@ -88,11 +96,17 @@ export default withBundleAnalyzer({
     disable: process.env.NODE_ENV === 'development',
     // Do not attempt to register service worker in dev
     register: process.env.NODE_ENV !== 'development',
-    sw: 'sw.js',
+    sw: 'sw-v2.js',
     workboxOptions: {
         skipWaiting: true, // Force new service worker to activate immediately
         clientsClaim: true, // Take control of all clients immediately
         runtimeCaching: [
+            {
+                // Do not have SW intercept HTML navigations
+                urlPattern: ({ request }) => request.mode === 'navigate',
+                handler: 'NetworkOnly',
+                options: { cacheName: 'html-pages' },
+            },
             {
                 urlPattern: /^https?.*/,
                 handler: 'NetworkFirst',
