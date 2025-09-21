@@ -129,3 +129,32 @@ Purpose: Track what the docs promise vs. what exists in code. This file is the s
 - [ ] Identified and prioritized gaps with concrete acceptance criteria
 - [ ] Added lightweight test steps; wire into future tasks when implementing
 
+---
+
+## Phase 4 — PWA stability and SW reintroduction
+
+Goal: Restore service worker safely without breaking navigation or API calls; ensure static assets and Workbox bundles are always accessible and not cached incorrectly.
+
+- [x] Add no-cache headers for service worker and Workbox bundles in Next headers config
+	- File: `app/frontend/next.config.ts` → headers for `/sw.js`, `/sw-v2.js`, `/workbox-:hash.js`
+- [x] Trim Workbox runtimeCaching to navigations only (NetworkOnly)
+	- File: `app/frontend/next.config.ts` → remove broad rules; keep navigate handler NetworkOnly
+- [x] Ensure middleware excludes static/PWA assets and icons/screenshots
+	- File: `app/frontend/middleware.ts` → matcher excludes `_next|api|static|favicon|manifest.json|sw.js|workbox-*.js|icon-*.png`
+- [x] Ignore generated PWA artifacts in git
+	- File: `app/frontend/.gitignore` → `public/sw*.js`, `public/workbox-*.js` (+ maps)
+- [x] Re-enable SW auto-registration for production only
+	- File: `app/frontend/next.config.ts` → `register: process.env.NODE_ENV !== 'development'`
+- [x] Build frontend to generate `public/sw-v2.js` and `public/workbox-*.js`
+	- Command: `npm run build` in `app/frontend` (Completed; warnings only)
+
+Validation checklist
+- [ ] In production, open devtools → Application → Service Workers: confirm `sw-v2.js` active with scope `/`
+- [ ] In a private window, verify no `importScripts` 404 for `workbox-*.js`
+- [ ] Navigate across pages; confirm no “no internet/Failed to fetch” and that navigations are not intercepted (NetworkOnly)
+- [ ] Run guest practice flow end-to-end; confirm no 401/500 from auth endpoints and no SW-related errors
+- [ ] Load icons and `screenshot-wide.png` anonymously (middleware exclusions working)
+
+Notes
+- If any regressions appear, unregister SW and hard refresh, then re-evaluate runtimeCaching rules before reintroducing caching of specific assets.
+
