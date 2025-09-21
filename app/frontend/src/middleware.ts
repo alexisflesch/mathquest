@@ -39,6 +39,27 @@ export function middleware(request: NextRequest) {
     const userState = getUserState(request);
     const { pathname, origin, search } = request.nextUrl;
 
+    // Early allow-list for static assets and PWA files
+    if (
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/static') ||
+        pathname.startsWith('/api') ||
+        pathname === '/favicon.ico' ||
+        pathname.startsWith('/favicon') ||
+        pathname === '/manifest.json' ||
+        pathname === '/site.webmanifest' ||
+        pathname === '/robots.txt' ||
+        pathname === '/sitemap.xml' ||
+        pathname === '/sw.js' ||
+        pathname === '/sw-v2.js' ||
+        /^\/workbox-.*\.js$/.test(pathname) ||
+        /^\/icon-.*\.png$/.test(pathname) ||
+        /^\/screenshot-.*\.png$/.test(pathname) ||
+        /\.(png|jpg|jpeg|gif|webp|svg|ico|txt|webmanifest)$/i.test(pathname)
+    ) {
+        return NextResponse.next();
+    }
+
     // Allow home, login, email verification, and password reset for everyone
     if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/reset-password')) {
         return NextResponse.next();
@@ -66,7 +87,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Exclude PWA files, favicons, Next.js files, API routes, and static assets
-        '/((?!_next|api|static|favicon\\.|manifest\\.json|sw\\.js|workbox-.*\\.js|icon-.*\\.png).*)',
+        // Keep matcher simple and handle precise exclusions in code above
+        '/((?!_next|api|static).*)',
     ],
 };
