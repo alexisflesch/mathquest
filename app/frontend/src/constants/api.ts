@@ -17,6 +17,7 @@ export const FRONTEND_AUTH_ENDPOINTS = {
     REGISTER: '/api/v1/auth/register',
     PROFILE: '/api/v1/auth/profile',
     UPGRADE: '/api/v1/auth/upgrade',
+    RESET_PASSWORD_CONFIRM: '/api/v1/auth/reset-password/confirm',
     CLEAR_COOKIES: '/api/v1/auth/clear-cookies'
 } as const;
 
