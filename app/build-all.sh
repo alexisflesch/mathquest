@@ -73,6 +73,7 @@ trap cleanup_staging EXIT
 setup_staging() {
     echo "📋 Setting up staging environment..."
     mkdir -p "$STAGING_DIR/frontend"
+    mkdir -p "$STAGING_DIR/frontend/public"
     mkdir -p "$STAGING_DIR/backend"
     echo "✅ Staging environment ready"
 }
@@ -117,10 +118,14 @@ build_frontend() {
     echo "📦 Moving frontend build to staging..."
     mv ".next" "$STAGING_DIR/frontend/"
     
-    # Copy service worker files to staging if they exist
-    if [ -f "public/sw.js" ]; then
-        cp "public/sw.js" "$STAGING_DIR/frontend/"
-        cp "public/sw.js.map" "$STAGING_DIR/frontend/" 2>/dev/null || true
+    # Copy PWA service worker files and workbox bundles to staging if they exist
+    if ls public/sw-v2.js >/dev/null 2>&1; then
+        cp public/sw-v2.js "$STAGING_DIR/frontend/public/"
+        cp public/sw-v2.js.map "$STAGING_DIR/frontend/public/" 2>/dev/null || true
+    fi
+    if ls public/workbox-*.js >/dev/null 2>&1; then
+        cp public/workbox-*.js "$STAGING_DIR/frontend/public/" 2>/dev/null || true
+        cp public/workbox-*.js.map "$STAGING_DIR/frontend/public/" 2>/dev/null || true
     fi
     
     echo "✅ Frontend built and staged successfully"
@@ -165,8 +170,8 @@ verify_staged_builds() {
     fi
     
     # Check if PWA files were generated
-    if [ -f "$STAGING_DIR/frontend/sw.js" ]; then
-        echo "✅ PWA service worker generated"
+    if [ -f "$STAGING_DIR/frontend/public/sw-v2.js" ]; then
+        echo "✅ PWA service worker (sw-v2.js) generated"
     else
         echo "⚠️  No service worker found - PWA may be disabled"
     fi
@@ -192,10 +197,16 @@ atomic_deploy() {
         mv "$APP_ROOT/backend/dist" "$backup_dir/backend_dist"
     fi
     
-    if [ -f "$APP_ROOT/frontend/public/sw.js" ]; then
-        echo "💾 Backing up current service worker..."
-        cp "$APP_ROOT/frontend/public/sw.js" "$backup_dir/"
-        cp "$APP_ROOT/frontend/public/sw.js.map" "$backup_dir/" 2>/dev/null || true
+    # Backup current PWA files (if any)
+    if ls "$APP_ROOT/frontend/public/sw-v2.js" >/dev/null 2>&1; then
+        echo "💾 Backing up current service worker (sw-v2.js)..."
+        cp "$APP_ROOT/frontend/public/sw-v2.js" "$backup_dir/" 2>/dev/null || true
+        cp "$APP_ROOT/frontend/public/sw-v2.js.map" "$backup_dir/" 2>/dev/null || true
+    fi
+    if ls "$APP_ROOT/frontend/public/workbox-*.js" >/dev/null 2>&1; then
+        echo "💾 Backing up current workbox bundles..."
+        cp "$APP_ROOT/frontend/public/workbox-"*.js "$backup_dir/" 2>/dev/null || true
+        cp "$APP_ROOT/frontend/public/workbox-"*.js.map "$backup_dir/" 2>/dev/null || true
     fi
     
     # Atomic deployment from staging
@@ -203,10 +214,18 @@ atomic_deploy() {
     mv "$STAGING_DIR/frontend/.next" "$APP_ROOT/frontend/"
     mv "$STAGING_DIR/backend/dist" "$APP_ROOT/backend/"
     
-    # Deploy new service worker files
-    if [ -f "$STAGING_DIR/frontend/sw.js" ]; then
-        cp "$STAGING_DIR/frontend/sw.js" "$APP_ROOT/frontend/public/"
-        cp "$STAGING_DIR/frontend/sw.js.map" "$APP_ROOT/frontend/public/" 2>/dev/null || true
+    # Deploy new PWA files
+    if [ -f "$STAGING_DIR/frontend/public/sw-v2.js" ]; then
+        # Clean up old workbox bundles to avoid stale references
+        rm -f "$APP_ROOT/frontend/public/workbox-"*.js 2>/dev/null || true
+        rm -f "$APP_ROOT/frontend/public/workbox-"*.js.map 2>/dev/null || true
+        
+        cp "$STAGING_DIR/frontend/public/sw-v2.js" "$APP_ROOT/frontend/public/"
+        cp "$STAGING_DIR/frontend/public/sw-v2.js.map" "$APP_ROOT/frontend/public/" 2>/dev/null || true
+    fi
+    if ls "$STAGING_DIR/frontend/public/workbox-"*.js >/dev/null 2>&1; then
+        cp "$STAGING_DIR/frontend/public/workbox-"*.js "$APP_ROOT/frontend/public/" 2>/dev/null || true
+        cp "$STAGING_DIR/frontend/public/workbox-"*.js.map "$APP_ROOT/frontend/public/" 2>/dev/null || true
     fi
     
     echo "✅ Atomic deployment completed"
