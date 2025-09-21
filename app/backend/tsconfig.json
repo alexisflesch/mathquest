@@ -20,13 +20,11 @@
         "moduleResolution": "node",
         "downlevelIteration": true,
         "types": [
-            "jest",
             "node"
         ],
     },
     "include": [
         "src/**/*",
-        "tests/**/*",
         "../shared/**/*.ts"
     ],
     "exclude": [
