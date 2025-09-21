@@ -67,6 +67,6 @@ export function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         // Exclude PWA files, favicons, Next.js files, API routes, and static assets
-        '/((?!_next|api|static|favicon\\.|manifest\\.json|robots\\.txt|sitemap\\.xml|sw\\.js|sw-v2\\.js|workbox-.*\\.js|icon-.*\\.png|screenshot-.*\\.png).*)',
+        '/((?!_next|api|static|favicon\\.|manifest\\.json|robots\\.txt|sitemap\\.xml|sw\\.js|sw-.*\\.js|workbox-.*\\.js|icon-.*\\.png|screenshot-.*\\.png).*)',
     ],
 };

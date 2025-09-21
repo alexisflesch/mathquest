@@ -119,9 +119,9 @@ build_frontend() {
     mv ".next" "$STAGING_DIR/frontend/"
     
     # Copy PWA service worker files and workbox bundles to staging if they exist
-    if ls public/sw-v2.js >/dev/null 2>&1; then
-        cp public/sw-v2.js "$STAGING_DIR/frontend/public/"
-        cp public/sw-v2.js.map "$STAGING_DIR/frontend/public/" 2>/dev/null || true
+    if ls public/sw-*.js >/dev/null 2>&1; then
+        cp public/sw-*.js "$STAGING_DIR/frontend/public/" 2>/dev/null || true
+        cp public/sw-*.js.map "$STAGING_DIR/frontend/public/" 2>/dev/null || true
     fi
     if ls public/workbox-*.js >/dev/null 2>&1; then
         cp public/workbox-*.js "$STAGING_DIR/frontend/public/" 2>/dev/null || true
@@ -170,8 +170,8 @@ verify_staged_builds() {
     fi
     
     # Check if PWA files were generated
-    if [ -f "$STAGING_DIR/frontend/public/sw-v2.js" ]; then
-        echo "✅ PWA service worker (sw-v2.js) generated"
+    if ls "$STAGING_DIR/frontend/public/sw-"*.js >/dev/null 2>&1; then
+        echo "✅ PWA service worker generated"
     else
         echo "⚠️  No service worker found - PWA may be disabled"
     fi
@@ -198,10 +198,10 @@ atomic_deploy() {
     fi
     
     # Backup current PWA files (if any)
-    if ls "$APP_ROOT/frontend/public/sw-v2.js" >/dev/null 2>&1; then
-        echo "💾 Backing up current service worker (sw-v2.js)..."
-        cp "$APP_ROOT/frontend/public/sw-v2.js" "$backup_dir/" 2>/dev/null || true
-        cp "$APP_ROOT/frontend/public/sw-v2.js.map" "$backup_dir/" 2>/dev/null || true
+    if ls "$APP_ROOT/frontend/public/sw-"*.js >/dev/null 2>&1; then
+        echo "💾 Backing up current service worker(s)..."
+        cp "$APP_ROOT/frontend/public/sw-"*.js "$backup_dir/" 2>/dev/null || true
+        cp "$APP_ROOT/frontend/public/sw-"*.js.map "$backup_dir/" 2>/dev/null || true
     fi
     if ls "$APP_ROOT/frontend/public/workbox-*.js" >/dev/null 2>&1; then
         echo "💾 Backing up current workbox bundles..."
@@ -215,13 +215,13 @@ atomic_deploy() {
     mv "$STAGING_DIR/backend/dist" "$APP_ROOT/backend/"
     
     # Deploy new PWA files
-    if [ -f "$STAGING_DIR/frontend/public/sw-v2.js" ]; then
-        # Clean up old workbox bundles to avoid stale references
-        rm -f "$APP_ROOT/frontend/public/workbox-"*.js 2>/dev/null || true
-        rm -f "$APP_ROOT/frontend/public/workbox-"*.js.map 2>/dev/null || true
-        
-        cp "$STAGING_DIR/frontend/public/sw-v2.js" "$APP_ROOT/frontend/public/"
-        cp "$STAGING_DIR/frontend/public/sw-v2.js.map" "$APP_ROOT/frontend/public/" 2>/dev/null || true
+    # Clean up old workbox bundles to avoid stale references
+    rm -f "$APP_ROOT/frontend/public/workbox-"*.js 2>/dev/null || true
+    rm -f "$APP_ROOT/frontend/public/workbox-"*.js.map 2>/dev/null || true
+
+    if ls "$STAGING_DIR/frontend/public/sw-"*.js >/dev/null 2>&1; then
+        cp "$STAGING_DIR/frontend/public/sw-"*.js "$APP_ROOT/frontend/public/" 2>/dev/null || true
+        cp "$STAGING_DIR/frontend/public/sw-"*.js.map "$APP_ROOT/frontend/public/" 2>/dev/null || true
     fi
     if ls "$STAGING_DIR/frontend/public/workbox-"*.js >/dev/null 2>&1; then
         cp "$STAGING_DIR/frontend/public/workbox-"*.js "$APP_ROOT/frontend/public/" 2>/dev/null || true
@@ -260,7 +260,7 @@ main() {
     echo "📋 What was built:"
     echo "   ✅ Frontend: .next directory with PWA support"
     echo "   ✅ Backend: dist directory with compiled TypeScript"
-    echo "   ✅ Service Worker: sw.js for offline functionality"
+    echo "   ✅ Service Worker: sw-v2.js (Workbox runtime may be inlined; workbox-*.js may not be present)"
     echo ""
     echo "📝 Next steps:"
     echo "   Run your PM2 start script to launch the services"

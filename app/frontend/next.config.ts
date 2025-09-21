@@ -77,6 +77,14 @@ const nextConfig: NextConfig = {
                 ],
             },
             {
+                source: '/sw-v3.js',
+                headers: [
+                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+                    { key: 'Pragma', value: 'no-cache' },
+                    { key: 'Expires', value: '0' },
+                ],
+            },
+            {
                 source: '/workbox-:hash.js',
                 headers: [
                     { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
@@ -96,7 +104,7 @@ export default withBundleAnalyzer({
     disable: process.env.NODE_ENV === 'development',
     // Re-enable SW registration in production; disabled in development
     register: process.env.NODE_ENV !== 'development',
-    sw: 'sw-v2.js',
+    sw: 'sw-v3.js',
     // Avoid caching the start URL and inline workbox to prevent extra importScripts requests
     cacheStartUrl: false,
     workboxOptions: {
