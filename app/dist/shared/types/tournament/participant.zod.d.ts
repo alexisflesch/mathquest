@@ -9,18 +9,18 @@ export declare const participantSchema: z.ZodObject<{
     scoredQuestions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
     username: string;
+    avatar: string;
     id: string;
     score: number;
-    avatar: string;
-    socketId?: string | undefined;
     isDeferred?: boolean | undefined;
+    socketId?: string | undefined;
     scoredQuestions?: Record<string, number> | undefined;
 }, {
     username: string;
+    avatar: string;
     id: string;
     score: number;
-    avatar: string;
-    socketId?: string | undefined;
     isDeferred?: boolean | undefined;
+    socketId?: string | undefined;
     scoredQuestions?: Record<string, number> | undefined;
 }>;

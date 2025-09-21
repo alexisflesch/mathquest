@@ -67,7 +67,7 @@ exports.ResendEmailVerificationRequestSchema = zod_1.z.object({
 exports.CreateGameRequestSchema = zod_1.z.object({
     name: zod_1.z.string().min(1, 'Game name is required'),
     gameTemplateId: zod_1.z.string().uuid('Invalid game template ID').optional(),
-    playMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']),
+    playMode: zod_1.z.enum(['quiz', 'tournament', 'practice']),
     settings: zod_1.z.record(zod_1.z.any()).optional(),
     differedAvailableFrom: zod_1.z.string().datetime().optional(),
     differedAvailableTo: zod_1.z.string().datetime().optional(),
@@ -95,7 +95,7 @@ exports.CreateGameTemplateRequestSchema = zod_1.z.object({
     themes: zod_1.z.array(zod_1.z.string()).min(1, 'At least one theme is required'),
     discipline: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
-    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: zod_1.z.array(zod_1.z.string()).min(1, 'At least one question is required') // Temporarily allow any string format
 });
 exports.UpdateGameTemplateRequestSchema = zod_1.z.object({
@@ -104,7 +104,7 @@ exports.UpdateGameTemplateRequestSchema = zod_1.z.object({
     themes: zod_1.z.array(zod_1.z.string()).optional(),
     discipline: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
-    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: zod_1.z.array(zod_1.z.string()).optional() // Temporarily allow any string format
 });
 exports.RenameGameTemplateRequestSchema = zod_1.z.object({
@@ -145,7 +145,7 @@ exports.CreateQuizTemplateRequestSchema = zod_1.z.object({
     gradeLevel: zod_1.z.string().optional(),
     themes: zod_1.z.array(zod_1.z.string()).min(1, 'At least one theme is required'),
     discipline: zod_1.z.string().optional(),
-    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: zod_1.z.array(zod_1.z.string().uuid()).min(1, 'At least one question is required'),
     settings: zod_1.z.record(zod_1.z.any()).optional()
 });
@@ -323,7 +323,7 @@ const ApiGameTemplateSchema = zod_1.z.object({
     themes: zod_1.z.array(zod_1.z.string()),
     discipline: zod_1.z.string().nullable().optional(),
     description: zod_1.z.string().nullable().optional(),
-    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).nullable().optional(),
+    defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice']).nullable().optional(),
     createdAt: zod_1.z.coerce.date(),
     updatedAt: zod_1.z.coerce.date(),
     creatorId: zod_1.z.string(),
@@ -404,7 +404,7 @@ exports.TournamentListItemSchema = zod_1.z.object({
     code: zod_1.z.string(),
     name: zod_1.z.string(),
     statut: zod_1.z.string(), // Consider stricter enum if possible
-    playMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']),
+    playMode: zod_1.z.enum(['quiz', 'tournament', 'practice']),
     createdAt: zod_1.z.string(),
     date_debut: zod_1.z.string().nullable(),
     date_fin: zod_1.z.string().nullable(),

@@ -51,7 +51,7 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData;
     gameStatus: 'pending' | 'active' | 'completed' | 'archived';
-    gameMode: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode: 'tournament' | 'quiz' | 'practice';
     differedAvailableFrom?: string;
     differedAvailableTo?: string;
 }
@@ -72,7 +72,7 @@ export interface GameStateUpdatePayload {
     totalQuestions?: number;
     timer?: number;
     participants?: ParticipantData[];
-    gameMode?: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode?: 'tournament' | 'quiz' | 'practice';
 }
 export interface QuestionData {
     uid: string;

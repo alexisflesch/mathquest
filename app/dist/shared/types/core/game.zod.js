@@ -5,7 +5,7 @@ exports.GameInstanceCreationDataSchema = exports.GameTemplateUpdateDataSchema = 
  * Zod schemas for game-related types
  */
 const zod_1 = require("zod");
-exports.PlayModeSchema = zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']);
+exports.PlayModeSchema = zod_1.z.enum(['quiz', 'tournament', 'practice']);
 // Base schemas without circular references
 exports.GameTemplateBaseSchema = zod_1.z.object({
     id: zod_1.z.string(),

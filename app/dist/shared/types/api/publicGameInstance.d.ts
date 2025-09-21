@@ -43,8 +43,8 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
     }>>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
-    status: string;
     playMode: string;
+    status: string;
     linkedQuizId?: string | null | undefined;
     name?: string | undefined;
     practiceSettings?: {
@@ -59,8 +59,8 @@ export declare const PublicGameInstanceSchema: z.ZodObject<{
     } | undefined;
 }, {
     accessCode: string;
-    status: string;
     playMode: string;
+    status: string;
     linkedQuizId?: string | null | undefined;
     name?: string | undefined;
     practiceSettings?: {

@@ -8,14 +8,14 @@ export declare const setQuestionPayloadSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     questionUid: string;
     quizId: string;
-    teacherId?: string | undefined;
     questionIdx?: number | undefined;
+    teacherId?: string | undefined;
     tournamentCode?: string | undefined;
 }, {
     questionUid: string;
     quizId: string;
-    teacherId?: string | undefined;
     questionIdx?: number | undefined;
+    teacherId?: string | undefined;
     tournamentCode?: string | undefined;
 }>;
 export declare const timerActionPayloadSchema: z.ZodObject<{
@@ -28,13 +28,13 @@ export declare const timerActionPayloadSchema: z.ZodObject<{
     durationMs: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
-    questionUid: string;
     action: "run" | "pause" | "stop" | "edit";
+    questionUid: string;
     durationMs?: number | undefined;
 }, {
     accessCode: string;
-    questionUid: string;
     action: "run" | "pause" | "stop" | "edit";
+    questionUid: string;
     durationMs?: number | undefined;
 }>;
 export declare const setTimerPayloadSchema: z.ZodObject<{
@@ -129,13 +129,13 @@ export declare const quizTimerActionPayloadSchema: z.ZodObject<{
     durationMs: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
-    questionUid: string;
     action: "run" | "pause" | "stop" | "edit";
+    questionUid: string;
     durationMs?: number | undefined;
 }, {
     accessCode: string;
-    questionUid: string;
     action: "run" | "pause" | "stop" | "edit";
+    questionUid: string;
     durationMs?: number | undefined;
 }>;
 export declare const gameTimerUpdatePayloadSchema: z.ZodObject<{
@@ -197,25 +197,25 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
     answerStats: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
-    status: "pending" | "active" | "paused" | "completed";
-    answersLocked: boolean;
-    currentQuestionUid: string | null;
+    status: "pending" | "completed" | "active" | "paused";
+    questions: any[];
     gameId: string;
     templateName: string;
     gameInstanceName: string;
-    questions: any[];
+    currentQuestionUid: string | null;
+    answersLocked: boolean;
     participantCount: number;
     timer?: any;
     answerStats?: Record<string, number> | undefined;
 }, {
     accessCode: string;
-    status: "pending" | "active" | "paused" | "completed";
-    answersLocked: boolean;
-    currentQuestionUid: string | null;
+    status: "pending" | "completed" | "active" | "paused";
+    questions: any[];
     gameId: string;
     templateName: string;
     gameInstanceName: string;
-    questions: any[];
+    currentQuestionUid: string | null;
+    answersLocked: boolean;
     participantCount: number;
     timer?: any;
     answerStats?: Record<string, number> | undefined;

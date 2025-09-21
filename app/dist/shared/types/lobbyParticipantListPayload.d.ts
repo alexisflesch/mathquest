@@ -31,36 +31,36 @@ export declare const lobbyParticipantListPayloadSchema: z.ZodObject<{
         username: z.ZodString;
         userId: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        userId: string;
         username: string;
+        userId: string;
         avatarEmoji: string;
     }, {
-        userId: string;
         username: string;
+        userId: string;
         avatarEmoji: string;
     }>;
 }, "strip", z.ZodTypeAny, {
+    creator: {
+        username: string;
+        userId: string;
+        avatarEmoji: string;
+    };
     participants: {
         username: string;
         avatarEmoji: string;
         userId?: string | undefined;
     }[];
-    creator: {
-        userId: string;
-        username: string;
-        avatarEmoji: string;
-    };
 }, {
+    creator: {
+        username: string;
+        userId: string;
+        avatarEmoji: string;
+    };
     participants: {
         username: string;
         avatarEmoji: string;
         userId?: string | undefined;
     }[];
-    creator: {
-        userId: string;
-        username: string;
-        avatarEmoji: string;
-    };
 }>;
 export type LobbyParticipant = z.infer<typeof lobbyParticipantSchema>;
 export type LobbyParticipantListPayload = z.infer<typeof lobbyParticipantListPayloadSchema>;

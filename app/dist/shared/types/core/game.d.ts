@@ -1,7 +1,7 @@
 /**
  * Game-related shared types
  */
-export type PlayMode = 'quiz' | 'tournament' | 'practice' | 'class';
+export type PlayMode = 'quiz' | 'tournament' | 'practice';
 export interface GameTemplate {
     id: string;
     name: string;

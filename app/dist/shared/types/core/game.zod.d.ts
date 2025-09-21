@@ -2,7 +2,7 @@
  * Zod schemas for game-related types
  */
 import { z } from 'zod';
-export declare const PlayModeSchema: z.ZodEnum<["quiz", "tournament", "practice", "class"]>;
+export declare const PlayModeSchema: z.ZodEnum<["quiz", "tournament", "practice"]>;
 export declare const GameTemplateBaseSchema: z.ZodObject<{
     id: z.ZodString;
     name: z.ZodString;
@@ -10,45 +10,45 @@ export declare const GameTemplateBaseSchema: z.ZodObject<{
     themes: z.ZodArray<z.ZodString, "many">;
     discipline: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    defaultMode: z.ZodOptional<z.ZodNullable<z.ZodEnum<["quiz", "tournament", "practice", "class"]>>>;
+    defaultMode: z.ZodOptional<z.ZodNullable<z.ZodEnum<["quiz", "tournament", "practice"]>>>;
     createdAt: z.ZodDate;
     updatedAt: z.ZodDate;
     creatorId: z.ZodString;
     creator: z.ZodOptional<z.ZodAny>;
     questions: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
 }, "strip", z.ZodTypeAny, {
+    name: string;
     themes: string[];
+    id: string;
     createdAt: Date;
     updatedAt: Date;
-    id: string;
-    name: string;
     creatorId: string;
     gradeLevel?: string | null | undefined;
     discipline?: string | null | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-    creator?: any;
-    questions?: any[] | undefined;
     description?: string | null | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | null | undefined;
+    questions?: any[] | undefined;
+    creator?: any;
 }, {
+    name: string;
     themes: string[];
+    id: string;
     createdAt: Date;
     updatedAt: Date;
-    id: string;
-    name: string;
     creatorId: string;
     gradeLevel?: string | null | undefined;
     discipline?: string | null | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-    creator?: any;
-    questions?: any[] | undefined;
     description?: string | null | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | null | undefined;
+    questions?: any[] | undefined;
+    creator?: any;
 }>;
 export declare const GameInstanceBaseSchema: z.ZodObject<{
     id: z.ZodString;
     name: z.ZodString;
     accessCode: z.ZodString;
     status: z.ZodString;
-    playMode: z.ZodEnum<["quiz", "tournament", "practice", "class"]>;
+    playMode: z.ZodEnum<["quiz", "tournament", "practice"]>;
     leaderboard: z.ZodOptional<z.ZodAny>;
     currentQuestionIndex: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     settings: z.ZodOptional<z.ZodAny>;
@@ -62,36 +62,36 @@ export declare const GameInstanceBaseSchema: z.ZodObject<{
     initiatorUser: z.ZodOptional<z.ZodAny>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
+    playMode: "quiz" | "tournament" | "practice";
     status: string;
-    createdAt: Date;
-    id: string;
-    playMode: "quiz" | "tournament" | "practice" | "class";
     name: string;
     gameTemplateId: string;
-    currentQuestionIndex?: number | null | undefined;
+    id: string;
+    createdAt: Date;
+    settings?: any;
     differedAvailableFrom?: Date | null | undefined;
     differedAvailableTo?: Date | null | undefined;
+    currentQuestionIndex?: number | null | undefined;
     leaderboard?: any;
     startedAt?: Date | null | undefined;
     endedAt?: Date | null | undefined;
-    settings?: any;
     initiatorUserId?: string | null | undefined;
     initiatorUser?: any;
 }, {
     accessCode: string;
+    playMode: "quiz" | "tournament" | "practice";
     status: string;
-    createdAt: Date;
-    id: string;
-    playMode: "quiz" | "tournament" | "practice" | "class";
     name: string;
     gameTemplateId: string;
-    currentQuestionIndex?: number | null | undefined;
+    id: string;
+    createdAt: Date;
+    settings?: any;
     differedAvailableFrom?: Date | null | undefined;
     differedAvailableTo?: Date | null | undefined;
+    currentQuestionIndex?: number | null | undefined;
     leaderboard?: any;
     startedAt?: Date | null | undefined;
     endedAt?: Date | null | undefined;
-    settings?: any;
     initiatorUserId?: string | null | undefined;
     initiatorUser?: any;
 }>;
@@ -128,24 +128,24 @@ export declare const GameTemplateCreationDataSchema: z.ZodObject<{
     themes: z.ZodArray<z.ZodString, "many">;
     discipline: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
-    defaultMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice", "class"]>>;
+    defaultMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice"]>>;
     creatorId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    themes: string[];
     name: string;
+    themes: string[];
     creatorId: string;
     gradeLevel?: string | undefined;
     discipline?: string | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | undefined;
 }, {
-    themes: string[];
     name: string;
+    themes: string[];
     creatorId: string;
     gradeLevel?: string | undefined;
     discipline?: string | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | undefined;
 }>;
 export declare const GameTemplateUpdateDataSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
@@ -153,27 +153,27 @@ export declare const GameTemplateUpdateDataSchema: z.ZodObject<{
     themes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     discipline: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
-    defaultMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice", "class"]>>;
+    defaultMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice"]>>;
 }, "strip", z.ZodTypeAny, {
+    name?: string | undefined;
     gradeLevel?: string | undefined;
     discipline?: string | undefined;
     themes?: string[] | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
-    name?: string | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | undefined;
 }, {
+    name?: string | undefined;
     gradeLevel?: string | undefined;
     discipline?: string | undefined;
     themes?: string[] | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
-    name?: string | undefined;
     description?: string | undefined;
+    defaultMode?: "quiz" | "tournament" | "practice" | undefined;
 }>;
 export declare const GameInstanceCreationDataSchema: z.ZodObject<{
     name: z.ZodString;
     accessCode: z.ZodString;
     status: z.ZodString;
-    playMode: z.ZodEnum<["quiz", "tournament", "practice", "class"]>;
+    playMode: z.ZodEnum<["quiz", "tournament", "practice"]>;
     gameTemplateId: z.ZodString;
     initiatorUserId: z.ZodOptional<z.ZodString>;
     settings: z.ZodOptional<z.ZodAny>;
@@ -181,23 +181,23 @@ export declare const GameInstanceCreationDataSchema: z.ZodObject<{
     differedAvailableTo: z.ZodOptional<z.ZodDate>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
+    playMode: "quiz" | "tournament" | "practice";
     status: string;
-    playMode: "quiz" | "tournament" | "practice" | "class";
     name: string;
     gameTemplateId: string;
+    settings?: any;
     differedAvailableFrom?: Date | undefined;
     differedAvailableTo?: Date | undefined;
-    settings?: any;
     initiatorUserId?: string | undefined;
 }, {
     accessCode: string;
+    playMode: "quiz" | "tournament" | "practice";
     status: string;
-    playMode: "quiz" | "tournament" | "practice" | "class";
     name: string;
     gameTemplateId: string;
+    settings?: any;
     differedAvailableFrom?: Date | undefined;
     differedAvailableTo?: Date | undefined;
-    settings?: any;
     initiatorUserId?: string | undefined;
 }>;
 export type PlayMode = z.infer<typeof PlayModeSchema>;

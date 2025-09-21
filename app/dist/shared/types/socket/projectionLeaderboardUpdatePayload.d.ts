@@ -14,44 +14,44 @@ export declare const ProjectionLeaderboardUpdatePayloadSchema: z.ZodObject<{
         attemptCount: z.ZodOptional<z.ZodNumber>;
         participationId: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        userId: string;
         username: string;
+        userId: string;
         score: number;
         avatarEmoji?: string | undefined;
-        attemptCount?: number | undefined;
         rank?: number | undefined;
         participationType?: import("..").ParticipationType | undefined;
+        attemptCount?: number | undefined;
         participationId?: string | undefined;
     }, {
-        userId: string;
         username: string;
+        userId: string;
         score: number;
         avatarEmoji?: string | undefined;
-        attemptCount?: number | undefined;
         rank?: number | undefined;
         participationType?: import("..").ParticipationType | undefined;
+        attemptCount?: number | undefined;
         participationId?: string | undefined;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     leaderboard: {
-        userId: string;
         username: string;
+        userId: string;
         score: number;
         avatarEmoji?: string | undefined;
-        attemptCount?: number | undefined;
         rank?: number | undefined;
         participationType?: import("..").ParticipationType | undefined;
+        attemptCount?: number | undefined;
         participationId?: string | undefined;
     }[];
 }, {
     leaderboard: {
-        userId: string;
         username: string;
+        userId: string;
         score: number;
         avatarEmoji?: string | undefined;
-        attemptCount?: number | undefined;
         rank?: number | undefined;
         participationType?: import("..").ParticipationType | undefined;
+        attemptCount?: number | undefined;
         participationId?: string | undefined;
     }[];
 }>;
