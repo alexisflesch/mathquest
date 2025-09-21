@@ -6,7 +6,6 @@
  */
 
 import { z } from 'zod';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Backend API base URL - can be overridden via environment variable
 export const BACKEND_API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:3007/api/v1';

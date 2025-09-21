@@ -14,22 +14,22 @@ export declare const LeaderboardEntrySchema: z.ZodObject<{
     attemptCount: z.ZodOptional<z.ZodNumber>;
     participationId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
     userId: string;
+    username: string;
     score: number;
     avatarEmoji?: string | undefined;
+    attemptCount?: number | undefined;
     rank?: number | undefined;
     participationType?: ParticipationType | undefined;
-    attemptCount?: number | undefined;
     participationId?: string | undefined;
 }, {
-    username: string;
     userId: string;
+    username: string;
     score: number;
     avatarEmoji?: string | undefined;
+    attemptCount?: number | undefined;
     rank?: number | undefined;
     participationType?: ParticipationType | undefined;
-    attemptCount?: number | undefined;
     participationId?: string | undefined;
 }>;
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;

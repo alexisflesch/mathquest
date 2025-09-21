@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { makeApiRequest } from '@/config/api';
 import { BACKEND_ENDPOINTS } from '@/constants/api';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function TeacherResetPasswordRequestPage() {
     const [email, setEmail] = useState('');
