@@ -75,11 +75,18 @@ export default withBundleAnalyzer({
                 urlPattern: /^https?.*/,
                 handler: 'NetworkFirst',
                 options: {
-                    cacheName: 'offlineCache',
+                    cacheName: 'offlineCache-v2', // Changed cache name to invalidate old cache
                     expiration: {
                         maxEntries: 100, // Reduced from 200 to save memory
                         maxAgeSeconds: 24 * 60 * 60, // 24 hours
                     },
+                },
+            },
+            {
+                urlPattern: /^\/$/,
+                handler: 'NetworkFirst',
+                options: {
+                    cacheName: 'start-url-v2', // Changed start URL cache name
                 },
             },
         ],
