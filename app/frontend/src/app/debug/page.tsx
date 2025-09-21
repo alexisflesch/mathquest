@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { makeApiRequest } from '@/config/api';
+import { AUTH_ENDPOINTS } from '@/constants/auth';
 import { useAuth } from '@/components/AuthProvider';
 import { AuthStatusResponseSchema, LogoutResponseSchema } from '@shared/types/api/schemas';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
@@ -61,7 +62,7 @@ export default function DebugPage() {
 
             // 2. For extra safety, also call clear-cookies API endpoint
             setStatus('Calling clear-cookies API endpoint...');
-            const clearResult = await makeApiRequest('auth/clear-cookies', { method: 'POST' }, undefined, LogoutResponseSchema);
+            const clearResult = await makeApiRequest(AUTH_ENDPOINTS.CLEAR_COOKIES, { method: 'POST' }, undefined, LogoutResponseSchema);
             console.log('[Debug] Clear cookies API response:', clearResult);
 
             // 3. Extra clearing for client-side cookies
@@ -92,7 +93,7 @@ export default function DebugPage() {
     const checkAuthStatus = async () => {
         try {
             setStatus('Checking auth status from server...');
-            const statusResult = await makeApiRequest('auth/status', { method: 'GET' }, undefined, AuthStatusResponseSchema);
+            const statusResult = await makeApiRequest(AUTH_ENDPOINTS.STATUS, { method: 'GET' }, undefined, AuthStatusResponseSchema);
             console.log('[Debug] Auth status from server:', statusResult);
             setStatus(`Auth status checked at ${new Date().toLocaleTimeString()}`);
             alert(JSON.stringify(statusResult, null, 2));

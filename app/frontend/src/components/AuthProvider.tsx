@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Register guest user in database so they can be found during upgrade
             try {
                 const result = await makeApiRequest<RegisterResponse>(
-                    'auth/register',
+                    AUTH_ENDPOINTS.REGISTER,
                     {
                         method: 'POST',
                         body: JSON.stringify({
@@ -352,7 +352,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const registerStudent = useCallback(async (email: string, password: string, username: string, avatar: string) => {
         try {
             const result = await makeApiRequest<RegisterResponse>(
-                'auth/register',
+                AUTH_ENDPOINTS.REGISTER,
                 {
                     method: 'POST',
                     body: JSON.stringify({ email, password, username, avatar, role: 'STUDENT' }),
