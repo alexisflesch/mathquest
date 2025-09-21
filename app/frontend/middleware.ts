@@ -39,8 +39,8 @@ export function middleware(request: NextRequest) {
     const userState = getUserState(request);
     const { pathname, origin, search } = request.nextUrl;
 
-    // Allow home, login, and email verification for everyone
-    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email')) {
+    // Allow home, login, email verification, and password reset for everyone
+    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/reset-password')) {
         return NextResponse.next();
     }
 

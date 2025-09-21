@@ -14,6 +14,8 @@ import { prisma } from '../../src/db/prisma';
 import { TEACHER_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
 import * as jwt from 'jsonwebtoken';
 import { GameTimerUpdatePayload } from '@shared/types/core/timer';
+import gameStateService from '../../src/core/services/gameStateService';
+import { configureSocketServer, registerHandlers } from '../../src/sockets';
 
 describe('Timer Synchronization Tests', () => {
     let io: SocketIOServer;
@@ -38,6 +40,11 @@ describe('Timer Synchronization Tests', () => {
         // Setup HTTP and Socket.IO server
         httpServer = createServer();
         io = new SocketIOServer(httpServer);
+
+        // Configure the socket server with middleware and handlers
+        configureSocketServer(io);
+        registerHandlers(io);
+
         await new Promise<void>(resolve => httpServer.listen(() => {
             const port = (httpServer.address() as any).port;
             serverAddress = `http://localhost:${port}`;
@@ -126,7 +133,7 @@ describe('Timer Synchronization Tests', () => {
         await redisClient.quit();
     });
 
-    beforeEach(done => {
+    beforeEach((done: (error?: any) => void) => {
         // Connect all clients
         teacherSocket = createClient(token);
         playerSocket = createClient(token); // Using same user for simplicity
@@ -152,7 +159,14 @@ describe('Timer Synchronization Tests', () => {
 
             // For this test, we assume the teacher is implicitly in the dashboard room.
             // The main goal is to verify player and projection sync.
-            Promise.all([playerJoin, projectionJoin]).then(() => done());
+            Promise.all([playerJoin, projectionJoin]).then(() => {
+                // Initialize game state in Redis so timer actions can work
+                gameStateService.initializeGameState(gameId).then(() => {
+                    done();
+                }).catch(err => {
+                    done(err);
+                });
+            });
         });
     });
 
@@ -166,8 +180,13 @@ describe('Timer Synchronization Tests', () => {
                     reject(new Error(`Timeout waiting for '${action}' on ${clientName} socket`));
                 }, testTimeout);
 
+                // Different clients listen to different events
+                const eventName = clientName === 'Projection'
+                    ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED
+                    : SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED;
+
                 // All clients should receive the same canonical event
-                socket.on(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED, (payload: GameTimerUpdatePayload) => {
+                socket.on(eventName, (payload: GameTimerUpdatePayload) => {
                     if (payload.timer.status === action) {
                         clearTimeout(timeoutId);
                         resolve(payload);

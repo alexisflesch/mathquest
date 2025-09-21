@@ -636,7 +636,7 @@ class UserService {
                 },
             });
             // Send password reset email
-            await emailService.sendPasswordResetEmail(email, user.username, resetToken);
+            await emailService.sendPasswordResetEmail(email, resetToken, user.username);
             logger.info({ email, userId: user.id }, 'Password reset token generated and sent');
         }
         catch (error) {

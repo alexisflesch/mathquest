@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { makeApiRequest } from '@/config/api';
+import { BACKEND_ENDPOINTS } from '@/constants/api';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function TeacherResetPasswordRequestPage() {
@@ -15,7 +16,7 @@ export default function TeacherResetPasswordRequestPage() {
         setSuccess(null);
         setIsLoading(true);
         try {
-            const result = await makeApiRequest<{ message?: string }>('auth/reset-password', {
+            const result = await makeApiRequest<{ message?: string }>(BACKEND_ENDPOINTS.RESET_PASSWORD, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
@@ -29,8 +30,8 @@ export default function TeacherResetPasswordRequestPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-200">
-            <div className="card w-full max-w-md shadow-xl bg-base-100">
+        <div className="main-content">
+            <div className="card w-full max-w-md shadow-xl bg-base-100 my-6">
                 <div className="card-body items-center gap-8">
                     <h1 className="card-title text-3xl mb-4 text-center">Réinitialiser le mot de passe</h1>
                     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6">
@@ -56,7 +57,7 @@ export default function TeacherResetPasswordRequestPage() {
                             disabled={isLoading}
                             className="btn btn-primary btn-lg w-full"
                         >
-                            {isLoading ? 'Envoi...' : 'Envoyer le lien de réinitialisation'}
+                            {isLoading ? 'Envoi...' : 'Envoyer le lien'}
                         </button>
                     </form>
                 </div>

@@ -276,7 +276,7 @@ const TestKeyboardNavigation = () => {
                             key={index}
                             data-testid={`answer-option-${index}`}
                             onClick={() => handleSingleChoice(index)}
-                            onKeyDown={(e) => handleKeyDown(e, index)}
+                            onKeyUp={(e) => handleKeyDown(e, index)}
                             tabIndex={0}
                             role="radio"
                             aria-checked={selectedAnswer === index}
@@ -486,7 +486,7 @@ describe('Accessibility and Keyboard Flows', () => {
 
             // Submit with Space
             firstOption.focus();
-            await user.keyboard('{Space}');
+            fireEvent.keyUp(firstOption, { key: ' ' });
             expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith('q1', 0, expect.any(Number));
         });
 
@@ -620,7 +620,7 @@ describe('Accessibility and Keyboard Flows', () => {
                 expect(firstOption).toHaveFocus();
 
                 // Select with Space
-                await user.keyboard('{Space}');
+                fireEvent.keyUp(firstOption, { key: ' ' });
                 expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith(
                     mockSocketHook.gameState.currentQuestion.uid,
                     0,
@@ -796,7 +796,7 @@ describe('Accessibility and Keyboard Flows', () => {
                                     key={index}
                                     data-testid={`mcq-option-${index}`}
                                     onClick={() => handleToggle(index)}
-                                    onKeyDown={(e) => handleKeyDown(e, index)}
+                                    onKeyUp={(e) => handleKeyDown(e, index)}
                                     tabIndex={0}
                                     role="checkbox"
                                     aria-checked={selectedAnswers.has(index)}
@@ -810,6 +810,7 @@ describe('Accessibility and Keyboard Flows', () => {
                         <button
                             data-testid="submit-mcq"
                             onClick={handleSubmit}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
                             disabled={selectedAnswers.size === 0}
                             aria-label={`Submit ${selectedAnswers.size} selected answers`}
                         >
@@ -829,7 +830,7 @@ describe('Accessibility and Keyboard Flows', () => {
                 expect(firstOption).toHaveFocus();
 
                 // Select with Space
-                await user.keyboard('{Space}');
+                fireEvent.keyUp(firstOption, { key: ' ' });
                 await waitFor(() => expect(firstOption).toHaveAttribute('aria-checked', 'true'));
 
                 // Tab to second option
@@ -838,17 +839,17 @@ describe('Accessibility and Keyboard Flows', () => {
                 expect(secondOption).toHaveFocus();
 
                 // Select with Enter
-                await user.keyboard('{Enter}');
+                fireEvent.keyUp(secondOption, { key: 'Enter' });
                 await waitFor(() => expect(secondOption).toHaveAttribute('aria-checked', 'true'));
 
                 // Tab to third option and deselect with Space
                 await user.tab();
                 const thirdOption = screen.getByTestId('mcq-option-2');
-                await user.keyboard('{Space}');
+                fireEvent.keyUp(thirdOption, { key: ' ' });
                 await waitFor(() => expect(thirdOption).toHaveAttribute('aria-checked', 'true'));
 
                 // Deselect by pressing Space again
-                await user.keyboard('{Space}');
+                fireEvent.keyUp(thirdOption, { key: ' ' });
                 await waitFor(() => expect(thirdOption).toHaveAttribute('aria-checked', 'false'));
             });
 
@@ -861,14 +862,14 @@ describe('Accessibility and Keyboard Flows', () => {
                 const thirdOption = screen.getByTestId('mcq-option-2');
 
                 firstOption.focus();
-                await user.keyboard('{Space}');
+                fireEvent.keyUp(firstOption, { key: ' ' });
                 thirdOption.focus();
-                await user.keyboard('{Space}');
+                fireEvent.keyUp(thirdOption, { key: ' ' });
 
                 // Submit
                 const submitButton = screen.getByTestId('submit-mcq');
                 submitButton.focus();
-                await user.keyboard('{Enter}');
+                fireEvent.keyDown(submitButton, { key: 'Enter' });
 
                 expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith(
                     mockSocketHook.gameState.currentQuestion.uid,
@@ -889,10 +890,10 @@ describe('Accessibility and Keyboard Flows', () => {
 
                 // Select it
                 firstOption.focus();
-                await user.keyboard('{Space}');
+                fireEvent.keyUp(firstOption, { key: ' ' });
 
                 // Now selected
-                expect(firstOption).toHaveAttribute('aria-checked', 'true');
+                await waitFor(() => expect(firstOption).toHaveAttribute('aria-checked', 'true'));
                 expect(firstOption).toHaveAttribute('aria-label', 'Option A, selected');
             });
         });

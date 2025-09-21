@@ -31,6 +31,18 @@ import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketDa
 // Create a server-specific logger
 const logger = createLogger('Server');
 
+// Handle uncaught exceptions to prevent server crashes
+process.on('uncaughtException', (error) => {
+    logger.error({ error }, 'Uncaught Exception - preventing server crash');
+    // Don't exit the process, just log the error
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    logger.error({ reason, promise }, 'Unhandled Rejection - preventing server crash');
+    // Don't exit the process, just log the error
+});
+
 // Check for JWT_SECRET
 if (!process.env.JWT_SECRET) {
     logger.warn('JWT_SECRET not found in environment variables, using default secret');

@@ -17,12 +17,15 @@ export const FRONTEND_AUTH_ENDPOINTS = {
     REGISTER: '/api/v1/auth/register',
     PROFILE: '/api/v1/auth/profile',
     UPGRADE: '/api/v1/auth/upgrade',
-    RESET_PASSWORD_CONFIRM: '/api/v1/auth/reset-password/confirm',
     CLEAR_COOKIES: '/api/v1/auth/clear-cookies'
 } as const;
 
 // Backend API Endpoints (V1 API)
 export const BACKEND_ENDPOINTS = {
+    // Authentication
+    RESET_PASSWORD: 'auth/reset-password',
+    RESET_PASSWORD_CONFIRM: 'auth/reset-password/confirm',
+
     // Questions
     QUESTIONS: 'questions',
     QUESTIONS_FILTERS: 'questions/filters',

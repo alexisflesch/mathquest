@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { makeApiRequest } from '@/config/api';
+import { BACKEND_ENDPOINTS } from '@/constants/api';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function Page() {
@@ -38,7 +39,7 @@ export default function Page() {
         setIsLoading(true);
 
         try {
-            const result = await makeApiRequest<{ message: string }>('/api/v1/auth/reset-password/confirm', {
+            const result = await makeApiRequest<{ message: string }>(BACKEND_ENDPOINTS.RESET_PASSWORD_CONFIRM, {
                 method: 'POST',
                 body: JSON.stringify({
                     token: token,
@@ -52,7 +53,7 @@ export default function Page() {
             setSuccess('Mot de passe réinitialisé avec succès ! Redirection vers la page de connexion...');
             // Redirect to login page after 2 seconds
             setTimeout(() => {
-                router.push('/teacher/login');
+                router.push('/login');
             }, 2000);
         } catch (error) {
             console.error('Password reset error:', error);
@@ -67,8 +68,8 @@ export default function Page() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-200">
-            <div className="card w-full max-w-md shadow-xl bg-base-100">
+        <div className="main-content">
+            <div className="card w-full max-w-md shadow-xl bg-base-100 my-6">
                 <div className="card-body items-center gap-8">
                     <h1 className="card-title text-3xl mb-4 text-center">Nouveau mot de passe</h1>
                     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6">

@@ -14,13 +14,6 @@ import Image from 'next/image';
 import InfinitySpin from '@/components/InfinitySpin';
 import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-import { default as dynamicImport } from 'next/dynamic';
-
-// Dynamically import the inner component to force client-side rendering
-const LoginPageInner = dynamicImport(() => Promise.resolve(LoginPageInnerComponent), {
-    ssr: false,
-    loading: () => <div>Chargement...</div>
-});
 
 function LoginPageInnerComponent() {
     const router = useRouter();
@@ -395,7 +388,7 @@ function LoginPageInnerComponent() {
 export default function LoginPage() {
     return (
         <Suspense fallback={<div>Chargement...</div>}>
-            <LoginPageInner />
+            <LoginPageInnerComponent />
         </Suspense>
     );
 }

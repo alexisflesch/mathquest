@@ -205,7 +205,7 @@ export class EmailService {
         <p>Merci de vous être inscrit(e) sur ${this.appName}. Pour activer votre compte, veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :</p>
         
         <div style="text-align: center;">
-            <a href="${data.verificationUrl}" class="button">Vérifier mon adresse email</a>
+            <a href="${data.verificationUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">Vérifier mon adresse email</a>
         </div>
         
         <p>Si le bouton ne fonctionne pas, vous pouvez copier et coller ce lien dans votre navigateur :</p>
@@ -277,7 +277,7 @@ Si vous n'avez pas créé de compte sur ${this.appName}, vous pouvez ignorer cet
         <p>Vous avez demandé la réinitialisation de votre mot de passe sur ${this.appName}. Pour créer un nouveau mot de passe, cliquez sur le bouton ci-dessous :</p>
         
         <div style="text-align: center;">
-            <a href="${data.resetUrl}" class="button">Réinitialiser mon mot de passe</a>
+            <a href="${data.resetUrl}" style="display: inline-block; background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">Réinitialiser mon mot de passe</a>
         </div>
         
         <p>Si le bouton ne fonctionne pas, vous pouvez copier et coller ce lien dans votre navigateur :</p>
