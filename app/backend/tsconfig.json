@@ -20,14 +20,12 @@
         "moduleResolution": "node",
         "downlevelIteration": true,
         "types": [
-            "jest",
             "node"
-        ], // Include Jest types for test files
+        ],
     },
     "include": [
         "src/**/*",
-        "../shared/**/*.ts",
-        "tests/**/*" // Include test files for VSCode TypeScript language server
+        "../shared/**/*.ts"
     ],
     "exclude": [
         "node_modules",
