@@ -4,7 +4,7 @@ module.exports = {
             name: "mathquest-backend",
             script: "npm",
             cwd: "./backend",
-            args: "run start",
+            args: "run start:memory-limited",
             env: {
                 NODE_ENV: "production",
                 REDIS_URL: "redis://localhost:6379"

@@ -486,7 +486,7 @@ describe('Accessibility and Keyboard Flows', () => {
 
             // Submit with Space
             firstOption.focus();
-            await user.keyboard(' ');
+            await user.keyboard('{Space}');
             expect(mockSocketHook.submitAnswer).toHaveBeenCalledWith('q1', 0, expect.any(Number));
         });
 
@@ -830,7 +830,7 @@ describe('Accessibility and Keyboard Flows', () => {
 
                 // Select with Space
                 await user.keyboard('{Space}');
-                expect(firstOption).toHaveAttribute('aria-checked', 'true');
+                await waitFor(() => expect(firstOption).toHaveAttribute('aria-checked', 'true'));
 
                 // Tab to second option
                 await user.tab();
@@ -839,17 +839,17 @@ describe('Accessibility and Keyboard Flows', () => {
 
                 // Select with Enter
                 await user.keyboard('{Enter}');
-                expect(secondOption).toHaveAttribute('aria-checked', 'true');
+                await waitFor(() => expect(secondOption).toHaveAttribute('aria-checked', 'true'));
 
                 // Tab to third option and deselect with Space
                 await user.tab();
                 const thirdOption = screen.getByTestId('mcq-option-2');
                 await user.keyboard('{Space}');
-                expect(thirdOption).toHaveAttribute('aria-checked', 'true');
+                await waitFor(() => expect(thirdOption).toHaveAttribute('aria-checked', 'true'));
 
                 // Deselect by pressing Space again
                 await user.keyboard('{Space}');
-                expect(thirdOption).toHaveAttribute('aria-checked', 'false');
+                await waitFor(() => expect(thirdOption).toHaveAttribute('aria-checked', 'false'));
             });
 
             test('should submit multiple selected answers', async () => {

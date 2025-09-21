@@ -268,6 +268,16 @@ function LoginPageInnerComponent() {
                                         autoComplete={studentAuthMode === 'login' ? 'current-password' : 'new-password'}
                                         required
                                     />
+                                    {studentAuthMode === 'login' && (
+                                        <div className="mt-1 text-right">
+                                            <Link
+                                                href="/reset-password"
+                                                className="text-sm text-[color:var(--primary)] hover:text-[color:var(--primary-hover)]"
+                                            >
+                                                Mot de passe oublié ?
+                                            </Link>
+                                        </div>
+                                    )}
                                     {studentAuthMode === 'signup' && (
                                         <p className="text-xs text-[color:var(--muted-foreground)] mt-1">Minimum 6 caractères</p>
                                     )}
