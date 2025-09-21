@@ -127,6 +127,9 @@ build_frontend() {
         cp public/workbox-*.js "$STAGING_DIR/frontend/public/" 2>/dev/null || true
         cp public/workbox-*.js.map "$STAGING_DIR/frontend/public/" 2>/dev/null || true
     fi
+
+    echo "🧾 Staged PWA files:"
+    ls -la "$STAGING_DIR/frontend/public" 2>/dev/null || true
     
     echo "✅ Frontend built and staged successfully"
 }
@@ -268,7 +271,12 @@ main() {
     echo "📋 What was built:"
     echo "   ✅ Frontend: .next directory with PWA support"
     echo "   ✅ Backend: dist directory with compiled TypeScript"
-    echo "   ✅ Service Worker: sw-v2.js (Workbox runtime may be inlined; workbox-*.js may not be present)"
+    SW_SUMMARY_LIST=$(ls "$APP_ROOT/frontend/public"/sw-*.js 2>/dev/null | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
+    if [ -n "$SW_SUMMARY_LIST" ]; then
+        echo "   ✅ Service Worker(s): $SW_SUMMARY_LIST (Workbox runtime may be inlined; workbox-*.js may not be present)"
+    else
+        echo "   ⚠️  Service Worker: none found (PWA may be disabled)"
+    fi
     echo ""
     echo "📝 Next steps:"
     echo "   Run your PM2 start script to launch the services"
