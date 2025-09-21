@@ -29,6 +29,7 @@
     ],
     "exclude": [
         "node_modules",
+        "src/tests",
         "../shared/types/examples" // Exclude shared TSX examples directory
     ],
     "ts-node": {
