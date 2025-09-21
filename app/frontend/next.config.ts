@@ -106,6 +106,7 @@ export default withBundleAnalyzer({
     // Avoid caching the start URL and prevent external workbox imports
     cacheStartUrl: false,
     workboxOptions: {
+        inlineWorkboxRuntime: true, // Inline workbox runtime to avoid external imports
         importScripts: [], // Prevent external workbox script imports
         skipWaiting: true, // Force new service worker to activate immediately
         clientsClaim: true, // Take control of all clients immediately
