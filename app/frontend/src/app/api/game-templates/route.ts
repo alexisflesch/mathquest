@@ -35,6 +35,15 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(data, { status: backendResponse.status });
         }
 
+        // Convert date strings to Date objects for frontend compatibility
+        if (data.gameTemplates) {
+            data.gameTemplates = data.gameTemplates.map((template: any) => ({
+                ...template,
+                createdAt: new Date(template.createdAt),
+                updatedAt: new Date(template.updatedAt)
+            }));
+        }
+
         return NextResponse.json(data);
     } catch (error) {
         console.error('Frontend API route error:', error);

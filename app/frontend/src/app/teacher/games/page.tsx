@@ -42,6 +42,16 @@ interface ActivityCardProps {
 }
 
 function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplicate, onDelete, onDeleteInstance, onRenameTemplate, onRenameInstance, formatDate, gameInstances, onFetchGameInstances }: ActivityCardProps) {
+  // Robustly convert Date|string to ISO string to avoid runtime errors
+  const toIso = (d: unknown): string => {
+    if (!d) return '';
+    if (typeof d === 'string') return d;
+    try {
+      return (d as Date).toISOString();
+    } catch {
+      return String(d);
+    }
+  };
   const [startModal, setStartModal] = useState<{
     isOpen: boolean;
     templateId: string | null;
@@ -129,8 +139,8 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                 <div className="flex items-center gap-4 flex-wrap">
                   <span className="flex items-center gap-1">
                     <Clock size={14} />
-                    <span className="hidden sm:inline">{formatDate(template.createdAt.toISOString())}</span>
-                    <span className="inline sm:hidden">{formatDate(template.createdAt.toISOString(), { dateOnly: true })}</span>
+                    <span className="hidden sm:inline">{formatDate(toIso(template.createdAt))}</span>
+                    <span className="inline sm:hidden">{formatDate(toIso(template.createdAt), { dateOnly: true })}</span>
                   </span>
                   {template.questions && (
                     <span className="flex items-center gap-1">
@@ -255,9 +265,9 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                               instance.status === 'completed' ? '' : 'Annulée';
                           subtext = instance.accessCode ? `${instance.accessCode}` : '';
                           if (subtext && instance.createdAt) {
-                            subtext += ` • ${formatDate(instance.createdAt.toISOString())}`;
+                            subtext += ` • ${formatDate(toIso(instance.createdAt))}`;
                           } else if (instance.createdAt) {
-                            subtext = formatDate(instance.createdAt.toISOString());
+                            subtext = formatDate(toIso(instance.createdAt));
                           }
                         }
 
@@ -361,7 +371,7 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onDeleteInstance(instance.id, `${instance.playMode === 'quiz' ? 'Quiz' : instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'} - ${formatDate(instance.createdAt.toISOString())}`);
+                                    onDeleteInstance(instance.id, `${instance.playMode === 'quiz' ? 'Quiz' : instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'} - ${formatDate(toIso(instance.createdAt))}`);
                                   }}
                                   className="p-1 text-[color:var(--alert)] hover:bg-[color:var(--alert)] hover:bg-opacity-10 rounded transition-colors group"
                                   title="Supprimer cette session"

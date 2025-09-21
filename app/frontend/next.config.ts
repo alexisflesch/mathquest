@@ -58,14 +58,36 @@ const nextConfig: NextConfig = {
     outputFileTracingRoot: path.join(__dirname, '..'), // Point to the monorepo root (app/)
     experimental: {
     },
+    async headers() {
+        return [
+            {
+                source: '/sw.js',
+                headers: [
+                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+                    { key: 'Pragma', value: 'no-cache' },
+                    { key: 'Expires', value: '0' },
+                ],
+            },
+            {
+                source: '/workbox-:hash.js',
+                headers: [
+                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+                    { key: 'Pragma', value: 'no-cache' },
+                    { key: 'Expires', value: '0' },
+                ],
+            },
+        ];
+    },
 };
 
 export default withBundleAnalyzer({
     enabled: isAnalyze,
 })(withPWA({
     dest: 'public',
+    // Ensure PWA is fully disabled in development
     disable: process.env.NODE_ENV === 'development',
-    register: true,
+    // Do not attempt to register service worker in dev
+    register: process.env.NODE_ENV !== 'development',
     sw: 'sw.js',
     workboxOptions: {
         skipWaiting: true, // Force new service worker to activate immediately
