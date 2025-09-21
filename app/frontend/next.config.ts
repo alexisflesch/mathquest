@@ -94,8 +94,9 @@ export default withBundleAnalyzer({
     dest: 'public',
     // Ensure PWA is fully disabled in development
     disable: process.env.NODE_ENV === 'development',
-    // Do not attempt to register service worker in dev
-    register: process.env.NODE_ENV !== 'development',
+    // Temporarily disable SW registration in all envs to avoid importScripts 404
+    // Re-enable after server is correctly serving /workbox-*.js
+    register: false,
     sw: 'sw-v2.js',
     workboxOptions: {
         skipWaiting: true, // Force new service worker to activate immediately
