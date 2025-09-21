@@ -97,7 +97,10 @@ export default withBundleAnalyzer({
     // Re-enable SW registration in production; disabled in development
     register: process.env.NODE_ENV !== 'development',
     sw: 'sw-v2.js',
+    // Avoid caching the start URL and inline workbox to prevent extra importScripts requests
+    cacheStartUrl: false,
     workboxOptions: {
+        inlineWorkboxRuntime: true,
         skipWaiting: true, // Force new service worker to activate immediately
         clientsClaim: true, // Take control of all clients immediately
         runtimeCaching: [
