@@ -136,89 +136,89 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                 });
 
                 if (existing) {
-                // Update existing participant
-                if (isDeferred) {
-                    // For deferred mode: check if they have an ongoing session
-                    const hasOngoing = await hasOngoingDeferredSession({
-                        accessCode,
-                        userId,
-                        attemptCount: existing.nbAttempts
-                    });
-
-                    if (!hasOngoing) {
-                        // New deferred attempt: increment nbAttempts to reflect new attempt
-                        const newAttemptNumber = existing.nbAttempts + 1;
-                        const updated = await tx.gameParticipant.update({
-                            where: { id: existing.id },
-                            data: {
-                                nbAttempts: newAttemptNumber,
-                                deferredScore: 0,
-                                status: ParticipantStatus.ACTIVE,
-                                lastActiveAt: new Date()
-                            },
-                            include: { user: true }
-                        });
-                        logger.info({
-                            userId: targetUserId,
+                    // Update existing participant
+                    if (isDeferred) {
+                        // For deferred mode: check if they have an ongoing session
+                        const hasOngoing = await hasOngoingDeferredSession({
                             accessCode,
-                            participantId: existing.id,
-                            newAttemptNumber,
-                            totalAttemptsAfterIncrement: updated.nbAttempts
-                        }, 'Starting new deferred session - incremented nbAttempts');
+                            userId,
+                            attemptCount: existing.nbAttempts
+                        });
 
-                        // Return the new attempt number for session creation
-                        (updated as any).currentDeferredAttemptNumber = newAttemptNumber;
-                        return updated;
+                        if (!hasOngoing) {
+                            // New deferred attempt: increment nbAttempts to reflect new attempt
+                            const newAttemptNumber = existing.nbAttempts + 1;
+                            const updated = await tx.gameParticipant.update({
+                                where: { id: existing.id },
+                                data: {
+                                    nbAttempts: newAttemptNumber,
+                                    deferredScore: 0,
+                                    status: ParticipantStatus.ACTIVE,
+                                    lastActiveAt: new Date()
+                                },
+                                include: { user: true }
+                            });
+                            logger.info({
+                                userId: targetUserId,
+                                accessCode,
+                                participantId: existing.id,
+                                newAttemptNumber,
+                                totalAttemptsAfterIncrement: updated.nbAttempts
+                            }, 'Starting new deferred session - incremented nbAttempts');
+
+                            // Return the new attempt number for session creation
+                            (updated as any).currentDeferredAttemptNumber = newAttemptNumber;
+                            return updated;
+                        } else {
+                            // Ongoing session: just update status and lastActiveAt
+                            const updated = await tx.gameParticipant.update({
+                                where: { id: existing.id },
+                                data: {
+                                    status: ParticipantStatus.ACTIVE,
+                                    lastActiveAt: new Date()
+                                },
+                                include: { user: true }
+                            });
+                            logger.info({ userId: targetUserId, accessCode, participantId: existing.id }, 'Reconnected to ongoing deferred session');
+                            return updated;
+                        }
                     } else {
-                        // Ongoing session: just update status and lastActiveAt
+                        // Live/pending mode: update status based on game state
                         const updated = await tx.gameParticipant.update({
                             where: { id: existing.id },
                             data: {
-                                status: ParticipantStatus.ACTIVE,
+                                status: participantStatus,
                                 lastActiveAt: new Date()
                             },
                             include: { user: true }
                         });
-                        logger.info({ userId: targetUserId, accessCode, participantId: existing.id }, 'Reconnected to ongoing deferred session');
+                        logger.info({ userId: targetUserId, accessCode, participantId: existing.id, status: participantStatus }, 'Updated existing participant status');
                         return updated;
                     }
                 } else {
-                    // Live/pending mode: update status based on game state
-                    const updated = await tx.gameParticipant.update({
-                        where: { id: existing.id },
+                    // Create new participant
+                    const newParticipant = await tx.gameParticipant.create({
                         data: {
-                            status: participantStatus,
+                            gameInstanceId: gameInstance.id,
+                            userId: targetUserId,
+                            status: isDeferred ? ParticipantStatus.ACTIVE : participantStatus,
+                            nbAttempts: 1,
+                            liveScore: 0,
+                            deferredScore: 0,
                             lastActiveAt: new Date()
                         },
                         include: { user: true }
                     });
-                    logger.info({ userId: targetUserId, accessCode, participantId: existing.id, status: participantStatus }, 'Updated existing participant status');
-                    return updated;
-                }
-            } else {
-                // Create new participant
-                const newParticipant = await tx.gameParticipant.create({
-                    data: {
-                        gameInstanceId: gameInstance.id,
+                    logger.info({
                         userId: targetUserId,
-                        status: isDeferred ? ParticipantStatus.ACTIVE : participantStatus,
-                        nbAttempts: 1,
-                        liveScore: 0,
-                        deferredScore: 0,
-                        lastActiveAt: new Date()
-                    },
-                    include: { user: true }
-                });
-                logger.info({
-                    userId: targetUserId,
-                    accessCode,
-                    participantId: newParticipant.id,
-                    status: newParticipant.status,
-                    isDeferred
-                }, 'Created new unified participant');
-                return newParticipant;
-            }
-        });
+                        accessCode,
+                        participantId: newParticipant.id,
+                        status: newParticipant.status,
+                        isDeferred
+                    }, 'Created new unified participant');
+                    return newParticipant;
+                }
+            });
         } catch (transactionError) {
             logger.error({
                 error: transactionError,
@@ -227,7 +227,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                 gameInstanceId: gameInstance.id,
                 logPoint: 'TRANSACTION_ERROR'
             }, 'Database transaction failed in joinGame');
-            
+
             // Check if it's a specific Prisma error
             if (transactionError && typeof transactionError === 'object' && 'code' in transactionError) {
                 const prismaError = transactionError as any;
@@ -235,7 +235,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                     return { success: false, error: 'You are already participating in this game' };
                 }
             }
-            
+
             return { success: false, error: 'Database error occurred while joining the game' };
         }
 
