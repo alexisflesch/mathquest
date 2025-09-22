@@ -61,8 +61,8 @@ export function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    // Allow home, login, email verification, and password reset for everyone
-    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/reset-password')) {
+    // Allow home, login, email verification, password reset, and join page for everyone
+    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/reset-password') || pathname === '/student/join') {
         return NextResponse.next();
     }
 

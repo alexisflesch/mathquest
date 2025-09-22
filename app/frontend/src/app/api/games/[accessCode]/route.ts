@@ -10,12 +10,14 @@ export async function GET(
     const { accessCode } = await params;
 
     // Get authentication token from cookies - allow both teacher and student tokens
+    // For GET requests, allow unauthenticated access to check game existence
     const teacherToken = request.cookies.get('teacherToken')?.value;
     const authToken = request.cookies.get('authToken')?.value;
 
     const token = teacherToken || authToken;
 
-    if (!token) {
+    // Allow unauthenticated GET requests for game existence checks
+    if (!token && request.method !== 'GET') {
         return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 

@@ -73,7 +73,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const niveau of possibleNiveaux) {
                     const niveauOption = niveauOptions.filter({ hasText: niveau });
                     if (await niveauOption.count() > 0) {
-                        console.log(` Found and selecting gradeLevel: ${gradeLevel`);
+                        console.log(` Found and selecting gradeLevel: ${gradeLevel}`);
                         await niveauOption.first().click();
                         selectedNiveau = true;
                         break;
@@ -83,7 +83,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedNiveau) {
                     // Select the first available niveau option
                     const firstNiveauText = niveauTexts[0];
-                    console.log(`[SUCCESS] Selecting first available gradeLevel: ${ firstNiveauText }`);
+                    console.log(`[SUCCESS] Selecting first available gradeLevel: ${firstNiveauText}`);
                     await niveauOptions.first().click();
                     selectedNiveau = true;
                 }
@@ -107,7 +107,7 @@ test.describe('Practice Mode E2E', () => {
             // Look for discipline options in the dropdown
             const disciplineOptions = studentPage.locator('.custom-dropdown-option');
             const disciplineCount = await disciplineOptions.count();
-            console.log(` Found ${ disciplineCount } discipline options`);
+            console.log(` Found ${disciplineCount} discipline options`);
 
             if (disciplineCount > 0) {
                 // Get all option texts for debugging
@@ -121,7 +121,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const discipline of disciplines) {
                     const disciplineOption = disciplineOptions.filter({ hasText: discipline });
                     if (await disciplineOption.count() > 0) {
-                        console.log(` Found and selecting discipline: ${ discipline }`);
+                        console.log(` Found and selecting discipline: ${discipline}`);
                         await disciplineOption.first().click();
                         selectedDiscipline = true;
                         break;
@@ -131,7 +131,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedDiscipline) {
                     // Select the first available discipline option
                     const firstDisciplineText = disciplineTexts[0];
-                    console.log(` Selecting first available discipline: ${ firstDisciplineText }`);
+                    console.log(` Selecting first available discipline: ${firstDisciplineText}`);
                     await disciplineOptions.first().click();
                     selectedDiscipline = true;
                 }
@@ -160,7 +160,7 @@ test.describe('Practice Mode E2E', () => {
             // Debug: Check all visible dropdown options (for MultiSelectDropdown, these are labels with checkboxes)
             const themeLabels = studentPage.locator('.multi-dropdown-option');
             const themeCount = await themeLabels.count();
-            console.log(` Found ${ themeCount } theme options`);
+            console.log(` Found ${themeCount} theme options`);
 
             if (themeCount > 0) {
                 // Get all theme texts for debugging
@@ -174,7 +174,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const theme of themes) {
                     const themeLabel = themeLabels.filter({ hasText: theme });
                     if (await themeLabel.count() > 0) {
-                        console.log(` Found and selecting theme: ${ theme }`);
+                        console.log(` Found and selecting theme: ${theme}`);
                         await themeLabel.first().click();
                         selectedTheme = true;
                         break;
@@ -184,7 +184,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedTheme) {
                     // Select the first available theme option
                     const firstThemeText = themeTexts[0];
-                    console.log(` Selecting first available theme: ${ firstThemeText }`);
+                    console.log(` Selecting first available theme: ${firstThemeText}`);
                     await themeLabels.first().click();
                     selectedTheme = true;
                 }
@@ -257,14 +257,14 @@ test.describe('Practice Mode E2E', () => {
                 const buttonCount = await button.count();
 
                 if (buttonCount > 0) {
-                    console.log(` Found training button with selector: ${ selector } `);
+                    console.log(` Found training button with selector: ${selector} `);
                     try {
                         await button.first().click();
                         console.log(' Successfully clicked training start button');
                         trainingStarted = true;
                         break;
                     } catch (error) {
-                        console.log(`⚠️ Failed to click button with ${ selector }: `, error);
+                        console.log(`⚠️ Failed to click button with ${selector}: `, error);
                         continue;
                     }
                 }
@@ -312,7 +312,7 @@ test.describe('Practice Mode E2E', () => {
                 let questionFound = false;
                 for (const selector of questionSelectors) {
                     if (await page.locator(selector).count() > 0) {
-                        console.log(` Found question element: ${ selector } `);
+                        console.log(` Found question element: ${selector} `);
                         questionFound = true;
                         break;
                     }
@@ -327,7 +327,7 @@ test.describe('Practice Mode E2E', () => {
                 // Try to answer a few questions
                 const maxQuestions = 3;
                 for (let i = 0; i < maxQuestions; i++) {
-                    console.log(`🔢 Attempting to answer question ${ i + 1 }...`);
+                    console.log(`🔢 Attempting to answer question ${i + 1}...`);
 
                     // Look for input fields or answer buttons
                     const answerInputs = page.locator('input[type="text"], input[type="number"], textarea');
@@ -336,7 +336,7 @@ test.describe('Practice Mode E2E', () => {
                     const inputCount = await answerInputs.count();
                     const buttonCount = await answerButtons.count();
 
-                    console.log(` Found ${ inputCount } answer inputs and ${ buttonCount } answer buttons`);
+                    console.log(` Found ${inputCount} answer inputs and ${buttonCount} answer buttons`);
 
                     if (inputCount > 0) {
                         // Text/number input question
@@ -376,7 +376,7 @@ test.describe('Practice Mode E2E', () => {
                     let sessionComplete = false;
                     for (const indicator of completionIndicators) {
                         if (await page.locator(indicator).count() > 0) {
-                            console.log(`🎉 Practice session completed: ${ indicator }`);
+                            console.log(`🎉 Practice session completed: ${indicator}`);
                             sessionComplete = true;
                             break;
                         }
@@ -413,7 +413,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const buttonSelector of startButtons) {
                     const button = studentPage.locator(buttonSelector);
                     if (await button.count() > 0) {
-                        console.log(` Found start button: ${ buttonSelector }`);
+                        console.log(` Found start button: ${buttonSelector}`);
                         await button.click();
                         foundStartButton = true;
 
@@ -436,7 +436,7 @@ test.describe('Practice Mode E2E', () => {
 
                     for (const indicator of trainingIndicators) {
                         if (await studentPage.locator(indicator).count() > 0) {
-                            console.log(` Found training indicator: ${ indicator }`);
+                            console.log(` Found training indicator: ${indicator}`);
                             break;
                         }
                     }
@@ -459,7 +459,7 @@ test.describe('Practice Mode E2E', () => {
                     const errorElement = studentPage.locator(errorSelector);
                     if (await errorElement.count() > 0) {
                         const errorText = await errorElement.textContent();
-                        console.log(` Found error message: ${ errorText }`);
+                        console.log(` Found error message: ${errorText}`);
                     }
                 }
             }

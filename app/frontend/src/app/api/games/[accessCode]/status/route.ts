@@ -19,7 +19,7 @@ export async function PUT(
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
 
-        const body = await request.text();
+        const body = await request.json();
 
         // Forward request to backend
         const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${accessCode}/status`, {
@@ -28,7 +28,7 @@ export async function PUT(
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
-            body,
+            body: JSON.stringify(body),
         });
 
         const data = await backendResponse.json();

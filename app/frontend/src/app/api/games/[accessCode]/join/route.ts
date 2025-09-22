@@ -8,9 +8,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ acc
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:3007/api/v1';
     let body = {};
     try {
-        // Only try to parse JSON if there is a body
-        const text = await req.text();
-        if (text) body = JSON.parse(text);
+        body = await req.json();
     } catch (e) {
         body = {};
     }
