@@ -48,3 +48,6 @@ backend/*.log
 # SSL / keys
 *.pem
 
+# Backup files
+.backup*
+

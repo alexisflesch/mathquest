@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Worker Test - Fixed</title>
+</head>
+<body>
+    <h1>Service Worker Test - Fixed</h1>
+    <div id="status">Testing service worker...</div>
+    <div id="log"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const logDiv = document.getElementById('log');
+
+        function log(message) {
+            console.log(message);
+            logDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        }
+
+        function updateStatus(message) {
+            statusDiv.textContent = message;
+            log(message);
+        }
+
+        async function testServiceWorker() {
+            try {
+                updateStatus('Checking service worker support...');
+
+                if ('serviceWorker' in navigator) {
+                    updateStatus('Service workers supported. Registering...');
+
+                    // Register the service worker
+                    const registration = await navigator.serviceWorker.register('/sw-v3.js');
+                    updateStatus('Service worker registered successfully!');
+
+                    log('Registration scope: ' + registration.scope);
+                    log('Registration state: ' + registration.active?.state);
+
+                    // Wait for the service worker to be ready
+                    await navigator.serviceWorker.ready;
+                    updateStatus('Service worker ready!');
+
+                    // Test a fetch request to trigger cacheWillUpdate
+                    updateStatus('Testing cache functionality...');
+                    const response = await fetch('/');
+                    if (response.ok) {
+                        updateStatus('✅ Cache test successful - no _ref errors!');
+                        log('Response status: ' + response.status);
+                    } else {
+                        updateStatus('❌ Cache test failed');
+                        log('Response status: ' + response.status);
+                    }
+
+                } else {
+                    updateStatus('❌ Service workers not supported');
+                }
+            } catch (error) {
+                updateStatus('❌ Service worker test failed: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // Listen for service worker errors
+        window.addEventListener('error', (event) => {
+            if (event.filename && event.filename.includes('sw-v3.js')) {
+                log('❌ Service Worker Error: ' + event.message);
+                updateStatus('❌ Service worker has errors!');
+            }
+        });
+
+        // Listen for unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            log('❌ Unhandled promise rejection: ' + event.reason);
+            updateStatus('❌ Service worker has promise rejections!');
+        });
+
+        // Start the test
+        testServiceWorker();
+    </script>
+</body>
+</html>

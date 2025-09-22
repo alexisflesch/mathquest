@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Worker Test</title>
+</head>
+<body>
+    <h1>Service Worker Test</h1>
+    <div id="status">Loading...</div>
+    <button id="register-sw">Register Service Worker</button>
+    <button id="unregister-sw">Unregister Service Worker</button>
+    <button id="test-cache">Test Cache</button>
+    <div id="log"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const logDiv = document.getElementById('log');
+
+        function log(message) {
+            console.log(message);
+            logDiv.innerHTML += '<div>' + message + '</div>';
+        }
+
+        function updateStatus(message) {
+            statusDiv.textContent = message;
+            log(message);
+        }
+
+        // Register service worker
+        document.getElementById('register-sw').addEventListener('click', async () => {
+            try {
+                if ('serviceWorker' in navigator) {
+                    updateStatus('Registering service worker...');
+                    const registration = await navigator.serviceWorker.register('/sw-v3.js');
+                    updateStatus('Service worker registered: ' + registration.scope);
+
+                    // Listen for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed') {
+                                updateStatus('New service worker installed');
+                            }
+                        });
+                    });
+
+                    // Listen for messages from SW
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        log('Message from SW: ' + JSON.stringify(event.data));
+                    });
+
+                } else {
+                    updateStatus('Service workers not supported');
+                }
+            } catch (error) {
+                updateStatus('Registration failed: ' + error.message);
+                console.error(error);
+            }
+        });
+
+        // Unregister service worker
+        document.getElementById('unregister-sw').addEventListener('click', async () => {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+                updateStatus('Service worker unregistered');
+            } catch (error) {
+                updateStatus('Unregistration failed: ' + error.message);
+            }
+        });
+
+        // Test cache functionality
+        document.getElementById('test-cache').addEventListener('click', async () => {
+            try {
+                updateStatus('Testing cache...');
+
+                // Try to fetch the root URL to trigger cacheWillUpdate
+                const response = await fetch('/');
+                if (response.ok) {
+                    updateStatus('Cache test successful - response status: ' + response.status);
+                } else {
+                    updateStatus('Cache test failed - response status: ' + response.status);
+                }
+
+                // Check caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    log('Available caches: ' + cacheNames.join(', '));
+                }
+
+            } catch (error) {
+                updateStatus('Cache test failed: ' + error.message);
+                console.error(error);
+            }
+        });
+
+        // Check initial service worker status
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then((registration) => {
+                updateStatus('Service worker ready: ' + registration.scope);
+            }).catch(() => {
+                updateStatus('No service worker registered');
+            });
+        } else {
+            updateStatus('Service workers not supported');
+        }
+
+        // Listen for service worker errors
+        window.addEventListener('error', (event) => {
+            if (event.filename && event.filename.includes('sw-v3.js')) {
+                log('Service Worker Error: ' + event.message + ' in ' + event.filename + ':' + event.lineno);
+            }
+        });
+
+        // Listen for unhandled promise rejections (which might catch SW errors)
+        window.addEventListener('unhandledrejection', (event) => {
+            log('Unhandled promise rejection: ' + event.reason);
+        });
+    </script>
+</body>
+</html>

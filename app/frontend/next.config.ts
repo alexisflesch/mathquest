@@ -103,34 +103,19 @@ export default withBundleAnalyzer({
     // Re-enable SW registration in production; disabled in development
     register: process.env.NODE_ENV !== 'development',
     sw: 'sw-v3.js',
-    // Avoid caching the start URL and prevent external workbox imports
+    // Enable start URL caching so we can override it
     cacheStartUrl: false,
     workboxOptions: {
-        inlineWorkboxRuntime: true, // Inline workbox runtime to avoid external imports
-        importScripts: [], // Prevent external workbox script imports
-        skipWaiting: true, // Force new service worker to activate immediately
-        clientsClaim: true, // Take control of all clients immediately
+        // Disable all default workbox routes and behaviors
+        // disable: true, // This option doesn't exist
+        // Remove runtimeCaching to prevent conflicts
         runtimeCaching: [
             {
-                // Do not have SW intercept HTML navigations
-                urlPattern: ({ request }) => request.mode === 'navigate',
-                handler: 'NetworkOnly',
-                options: { cacheName: 'html-pages' },
-            },
-            {
-                // Cache start URL with NetworkFirst strategy
+                // Override the default start URL caching
                 urlPattern: '/',
-                handler: 'NetworkFirst',
+                handler: 'StaleWhileRevalidate',
                 options: {
-                    cacheName: 'start-url',
-                    plugins: [
-                        {
-                            cacheWillUpdate: async ({ response }) => {
-                                // Only cache successful responses
-                                return response.status === 200 ? response : null;
-                            },
-                        },
-                    ],
+                    cacheName: 'start-url'
                 },
             },
         ],
