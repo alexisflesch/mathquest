@@ -34,6 +34,7 @@ test.describe('API Authentication Tests', () => {
         const studentData = testData.generateTestData('student');
         const student = await testData.createStudent({
             username: studentData.username,
+            email: studentData.email,
             password: studentData.password,
             firstName: 'Test',
             lastName: 'Student'

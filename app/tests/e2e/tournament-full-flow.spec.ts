@@ -355,7 +355,7 @@ test.describe('Tournament Full Flow E2E', () => {
 
             // Enable console logging
             page.on('console', msg => {
-                log(`Browser Console [${msg.defaultMode()}]:`, msg.text());
+                log(`Browser Console [${msg.type()}]:`, msg.text());
             });
 
             // Enable network logging

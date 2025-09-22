@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { LoginHelper } from './helpers/test-helpers';
+import { LoginHelper, TestDataHelper } from './helpers/test-helpers';
 
 test.describe('Practice Mode E2E', () => {
     let studentPage: Page;
@@ -16,10 +16,21 @@ test.describe('Practice Mode E2E', () => {
 
     test('Practice Mode: Self-paced learning with feedback', async () => {
         try {
-            // Step 1: Login as student using unified login page
-            console.log('🔐 Logging in as student...');
+            const dataHelper = new TestDataHelper(studentPage);
             const studentLogin = new LoginHelper(studentPage);
-            await studentLogin.loginAsStudent({ username: 'PracticeTestStudent' });
+
+            // Step 1: Create student account and login
+            const studentData = dataHelper.generateTestData('practice_student');
+            const student = await dataHelper.createStudent({
+                username: studentData.username,
+                email: studentData.email,
+                password: studentData.password
+            });
+
+            await studentLogin.loginAsAuthenticatedStudent({
+                email: studentData.email,
+                password: studentData.password
+            });
             console.log(' Student login successful');
 
             // Step 2: Navigate to practice mode (training)

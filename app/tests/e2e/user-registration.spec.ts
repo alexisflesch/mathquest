@@ -384,7 +384,7 @@ test.describe('User Registration & Authentication', () => {
 
             try {
                 // Login as student
-                await loginHelper.loginAsStudent({ username: testData.username });
+                await loginHelper.loginAsGuestStudent({ username: testData.username });
 
                 // Navigate to different pages to test session
                 const testPages = ['/student/create-game', '/student/join', '/'];
