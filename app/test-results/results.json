@@ -1,0 +1,134 @@
+{
+  "config": {
+    "configFile": "/home/aflesch/mathquest/app/playwright.config.ts",
+    "rootDir": "/home/aflesch/mathquest/app/tests/e2e",
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": "/home/aflesch/mathquest/app/tests/e2e/global-setup.ts",
+    "globalTeardown": "/home/aflesch/mathquest/app/tests/e2e/global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ],
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/aflesch/mathquest/app/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/aflesch/mathquest/app/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.52.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "auth-test.spec.ts",
+      "file": "auth-test.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Test teacher login flow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6360,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Creating teacher account...\n"
+                    },
+                    {
+                      "text": "Registration result: {\n  success: \u001b[33mtrue\u001b[39m,\n  user: {\n    id: \u001b[32m'952fcbf2-70cc-489d-bf78-e01825de9a9f'\u001b[39m,\n    email: \u001b[32m'auth_test_1758557865473_772@test-mathquest.com'\u001b[39m,\n    username: \u001b[32m'marie-julie'\u001b[39m,\n    avatar: \u001b[32m'🦬'\u001b[39m,\n    role: \u001b[32m'TEACHER'\u001b[39m\n  },\n  token: \u001b[32m'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5NTJmY2JmMi03MGNjLTQ4OWQtYmY3OC1lMDE4MjVkZTlhOWYiLCJ1c2VybmFtZSI6Im1hcmllLWp1bGllIiwicm9sZSI6IlRFQUNIRVIiLCJpYXQiOjE3NTg1NTc4NjUsImV4cCI6MTc1ODY0NDI2NX0.EYYTzWsUMLnQRy_VIWNxqiZOGsJtHGiPyT4ZPpauz0k'\u001b[39m,\n  message: \u001b[32m'Registration successful'\u001b[39m\n}\n"
+                    },
+                    {
+                      "text": "Testing login via frontend...\n"
+                    },
+                    {
+                      "text": "Current URL after login: http://localhost:3008/\n"
+                    },
+                    {
+                      "text": "✅ Teacher login successful!\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-09-22T16:17:45.250Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "40d6d58ecdf96ce55ed5-a66022ccbfd7513b0e5b",
+          "file": "auth-test.spec.ts",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-09-22T16:17:34.054Z",
+    "duration": 17769.02,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

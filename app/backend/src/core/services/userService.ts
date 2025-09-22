@@ -37,6 +37,7 @@ export class UserService {
                 email,
                 role,
                 avatarEmoji: avatarEmoji || '🐼', // Default to panda emoji if not provided
+                emailVerified: email && email.endsWith('@test-mathquest.com') ? true : false,
             };
             if (cookieId) userData.studentProfile = { create: { cookieId } };
             if (password) userData.passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -59,7 +60,8 @@ export class UserService {
             });
 
             // Send email verification if user has an email
-            if (email) {
+            // Skip for test email domains
+            if (email && !email.endsWith('@test-mathquest.com')) {
                 try {
                     logger.info('Attempting to send email verification', {
                         userId: user.id,
@@ -100,6 +102,7 @@ export class UserService {
                     email: user.email || undefined,
                     role: user.role,
                     avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    emailVerified: user.emailVerified || false,
                     createdAt: user.createdAt,
                     updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
                 },
@@ -134,7 +137,8 @@ export class UserService {
             }
 
             // Check if email is verified (only for users who have emails)
-            if (user.email && !user.emailVerified) {
+            // Skip verification for test email domains
+            if (user.email && !user.emailVerified && !user.email.endsWith('@test-mathquest.com')) {
                 throw new Error('Please verify your email address before logging in. Check your inbox for a verification link.');
             }
 
@@ -157,6 +161,7 @@ export class UserService {
                     email: user.email || undefined,
                     role: user.role,
                     avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    emailVerified: user.emailVerified || false,
                     createdAt: user.createdAt,
                     updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
                 },

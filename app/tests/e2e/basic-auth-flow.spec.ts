@@ -59,7 +59,7 @@ test.describe('Basic Authentication Flow', () => {
         await expect(accountModeButton).toBeVisible();
 
         // Step 4: Check guest form is present (should be default)
-        const usernameInput = page.getByRole('textbox'); // Use getByRole for textbox
+        const usernameInput = page.locator('input[name="username"]'); // Use specific name selector instead of generic getByRole
         const submitButton = page.locator('button:has-text("Commencer à jouer")');
 
         await expect(usernameInput).toBeVisible();

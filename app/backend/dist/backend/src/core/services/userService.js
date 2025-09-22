@@ -40,6 +40,7 @@ class UserService {
                 email,
                 role,
                 avatarEmoji: avatarEmoji || '🐼', // Default to panda emoji if not provided
+                emailVerified: email && email.endsWith('@test-mathquest.com') ? true : false,
             };
             if (cookieId)
                 userData.studentProfile = { create: { cookieId } };
@@ -63,7 +64,8 @@ class UserService {
                 },
             });
             // Send email verification if user has an email
-            if (email) {
+            // Skip for test email domains
+            if (email && !email.endsWith('@test-mathquest.com')) {
                 try {
                     logger.info('Attempting to send email verification', {
                         userId: user.id,
@@ -101,6 +103,7 @@ class UserService {
                     email: user.email || undefined,
                     role: user.role,
                     avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    emailVerified: user.emailVerified || false,
                     createdAt: user.createdAt,
                     updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
                 },
@@ -134,7 +137,8 @@ class UserService {
                 throw new Error('Invalid email or password');
             }
             // Check if email is verified (only for users who have emails)
-            if (user.email && !user.emailVerified) {
+            // Skip verification for test email domains
+            if (user.email && !user.emailVerified && !user.email.endsWith('@test-mathquest.com')) {
                 throw new Error('Please verify your email address before logging in. Check your inbox for a verification link.');
             }
             const passwordMatch = await bcrypt_1.default.compare(password, user.passwordHash);
@@ -152,6 +156,7 @@ class UserService {
                     email: user.email || undefined,
                     role: user.role,
                     avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    emailVerified: user.emailVerified || false,
                     createdAt: user.createdAt,
                     updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
                 },

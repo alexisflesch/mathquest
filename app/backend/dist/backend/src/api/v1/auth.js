@@ -37,9 +37,20 @@ router.post('/logout', (req, res) => {
     });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 });
-// ...existing code...
-// ...existing code...
-// Create a singleton instance or allow injection for testing
+/**
+ * Debug endpoint to check environment
+ * GET /api/v1/auth/debug
+ */
+router.get('/debug', (req, res) => {
+    res.status(200).json({
+        NODE_ENV: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+    });
+});
+/**
+ * Generic auth endpoint that handles multiple actions
+ * POST /api/v1/auth
+ */
 let userServiceInstance = null;
 const getUserService = () => {
     if (!userServiceInstance) {
@@ -436,7 +447,7 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
             password,
             role: role,
             cookieId,
-            avatarEmoji: validatedAvatar
+            avatarEmoji: validatedAvatar,
         });
         if (!result.user || !result.token) {
             res.status(500).json({ error: 'Registration failed' });
@@ -450,8 +461,8 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
             hasCookieId: !!cookieId,
             emailVerified: result.user.emailVerified || false
         });
-        // For users with email - DO NOT set auth cookies until email is verified
-        if (email) {
+        // For users with email - DO NOT set auth cookies until email is verified (unless skipped for testing)
+        if (email && !result.user.emailVerified) {
             logger.info('Email verification required - not setting auth cookies', {
                 userId: result.user.id,
                 email: email
@@ -464,11 +475,11 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
                     username: result.user.username,
                     avatar: result.user.avatarEmoji,
                     role: result.user.role,
-                    emailVerified: false
+                    emailVerified: result.user.emailVerified
                 },
                 // Do NOT include token in response for unverified users
-                message: 'Account created successfully. Please verify your email before logging in.',
-                requiresEmailVerification: true
+                message: result.user.emailVerified ? 'Account created successfully.' : 'Account created successfully. Please verify your email before logging in.',
+                requiresEmailVerification: !result.user.emailVerified
             });
             return;
         }

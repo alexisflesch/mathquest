@@ -175,7 +175,7 @@ async function createGameFromTemplate(page: Page, templateId: string, playMode: 
 async function createPracticeGame(page: Page): Promise<GameData> {
     log('Creating practice game...');
 
-    const response = await page.request.post('/api/games', {
+    const response = await page.request.post(`${TEST_CONFIG.backendUrl}/api/v1/games`, {
         data: {
             name: `Test Practice Game ${Date.now()}`,
             playMode: 'practice',
