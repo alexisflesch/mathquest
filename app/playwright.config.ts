@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -8,7 +10,7 @@ export default defineConfig({
     /* Run tests in files in parallel */
     fullyParallel: false, // Disable parallel for real-time testing
     /* Fail the build on CI if you accidentally left test.only in the source code. */
-    forbidOnly: !!process.env.CI,
+    forbidOnly: true,
     /* Retry on CI only */
     retries: process.env.CI ? 2 : 0,
     /* Opt out of parallel tests on CI. */
@@ -46,11 +48,7 @@ export default defineConfig({
         {
             name: 'chromium',
             use: {
-                ...devices['Desktop Chrome'],
-                /* Environment variables for frontend during tests */
-                env: {
-                    NEXT_PUBLIC_BACKEND_BASE_URL: 'http://localhost:3007'
-                }
+                ...devices['Desktop Chrome']
             },
         },
 

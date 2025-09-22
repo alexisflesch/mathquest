@@ -59,7 +59,7 @@ test.describe('Practice Mode E2E', () => {
             // Look for niveau options in the dropdown
             const niveauOptions = studentPage.locator('.custom-dropdown-option');
             const niveauCount = await niveauOptions.count();
-            console.log(` Found ${niveauCount} niveau options`);
+            console.log(' Found ' + niveauCount + ' niveau options');
 
             if (niveauCount > 0) {
                 // Get all option texts for debugging
@@ -73,7 +73,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const niveau of possibleNiveaux) {
                     const niveauOption = niveauOptions.filter({ hasText: niveau });
                     if (await niveauOption.count() > 0) {
-                        console.log(` Found and selecting gradeLevel: ${gradeLevel`);
+                        console.log(' Found and selecting gradeLevel: ' + niveau);
                         await niveauOption.first().click();
                         selectedNiveau = true;
                         break;
@@ -83,7 +83,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedNiveau) {
                     // Select the first available niveau option
                     const firstNiveauText = niveauTexts[0];
-                    console.log(`Selecting first available gradeLevel: ${ firstNiveauText }`);
+                    console.log('Selecting first available gradeLevel: ' + firstNiveauText);
                     await niveauOptions.first().click();
                     selectedNiveau = true;
                 }
@@ -107,7 +107,7 @@ test.describe('Practice Mode E2E', () => {
             // Look for discipline options in the dropdown
             const disciplineOptions = studentPage.locator('.custom-dropdown-option');
             const disciplineCount = await disciplineOptions.count();
-            console.log(` Found ${ disciplineCount } discipline options`);
+            console.log(' Found ' + disciplineCount + ' discipline options');
 
             if (disciplineCount > 0) {
                 // Get all option texts for debugging
@@ -121,7 +121,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const discipline of disciplines) {
                     const disciplineOption = disciplineOptions.filter({ hasText: discipline });
                     if (await disciplineOption.count() > 0) {
-                        console.log(` Found and selecting discipline: ${ discipline }`);
+                        console.log(' Found and selecting discipline: ' + discipline);
                         await disciplineOption.first().click();
                         selectedDiscipline = true;
                         break;
@@ -131,7 +131,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedDiscipline) {
                     // Select the first available discipline option
                     const firstDisciplineText = disciplineTexts[0];
-                    console.log(` Selecting first available discipline: ${ firstDisciplineText }`);
+                    console.log(' Selecting first available discipline: ' + firstDisciplineText);
                     await disciplineOptions.first().click();
                     selectedDiscipline = true;
                 }
@@ -160,7 +160,7 @@ test.describe('Practice Mode E2E', () => {
             // Debug: Check all visible dropdown options (for MultiSelectDropdown, these are labels with checkboxes)
             const themeLabels = studentPage.locator('.multi-dropdown-option');
             const themeCount = await themeLabels.count();
-            console.log(` Found ${ themeCount } theme options`);
+            console.log(' Found ' + themeCount + ' theme options');
 
             if (themeCount > 0) {
                 // Get all theme texts for debugging
@@ -174,7 +174,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const theme of themes) {
                     const themeLabel = themeLabels.filter({ hasText: theme });
                     if (await themeLabel.count() > 0) {
-                        console.log(` Found and selecting theme: ${ theme }`);
+                        console.log(' Found and selecting theme: ' + theme);
                         await themeLabel.first().click();
                         selectedTheme = true;
                         break;
@@ -184,7 +184,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedTheme) {
                     // Select the first available theme option
                     const firstThemeText = themeTexts[0];
-                    console.log(` Selecting first available theme: ${ firstThemeText }`);
+                    console.log(' Selecting first available theme: ' + firstThemeText);
                     await themeLabels.first().click();
                     selectedTheme = true;
                 }
@@ -233,18 +233,18 @@ test.describe('Practice Mode E2E', () => {
                 // Manual approach: find all buttons with "5" and click the one that's not a stepper
                 const allFiveButtons = studentPage.locator('button:has-text("5")');
                 const fiveButtonCount = await allFiveButtons.count();
-                console.log(` Found ${ fiveButtonCount } buttons with "5" text`);
+                console.log(' Found ' + fiveButtonCount + ' buttons with "5" text');
 
                 for (let i = 0; i < fiveButtonCount; i++) {
                     const button = allFiveButtons.nth(i);
                     const buttonClass = await button.getAttribute('class') || '';
                     const buttonText = await button.textContent() || '';
 
-                    console.log(` Button ${ i }: class="${buttonClass}", text = "${buttonText}"`);
+                    console.log(' Button ' + i + ': class="' + buttonClass + '", text = "' + buttonText + '"');
 
                     // Skip stepper badges and target question selection buttons
                     if (!buttonClass.includes('badge') && !buttonClass.includes('stepper') && buttonText.trim() === '5') {
-                        console.log(` Selecting question count button ${ i } `);
+                        console.log(' Selecting question count button ' + i + ' ');
                         await button.click();
                         questionSelected = true;
                         break;
@@ -287,14 +287,14 @@ test.describe('Practice Mode E2E', () => {
                 const buttonCount = await button.count();
 
                 if (buttonCount > 0) {
-                    console.log(` Found training button with selector: ${ selector } `);
+                    console.log(' Found training button with selector: ' + selector + ' ');
                     try {
                         await button.first().click();
                         console.log(' Successfully clicked training start button');
                         trainingStarted = true;
                         break;
                     } catch (error) {
-                        console.log(`⚠️ Failed to click button with ${ selector }: `, error);
+                        console.log('⚠️ Failed to click button with ' + selector + ': ', error);
                         continue;
                     }
                 }
@@ -348,7 +348,7 @@ test.describe('Practice Mode E2E', () => {
             for (const questionSelector of questionElements) {
                 const questionElement = studentPage.locator(questionSelector);
                 if (await questionElement.count() > 0) {
-                    console.log(` Found practice session question with: ${ questionSelector } `);
+                    console.log(' Found practice session question with: ' + questionSelector + ' ');
                     inPracticeSession = true;
                     break;
                 }
@@ -363,103 +363,103 @@ test.describe('Practice Mode E2E', () => {
                     const maxQuestions = 5;
 
                     while (questionsAnswered < maxQuestions) {
-                        console.log(`📝 Answering question ${ questionsAnswered + 1 }/${maxQuestions}...`);
+                        console.log('📝 Answering question ' + (questionsAnswered + 1) + '/' + maxQuestions + '...');
 
-    // Look for answer buttons or input fields
-    const answerButtons = studentPage.locator('button').filter({ hasText: /^[0-9]+$/ });
-    const answerInputs = studentPage.locator('input[type="text"], input[type="number"]');
-    const submitButtons = studentPage.locator('button:has-text("Valider"), button:has-text("Submit"), button:has-text("Confirmer")');
+                        // Look for answer buttons or input fields
+                        const answerButtons = studentPage.locator('button').filter({ hasText: /^[0-9]+$/ });
+                        const answerInputs = studentPage.locator('input[type="text"], input[type="number"]');
+                        const submitButtons = studentPage.locator('button:has-text("Valider"), button:has-text("Submit"), button:has-text("Confirmer")');
 
-    const buttonCount = await answerButtons.count();
-    const inputCount = await answerInputs.count();
-    const submitCount = await submitButtons.count();
+                        const buttonCount = await answerButtons.count();
+                        const inputCount = await answerInputs.count();
+                        const submitCount = await submitButtons.count();
 
-    if (buttonCount > 0) {
-        // Multiple choice question
-        console.log(`🔘 Found ${buttonCount} answer buttons, selecting first one`);
-        await answerButtons.first().click();
-        await studentPage.waitForTimeout(500);
-    } else if (inputCount > 0) {
-        // Text input question
-        console.log(`✏️ Found ${inputCount} input fields, entering answer`);
-        await answerInputs.first().fill('42'); // Generic answer
-        await studentPage.waitForTimeout(500);
-    }
+                        if (buttonCount > 0) {
+                            // Multiple choice question
+                            console.log('🔘 Found ' + buttonCount + ' answer buttons, selecting first one');
+                            await answerButtons.first().click();
+                            await studentPage.waitForTimeout(500);
+                        } else if (inputCount > 0) {
+                            // Text input question
+                            console.log('✏️ Found ' + inputCount + ' input fields, entering answer');
+                            await answerInputs.first().fill('42'); // Generic answer
+                            await studentPage.waitForTimeout(500);
+                        }
 
-    // Submit the answer
-    if (submitCount > 0) {
-        console.log(' Submitting answer...');
-        await submitButtons.first().click();
-        await studentPage.waitForTimeout(2000);
-    }
+                        // Submit the answer
+                        if (submitCount > 0) {
+                            console.log(' Submitting answer...');
+                            await submitButtons.first().click();
+                            await studentPage.waitForTimeout(2000);
+                        }
 
-    // Look for next question button or session completion
-    const nextButtons = studentPage.locator('button:has-text("Suivant"), button:has-text("Next"), button:has-text("Continuer")');
-    const nextCount = await nextButtons.count();
+                        // Look for next question button or session completion
+                        const nextButtons = studentPage.locator('button:has-text("Suivant"), button:has-text("Next"), button:has-text("Continuer")');
+                        const nextCount = await nextButtons.count();
 
-    if (nextCount > 0) {
-        console.log('➡️ Moving to next question...');
-        await nextButtons.first().click();
-        await studentPage.waitForTimeout(2000);
-        questionsAnswered++;
-    } else {
-        // Check if session is complete
-        const completionElements = [
-            'text=Terminé',
-            'text=Completed',
-            'text=Félicitations',
-            'text=Results',
-            'text=Score'
-        ];
+                        if (nextCount > 0) {
+                            console.log('➡️ Moving to next question...');
+                            await nextButtons.first().click();
+                            await studentPage.waitForTimeout(2000);
+                            questionsAnswered++;
+                        } else {
+                            // Check if session is complete
+                            const completionElements = [
+                                'text=Terminé',
+                                'text=Completed',
+                                'text=Félicitations',
+                                'text=Results',
+                                'text=Score'
+                            ];
 
-        let sessionComplete = false;
-        for (const completionSelector of completionElements) {
-            if (await studentPage.locator(completionSelector).count() > 0) {
-                console.log(` Practice session completed with: ${completionSelector}`);
-                sessionComplete = true;
-                break;
-            }
-        }
+                            let sessionComplete = false;
+                            for (const completionSelector of completionElements) {
+                                if (await studentPage.locator(completionSelector).count() > 0) {
+                                    console.log(' Practice session completed with: ' + completionSelector);
+                                    sessionComplete = true;
+                                    break;
+                                }
+                            }
 
-        if (sessionComplete) {
-            break;
-        } else {
-            questionsAnswered++;
-            if (questionsAnswered >= maxQuestions) {
-                console.log(' Reached maximum questions limit');
-                break;
-            }
-        }
-    }
-}
+                            if (sessionComplete) {
+                                break;
+                            } else {
+                                questionsAnswered++;
+                                if (questionsAnswered >= maxQuestions) {
+                                    console.log(' Reached maximum questions limit');
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 };
 
-await interactWithPracticeSession();
+                await interactWithPracticeSession();
 
-// Final verification
-console.log(' Practice mode test completed successfully');
+                // Final verification
+                console.log(' Practice mode test completed successfully');
 
-// Take final screenshot
-await studentPage.screenshot({ path: 'debug-practice-complete.png' });
+                // Take final screenshot
+                await studentPage.screenshot({ path: 'debug-practice-complete.png' });
 
             } else {
-    console.log('⚠️ Could not verify practice session started, but training button was clicked');
-    // Still consider test partially successful if we got this far
-}
+                console.log('⚠️ Could not verify practice session started, but training button was clicked');
+                // Still consider test partially successful if we got this far
+            }
 
-console.log(' Practice Mode E2E test completed');
+            console.log(' Practice Mode E2E test completed');
 
         } catch (error) {
-    console.error(' Practice Mode E2E test failed:', error);
+            console.error(' Practice Mode E2E test failed:', error);
 
-    // Take error screenshot
-    await studentPage.screenshot({ path: 'debug-practice-error.png' });
+            // Take error screenshot
+            await studentPage.screenshot({ path: 'debug-practice-error.png' });
 
-    // Log current page state for debugging
-    const errorContent = await studentPage.textContent('body');
-    console.log(' Error page content:', errorContent?.substring(0, 500) + '...');
+            // Log current page state for debugging
+            const errorContent = await studentPage.textContent('body');
+            console.log(' Error page content:', errorContent?.substring(0, 500) + '...');
 
-    throw error;
-}
+            throw error;
+        }
     });
 });
