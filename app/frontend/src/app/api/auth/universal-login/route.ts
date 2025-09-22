@@ -16,10 +16,26 @@ import {
  */
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (jsonError) {
+            return NextResponse.json(
+                { error: 'Invalid JSON in request body' },
+                { status: 400 }
+            );
+        }
 
         // Validate the request body
-        const validatedRequest: LoginRequest = LoginRequestSchema.parse(body);
+        let validatedRequest: LoginRequest;
+        try {
+            validatedRequest = LoginRequestSchema.parse(body);
+        } catch (validationError: any) {
+            return NextResponse.json(
+                { error: 'Invalid request data', details: validationError.errors },
+                { status: 400 }
+            );
+        }
 
         // Forward the request to the backend universal login endpoint
         const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/auth/login`, {

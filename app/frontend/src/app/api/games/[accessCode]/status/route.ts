@@ -19,7 +19,15 @@ export async function PUT(
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
 
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (jsonError) {
+            return NextResponse.json(
+                { error: 'Invalid JSON in request body' },
+                { status: 400 }
+            );
+        }
 
         // Forward request to backend
         const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${accessCode}/status`, {
