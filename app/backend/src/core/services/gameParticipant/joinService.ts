@@ -121,19 +121,21 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
 
         // --- UNIFIED PARTICIPANT LOGIC ---
         // Use transaction to prevent race conditions and ensure unique constraint
-        const participant = await prisma.$transaction(async (tx) => {
-            // Check for existing participant (unique constraint: gameInstanceId + userId)
-            const existing = await tx.gameParticipant.findUnique({
-                where: {
-                    gameInstanceId_userId: {
-                        gameInstanceId: gameInstance.id,
-                        userId: targetUserId
-                    }
-                },
-                include: { user: true }
-            });
+        let participant;
+        try {
+            participant = await prisma.$transaction(async (tx) => {
+                // Check for existing participant (unique constraint: gameInstanceId + userId)
+                const existing = await tx.gameParticipant.findUnique({
+                    where: {
+                        gameInstanceId_userId: {
+                            gameInstanceId: gameInstance.id,
+                            userId: targetUserId
+                        }
+                    },
+                    include: { user: true }
+                });
 
-            if (existing) {
+                if (existing) {
                 // Update existing participant
                 if (isDeferred) {
                     // For deferred mode: check if they have an ongoing session
@@ -217,6 +219,25 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                 return newParticipant;
             }
         });
+        } catch (transactionError) {
+            logger.error({
+                error: transactionError,
+                userId: targetUserId,
+                accessCode,
+                gameInstanceId: gameInstance.id,
+                logPoint: 'TRANSACTION_ERROR'
+            }, 'Database transaction failed in joinGame');
+            
+            // Check if it's a specific Prisma error
+            if (transactionError && typeof transactionError === 'object' && 'code' in transactionError) {
+                const prismaError = transactionError as any;
+                if (prismaError.code === 'P2002') {
+                    return { success: false, error: 'You are already participating in this game' };
+                }
+            }
+            
+            return { success: false, error: 'Database error occurred while joining the game' };
+        }
 
         // --- JOIN BONUS SNAPSHOT LOGIC ---
         // Only apply join bonus for live/pending participants (not deferred reconnections)
