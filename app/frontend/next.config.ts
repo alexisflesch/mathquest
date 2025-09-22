@@ -1,7 +1,5 @@
 import path from "path";
 import type { NextConfig } from "next";
-import withPWA from '@ducanh2912/next-pwa';
-import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const isLightBuild = process.env.LIGHT_BUILD === '1';
 const isAnalyze = process.env.ANALYZE === 'true';
@@ -104,36 +102,44 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default withBundleAnalyzer({
-    enabled: isAnalyze,
-})(withPWA({
-    dest: 'public',
-    // Re-enable SW registration in production; disabled in development
-    register: process.env.NODE_ENV !== 'development',
-    sw: 'sw-v3.js',
-    // Enable start URL caching so we can override it
-    cacheStartUrl: false,
-    workboxOptions: {
-        // Exclude Next.js internal manifest files that change with each build
-        exclude: [
-            /_buildManifest\.js$/,
-            /_ssgManifest\.js$/,
-            /_middlewareManifest\.js$/,
-        ],
-        // Disable all default workbox routes and behaviors
-        // disable: true, // This option doesn't exist
-        // Remove runtimeCaching to prevent conflicts
-        runtimeCaching: [
-            {
-                // Override the default start URL caching
-                urlPattern: '/',
-                handler: 'StaleWhileRevalidate',
-                options: {
-                    cacheName: 'start-url'
-                },
+// Conditionally apply PWA plugin only in production
+let finalConfig = nextConfig;
+
+if (process.env.NODE_ENV === 'production') {
+    try {
+        const withPWA = require('@ducanh2912/next-pwa');
+        finalConfig = withPWA({
+            dest: 'public',
+            register: true,
+            sw: 'sw-v3.js',
+            cacheStartUrl: false,
+            workboxOptions: {
+                exclude: [
+                    /_buildManifest\.js$/,
+                    /_ssgManifest\.js$/,
+                    /_middlewareManifest\.js$/,
+                ],
+                runtimeCaching: [
+                    {
+                        urlPattern: '/',
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'start-url'
+                        },
+                    },
+                ],
+                cleanupOutdatedCaches: true,
+                maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
             },
-        ],
-        cleanupOutdatedCaches: true, // Clean up old cache versions
-        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024, // 2MB limit per file
-    },
-})(nextConfig));
+        })(nextConfig);
+    } catch (error) {
+        console.warn('PWA plugin not available, skipping PWA configuration:', error);
+    }
+} if (isAnalyze) {
+    const withBundleAnalyzer = require('@next/bundle-analyzer');
+    finalConfig = withBundleAnalyzer({
+        enabled: true,
+    })(finalConfig);
+}
+
+export default finalConfig;

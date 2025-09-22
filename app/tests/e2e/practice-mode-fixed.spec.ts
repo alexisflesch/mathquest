@@ -20,10 +20,10 @@ test.describe('Practice Mode E2E', () => {
             console.log('🔐 Logging in as student...');
             const studentLogin = new LoginHelper(studentPage);
             await studentLogin.loginAsStudent({ username: 'PracticeTestStudent' });
-            console.log('✅ Student login successful');
+            console.log(' Student login successful');
 
             // Step 2: Navigate to practice mode (training)
-            console.log('🎯 Navigating to practice mode...');
+            console.log(' Navigating to practice mode...');
             await studentPage.goto('/student/create-game?training=true');
             await studentPage.waitForLoadState('networkidle');
 
@@ -41,7 +41,7 @@ test.describe('Practice Mode E2E', () => {
 
             // Debug: Check what's actually in the page
             const pageContent = await studentPage.textContent('body');
-            console.log('🔍 Page contains:', pageContent?.substring(0, 500) + '...');
+            console.log(' Page contains:', pageContent?.substring(0, 500) + '...');
 
             // Wait for the step to be interactive and find the dropdown within step 1
             await studentPage.waitForTimeout(1000);
@@ -51,7 +51,7 @@ test.describe('Practice Mode E2E', () => {
             const niveauDropdown = niveauLabel.locator('..').locator('button').first();
 
             await niveauDropdown.click();
-            console.log('✅ Opened niveau dropdown');
+            console.log(' Opened niveau dropdown');
 
             // Wait for dropdown options to appear
             await studentPage.waitForTimeout(1000);
@@ -59,12 +59,12 @@ test.describe('Practice Mode E2E', () => {
             // Look for niveau options in the dropdown
             const niveauOptions = studentPage.locator('.custom-dropdown-option');
             const niveauCount = await niveauOptions.count();
-            console.log(`🔍 Found ${niveauCount} niveau options`);
+            console.log(` Found ${niveauCount} niveau options`);
 
             if (niveauCount > 0) {
                 // Get all option texts for debugging
                 const niveauTexts = await niveauOptions.allTextContents();
-                console.log('🔍 Available niveau options:', niveauTexts);
+                console.log(' Available niveau options:', niveauTexts);
 
                 // Look for specific niveau options
                 const possibleNiveaux = ['elementary', 'CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème', 'Primaire', 'Collège'];
@@ -73,7 +73,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const niveau of possibleNiveaux) {
                     const niveauOption = niveauOptions.filter({ hasText: niveau });
                     if (await niveauOption.count() > 0) {
-                        console.log(`✅ Found and selecting gradeLevel: ${gradeLevel`);
+                        console.log(` Found and selecting gradeLevel: ${gradeLevel`);
                         await niveauOption.first().click();
                         selectedNiveau = true;
                         break;
@@ -87,10 +87,6 @@ test.describe('Practice Mode E2E', () => {
                     await niveauOptions.first().click();
                     selectedNiveau = true;
                 }
-
-                if (!selectedNiveau) {
-                    throw new Error('Could not find or select any niveau option from dropdown');
-                }
             } else {
                 throw new Error('No niveau dropdown options found');
             }
@@ -103,7 +99,7 @@ test.describe('Practice Mode E2E', () => {
             const disciplineDropdown = disciplineLabel.locator('..').locator('button').first();
 
             await disciplineDropdown.click();
-            console.log('✅ Opened discipline dropdown');
+            console.log(' Opened discipline dropdown');
 
             // Wait for dropdown options to appear
             await studentPage.waitForTimeout(1000);
@@ -111,12 +107,12 @@ test.describe('Practice Mode E2E', () => {
             // Look for discipline options in the dropdown
             const disciplineOptions = studentPage.locator('.custom-dropdown-option');
             const disciplineCount = await disciplineOptions.count();
-            console.log(`🔍 Found ${ disciplineCount } discipline options`);
+            console.log(` Found ${ disciplineCount } discipline options`);
 
             if (disciplineCount > 0) {
                 // Get all option texts for debugging
                 const disciplineTexts = await disciplineOptions.allTextContents();
-                console.log('🔍 Available discipline options:', disciplineTexts);
+                console.log(' Available discipline options:', disciplineTexts);
 
                 // Look for mathematical discipline options
                 const disciplines = ['Mathématiques', 'Mathematics', 'math', 'Math', 'Français', 'Histoire'];
@@ -125,7 +121,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const discipline of disciplines) {
                     const disciplineOption = disciplineOptions.filter({ hasText: discipline });
                     if (await disciplineOption.count() > 0) {
-                        console.log(`✅ Found and selecting discipline: ${ discipline }`);
+                        console.log(` Found and selecting discipline: ${ discipline }`);
                         await disciplineOption.first().click();
                         selectedDiscipline = true;
                         break;
@@ -135,7 +131,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedDiscipline) {
                     // Select the first available discipline option
                     const firstDisciplineText = disciplineTexts[0];
-                    console.log(`✅ Selecting first available discipline: ${ firstDisciplineText }`);
+                    console.log(` Selecting first available discipline: ${ firstDisciplineText }`);
                     await disciplineOptions.first().click();
                     selectedDiscipline = true;
                 }
@@ -154,9 +150,9 @@ test.describe('Practice Mode E2E', () => {
             const themesLabel = studentPage.locator('label:has-text("Choisis un ou plusieurs thèmes")');
             const themesDropdown = themesLabel.locator('..').locator('button').first();
 
-            console.log('🔍 Debug: Looking for themes dropdown...');
+            console.log(' Debug: Looking for themes dropdown...');
             await themesDropdown.click();
-            console.log('✅ Opened themes dropdown');
+            console.log(' Opened themes dropdown');
 
             // Wait for dropdown to open and be visible
             await studentPage.waitForTimeout(1000);
@@ -164,12 +160,12 @@ test.describe('Practice Mode E2E', () => {
             // Debug: Check all visible dropdown options (for MultiSelectDropdown, these are labels with checkboxes)
             const themeLabels = studentPage.locator('.multi-dropdown-option');
             const themeCount = await themeLabels.count();
-            console.log(`🔍 Found ${ themeCount } theme options`);
+            console.log(` Found ${ themeCount } theme options`);
 
             if (themeCount > 0) {
                 // Get all theme texts for debugging
                 const themeTexts = await themeLabels.allTextContents();
-                console.log('🔍 Available theme options:', themeTexts);
+                console.log(' Available theme options:', themeTexts);
 
                 // Try to find mathematical themes specifically
                 const themes = ['Addition', 'Soustraction', 'Multiplication', 'Division', 'Géométrie', 'Nombres', 'Calcul', 'multiplication', 'arithmetic'];
@@ -178,7 +174,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const theme of themes) {
                     const themeLabel = themeLabels.filter({ hasText: theme });
                     if (await themeLabel.count() > 0) {
-                        console.log(`✅ Found and selecting theme: ${ theme }`);
+                        console.log(` Found and selecting theme: ${ theme }`);
                         await themeLabel.first().click();
                         selectedTheme = true;
                         break;
@@ -188,7 +184,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedTheme) {
                     // Select the first available theme option
                     const firstThemeText = themeTexts[0];
-                    console.log(`✅ Selecting first available theme: ${ firstThemeText }`);
+                    console.log(` Selecting first available theme: ${ firstThemeText }`);
                     await themeLabels.first().click();
                     selectedTheme = true;
                 }
@@ -201,31 +197,31 @@ test.describe('Practice Mode E2E', () => {
             }
 
             // IMPORTANT: Click outside the dropdown to close it and reveal the "Valider les thèmes" button
-            console.log('🔄 Clicking outside dropdown to close it and reveal next step button...');
+            console.log(' Clicking outside dropdown to close it and reveal next step button...');
             await studentPage.click('body', { position: { x: 100, y: 100 } });
             await studentPage.waitForTimeout(500); // Wait for dropdown to close
 
             // Click validate themes button
             await studentPage.click('button:has-text("Valider les thèmes")');
-            console.log('✅ Validated themes');
+            console.log(' Validated themes');
 
             // Step 4: Select number of questions
             await expect(studentPage.locator('text=Combien de questions ?')).toBeVisible({ timeout: 5000 });
 
             // Debug: Check available question number options
             const questionButtons = await studentPage.locator('button').filter({ hasText: /^[0-9]+$/ }).allTextContents();
-            console.log('🔍 Available question numbers:', questionButtons);
+            console.log(' Available question numbers:', questionButtons);
 
             // Select 5 questions
             const fiveButton = studentPage.locator('button:has-text("5")');
             await fiveButton.click();
-            console.log('✅ Selected 5 questions');
+            console.log(' Selected 5 questions');
 
             // Wait for form to auto-advance to summary page or for "Commencer l'entraînement" button to appear
             await studentPage.waitForTimeout(2000);
 
             // Step 5: Look for "Commencer l'entraînement" button - it might appear immediately after selecting questions
-            console.log('🔍 Looking for "Commencer l\'entraînement" button...');
+            console.log(' Looking for "Commencer l\'entraînement" button...');
 
             // Wait for either the summary page or the training start button
             try {
@@ -242,7 +238,7 @@ test.describe('Practice Mode E2E', () => {
 
             // Debug: Check all buttons available on the page
             const allButtons = await studentPage.locator('button').allTextContents();
-            console.log('🔍 All buttons on page:', allButtons);
+            console.log(' All buttons on page:', allButtons);
 
             // Look for the specific training start button with multiple variations
             const startTrainingSelectors = [
@@ -261,10 +257,10 @@ test.describe('Practice Mode E2E', () => {
                 const buttonCount = await button.count();
 
                 if (buttonCount > 0) {
-                    console.log(`✅ Found training button with selector: ${ selector } `);
+                    console.log(` Found training button with selector: ${ selector } `);
                     try {
                         await button.first().click();
-                        console.log('✅ Successfully clicked training start button');
+                        console.log(' Successfully clicked training start button');
                         trainingStarted = true;
                         break;
                     } catch (error) {
@@ -275,25 +271,25 @@ test.describe('Practice Mode E2E', () => {
             }
 
             if (!trainingStarted) {
-                console.log('❌ Could not find or click any training start button');
+                console.log(' Could not find or click any training start button');
                 // Fallback: try clicking any submit-like button
                 const fallbackButtons = studentPage.locator('button').filter({ hasText: /.+/ });
                 const fallbackTexts = await fallbackButtons.allTextContents();
-                console.log('🔍 Available fallback buttons:', fallbackTexts);
+                console.log(' Available fallback buttons:', fallbackTexts);
 
                 // Try the last button (often the primary action)
                 const buttonCount = await fallbackButtons.count();
                 if (buttonCount > 0) {
-                    console.log('🔄 Attempting to click last available button as fallback');
+                    console.log(' Attempting to click last available button as fallback');
                     await fallbackButtons.last().click();
                     trainingStarted = true;
                 }
             }
 
-            console.log('✅ Training session creation initiated');
+            console.log(' Training session creation initiated');
 
             // Step 6: Wait for either practice session or lobby redirect
-            console.log('🔄 Waiting for redirect...');
+            console.log(' Waiting for redirect...');
 
             // Give some time for the redirect to happen
             await studentPage.waitForTimeout(3000);
@@ -303,7 +299,7 @@ test.describe('Practice Mode E2E', () => {
 
             // Helper function to handle practice session interactions
             const handlePracticeSession = async (page: Page) => {
-                console.log('🎯 Entering practice session...');
+                console.log(' Entering practice session...');
 
                 // Wait for question elements to load
                 const questionSelectors = [
@@ -316,7 +312,7 @@ test.describe('Practice Mode E2E', () => {
                 let questionFound = false;
                 for (const selector of questionSelectors) {
                     if (await page.locator(selector).count() > 0) {
-                        console.log(`✅ Found question element: ${ selector } `);
+                        console.log(` Found question element: ${ selector } `);
                         questionFound = true;
                         break;
                     }
@@ -340,7 +336,7 @@ test.describe('Practice Mode E2E', () => {
                     const inputCount = await answerInputs.count();
                     const buttonCount = await answerButtons.count();
 
-                    console.log(`🔍 Found ${ inputCount } answer inputs and ${ buttonCount } answer buttons`);
+                    console.log(` Found ${ inputCount } answer inputs and ${ buttonCount } answer buttons`);
 
                     if (inputCount > 0) {
                         // Text/number input question
@@ -352,13 +348,13 @@ test.describe('Practice Mode E2E', () => {
                         const submitButton = page.locator('button').filter({ hasText: /Valider|Submit|Confirmer|Suivant/ });
                         if (await submitButton.count() > 0) {
                             await submitButton.first().click();
-                            console.log('✅ Submitted answer');
+                            console.log(' Submitted answer');
                         }
 
                     } else if (buttonCount > 0) {
                         // Multiple choice question
                         await answerButtons.first().click();
-                        console.log('✅ Selected first answer option');
+                        console.log(' Selected first answer option');
 
                     } else {
                         console.log('⚠️ No answer inputs or buttons found');
@@ -391,18 +387,18 @@ test.describe('Practice Mode E2E', () => {
                     }
                 }
 
-                console.log('✅ Practice session interaction completed');
+                console.log(' Practice session interaction completed');
             };
 
             // Check if we're in a practice session or lobby
             if (currentUrl.includes('/practice/session') || currentUrl.includes('/session/')) {
-                console.log('✅ Redirected to practice session');
+                console.log(' Redirected to practice session');
 
                 // Verify practice session elements and complete a few questions
                 await handlePracticeSession(studentPage);
 
             } else if (currentUrl.includes('/lobby/')) {
-                console.log('✅ Redirected to lobby (this is expected for training mode)');
+                console.log(' Redirected to lobby (this is expected for training mode)');
 
                 // In training mode, we might be redirected to a lobby first
                 // Look for start button or join functionality
@@ -417,7 +413,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const buttonSelector of startButtons) {
                     const button = studentPage.locator(buttonSelector);
                     if (await button.count() > 0) {
-                        console.log(`✅ Found start button: ${ buttonSelector }`);
+                        console.log(` Found start button: ${ buttonSelector }`);
                         await button.click();
                         foundStartButton = true;
 
@@ -440,7 +436,7 @@ test.describe('Practice Mode E2E', () => {
 
                     for (const indicator of trainingIndicators) {
                         if (await studentPage.locator(indicator).count() > 0) {
-                            console.log(`✅ Found training indicator: ${ indicator }`);
+                            console.log(` Found training indicator: ${ indicator }`);
                             break;
                         }
                     }
@@ -463,7 +459,7 @@ test.describe('Practice Mode E2E', () => {
                     const errorElement = studentPage.locator(errorSelector);
                     if (await errorElement.count() > 0) {
                         const errorText = await errorElement.textContent();
-                        console.log(`❌ Found error message: ${ errorText }`);
+                        console.log(` Found error message: ${ errorText }`);
                     }
                 }
             }
@@ -471,7 +467,7 @@ test.describe('Practice Mode E2E', () => {
             console.log('🎉 Practice mode flow test completed successfully');
 
         } catch (error) {
-            console.error('❌ Test failed:', error);
+            console.error(' Test failed:', error);
             console.log('📍 Current URL at error:', studentPage.url());
             await studentPage.screenshot({ path: 'debug-test-error.png' });
             throw error;

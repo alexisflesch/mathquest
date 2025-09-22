@@ -29,6 +29,10 @@ export default defineConfig({
         screenshot: 'only-on-failure',
         /* Video on failure */
         video: 'retain-on-failure',
+        /* Environment variables for tests */
+        extraHTTPHeaders: {
+            'X-Test-Environment': 'true'
+        }
     },
 
     /* Global timeout settings - optimized for local development */
@@ -41,7 +45,13 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome'],
+                /* Environment variables for frontend during tests */
+                env: {
+                    NEXT_PUBLIC_BACKEND_BASE_URL: 'http://localhost:3007'
+                }
+            },
         },
 
         // Uncomment for cross-browser testing later

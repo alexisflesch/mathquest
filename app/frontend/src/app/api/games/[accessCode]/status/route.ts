@@ -4,10 +4,10 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: Promise<{ gameId: string }> }
+    { params }: { params: Promise<{ accessCode: string }> }
 ) {
     try {
-        const { gameId } = await params;
+        const { accessCode } = await params;
 
         // Get authentication token from cookies
         const teacherToken = request.cookies.get('teacherToken')?.value;
@@ -22,7 +22,7 @@ export async function PUT(
         const body = await request.text();
 
         // Forward request to backend
-        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${gameId}/status`, {
+        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${accessCode}/status`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,

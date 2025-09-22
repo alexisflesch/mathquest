@@ -5,9 +5,9 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 // Allow GET for authenticated users (both teachers and students)
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ gameId: string }> }
+    { params }: { params: Promise<{ accessCode: string }> }
 ) {
-    const { gameId } = await params;
+    const { accessCode } = await params;
 
     // Get authentication token from cookies - allow both teacher and student tokens
     const teacherToken = request.cookies.get('teacherToken')?.value;
@@ -20,7 +20,7 @@ export async function GET(
     }
 
     // Forward request to backend
-    const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${gameId}`, {
+    const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${accessCode}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -34,10 +34,10 @@ export async function GET(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: Promise<{ gameId: string }> }
+    { params }: { params: Promise<{ accessCode: string }> }
 ) {
     try {
-        const { gameId } = await params;
+        const { accessCode } = await params;
 
         // Get authentication token from cookies
         const teacherToken = request.cookies.get('teacherToken')?.value;
@@ -50,7 +50,7 @@ export async function DELETE(
         }
 
         // Forward request to backend
-        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${gameId}`, {
+        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${accessCode}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,

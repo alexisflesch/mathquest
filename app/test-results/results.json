@@ -10,7 +10,9 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {},
+    "metadata": {
+      "actualWorkers": 1
+    },
     "preserveOutput": "always",
     "reporter": [
       [
@@ -40,7 +42,9 @@
         "outputDir": "/home/aflesch/mathquest/app/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 1
+        },
         "id": "chromium",
         "name": "chromium",
         "testDir": "/home/aflesch/mathquest/app/tests/e2e",
@@ -58,23 +62,101 @@
     "workers": 1,
     "webServer": null
   },
-  "suites": [],
-  "errors": [
+  "suites": [
     {
-      "message": "Error: Backend failed to start within 30 seconds",
-      "stack": "Error: Backend failed to start within 30 seconds\n    at globalSetup (/home/aflesch/mathquest/app/tests/e2e/global-setup.ts:27:15)",
-      "location": {
-        "file": "/home/aflesch/mathquest/app/tests/e2e/global-setup.ts",
-        "column": 15,
-        "line": 27
-      },
-      "snippet": "\u001b[90m   at \u001b[39mglobal-setup.ts:27\n\n\u001b[0m \u001b[90m 25 |\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mbackendReady) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 27 |\u001b[39m         \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Backend failed to start within 30 seconds'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 28 |\u001b[39m     }\n \u001b[90m 29 |\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[90m// Wait for frontend to be ready\u001b[39m\u001b[0m"
+      "title": "games-api-routes.spec.ts",
+      "file": "games-api-routes.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Live Game Joining Issues",
+          "file": "games-api-routes.spec.ts",
+          "line": 511,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should reproduce live game joining error",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7818,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[2025-09-22T10:46:42.699Z] Starting user authentication... \n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:43.090Z] Proceeding with guest login... \n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:43.878Z] Selected username: Jean \n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:43.920Z] Selected avatar: 🐨 \n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:43.993Z] Clicked submit button \n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:44.010Z] User authentication successful \n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:45.013Z] Cookies after login wait [\n  {\n    \"name\": \"authToken\",\n    \"value\": \"eyJhbGciOiJIUzI1NiIs...\"\n  }\n]\n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:45.015Z] Cookies after authentication [\n  {\n    \"name\": \"authToken\",\n    \"value\": \"eyJhbGciOiJIUzI1NiIs...\"\n  }\n]\n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:45.015Z] Creating practice game via API... \n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:45.016Z] Available cookies [\n  {\n    \"name\": \"authToken\",\n    \"value\": \"eyJhbGciOiJIUzI1NiIs...\"\n  }\n]\n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:45.079Z] Game created successfully {\n  \"gameInstance\": {\n    \"id\": \"6f476a74-980f-45cf-a530-cb661989b107\",\n    \"name\": \"Jean\",\n    \"accessCode\": \"3216\",\n    \"status\": \"pending\",\n    \"playMode\": \"practice\",\n    \"leaderboard\": null,\n    \"currentQuestionIndex\": null,\n    \"settings\": {\n      \"avatar\": \"🐨\",\n      \"username\": \"Jean\",\n      \"defaultMode\": \"direct\"\n    },\n    \"createdAt\": \"2025-09-22T10:46:45.064Z\",\n    \"startedAt\": null,\n    \"endedAt\": null,\n    \"differedAvailableFrom\": null,\n    \"differedAvailableTo\": null,\n    \"gameTemplateId\": \"6110ac4c-a557-4b14-9877-224d4f64d9bd\",\n    \"initiatorUserId\": \"53dfe1b7-a7c0-4484-bf85-52b169237ac7\",\n    \"gameTemplate\": {\n      \"id\": \"6110ac4c-a557-4b14-9877-224d4f64d9bd\",\n      \"name\": \"Entraînement de Jean\",\n      \"themes\": [\n        \"Calcul\"\n      ],\n      \"discipline\": \"Mathématiques\",\n      \"gradeLevel\": \"CP\",\n      \"description\": \"AUTO: Created from student UI\",\n      \"defaultMode\": \"practice\",\n      \"createdAt\": \"2025-09-22T10:46:45.043Z\",\n      \"updatedAt\": \"2025-09-22T10:46:45.043Z\",\n      \"creatorId\": \"53dfe1b7-a7c0-4484-bf85-52b169237ac7\"\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "[2025-09-22T10:46:50.288Z] ✅ Live game joining test completed {\n  \"accessCode\": \"3216\",\n  \"socketErrors\": 0,\n  \"hasUIErrors\": false,\n  \"joinedSuccessfully\": false,\n  \"url\": \"http://localhost:3008/live/3216\"\n}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-22T10:46:42.538Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b97d8a5c1dae2de40b54-8bb205b0ee834760e973",
+              "file": "games-api-routes.spec.ts",
+              "line": 517,
+              "column": 9
+            }
+          ]
+        }
+      ]
     }
   ],
+  "errors": [],
   "stats": {
-    "startTime": "2025-09-22T06:56:02.357Z",
-    "duration": 30895.850000000002,
-    "expected": 0,
+    "startTime": "2025-09-22T10:46:41.273Z",
+    "duration": 9194.926000000001,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
