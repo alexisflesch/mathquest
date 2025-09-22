@@ -85,7 +85,15 @@ const nextConfig: NextConfig = {
                 ],
             },
             {
-                source: '/workbox-:hash.js',
+                source: '/_next/static/:path*/_buildManifest.js',
+                headers: [
+                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+                    { key: 'Pragma', value: 'no-cache' },
+                    { key: 'Expires', value: '0' },
+                ],
+            },
+            {
+                source: '/_next/static/:path*/_ssgManifest.js',
                 headers: [
                     { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
                     { key: 'Pragma', value: 'no-cache' },
@@ -106,6 +114,12 @@ export default withBundleAnalyzer({
     // Enable start URL caching so we can override it
     cacheStartUrl: false,
     workboxOptions: {
+        // Exclude Next.js internal manifest files that change with each build
+        exclude: [
+            /_buildManifest\.js$/,
+            /_ssgManifest\.js$/,
+            /_middlewareManifest\.js$/,
+        ],
         // Disable all default workbox routes and behaviors
         // disable: true, // This option doesn't exist
         // Remove runtimeCaching to prevent conflicts
