@@ -644,9 +644,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (username && avatar) {
                 // Has guest profile
-                profile = { 
-                    username, 
-                    avatar, 
+                profile = {
+                    username,
+                    avatar,
                     cookieId: cookieId || undefined,
                     userId: userId || undefined
                 };
@@ -899,7 +899,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             studentLoggedIn,
             teacherLoggedIn,
             isAuthenticated: studentLoggedIn || teacherLoggedIn,
-            profile: { ...profile, cookieId: profile.cookieId ? '[HIDDEN]' : undefined }
+            profile: { ...profile, cookieId: profile.cookieId ? '[HIDDEN]' : undefined },
+            userIdPresent: !!profile.userId,
+            userIdValue: profile.userId
         });
     }, []);
 

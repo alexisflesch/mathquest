@@ -30,9 +30,9 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed' | 'expired', message: string }>(null);
+    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed' | 'expired' | 'error', message: string }>(null);
     const router = useRouter();
-    const { userProfile } = useAuthState();
+    const { userProfile, userState } = useAuthState();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,6 +62,22 @@ export default function StudentJoinPage() {
             }
 
             // For quiz/tournament games, proceed with join logic
+            console.log('[JoinPage] Attempting to join game with userProfile:', {
+                userState,
+                userId: userProfile.userId,
+                username: userProfile.username,
+                hasProfile: !!userProfile
+            });
+
+            if (!userProfile.userId) {
+                console.error('[JoinPage] No userId available for game joining - user needs to re-register');
+                setModal({ 
+                    type: 'error', 
+                    message: "Votre session a expiré. Veuillez vous reconnecter." 
+                });
+                return;
+            }
+
             const data = await makeApiRequest<GameJoinResponse>(`/api/games/${code}/join`, {
                 method: 'POST',
                 body: JSON.stringify({ userId: userProfile.userId }),
