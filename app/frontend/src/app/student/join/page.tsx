@@ -71,9 +71,9 @@ export default function StudentJoinPage() {
 
             if (!userProfile.userId) {
                 console.error('[JoinPage] No userId available for game joining - user needs to re-register');
-                setModal({ 
-                    type: 'error', 
-                    message: "Votre session a expiré. Veuillez vous reconnecter." 
+                setModal({
+                    type: 'error',
+                    message: "Votre session a expiré. Veuillez vous reconnecter."
                 });
                 return;
             }
