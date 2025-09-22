@@ -136,7 +136,7 @@ export class EmailService {
     }
 
     /**
-     * Generic email sending method
+     * Generic email sending method with retry logic for reliability
      */
     private async sendEmail(emailData: EmailTemplate): Promise<void> {
         if (!process.env.BREVO_API_KEY) {
@@ -147,34 +147,57 @@ export class EmailService {
             return;
         }
 
-        try {
-            const sendSmtpEmail = new brevo.SendSmtpEmail();
+        const maxRetries = 3;
+        const baseDelay = 1000; // 1 second
 
-            sendSmtpEmail.sender = {
-                name: this.senderName,
-                email: this.senderEmail
-            };
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const sendSmtpEmail = new brevo.SendSmtpEmail();
 
-            sendSmtpEmail.to = [{ email: emailData.to }];
-            sendSmtpEmail.subject = emailData.subject;
-            sendSmtpEmail.htmlContent = emailData.htmlContent;
-            sendSmtpEmail.textContent = emailData.textContent;
+                sendSmtpEmail.sender = {
+                    name: this.senderName,
+                    email: this.senderEmail
+                };
 
-            const result = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
+                sendSmtpEmail.to = [{ email: emailData.to }];
+                sendSmtpEmail.subject = emailData.subject;
+                sendSmtpEmail.htmlContent = emailData.htmlContent;
+                sendSmtpEmail.textContent = emailData.textContent;
 
-            logger.info('Email sent successfully', {
-                to: emailData.to,
-                subject: emailData.subject,
-                messageId: result.body?.messageId || 'unknown'
-            });
+                const result = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
 
-        } catch (error) {
-            logger.error('Failed to send email', {
-                error,
-                to: emailData.to,
-                subject: emailData.subject
-            });
-            throw new Error('Failed to send email');
+                logger.info('Email sent successfully', {
+                    to: emailData.to,
+                    subject: emailData.subject,
+                    messageId: result.body?.messageId || 'unknown',
+                    attempt
+                });
+
+                return; // Success, exit retry loop
+
+            } catch (error) {
+                logger.warn(`Email send attempt ${attempt}/${maxRetries} failed`, {
+                    error: error instanceof Error ? error.message : String(error),
+                    to: emailData.to,
+                    subject: emailData.subject,
+                    attempt
+                });
+
+                // If this is not the last attempt, wait before retrying
+                if (attempt < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    // Final attempt failed
+                    logger.error('Email sending failed after all retry attempts', {
+                        error: error instanceof Error ? error.message : String(error),
+                        to: emailData.to,
+                        subject: emailData.subject,
+                        maxRetries
+                    });
+                    throw new Error('Failed to send email after retries');
+                }
+            }
         }
     }
 

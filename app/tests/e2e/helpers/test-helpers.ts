@@ -314,51 +314,35 @@ export class LoginHelper {
         await this.page.goto('/login');
         await this.page.waitForLoadState('networkidle');
 
-        // Switch to account login mode
-        console.log('🔄 Switching to account login mode...');
-        const compteButton = this.page.locator('button:has-text("Compte")').first();
-        await compteButton.waitFor({ timeout: 3000 });
-        console.log('✅ Found Compte button, clicking...');
-        await compteButton.click();
-        console.log('✅ Clicked Compte button');
+        // Wait for the page to be fully loaded
+        console.log('⏳ Waiting for login page to stabilize...');
+        await this.page.waitForTimeout(2000);
 
-        // Wait for the account form to appear and ensure we're in login mode
+        // Click the "Compte" button to switch to account login mode
+        console.log('🔄 Clicking "Compte" button to switch to account mode...');
+        const compteButton = this.page.locator('button:has-text("Compte")').first();
+        await compteButton.waitFor({ timeout: 5000, state: 'visible' });
+        console.log('✅ Found "Compte" button, clicking...');
+        await compteButton.click();
+        console.log('✅ Clicked "Compte" button');
+
+        // Wait for the account form to appear
         console.log('⏳ Waiting for account form to load...');
         await this.page.waitForTimeout(2000);
 
-        // Check if the tab actually switched by looking for account-specific elements
-        const accountFormVisible = await this.page.locator('input[name="email"]').isVisible().catch(() => false);
-        console.log(`🔍 Account form visible after tab switch: ${accountFormVisible}`);
-
-        if (!accountFormVisible) {
-            console.log('❌ Account form not visible, checking what inputs are actually present...');
-            // Debug: Check what inputs are available
-            const debugInputs = await this.page.locator('input').all();
-            console.log(`🔍 Found ${debugInputs.length} input fields after clicking Compte`);
-            for (let i = 0; i < debugInputs.length; i++) {
-                const input = debugInputs[i];
-                const name = await input.getAttribute('name').catch(() => 'no-name');
-                const type = await input.getAttribute('type').catch(() => 'no-type');
-                const id = await input.getAttribute('id').catch(() => 'no-id');
-                const placeholder = await input.getAttribute('placeholder').catch(() => 'no-placeholder');
-                console.log(`  Input ${i}: name="${name}", type="${type}", id="${id}", placeholder="${placeholder}"`);
-            }
-            throw new Error('Account form did not appear after clicking Compte tab');
-        }
-
-        // Fill email field - use the exact name attribute that works
-        console.log('📧 Filling email field...');
-        const emailInput = this.page.locator('input[name="email"]');
+        // Fill email field
+        console.log('� Filling email field...');
+        const emailInput = this.page.locator('input[name="email"], input[type="email"]').first();
         await emailInput.waitFor({ timeout: 5000, state: 'visible' });
         await emailInput.fill(credentials.email);
 
-        // Fill password field - use the exact name attribute that works
+        // Fill password field
         console.log('🔑 Filling password field...');
-        const passwordInput = this.page.locator('input[name="password"]');
+        const passwordInput = this.page.locator('input[name="password"], input[type="password"]').first();
         await passwordInput.waitFor({ timeout: 5000, state: 'visible' });
         await passwordInput.fill(credentials.password);
 
-        // Click login button - try multiple selectors
+        // Click login button
         console.log('🚀 Clicking login button...');
         const loginButton = this.page.locator('button[type="submit"], button:has-text("Se connecter"), button:has-text("Connexion")').first();
         await loginButton.waitFor({ timeout: 3000 });

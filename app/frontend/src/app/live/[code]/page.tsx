@@ -2,7 +2,7 @@
 import AnswerDebug from '@/components/AnswerDebug';
 import QrCodeWithLogo from '@/components/QrCodeWithLogo';
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from '@/components/AuthProvider';
 import Snackbar from '@/components/Snackbar';
 import { createLogger } from '@/clientLogger';
@@ -59,7 +59,11 @@ export default function LiveGamePage() {
 
     const { code } = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { userState, userProfile, isLoading } = useAuth();
+
+    // Check if this is a differed session
+    const isDiffered = searchParams?.get('differed') === '1';
 
     const userId = userProfile.userId || userProfile.cookieId || `temp_${Date.now()}`;
     const username: string | null = userProfile.username ?? null;
@@ -79,6 +83,7 @@ export default function LiveGamePage() {
         userId,
         username,
         avatarEmoji,
+        isDiffered,
         onAnswerReceived: () => {
             setSnackbarType("success");
             setSnackbarMessage("Réponse enregistrée");

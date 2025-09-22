@@ -387,8 +387,15 @@ export async function startDeferredTournamentSession(
 
         // Always ensure participant exists for deferred mode at session start
         const { joinGame } = await import('@/core/services/gameParticipant/joinService');
-        let username = `guest-${userId.substring(0, 8)}`;
-        let avatarEmoji = undefined;
+
+        // Get the actual user data instead of hardcoding guest username
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { username: true, avatarEmoji: true }
+        });
+
+        let username = user?.username || `guest-${userId.substring(0, 8)}`;
+        let avatarEmoji = user?.avatarEmoji || undefined;
         logger.info({
             accessCode,
             userId,

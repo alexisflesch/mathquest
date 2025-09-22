@@ -14,7 +14,6 @@ import UsernameSelector from '../../components/ui/UsernameSelector';
 import Image from 'next/image';
 import InfinitySpin from '@/components/InfinitySpin';
 import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 function LoginPageInnerComponent() {
     const router = useRouter();

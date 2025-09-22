@@ -3,14 +3,14 @@ require('../../../tests/setupTestEnv');
 import { jest } from '@jest/globals';
 import { describe, it, expect, beforeAll, afterAll, beforeEach, test } from '@jest/globals';
 import request from 'supertest';
-import { app } from '@/server';
-import { UserService } from '@/core/services/userService';
+import { app } from '../../server';
+import { UserService } from '../../core/services/userService';
 
 // Import the testing injection functions
 import { __setUserServiceForTesting as setTeachersUserService } from '../../../src/api/v1/teachers';
 
 // Mock services
-jest.mock('@/core/services/userService');
+jest.mock('../../core/services/userService');
 
 // Mock jsonwebtoken for authentication
 jest.mock('jsonwebtoken', () => ({
@@ -27,8 +27,8 @@ jest.mock('jsonwebtoken', () => ({
 }));
 
 // Mock Prisma
-jest.mock('@/db/prisma');
-const mockPrisma = jest.mocked(require('@/db/prisma'));
+jest.mock('../../db/prisma');
+const mockPrisma = jest.mocked(require('../../db/prisma'));
 mockPrisma.prisma = {
     user: {
         findUnique: jest.fn().mockImplementation((query: any) => {

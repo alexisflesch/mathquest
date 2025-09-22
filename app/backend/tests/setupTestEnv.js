@@ -1,4 +1,6 @@
 // Shared test environment setup for backend tests
+require('module-alias/register');
+
 process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest_test";
 process.env.REDIS_URL = "redis://localhost:6379";
 process.env.JWT_SECRET = "test_jwt_secret";

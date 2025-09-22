@@ -52,7 +52,7 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 30000
+        "timeout": 10000
       }
     ],
     "shard": null,
@@ -64,70 +64,277 @@
   },
   "suites": [
     {
-      "title": "auth-test.spec.ts",
-      "file": "auth-test.spec.ts",
+      "title": "student-create-game-filtering.spec.ts",
+      "file": "student-create-game-filtering.spec.ts",
       "column": 0,
       "line": 0,
-      "specs": [
+      "specs": [],
+      "suites": [
         {
-          "title": "Test teacher login flow",
-          "ok": true,
-          "tags": [],
-          "tests": [
+          "title": "Student Create Game - Cross-Filter Compatibility",
+          "file": "student-create-game-filtering.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
             {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "chromium",
-              "projectName": "chromium",
-              "results": [
+              "title": "should filter disciplines when grade level L2 is selected",
+              "ok": true,
+              "tags": [],
+              "tests": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 6360,
-                  "errors": [],
-                  "stdout": [
+                  "timeout": 10000,
+                  "annotations": [
                     {
-                      "text": "Creating teacher account...\n"
-                    },
-                    {
-                      "text": "Registration result: {\n  success: \u001b[33mtrue\u001b[39m,\n  user: {\n    id: \u001b[32m'952fcbf2-70cc-489d-bf78-e01825de9a9f'\u001b[39m,\n    email: \u001b[32m'auth_test_1758557865473_772@test-mathquest.com'\u001b[39m,\n    username: \u001b[32m'marie-julie'\u001b[39m,\n    avatar: \u001b[32m'🦬'\u001b[39m,\n    role: \u001b[32m'TEACHER'\u001b[39m\n  },\n  token: \u001b[32m'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5NTJmY2JmMi03MGNjLTQ4OWQtYmY3OC1lMDE4MjVkZTlhOWYiLCJ1c2VybmFtZSI6Im1hcmllLWp1bGllIiwicm9sZSI6IlRFQUNIRVIiLCJpYXQiOjE3NTg1NTc4NjUsImV4cCI6MTc1ODY0NDI2NX0.EYYTzWsUMLnQRy_VIWNxqiZOGsJtHGiPyT4ZPpauz0k'\u001b[39m,\n  message: \u001b[32m'Registration successful'\u001b[39m\n}\n"
-                    },
-                    {
-                      "text": "Testing login via frontend...\n"
-                    },
-                    {
-                      "text": "Current URL after login: http://localhost:3008/\n"
-                    },
-                    {
-                      "text": "✅ Teacher login successful!\n"
+                      "type": "skip"
                     }
                   ],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2025-09-22T16:17:45.250Z",
-                  "annotations": [],
-                  "attachments": []
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-22T17:07:29.855Z",
+                      "annotations": [
+                        {
+                          "type": "skip"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
                 }
               ],
-              "status": "expected"
+              "id": "92efbd6218313f3338c1-599d33c78973175600d2",
+              "file": "student-create-game-filtering.spec.ts",
+              "line": 40,
+              "column": 8
+            },
+            {
+              "title": "should filter themes when discipline and grade level are selected",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10000,
+                  "annotations": [
+                    {
+                      "type": "skip"
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-22T17:07:29.856Z",
+                      "annotations": [
+                        {
+                          "type": "skip"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "92efbd6218313f3338c1-f82ee11cb546695bbcd1",
+              "file": "student-create-game-filtering.spec.ts",
+              "line": 45,
+              "column": 8
+            },
+            {
+              "title": "should show all options when no filters are selected",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10000,
+                  "annotations": [
+                    {
+                      "type": "skip"
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-22T17:07:29.856Z",
+                      "annotations": [
+                        {
+                          "type": "skip"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "92efbd6218313f3338c1-69eb2621d1cffa7172e7",
+              "file": "student-create-game-filtering.spec.ts",
+              "line": 50,
+              "column": 8
+            },
+            {
+              "title": "should reset dependent dropdowns when grade level changes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10000,
+                  "annotations": [
+                    {
+                      "type": "skip"
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-22T17:07:29.856Z",
+                      "annotations": [
+                        {
+                          "type": "skip"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "92efbd6218313f3338c1-292b6c5e1c1524ed5e3a",
+              "file": "student-create-game-filtering.spec.ts",
+              "line": 55,
+              "column": 8
             }
-          ],
-          "id": "40d6d58ecdf96ce55ed5-a66022ccbfd7513b0e5b",
-          "file": "auth-test.spec.ts",
-          "line": 4,
-          "column": 5
+          ]
+        },
+        {
+          "title": "API Integration - Cross-Filter Compatibility",
+          "file": "student-create-game-filtering.spec.ts",
+          "line": 62,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should return only compatible options via API",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 52,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "API Response for L2 filter: {\n  \"gradeLevel\": [\n    {\n      \"value\": \"CE1\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"CP\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"L1\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"L2\",\n      \"isCompatible\": true\n    }\n  ],\n  \"disciplines\": [\n    {\n      \"value\": \"Allemand\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Anglais\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Espagnol\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Français\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Italien\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Mathématiques\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"Questionner le monde\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Éducation artistique\",\n      \"isCompatible\": false\n    }\n  ],\n  \"themes\": [\n    {\n      \"value\": \"Arts plastiques\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Calcul\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Déterminant\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"Ensembles et applications\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Espaces préhilbertiens\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"Grandeurs et mesures\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Géométrie\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Intégrales généralisées\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"L'espace\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"La matière et les objets\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Le temps\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Le vivant\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Lecture\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Les objets techniques\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Logique et raisonnement\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Nombres\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Nombres complexes\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Organisation et gestion de données\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Orthographe\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Pratique calculatoire\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Réduction d'endomorphismes\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"Séries numériques\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"Vocabulaire\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"Éducation musicale\",\n      \"isCompatible\": false\n    }\n  ],\n  \"tags\": [\n    {\n      \"value\": \"Riemann\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"absolue convergence\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"additions\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"additions simples\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"animaux\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"animaux et leurs caractéristiques\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"appartenance\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"argument\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"bijection\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"calcul de somme\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"calcul mental\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"changement d'indice\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"chant et expression vocale\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"comparer des quantités\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"complémentaire\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"compléments à 10\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"compléments à 20\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"conjugué\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"connecteurs logiques\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"contraposée\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"convergence\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"correspondances graphème-phonème\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"couleurs\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"dessiner, colorier, peindre\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"espace orthogonal\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"forme algébrique\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"forme exponentielle\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"formes géométriques usuelles\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"formule du binôme\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"formules d'addition\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"formules de duplication\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"implication\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"inclusion\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"injection\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"intersection\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"jours, mois, saisons\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"lire un graphique\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"lire un pictogramme\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"lire un tableau\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"matrice diagonalisable\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"module\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"norme euclidienne\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"négation\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"objets du quotidien\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"observer un mécanisme\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"orthogonalité\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"parties\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"plantes et besoins vitaux\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"polynôme caractéristique\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"problèmes\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"produit scalaire\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"proposition\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"propriétés de la matière\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"propriétés partie entière\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"quantificateurs\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"racines carrées\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"reconnaître les sons\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"repères temporels\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"repérer dans l'espace\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"règles de calcul\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"résolution de problèmes très simples\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"se repérer dans l'espace familier\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"somme géométrique\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"soustractions\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"surjection\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"série géométrique\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"table de vérité\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"union\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"unités de temps\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"utilisation d'instruments\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"utilisation d'objets simples\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"valeurs propres\",\n      \"isCompatible\": true\n    },\n    {\n      \"value\": \"écoute musicale\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"équations trigonométriques\",\n      \"isCompatible\": false\n    },\n    {\n      \"value\": \"équivalence\",\n      \"isCompatible\": true\n    }\n  ]\n}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-22T17:07:29.856Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "92efbd6218313f3338c1-ec1d3697515c7d6b78b7",
+              "file": "student-create-game-filtering.spec.ts",
+              "line": 63,
+              "column": 7
+            },
+            {
+              "title": "should return all options as compatible when no filters applied",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 10000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 34,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-22T17:07:29.919Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "92efbd6218313f3338c1-c210e61338cc390127ae",
+              "file": "student-create-game-filtering.spec.ts",
+              "line": 80,
+              "column": 7
+            }
+          ]
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-22T16:17:34.054Z",
-    "duration": 17769.02,
-    "expected": 1,
-    "skipped": 0,
+    "startTime": "2025-09-22T17:07:28.880Z",
+    "duration": 1088.3220000000001,
+    "expected": 2,
+    "skipped": 4,
     "unexpected": 0,
     "flaky": 0
   }

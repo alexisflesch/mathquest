@@ -3,22 +3,22 @@ require('../../../tests/setupTestEnv');
 import { jest } from '@jest/globals';
 import { describe, it, expect, beforeAll, afterAll, beforeEach, test } from '@jest/globals';
 import request from 'supertest';
-import { app } from '@/server';
-import { UserService } from '@/core/services/userService';
-import { EmailService } from '@/core/services/emailService';
-import { UserRole, AuthResponse, UserState } from '@shared/types/core';
+import { app } from '../../server';
+import { UserService } from '../../core/services/userService';
+import { EmailService } from '../../core/services/emailService';
+import { UserRole, AuthResponse, UserState } from '../../../../shared/types/core';
 
 // Import the testing injection functions
 import { __setUserServiceForTesting as setAuthUserService } from '../../../src/api/v1/auth';
 import { __setUserServiceForTesting as setUsersUserService } from '../../../src/api/v1/users';
 
 // Mock services
-jest.mock('@/core/services/userService');
-jest.mock('@/core/services/emailService');
-jest.mock('@/utils/usernameValidator');
-jest.mock('@/utils/avatarUtils');
+jest.mock('../../core/services/userService');
+jest.mock('../../core/services/emailService');
+jest.mock('../../utils/usernameValidator');
+jest.mock('../../utils/avatarUtils');
 jest.mock('jsonwebtoken');
-jest.mock('@/db/prisma');
+jest.mock('../../db/prisma');
 
 // Mock jsonwebtoken
 const mockJwt = jest.mocked(require('jsonwebtoken'));
@@ -37,7 +37,7 @@ mockJwt.verify.mockImplementation((token: string) => {
 mockJwt.sign.mockReturnValue('mock-jwt-token');
 
 // Mock Prisma
-const mockPrisma = jest.mocked(require('@/db/prisma'));
+const mockPrisma = jest.mocked(require('../../db/prisma'));
 mockPrisma.prisma = {
     user: {
         findUnique: jest.fn().mockImplementation((query: any) => {
@@ -68,12 +68,12 @@ mockPrisma.prisma = {
 } as any;
 
 // Mock getRandomAvatar to return consistent values
-const mockAvatarUtils = jest.mocked(require('@/utils/avatarUtils'));
+const mockAvatarUtils = jest.mocked(require('../../utils/avatarUtils'));
 mockAvatarUtils.getRandomAvatar.mockReturnValue('👨‍🏫');
 
 const mockUserService = UserService as jest.MockedClass<typeof UserService>;
 const mockEmailService = EmailService as jest.MockedClass<typeof EmailService>;
-const mockUsernameValidator = jest.mocked(require('@/utils/usernameValidator'));
+const mockUsernameValidator = jest.mocked(require('../../utils/usernameValidator'));
 
 describe('Users API - Authentication & User Management', () => {
     let userServiceInstance: jest.Mocked<UserService>;
@@ -324,6 +324,7 @@ describe('Users API - Authentication & User Management', () => {
                     email: 'student@example.com',
                     role: 'STUDENT' as const,
                     avatarEmoji: '🐻',
+                    emailVerified: false,
                     createdAt: new Date('2025-09-12T07:35:14.311Z'),
                     updatedAt: new Date('2025-09-12T07:35:14.311Z')
                 },
@@ -376,6 +377,7 @@ describe('Users API - Authentication & User Management', () => {
                     email: 'teacher@example.com',
                     role: 'TEACHER' as const,
                     avatarEmoji: '👨‍🏫',
+                    emailVerified: false,
                     createdAt: new Date('2025-09-12T07:35:14.311Z'),
                     updatedAt: new Date('2025-09-12T07:35:14.311Z')
                 },
