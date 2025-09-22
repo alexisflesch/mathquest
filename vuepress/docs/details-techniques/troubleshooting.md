@@ -268,6 +268,43 @@ ls -la start-all.sh
 chmod +x start-all.sh
 ```
 
+## PWA and Service Worker Issues
+
+### Symptom: Service worker JavaScript errors (`_ref is not defined`)
+
+**Cause:** Bug in `@ducanh2912/next-pwa` library causing serialization issues with async cache plugins.
+
+**Symptoms:**
+```javascript
+// Browser console error
+sw-v3.js:1 Uncaught (in promise) ReferenceError: _ref is not defined
+    at Object.cacheWillUpdate (sw-v3.js:1:12607)
+```
+
+**Solutions:**
+
+```bash
+# 1. Update service worker configuration in next.config.ts
+# Change NetworkFirst to StaleWhileRevalidate without plugins
+runtimeCaching: [
+    {
+        urlPattern: '/',
+        handler: 'StaleWhileRevalidate',
+        options: {
+            cacheName: 'start-url'
+        },
+    },
+],
+
+# 2. Rebuild the frontend (postbuild script will automatically fix SW)
+cd frontend && npm run build
+
+# 3. Hard refresh browser or update service worker
+# In DevTools: Application → Service Workers → Update/Unregister
+```
+
+**Note:** A postbuild script automatically removes any broken registerRoute from the generated service worker. This ensures the fix is applied consistently after each build. The bug can be reproduced using `node scripts/test-ref-bug.js` on an unfixed service worker.
+
 ## Performance Issues
 
 ### Symptom: Application is slow or unresponsive

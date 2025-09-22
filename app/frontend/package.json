@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "concurrently \"next dev -p 3008 -H 0.0.0.0\" \"sleep 2 && node log-local-ip.js\"",
         "build": "next build",
+        "postbuild": "node scripts/fix-sw.js",
         "start": "next start -p 3008",
         "start:quiet": "NODE_OPTIONS='--max-old-space-size=512 --max-semi-space-size=128' NEXT_TELEMETRY_DISABLED=1 next start -p 3008",
         "start:minimal": "NODE_OPTIONS='--max-old-space-size=256 --max-semi-space-size=64' NEXT_TELEMETRY_DISABLED=1 next start -p 3008",
