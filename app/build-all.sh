@@ -110,6 +110,9 @@ build_frontend() {
     echo "🏗️  Running production build..."
     if [ "$LOW_MEMORY" = true ]; then
         npm run vps-build
+        # Run postbuild script manually since vps-build doesn't trigger it
+        echo "🔧 Running postbuild script..."
+        npm run postbuild
     else
         npm run build
     fi
