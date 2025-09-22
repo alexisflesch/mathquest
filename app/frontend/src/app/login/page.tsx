@@ -8,6 +8,7 @@ import { useAuth } from '../../components/AuthProvider';
 import AuthModeToggle, { AuthMode } from '../../components/auth/AuthModeToggle';
 import GuestForm from '../../components/auth/GuestForm';
 import StudentAuthForm from '../../components/auth/StudentAuthForm';
+import { FRONTEND_AUTH_ENDPOINTS } from '@/constants/api';
 import AvatarGrid from '../../components/ui/AvatarGrid';
 import UsernameSelector from '../../components/ui/UsernameSelector';
 import Image from 'next/image';
@@ -127,7 +128,7 @@ function LoginPageInnerComponent() {
     // Handle resending email verification
     const handleResendEmailVerification = async () => {
         try {
-            const response = await fetch('/api/auth/resend-email-verification', {
+            const response = await fetch(FRONTEND_AUTH_ENDPOINTS.RESEND_EMAIL_VERIFICATION, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

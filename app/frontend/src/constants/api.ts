@@ -20,14 +20,17 @@ export const FRONTEND_AUTH_ENDPOINTS = {
     UPGRADE: '/api/auth/upgrade',
     UPGRADE_TO_TEACHER: '/api/auth/upgrade-to-teacher',
     VERIFY_EMAIL: '/api/auth/verify-email',
+    SEND_EMAIL_VERIFICATION: '/api/auth/send-email-verification',
+    RESEND_EMAIL_VERIFICATION: '/api/auth/resend-email-verification',
     CLEAR_COOKIES: '/api/auth/clear-cookies',
+    RESET_PASSWORD: '/api/auth/reset-password',
+    RESET_PASSWORD_CONFIRM: '/api/auth/reset-password/confirm',
 } as const;
 
 // Backend API Endpoints (V1 API)
 export const BACKEND_ENDPOINTS = {
     // Authentication
-    RESET_PASSWORD: 'auth/reset-password',
-    RESET_PASSWORD_CONFIRM: 'auth/reset-password/confirm',
+    // Note: Reset password endpoints moved to FRONTEND_AUTH_ENDPOINTS
 
     // Questions
     QUESTIONS: 'questions',

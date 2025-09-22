@@ -147,6 +147,14 @@ Goal: Restore service worker safely without breaking navigation or API calls; en
 	- File: `app/frontend/next.config.ts` → `register: process.env.NODE_ENV !== 'development'`
 - [x] Build frontend to generate `public/sw-v2.js` and `public/workbox-*.js`
 	- Command: `npm run build` in `app/frontend` (Completed; warnings only)
+- [x] Fix service worker _ref bug causing runtime errors
+	- Issue: `cacheWillUpdate` function referenced undefined `_ref` variable
+	- Solution: Created `scripts/fix-sw.js` to automatically remove broken NetworkFirst route
+	- Status: Fixed with automated postbuild script
+- [x] Fix bad-precaching-response for Next.js manifest files
+	- Issue: `_buildManifest.js`, `_ssgManifest.js`, `_middlewareManifest.js` were being precached despite changing hashes
+	- Solution: Added exclude patterns in `workboxOptions.exclude` and no-cache headers
+	- Status: Fixed - manifest files no longer precached
 
 Validation checklist
 - [ ] In production, open devtools → Application → Service Workers: confirm `sw-v2.js` active with scope `/`

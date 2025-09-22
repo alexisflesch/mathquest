@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { makeApiRequest } from '@/config/api';
-import { BACKEND_ENDPOINTS } from '@/constants/api';
+import { FRONTEND_AUTH_ENDPOINTS } from '@/constants/api';
 
 export default function TeacherResetPasswordRequestPage() {
     const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ export default function TeacherResetPasswordRequestPage() {
         setSuccess(null);
         setIsLoading(true);
         try {
-            const result = await makeApiRequest<{ message?: string }>(BACKEND_ENDPOINTS.RESET_PASSWORD, {
+            const result = await makeApiRequest<{ message?: string }>(FRONTEND_AUTH_ENDPOINTS.RESET_PASSWORD, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),

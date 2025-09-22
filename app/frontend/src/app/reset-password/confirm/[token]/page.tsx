@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { makeApiRequest } from '@/config/api';
-import { BACKEND_ENDPOINTS } from '@/constants/api';
+import { FRONTEND_AUTH_ENDPOINTS } from '@/constants/api';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function Page() {
@@ -39,7 +39,7 @@ export default function Page() {
         setIsLoading(true);
 
         try {
-            const result = await makeApiRequest<{ message: string }>(BACKEND_ENDPOINTS.RESET_PASSWORD_CONFIRM, {
+            const result = await makeApiRequest<{ message: string }>(FRONTEND_AUTH_ENDPOINTS.RESET_PASSWORD_CONFIRM, {
                 method: 'POST',
                 body: JSON.stringify({
                     token: token,
