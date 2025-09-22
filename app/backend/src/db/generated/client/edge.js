@@ -295,11 +295,12 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://postgre:dev123@localhost:5432/mathquest"
+        "value": null
       }
     }
   },

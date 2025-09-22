@@ -64,264 +64,59 @@
   },
   "suites": [
     {
-      "title": "game-joining-bug.spec.ts",
-      "file": "game-joining-bug.spec.ts",
+      "title": "test_guest_join_flow.spec.ts",
+      "file": "test_guest_join_flow.spec.ts",
       "column": 0,
       "line": 0,
-      "specs": [],
-      "suites": [
+      "specs": [
         {
-          "title": "Game Joining Bug Reproduction",
-          "file": "game-joining-bug.spec.ts",
-          "line": 80,
-          "column": 6,
-          "specs": [
+          "title": "join page loads and handles invalid codes gracefully",
+          "ok": true,
+          "tags": [],
+          "tests": [
             {
-              "title": "API properly handles join requests with valid userId",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "timeout": 10000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
                 {
-                  "timeout": 10000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2814,
+                  "errors": [],
+                  "stdout": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 5825,
-                      "error": {
-                        "message": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n",
-                        "stack": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n\n    at authenticateGuestUser (/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:43:25)\n    at /home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:83:9",
-                        "location": {
-                          "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                          "column": 25,
-                          "line": 43
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[90m// Fill in guest login form\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mconst\u001b[39m usernameInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[placeholder*=\"pseudo\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mwaitFor({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mfill(testUsername)\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[90m// Wait for dropdown and click outside to close it\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                            "column": 25,
-                            "line": 43
-                          },
-                          "message": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[90m// Fill in guest login form\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mconst\u001b[39m usernameInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[placeholder*=\"pseudo\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mwaitFor({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mfill(testUsername)\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[90m// Wait for dropdown and click outside to close it\u001b[39m\u001b[0m\n\u001b[2m    at authenticateGuestUser (/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:43:25)\u001b[22m\n\u001b[2m    at /home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:83:9\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "[2025-09-22T12:23:30.680Z] Starting guest user authentication... \n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-22T12:23:30.245Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-d1d5b--requests-with-valid-userId-chromium/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-d1d5b--requests-with-valid-userId-chromium/video.webm"
-                        },
-                        {
-                          "name": "_error-context-0",
-                          "contentType": "text/markdown",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-d1d5b--requests-with-valid-userId-chromium/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                        "column": 25,
-                        "line": 43
-                      }
+                      "text": "✅ Join page handles invalid codes gracefully without crashing\n"
                     }
                   ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "db7c309d11474819f777-870b0ece1199f428f86c",
-              "file": "game-joining-bug.spec.ts",
-              "line": 81,
-              "column": 9
-            },
-            {
-              "title": "reproduces user reported issue - join with invalid userId",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 10000,
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-09-22T13:54:12.883Z",
                   "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 5715,
-                      "error": {
-                        "message": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n",
-                        "stack": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n\n    at authenticateGuestUser (/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:43:25)\n    at /home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:109:9",
-                        "location": {
-                          "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                          "column": 25,
-                          "line": 43
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[90m// Fill in guest login form\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mconst\u001b[39m usernameInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[placeholder*=\"pseudo\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mwaitFor({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mfill(testUsername)\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[90m// Wait for dropdown and click outside to close it\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                            "column": 25,
-                            "line": 43
-                          },
-                          "message": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[90m// Fill in guest login form\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mconst\u001b[39m usernameInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[placeholder*=\"pseudo\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mwaitFor({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mfill(testUsername)\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[90m// Wait for dropdown and click outside to close it\u001b[39m\u001b[0m\n\u001b[2m    at authenticateGuestUser (/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:43:25)\u001b[22m\n\u001b[2m    at /home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:109:9\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "[2025-09-22T12:23:37.306Z] Starting guest user authentication... \n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-22T12:23:36.970Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-96521----join-with-invalid-userId-chromium/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-96521----join-with-invalid-userId-chromium/video.webm"
-                        },
-                        {
-                          "name": "_error-context-0",
-                          "contentType": "text/markdown",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-96521----join-with-invalid-userId-chromium/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                        "column": 25,
-                        "line": 43
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
+                  "attachments": []
                 }
               ],
-              "id": "db7c309d11474819f777-d85ad8f2f6d225255848",
-              "file": "game-joining-bug.spec.ts",
-              "line": 107,
-              "column": 9
-            },
-            {
-              "title": "join page shows appropriate error for invalid game codes",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 10000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 5720,
-                      "error": {
-                        "message": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n",
-                        "stack": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n\n    at authenticateGuestUser (/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:43:25)\n    at /home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:138:9",
-                        "location": {
-                          "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                          "column": 25,
-                          "line": 43
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[90m// Fill in guest login form\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mconst\u001b[39m usernameInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[placeholder*=\"pseudo\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mwaitFor({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mfill(testUsername)\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[90m// Wait for dropdown and click outside to close it\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                            "column": 25,
-                            "line": 43
-                          },
-                          "message": "TimeoutError: locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[placeholder*=\"pseudo\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[90m// Fill in guest login form\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mconst\u001b[39m usernameInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[placeholder*=\"pseudo\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mwaitFor({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m usernameInput\u001b[33m.\u001b[39mfill(testUsername)\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[90m// Wait for dropdown and click outside to close it\u001b[39m\u001b[0m\n\u001b[2m    at authenticateGuestUser (/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:43:25)\u001b[22m\n\u001b[2m    at /home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts:138:9\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "[2025-09-22T12:23:43.835Z] Starting guest user authentication... \n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-22T12:23:43.487Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-0eccc-rror-for-invalid-game-codes-chromium/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-0eccc-rror-for-invalid-game-codes-chromium/video.webm"
-                        },
-                        {
-                          "name": "_error-context-0",
-                          "contentType": "text/markdown",
-                          "path": "/home/aflesch/mathquest/app/test-results/game-joining-bug-Game-Join-0eccc-rror-for-invalid-game-codes-chromium/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/aflesch/mathquest/app/tests/e2e/game-joining-bug.spec.ts",
-                        "column": 25,
-                        "line": 43
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "db7c309d11474819f777-ebd1b1ad1523ff19a768",
-              "file": "game-joining-bug.spec.ts",
-              "line": 136,
-              "column": 9
+              "status": "expected"
             }
-          ]
+          ],
+          "id": "e29131301f5f15e6b226-0165b304d8e5b9534bbc",
+          "file": "test_guest_join_flow.spec.ts",
+          "line": 8,
+          "column": 5
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-22T12:23:24.830Z",
-    "duration": 24664.724000000002,
-    "expected": 0,
+    "startTime": "2025-09-22T13:54:11.711Z",
+    "duration": 4076.059,
+    "expected": 1,
     "skipped": 0,
-    "unexpected": 3,
+    "unexpected": 0,
     "flaky": 0
   }
 }

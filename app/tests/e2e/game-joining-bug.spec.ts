@@ -13,7 +13,7 @@ const TEST_CONFIG = {
     backendUrl: 'http://localhost:3007',
     timeout: 30000,
     user: {
-        username: 'TestGuest',
+        username: 'Alexis',
         avatar: '🐨'
     },
     game: {

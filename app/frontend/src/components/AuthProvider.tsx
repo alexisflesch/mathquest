@@ -778,9 +778,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     studentLoggedIn = true;
                     teacherLoggedIn = false;
                 } else {
-                    // No fallback tokens, explicitly set anonymous state
-                    detectedState = 'anonymous';
-                    profile = {};
+                    // No fallback tokens - check if we have guest data in localStorage
+                    if (typeof window !== 'undefined') {
+                        const username = localStorage.getItem('mathquest_username');
+                        const avatar = localStorage.getItem('mathquest_avatar');
+                        const cookieId = localStorage.getItem('mathquest_cookie_id');
+                        const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
+
+                        if (username && avatar) {
+                            // Found guest data in localStorage, preserve it
+                            profile = {
+                                username,
+                                avatar,
+                                cookieId: cookieId || undefined,
+                                userId: userId || undefined
+                            };
+                            detectedState = 'guest';
+                            logger.debug('Preserving guest data from localStorage despite anonymous auth status');
+                        } else {
+                            // No guest data, explicitly set anonymous state
+                            detectedState = 'anonymous';
+                            profile = {};
+                        }
+                    } else {
+                        // No window, set anonymous
+                        detectedState = 'anonymous';
+                        profile = {};
+                    }
                     studentLoggedIn = false;
                     teacherLoggedIn = false;
                 }
