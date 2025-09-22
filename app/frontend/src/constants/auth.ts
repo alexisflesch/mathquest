@@ -23,7 +23,8 @@ export const STORAGE_KEYS = {
     USERNAME: 'mathquest_username',
     AVATAR: 'mathquest_avatar',
     COOKIE_ID: 'mathquest_cookie_id',
-    PSEUDO: 'mathquest_pseudo'
+    PSEUDO: 'mathquest_pseudo',
+    USER_ID: 'mathquest_user_id'
 } as const;
 
 // API Endpoints - Reference centralized API constants

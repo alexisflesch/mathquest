@@ -23,11 +23,6 @@ const TEST_CONFIG = {
     }
 };
 
-interface GameData {
-    accessCode: string;
-    gameId: string;
-}
-
 // Helper function to log with timestamp
 function log(message: string, data?: unknown) {
     const timestamp = new Date().toISOString();
@@ -82,102 +77,60 @@ async function authenticateGuestUser(page: Page): Promise<void> {
     }
 }
 
-// Helper to create a practice game via API
-async function createPracticeGame(page: Page): Promise<GameData> {
-    log('Creating practice game via API...');
-
-    // For guest users, we need to provide initiatorStudentId
-    // Let's try with a dummy ID first to see if it works
-    const response = await page.request.post('/api/games', {
-        data: {
-            name: TEST_CONFIG.user.username,
-            playMode: 'practice',
-            gradeLevel: TEST_CONFIG.game.gradeLevel,
-            discipline: TEST_CONFIG.game.discipline,
-            themes: TEST_CONFIG.game.themes,
-            nbOfQuestions: 2,
-            initiatorStudentId: 'guest-test-user-id', // Dummy ID for testing
-            settings: {
-                defaultMode: 'direct',
-                avatar: TEST_CONFIG.user.avatar,
-                username: TEST_CONFIG.user.username
-            }
-        }
-    });
-
-    if (!response.ok()) {
-        const errorText = await response.text();
-        log('Game creation failed, trying without initiatorStudentId...');
-
-        // Try without initiatorStudentId
-        const response2 = await page.request.post('/api/games', {
-            data: {
-                name: TEST_CONFIG.user.username,
-                playMode: 'practice',
-                gradeLevel: TEST_CONFIG.game.gradeLevel,
-                discipline: TEST_CONFIG.game.discipline,
-                themes: TEST_CONFIG.game.themes,
-                nbOfQuestions: 2,
-                settings: {
-                    defaultMode: 'direct',
-                    avatar: TEST_CONFIG.user.avatar,
-                    username: TEST_CONFIG.user.username
-                }
-            }
-        });
-
-        if (!response2.ok()) {
-            const errorText2 = await response2.text();
-            throw new Error(`Failed to create practice game: ${response2.status()} - ${errorText2}`);
-        }
-
-        const gameData = await response2.json();
-        log('Practice game created successfully', gameData);
-
-        return {
-            accessCode: gameData.gameInstance.accessCode || gameData.gameInstance.code,
-            gameId: gameData.gameInstance.id
-        };
-    }
-
-    const gameData = await response.json();
-    log('Practice game created successfully', gameData);
-
-    return {
-        accessCode: gameData.gameInstance.accessCode || gameData.gameInstance.code,
-        gameId: gameData.gameInstance.id
-    };
-}
-
 test.describe('Game Joining Bug Reproduction', () => {
-    test('API properly handles join requests with userId', async ({ page }) => {
+    test('API properly handles join requests with valid userId', async ({ page }) => {
         // Authenticate as guest user
         await authenticateGuestUser(page);
 
-        // Test the join API directly with a non-existent game code
-        // This should return a proper error response, not a 400 due to missing userId
+        // Test the join API directly with a valid userId for non-existent game
         const joinResponse = await page.request.post('/api/games/NONEXISTENT123/join', {
             data: {
-                userId: 'test-guest-user-id'
+                userId: '8e3b48be-6d25-42cf-bfbe-8c025d8ca402' // Valid UUID
             }
         });
 
-        // Should return 400 with validation error (not "Player ID is required")
-        // This proves the API is now properly parsing the request body
+        // Should return 400 with "Game not found" (not validation error)
         expect(joinResponse.status()).toBe(400);
 
         const responseData = await joinResponse.json();
-        log('Join API response for invalid userId:', {
+        log('Join API response for valid userId, invalid game:', {
             status: joinResponse.status(),
             data: responseData
         });
 
-        // The API should validate the userId format, not complain about missing userId
+        // Should get game not found error, not validation error
+        expect(responseData.error).toBe('Game not found');
+
+        log('✅ Join API properly handles valid userId format');
+    });
+
+    test('reproduces user reported issue - join with invalid userId', async ({ page }) => {
+        // Authenticate as guest user
+        await authenticateGuestUser(page);
+
+        // Try to join with an invalid userId (not a UUID)
+        const joinResponse = await page.request.post('/api/games/3167/join', {
+            data: {
+                userId: 'invalid-user-id' // Invalid UUID format
+            }
+        });
+
+        // Should return 400 with validation error
+        expect(joinResponse.status()).toBe(400);
+
+        const responseData = await joinResponse.json();
+        log('Join API response with invalid userId:', {
+            status: joinResponse.status(),
+            data: responseData
+        });
+
+        // The API should validate the userId format
         expect(responseData.error).toBe('Invalid request data');
         expect(responseData.details).toBeDefined();
         expect(responseData.details[0].field).toBe('userId');
+        expect(responseData.details[0].message).toContain('Invalid user ID');
 
-        log('✅ Join API properly validates userId in request body');
+        log('✅ Reproduced user issue: invalid userId causes 400 validation error');
     });
 
     test('join page shows appropriate error for invalid game codes', async ({ page }) => {

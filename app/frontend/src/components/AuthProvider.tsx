@@ -150,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Store guest profile in localStorage
                     localStorage.setItem('mathquest_username', username);
                     localStorage.setItem('mathquest_avatar', avatar);
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, result.user.id);
 
                     // Update state with userId from registration response
                     setUserState('guest');
@@ -188,6 +189,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             cookieId,
                             userId: lookupResult.user.id
                         });
+
+                        // Store userId in localStorage
+                        localStorage.setItem(STORAGE_KEYS.USER_ID, lookupResult.user.id);
 
                         logger.info('Found existing guest user via players/cookie endpoint', {
                             username, avatar, cookieId, userId: lookupResult.user.id
@@ -636,10 +640,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const username = localStorage.getItem('mathquest_username');
             const avatar = localStorage.getItem('mathquest_avatar');
             const cookieId = localStorage.getItem('mathquest_cookie_id');
+            const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
 
             if (username && avatar) {
                 // Has guest profile
-                profile = { username, avatar, cookieId: cookieId || undefined };
+                profile = { 
+                    username, 
+                    avatar, 
+                    cookieId: cookieId || undefined,
+                    userId: userId || undefined
+                };
                 detectedState = 'guest';
             }
         }
@@ -702,6 +712,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         role: data.user.role,
                         userId: data.user.id
                     };
+                    // Store userId in localStorage for persistence
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                 }
             } else if (data.authState === 'student') {
                 // Student account 
@@ -717,6 +729,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         role: data.user.role,
                         userId: data.user.id
                     };
+                    // Store userId in localStorage for persistence
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                 }
             } else if (data.authState === 'guest') {
                 // Guest user authenticated in database - preserve localStorage profile
@@ -727,6 +741,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Keep existing localStorage profile, but add userId from database if available
                 if (profile.username && profile.avatar && data.user?.id) {
                     profile.userId = data.user.id;
+                    // Store userId in localStorage for persistence
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                     logger.debug('Guest user authenticated, preserving localStorage profile with database userId', {
                         localUsername: profile.username,
                         localAvatar: profile.avatar,
@@ -743,6 +759,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             cookieId: profile.cookieId,
                             userId: data.user.id
                         };
+                        // Store userId in localStorage for persistence
+                        localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                         logger.debug('Guest user authenticated, using database profile as fallback', {
                             databaseUsername: data.user.username,
                             databaseAvatar: data.user.avatar
@@ -812,6 +830,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     localStorage.removeItem(STORAGE_KEYS.USERNAME);
                     localStorage.removeItem(STORAGE_KEYS.AVATAR);
                     localStorage.removeItem(STORAGE_KEYS.COOKIE_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USER_ID);
 
                     logger.info('Cleared invalid authentication data');
                 }
@@ -837,6 +856,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     localStorage.removeItem(STORAGE_KEYS.USERNAME);
                     localStorage.removeItem(STORAGE_KEYS.AVATAR);
                     localStorage.removeItem(STORAGE_KEYS.COOKIE_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USER_ID);
 
                     logger.info('Cleared localStorage due to network error');
                 }
