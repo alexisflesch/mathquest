@@ -155,6 +155,11 @@ Goal: Restore service worker safely without breaking navigation or API calls; en
 	- Issue: `_buildManifest.js`, `_ssgManifest.js`, `_middlewareManifest.js` were being precached despite changing hashes
 	- Solution: Added exclude patterns in `workboxOptions.exclude` and no-cache headers
 	- Status: Fixed - manifest files no longer precached
+- [x] Add database schema validation to build script
+	- Purpose: Prevent deployment with database schema drift that causes runtime errors
+	- Implementation: Added `check_database_schema()` function to `build-all.sh` that runs `npx prisma migrate status`
+	- Features: Detects pending migrations, shows which migrations need to be applied, fails build with clear error message
+	- Status: Fully implemented, tested, and working - correctly prevents builds with 5 pending migrations before build
 
 Validation checklist
 - [ ] In production, open devtools → Application → Service Workers: confirm `sw-v2.js` active with scope `/`

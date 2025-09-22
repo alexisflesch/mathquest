@@ -78,6 +78,54 @@ setup_staging() {
     echo "✅ Staging environment ready"
 }
 
+# Function to check database schema consistency
+check_database_schema() {
+    echo "🗄️  Checking database schema consistency..."
+    
+    cd "$APP_ROOT/backend"
+    
+    # Check migration status using a temporary file to capture output
+    # Temporarily disable 'set -e' since we expect exit code 1 for pending migrations
+    TEMP_FILE=$(mktemp)
+    set +e
+    npx prisma migrate status > "$TEMP_FILE" 2>&1
+    EXIT_CODE=$?
+    set -e
+    MIGRATION_STATUS=$(cat "$TEMP_FILE")
+    rm "$TEMP_FILE"
+    
+    if [ $EXIT_CODE -eq 1 ]; then
+        # Check if it's due to pending migrations or connection issues
+        if echo "$MIGRATION_STATUS" | grep -q "Following migrations have not yet been applied"; then
+            echo "❌ Pending database migrations detected!"
+            echo ""
+            echo "The following migrations need to be applied:"
+            echo "$MIGRATION_STATUS" | grep -A 20 "Following migrations have not yet been applied" | sed 's/^/   • /'
+            echo ""
+            echo "This will cause runtime errors if the code expects the new schema."
+            echo ""
+            echo "To resolve this:"
+            echo "   1. Run 'npx prisma migrate dev' (development)"
+            echo "   2. Run 'npx prisma migrate deploy' (production)"
+            echo ""
+            echo "❌ Build cancelled due to pending database migrations"
+            echo "   Apply migrations first, then re-run the build"
+            exit 1
+        else
+            echo "❌ Database connection or schema validation failed"
+            echo "   Error details:"
+            echo "$MIGRATION_STATUS"
+            echo ""
+            echo "   Please ensure:"
+            echo "   • Database is running and accessible"
+            echo "   • Database credentials in .env are correct"
+            exit 1
+        fi
+    else
+        echo "✅ Database schema is up to date"
+    fi
+}
+
 # Function to build frontend
 build_frontend() {
     echo "🔨 Building frontend..."
@@ -255,6 +303,9 @@ main() {
     
     # Setup staging environment
     setup_staging
+    
+    # Check database schema consistency before building
+    check_database_schema
     
     # Build frontend (output goes to staging)
     build_frontend
