@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { TestDataHelper } from './helpers/test-helpers';
 
 /**
  * Question Database and Tournament Creation Tests
@@ -11,6 +12,22 @@ test.describe('Question Database Tests', () => {
 
     test('should check if questions exist in database', async ({ page }) => {
         console.log('🔍 Checking questions in database...');
+
+        // First, create and login a teacher to get auth
+        const testData = new TestDataHelper(page);
+        const teacherData = testData.generateTestData('db_check');
+        const teacher = await testData.createTeacher({
+            username: teacherData.username,
+            email: teacherData.email,
+            password: teacherData.password
+        });
+
+        await page.request.post('http://localhost:3007/api/v1/auth/login', {
+            data: {
+                email: teacher.email,
+                password: teacher.password
+            }
+        });
 
         // Check questions endpoint
         const questionsResponse = await page.request.get('http://localhost:3007/api/v1/questions');
@@ -37,13 +54,13 @@ test.describe('Question Database Tests', () => {
                 name: 'Basic Math Test',
                 gradeLevel: 'CP',
                 discipline: 'Mathématiques',
-                theme: 'addition'
+                theme: 'additions'
             },
             {
                 name: 'Alternative Test',
-                gradeLevel: 'CE2',
+                gradeLevel: 'CE1',
                 discipline: 'Mathématiques',
-                theme: 'soustraction'
+                theme: 'soustractions'
             }
         ];
 

@@ -46,7 +46,7 @@ test.describe('Tournament Creation Tests', () => {
                 playMode: 'tournament',
                 gradeLevel: 'CP',
                 discipline: 'Mathématiques',
-                themes: ['addition'], // Array of themes - using French values!
+                themes: ['additions'], // Array of themes - using French values!
                 nbOfQuestions: 5 // Use nbOfQuestions instead of questionCount
             }
         });
@@ -91,9 +91,9 @@ test.describe('Tournament Creation Tests', () => {
 
         // Test different tournament configurations
         const configurations = [
-            { gradeLevel: 'elementary', themes: ['arithmetic'], nbOfQuestions: 3 },
-            { gradeLevel: 'elementary', themes: ['multiplication'], nbOfQuestions: 5 },
-            { gradeLevel: 'elementary', themes: ['arithmetic', 'multiplication'], nbOfQuestions: 4 }
+            { gradeLevel: 'CP', themes: ['additions'], nbOfQuestions: 3 },
+            { gradeLevel: 'CP', themes: ['soustractions'], nbOfQuestions: 5 },
+            { gradeLevel: 'CP', themes: ['additions', 'soustractions'], nbOfQuestions: 4 }
         ];
 
         for (const config of configurations) {

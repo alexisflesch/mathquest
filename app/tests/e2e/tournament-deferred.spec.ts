@@ -45,7 +45,7 @@ test.describe('Tournament Deferred Mode E2E', () => {
 
         // Step 1: Create teacher account and login
         await dataHelper.createTeacher({
-            username: testData.username + '_teacher',
+            username: testData.username,
             email: testData.email,
             password: testData.password
         });
