@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-const prenomsData = require('/home/aflesch/mathquest/app/prenoms/prenoms.json');
+import * as prenomsData from '/home/aflesch/mathquest/app/prenoms/prenoms.json';
 
 export interface TestUser {
     id?: string;
@@ -199,6 +199,45 @@ export class TestDataHelper {
     }
 
     /**
+     * Create test questions with 5-second time limits for fast tournament testing
+     */
+    async createTestQuestions(count: number = 5): Promise<string[]> {
+        const questionUids: string[] = [];
+
+        for (let i = 0; i < count; i++) {
+            const questionData = {
+                uid: `test-tournament-q${Date.now()}-${i}`,
+                author: 'test-automation',
+                discipline: 'Mathématiques',
+                title: `Test Question ${i + 1}`,
+                text: `Combien font ${i + 1} + ${i + 1} ?`,
+                questionType: 'numeric',
+                themes: ['Calcul'],
+                tags: ['test', 'automation'],
+                timeLimit: 5, // 5 seconds for fast testing
+                difficulty: 1,
+                gradeLevel: 'CP',
+                correctAnswer: (i + 1) * 2,
+                explanation: `${i + 1} + ${i + 1} = ${(i + 1) * 2}`,
+                feedbackWaitTime: 2
+            };
+
+            const response = await this.page.request.post('/api/questions', {
+                data: questionData
+            });
+
+            if (response.ok()) {
+                questionUids.push(questionData.uid);
+                console.log(`✅ Created test question: ${questionData.uid}`);
+            } else {
+                console.warn(`❌ Failed to create test question ${i + 1}:`, await response.text());
+            }
+        }
+
+        return questionUids;
+    }
+
+    /**
      * Clean database for test isolation
      */
     async cleanDatabase(): Promise<void> {
@@ -241,11 +280,32 @@ export class LoginHelper {
 
         await this.page.goto('/login');
         await this.page.waitForLoadState('networkidle');
+        console.log(`🔍 Current URL: ${this.page.url()}`);
+        console.log(`🔍 Page title: ${await this.page.title()}`);
 
         // Switch to account login mode
         console.log('🔄 Switching to account login mode...');
-        const compteButton = this.page.locator('button:has-text("Compte")').first();
-        await compteButton.waitFor({ timeout: 3000 });
+
+        // Debug: Check what buttons are available on the page
+        const allButtons = await this.page.locator('button').all();
+        console.log(`🔍 Found ${allButtons.length} buttons on the page:`);
+        for (let i = 0; i < allButtons.length; i++) {
+            const button = allButtons[i];
+            const text = await button.textContent().catch(() => 'no-text');
+            const className = await button.getAttribute('class').catch(() => 'no-class');
+            console.log(`  Button ${i}: "${text}" (class: ${className})`);
+        }
+
+        // Try multiple ways to find the account button
+        let compteButton;
+        try {
+            compteButton = this.page.locator('button').filter({ hasText: 'Compte' });
+            await compteButton.waitFor({ timeout: 1000 });
+        } catch {
+            // Fallback: look for button with Lock icon and Compte text
+            compteButton = this.page.locator('button:has-text("Compte")');
+            await compteButton.waitFor({ timeout: 1000 });
+        }
         console.log('✅ Found Compte button, clicking...');
         await compteButton.click();
         console.log('✅ Clicked Compte button');

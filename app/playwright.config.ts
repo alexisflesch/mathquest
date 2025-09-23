@@ -32,9 +32,9 @@ export default defineConfig({
         /* Video on failure */
         video: 'retain-on-failure',
         /* Environment variables for tests */
-        extraHTTPHeaders: {
-            'X-Test-Environment': 'true'
-        }
+        // extraHTTPHeaders: {
+        //     'X-Test-Environment': 'true'
+        // }
     },
 
     /* Global timeout settings - optimized for local development */
