@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-import * as prenomsData from '/home/aflesch/mathquest/app/prenoms/prenoms.json';
+import prenomsData from '../../../prenoms/prenoms.json';
 
 export interface TestUser {
     id?: string;
@@ -278,10 +278,18 @@ export class LoginHelper {
     async loginAsTeacher(credentials: { email: string; password: string }): Promise<void> {
         console.log(`🧑‍🏫 Logging in teacher: ${credentials.email}`);
 
-        await this.page.goto('/login');
+        await this.page.goto('/');
         await this.page.waitForLoadState('networkidle');
         console.log(`🔍 Current URL: ${this.page.url()}`);
         console.log(`🔍 Page title: ${await this.page.title()}`);
+
+        // Check if already logged in
+        const logoutButton = this.page.locator('button:has-text("Déconnexion")');
+        const isLoggedIn = await logoutButton.isVisible().catch(() => false);
+        if (isLoggedIn) {
+            console.log('✅ User is already logged in, skipping login process');
+            return;
+        }
 
         // Switch to account login mode
         console.log('🔄 Switching to account login mode...');

@@ -16,6 +16,13 @@ node_modules/
 # Testing
 coverage/
 **/coverage/
+test-results/
+**/test-results/
+
+# Debug files
+debug-*.png
+debug-*.js
+debug-*.ts
 
 # Next.js build (frontend)
 frontend/.next/

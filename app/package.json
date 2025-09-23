@@ -18,6 +18,10 @@
     "type-check:unified": "npx tsc --project tsconfig.check.json --noEmit --pretty",
     "type-check:build": "npx tsc --build --verbose",
     "type-check:all": "npm run type-check:unified && npm run type-check:build",
+    "test:summary": "node test-summary.mjs backend",
+    "test:summary:backend": "node test-summary.mjs backend",
+    "test:summary:frontend": "node test-summary.mjs frontend",
+    "test:summary:e2e": "node test-summary.mjs e2e",
     "test:e2e": "NODE_ENV=test playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug"

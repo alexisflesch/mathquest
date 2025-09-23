@@ -19,7 +19,7 @@ export default defineConfig({
     reporter: [
         ['html', { open: 'never' }], // Don't auto-open browser at end
         ['line'],
-        ['json', { outputFile: 'test-results/results.json' }]
+        ['json', { outputFile: 'test-results/e2e-results.json' }]
     ],
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
@@ -50,6 +50,7 @@ export default defineConfig({
             use: {
                 ...devices['Desktop Chrome']
             },
+            outputDir: 'test-results/e2e',
         },
 
         // Uncomment for cross-browser testing later
