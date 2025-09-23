@@ -56,5 +56,6 @@ backend/*.log
 *.pem
 
 # Backup files
-.backup*
+.backup*/
+.backup_*
 
