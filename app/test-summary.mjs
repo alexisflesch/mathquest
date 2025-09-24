@@ -8,12 +8,19 @@ import { spawn } from 'node:child_process';
 // Parse command line arguments
 const args = process.argv.slice(2);
 const testType = args[0] || 'backend'; // Default to backend
+const testPattern = args[1] || ''; // Optional pattern to filter tests
 
 // Validate test type
 const validTypes = ['backend', 'frontend', 'e2e'];
 if (!validTypes.includes(testType)) {
     console.error(`Invalid test type: ${testType}`);
     console.error(`Valid types: ${validTypes.join(', ')}`);
+    console.error(`Usage: node test-summary.mjs <type> [pattern]`);
+    console.error(`Examples:`);
+    console.error(`  node test-summary.mjs backend`);
+    console.error(`  node test-summary.mjs backend "tests/unit"`);
+    console.error(`  node test-summary.mjs frontend "src/components/ui"`);
+    console.error(`  node test-summary.mjs e2e "user registration"`);
     process.exit(1);
 }
 
@@ -23,23 +30,39 @@ switch (testType) {
     case 'backend':
         testCommand = 'npm';
         testArgs = ['test', '--', '--json', '--outputFile=../test-results/backend-jest-results.json', '--silent'];
+        if (testPattern) {
+            testArgs.push('--testPathPattern', testPattern);
+        }
         cwd = path.join(process.cwd(), 'backend');
         break;
     case 'frontend':
         testCommand = 'npm';
         testArgs = ['test', '--', '--json', '--outputFile=../test-results/frontend-jest-results.json', '--silent'];
+        if (testPattern) {
+            testArgs.push('--testPathPattern', testPattern);
+        }
         cwd = path.join(process.cwd(), 'frontend');
         break;
     case 'e2e':
         testCommand = 'npx';
-        testArgs = ['playwright', 'test', '--reporter=json'];
+        testArgs = ['playwright', 'test']; // Let config handle reporters
+        if (testPattern) {
+            testArgs.push('--grep', testPattern);
+        }
         cwd = process.cwd();
         break;
 }
 
-const outputFile = testType === 'e2e' ? 'test-results/e2e-results.json' : `test-results/${testType}-jest-results.json`;
+const outputFile = testType === 'e2e' ? 'test-results/e2e-results.json' : `../test-results/${testType}-jest-results.json`;
 
 console.log(`Running ${testType} tests...\n`);
+console.log(`Command: ${testCommand} ${testArgs.join(' ')}`);
+console.log(`CWD: ${cwd}`);
+console.log(`Expected output file: ${path.join(cwd, outputFile)}`);
+if (testPattern) {
+    console.log(`Test pattern: ${testPattern}`);
+}
+console.log('');
 
 const progressChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 let progressIndex = 0;
@@ -65,13 +88,23 @@ child.stderr.on('data', (data) => {
     allOutput += data.toString();
 });
 
-child.on('close', (code) => {
+child.on('close', async (code) => {
     clearInterval(progressInterval);
     process.stdout.write('\r' + ' '.repeat(40) + '\r'); // Clear progress line
 
-    if (testType !== 'e2e' && !fs.existsSync(path.join(cwd, outputFile))) {
-        console.error(`Test output file not found: ${outputFile}`);
-        process.exit(1);
+    // Wait for Jest to finish writing the output file
+    if (testType !== 'e2e') {
+        let retries = 0;
+        const maxRetries = 10;
+        while (retries < maxRetries && !fs.existsSync(path.join(cwd, outputFile))) {
+            await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
+            retries++;
+        }
+
+        if (!fs.existsSync(path.join(cwd, outputFile))) {
+            console.error(`Test output file not found after ${maxRetries} retries: ${outputFile}`);
+            process.exit(1);
+        }
     }
 
     if (testType === 'e2e') {
@@ -137,24 +170,18 @@ function handleJestResults(code, allOutput, cwd) {
 }
 
 function handlePlaywrightResults(code, allOutput) {
-    // Parse Playwright JSON output
-    let results = [];
+    // Try to read Playwright JSON results from file first
+    let results = null;
     try {
-        // Try to find JSON in the output
-        const jsonMatch = allOutput.match(/(\{[\s\S]*\})/);
-        if (jsonMatch) {
-            results = JSON.parse(jsonMatch[1]);
-        }
-    } catch (e) {
-        // Fallback: parse from file if it exists
-        try {
-            if (fs.existsSync(outputFile)) {
-                const txt = fs.readFileSync(outputFile, 'utf8');
+        const filePath = path.join(process.cwd(), outputFile);
+        if (fs.existsSync(filePath)) {
+            const txt = fs.readFileSync(filePath, 'utf8');
+            if (txt.trim()) {
                 results = JSON.parse(txt);
             }
-        } catch (fileError) {
-            console.error('Failed to parse Playwright results');
         }
+    } catch (e) {
+        // JSON parsing failed, fall back to text parsing
     }
 
     // Extract test results
@@ -162,6 +189,7 @@ function handlePlaywrightResults(code, allOutput) {
     const failed = new Set();
 
     if (results && Array.isArray(results)) {
+        // Parse from JSON format
         results.forEach(suite => {
             if (suite.specs) {
                 suite.specs.forEach(spec => {
@@ -181,22 +209,83 @@ function handlePlaywrightResults(code, allOutput) {
                 });
             }
         });
+    } else {
+        // Fallback: parse from text output
+        const lines = allOutput.split('\n');
+
+        // Look for test results in the output
+        for (const line of lines) {
+            // Look for test failure lines: "❌ Test failed: test-name" (legacy format)
+            const failMatch = line.match(/❌ Test failed:\s*(.+)/);
+            if (failMatch) {
+                failed.add(failMatch[1].trim());
+            }
+
+            // Look for Playwright failure lines: "    [browser] › file:line:column › suite › test name"
+            const playwrightFailMatch = line.match(/^\s*\[.*?\]\s*›\s*(.+?)\s*$/);
+            if (playwrightFailMatch && line.includes('›')) {
+                // Only add if this appears in a failure context (after "failed" but before next test or summary)
+                const testName = playwrightFailMatch[1].trim();
+                // Check if this line comes after a failure indicator
+                const lineIndex = lines.indexOf(line);
+                let isFailure = false;
+                // Look backwards for failure indicators
+                for (let i = lineIndex - 1; i >= 0 && i >= lineIndex - 5; i--) {
+                    if (lines[i].includes('failed') || lines[i].includes('Error:')) {
+                        isFailure = true;
+                        break;
+                    }
+                }
+                if (isFailure) {
+                    failed.add(testName);
+                }
+            }
+        }
+
+        // Calculate passed tests from total - failed
+        // Try different regex patterns for Playwright summary
+        let totalMatch = allOutput.match(/(\d+)\s*passed,\s*(\d+)\s*failed/);
+        if (!totalMatch) {
+            totalMatch = allOutput.match(/(\d+)\s*passed\s*\(/);
+        }
+        if (totalMatch) {
+            const totalPassed = parseInt(totalMatch[1]);
+            // Add placeholder names for passed tests since we don't have individual names
+            for (let i = 0; i < totalPassed; i++) {
+                passed.add(`Test ${i + 1} (passed)`);
+            }
+        }
     }
 
     // Show summary from output
     const summaryLines = allOutput.split('\n').filter(line =>
+        line.includes('passed') && line.includes('failed') ||
+        line.includes('Duration:') ||
         line.includes('tests passed') ||
         line.includes('tests failed') ||
-        line.includes('Duration:')
+        line.match(/\d+ passed, \d+ failed/)
     );
 
     console.log('E2E Test Summary:');
     if (summaryLines.length > 0) {
         summaryLines.forEach(line => console.log('  ' + line.trim()));
     } else {
+        // Fallback summary
         console.log(`  Exit code: ${code}`);
         console.log(`  Passed: ${passed.size}`);
         console.log(`  Failed: ${failed.size}`);
+
+        // Try to extract some info from the output
+        const runningMatch = allOutput.match(/Running (\d+) tests/);
+        if (runningMatch) {
+            console.log(`  Total tests found: ${runningMatch[1]}`);
+        }
+
+        const passedMatch = allOutput.match(/(\d+) passed/);
+        const failedMatch = allOutput.match(/(\d+) failed/);
+        if (passedMatch || failedMatch) {
+            console.log(`  Tests completed: ${passedMatch ? passedMatch[1] : 0} passed, ${failedMatch ? failedMatch[1] : 0} failed`);
+        }
     }
 
     console.log('\n' + '='.repeat(50));
@@ -216,8 +305,9 @@ function handlePlaywrightResults(code, allOutput) {
 
     // Clean up output file if it exists
     try {
-        if (fs.existsSync(outputFile)) {
-            fs.unlinkSync(outputFile);
+        const filePath = path.join(process.cwd(), outputFile);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
         }
     } catch (e) {
         // Ignore cleanup errors

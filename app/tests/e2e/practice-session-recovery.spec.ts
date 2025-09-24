@@ -343,7 +343,7 @@ test.describe('Practice Session Recovery E2E', () => {
 
         } catch (error) {
             console.error('❌ Test failed:', error);
-            await page.screenshot({ path: 'debug-answer-button-failure.png' });
+            await page.screenshot({ path: 'test-results/e2e/debug-answer-button-failure.png' });
             throw error;
         }
     });

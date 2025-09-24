@@ -335,7 +335,7 @@ test.describe('Tournament Full Flow E2E', () => {
             log('❌ Tournament flow failed', { error: error.message });
 
             // Take screenshot for debugging
-            await page.screenshot({ path: 'debug-tournament-flow-error.png' });
+            await page.screenshot({ path: 'test-results/e2e/debug-tournament-flow-error.png' });
 
             // Log page content for debugging
             const content = await page.content();
@@ -380,7 +380,7 @@ test.describe('Tournament Full Flow E2E', () => {
 
         } catch (error: any) {
             log('Enhanced debugging test failed', { error: error.message });
-            await page.screenshot({ path: 'debug-enhanced-error.png' });
+            await page.screenshot({ path: 'test-results/e2e/debug-enhanced-error.png' });
             throw error;
         }
     });
