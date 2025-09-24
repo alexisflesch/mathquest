@@ -536,7 +536,7 @@ test.describe('Quiz Teacher Controls & Real-time Features', () => {
             await projectionPage.waitForTimeout(3000);
 
             // Take a screenshot to see what's on the page
-            await projectionPage.screenshot({ path: 'debug-projection-page.png', fullPage: true });
+            await projectionPage.screenshot({ path: 'test-results/e2e/debug-projection-page.png', fullPage: true });
             log('📸 Screenshot taken of projection page');
         }
 

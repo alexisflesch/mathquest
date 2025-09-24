@@ -304,19 +304,19 @@ export class LoginHelper {
             console.log(`  Button ${i}: "${text}" (class: ${className})`);
         }
 
-        // Try multiple ways to find the account button
+        // Try multiple ways to find the teacher account button
         let compteButton;
         try {
-            compteButton = this.page.locator('button').filter({ hasText: 'Compte' });
+            compteButton = this.page.locator('button').filter({ hasText: 'Compte enseignant' });
             await compteButton.waitFor({ timeout: 1000 });
         } catch {
-            // Fallback: look for button with Lock icon and Compte text
-            compteButton = this.page.locator('button:has-text("Compte")');
+            // Fallback: look for button with teacher icon and Compte enseignant text
+            compteButton = this.page.locator('button:has-text("Compte enseignant")');
             await compteButton.waitFor({ timeout: 1000 });
         }
-        console.log('✅ Found Compte button, clicking...');
+        console.log('✅ Found Compte enseignant button, clicking...');
         await compteButton.click();
-        console.log('✅ Clicked Compte button');
+        console.log('✅ Clicked Compte enseignant button');
 
         // Wait for the account form to appear and ensure we're in login mode
         console.log('⏳ Waiting for account form to load...');
@@ -382,17 +382,25 @@ export class LoginHelper {
         await this.page.goto('/login');
         await this.page.waitForLoadState('networkidle');
 
+        // Check if already logged in (redirected away from login page)
+        const logoutButton = this.page.locator('button:has-text("Déconnexion")');
+        const isLoggedIn = await logoutButton.isVisible().catch(() => false);
+        if (isLoggedIn) {
+            console.log('✅ User is already logged in, skipping login process');
+            return;
+        }
+
         // Wait for the page to be fully loaded
         console.log('⏳ Waiting for login page to stabilize...');
         await this.page.waitForTimeout(2000);
 
-        // Click the "Compte" button to switch to account login mode
-        console.log('🔄 Clicking "Compte" button to switch to account mode...');
-        const compteButton = this.page.locator('button:has-text("Compte")').first();
+        // Click the "Compte étudiant" button to switch to student account login mode
+        console.log('🔄 Clicking "Compte étudiant" button to switch to account mode...');
+        const compteButton = this.page.locator('button:has-text("Compte étudiant")').first();
         await compteButton.waitFor({ timeout: 5000, state: 'visible' });
-        console.log('✅ Found "Compte" button, clicking...');
+        console.log('✅ Found "Compte étudiant" button, clicking...');
         await compteButton.click();
-        console.log('✅ Clicked "Compte" button');
+        console.log('✅ Clicked "Compte étudiant" button');
 
         // Wait for the account form to appear
         console.log('⏳ Waiting for account form to load...');
@@ -718,7 +726,7 @@ export class DebugHelper {
      */
     async takeScreenshot(name: string): Promise<void> {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `debug-${name}-${timestamp}.png`;
+        const filename = `test-results/e2e/debug-${name}-${timestamp}.png`;
 
         await this.page.screenshot({
             path: filename,

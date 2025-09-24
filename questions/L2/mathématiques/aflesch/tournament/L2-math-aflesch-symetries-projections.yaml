@@ -2,72 +2,83 @@
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
-  themes: ["Intégrales généralisées"]
-  tags: ["convergence"]
-  title: "Convergence en 0"
+  themes: ["Symétries et projections"]
+  tags: ["symétrie vectorielle"]
+  title: "Éléments caractéristiques"
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
-  feedbackWaitTime: 10
   text: |
-    L'intégrale suivante est-elle convergente ?
-    \
-    \[
-    \int_{0}^{1} \frac{\ln(x)}{\sqrt{x}}\,dx
-    \]
+    Une symétrie vectorielle \(s\) est une symétrie par rapport à \(F\) parallèlement à \(G\) où:
   answerOptions:
-    - "Oui"
-    - "Non"
-  correctAnswers: [true, false]
-  explanation: |
-    Au voisinage de 0, \( |\ln x| = o(x^{-1/4}) \). Ainsi, \( \left|\frac{\ln x}{\sqrt{x}}\right| \le C x^{-3/4} \) pour \(x\) proche de 0. Puisque \(\int_0^1 x^{-3/4} \,dx\) est une intégrale de Riemann convergente (exposant \(3/4 < 1\)), l'intégrale proposée converge absolument par comparaison.
+    - '\(F=\mathrm{Ker}(s-\mathrm{Id})\) et \(G=\mathrm{Im}(s-\mathrm{Id})\)'
+    - '\(F=\mathrm{Ker}(s+\mathrm{Id})\) et \(G=\mathrm{Im}(s+\mathrm{Id})\)'
+    - '\(F=\mathrm{Ker}(s)\) et \(G=\mathrm{Im}(s)\)'
+    - '\(F=\mathrm{Im}(s)\) et \(G=\mathrm{Ker}(s)\)'
+    - 'Aucune des réponses ci-dessus'
+  correctAnswers: [false, true, false, false, false]
 
-- uid: "aflesch-mt3-integrales-generalisees-008"
+
+- uid: "aflesch-mt3-symetries-projections-002"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
-  themes: ["Intégrales généralisées"]
-  tags: ["convergence"]
-  title: "Convergence à l'infini"
+  themes: ["Symétries et projections"]
+  tags: ["projection vectorielle"]
+  title: "Éléments caractéristiques"
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
-  feedbackWaitTime: 10
   text: |
-    L'intégrale suivante est-elle convergente ?
-    \[
-    \int_{1}^{+\infty} \frac{\sin(x)}{x^2}\,dx
-    \]
+    Une projection vectorielle \(p\) est une projection sur \(F\) parallèlement à \(G\) où:
   answerOptions:
-    - "Oui"
-    - "Non"
-  correctAnswers: [true, false]
-  explanation: |
-    Pour \(x\to +\infty\), \(|\sin(x)|/x^2 \leq 1/x^2\). 
-    L’intégrale de référence \(\int_{1}^{+\infty} 1/x^2\,dx\) est convergente. 
-    Donc l’intégrale proposée converge absolument.
+    - '\(F=\mathrm{Ker}(p-\mathrm{Id})\) et \(G=\mathrm{Im}(p-\mathrm{Id})\)'
+    - '\(F=\mathrm{Ker}(p+\mathrm{Id})\) et \(G=\mathrm{Im}(p+\mathrm{Id})\)'
+    - '\(F=\mathrm{Im}(p)\) et \(G=\mathrm{Ker}(p)\)'
+    - '\(F=\mathrm{Ker}(p)\) et \(G=\mathrm{Im}(p)\)'
+    - 'Aucune des réponses ci-dessus'
+  correctAnswers: [false, false, true, false, false]
 
 
-- uid: "aflesch-mt3-integrales-generalisees-010"
+
+- uid: "aflesch-mt3-symetries-projections-003"
   author: "aflesch"
   gradeLevel: "L2"
   discipline: "Mathématiques"
-  themes: ["Intégrales généralisées"]
-  tags: ["convergence"]
-  title: "Divergence à l'infini"
+  themes: ["Symétries et projections"]
+  tags: ["projection vectorielle"]
+  title: "Caractérisation d'une projection"
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
-  feedbackWaitTime: 10
   text: |
-    L'intégrale suivante est-elle convergente ?
-    \[
-    \int_{1}^{+\infty} \frac{1}{\sqrt{x}}\,dx
-    \]
+    Un endomorphisme \(p\) est une projection vectorielle si et seulement si:
   answerOptions:
-    - "Oui"
-    - "Non"
-  correctAnswers: [false, true]
-  explanation: |
-    Pour \(p = 1/2 \leq 1\), l'intégrale de Riemann \(\int_{1}^{+\infty} 1/x^p\,dx\) diverge. 
-    L’intégrale ne converge donc pas.
+    - '\(p^2=0\)'
+    - '\(p^2=-\mathrm{Id}\)'
+    - '\(p^2=p\)'
+    - '\(p^2=\mathrm{Id}\)'
+    - 'Aucune des réponses ci-dessus'
+  correctAnswers: [false, false, true, false, false]
+
+
+
+- uid: "aflesch-mt3-symetries-projections-004"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Symétries et projections"]
+  tags: ["projection vectorielle"]
+  title: "Caractérisation d'une symétrie"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Un endomorphisme \(s\) est une symétrie vectorielle si et seulement si:
+  answerOptions:
+    - '\(s^2=0\)'
+    - '\(s^2=-\mathrm{Id}\)'
+    - '\(s^2=s\)'
+    - '\(s^2=\mathrm{Id}\)'
+    - 'Aucune des réponses ci-dessus'
+  correctAnswers: [false, false, false, true, false]
