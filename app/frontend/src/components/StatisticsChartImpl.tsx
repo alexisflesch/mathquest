@@ -48,6 +48,7 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
                 // Small delay to ensure DOM has updated
                 setTimeout(resizeChart, 50);
             });
+
             resizeObserver.observe(containerRef.current);
 
             return () => {
@@ -55,223 +56,243 @@ const StatisticsChart: React.FC<StatisticsChartProps> = ({ data, layout = 'top' 
             };
         }
 
-        return () => {}; // Return empty cleanup function
+        // Return empty cleanup function if no container
+        return () => { };
     }, []);
 
-    // Calculate statistics
-    const stats = useMemo(() => {
-        if (!data || data.length === 0) return null;
+    // Additional effect to force resize when data changes (to ensure proper initial sizing)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (plotRef.current && plotRef.current.el && window.Plotly && window.Plotly.Plots) {
+                window.Plotly.Plots.resize(plotRef.current.el);
+            }
+        }, 100);
 
+        return () => clearTimeout(timer);
+    }, [data, chartType]);
+
+    const processedData = useMemo(() => {
+        if (data.length === 0) return { values: [], hasOutliers: false, outlierIndices: [] };
+        // Calculate quartiles for outlier detection
         const sorted = [...data].sort((a, b) => a - b);
-        const n = sorted.length;
-        const mean = sorted.reduce((sum, val) => sum + val, 0) / n;
-        const median = n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[Math.floor(n / 2)];
-        const min = sorted[0];
-        const max = sorted[n - 1];
-
-        // Calculate quartiles for box plot
-        const q1 = sorted[Math.floor(n * 0.25)];
-        const q3 = sorted[Math.floor(n * 0.75)];
+        const q1Index = Math.floor(sorted.length * 0.25);
+        const q3Index = Math.floor(sorted.length * 0.75);
+        const q1 = sorted[q1Index];
+        const q3 = sorted[q3Index];
         const iqr = q3 - q1;
+        const lowerBound = q1 - 1.5 * iqr;
+        const upperBound = q3 + 1.5 * iqr;
 
-        // Calculate outliers
-        const lowerFence = q1 - 1.5 * iqr;
-        const upperFence = q3 + 1.5 * iqr;
+        const outlierIndices = data
+            .map((value, index) => ({ value, index }))
+            .filter(({ value }) => value < lowerBound || value > upperBound)
+            .map(({ index }) => index);
 
-        const outliers = sorted.filter(val => val < lowerFence || val > upperFence);
-        const nonOutliers = sorted.filter(val => val >= lowerFence && val <= upperFence);
+        const hasOutliers = outlierIndices.length > 0;
+        const filteredData = hideOutliers && hasOutliers
+            ? data.filter((_, index) => !outlierIndices.includes(index))
+            : data;
 
         return {
-            mean,
-            median,
-            min,
-            max,
-            q1,
-            q3,
-            iqr,
-            lowerFence,
-            upperFence,
-            outliers,
-            nonOutliers,
-            sorted
+            values: filteredData,
+            hasOutliers,
+            outlierIndices
         };
-    }, [data]);
+    }, [data, hideOutliers]);
 
-    // Prepare chart data based on type
     const chartData = useMemo(() => {
-        if (!stats) return [];
+        const { values } = processedData;
+        if (values.length === 0) return null;
 
-        const navbarColor = getNavbarColor();
+        const uniqueValues = [...new Set(values)].sort((a, b) => a - b);
+        const shouldUseStem = chartType === 'stem' ||
+            (chartType === 'auto' && uniqueValues.length <= 10);
 
-        switch (chartType) {
-            case 'histogram':
-                return [{
-                    type: 'histogram' as const,
-                    x: hideOutliers ? stats.nonOutliers : stats.sorted,
-                    marker: { color: navbarColor },
-                    name: 'Values'
-                }];
+        if (shouldUseStem) {
+            const navbarColor = getNavbarColor();
+            // Stem plot - vertical lines from y=0 to y=frequency, plus markers at the top
+            const frequencies = uniqueValues.map(value =>
+                values.filter(v => v === value).length
+            );
 
-            case 'stem':
-                // Create stem and leaf plot data
-                const stemData: { [key: number]: number[] } = {};
-                (hideOutliers ? stats.nonOutliers : stats.sorted).forEach(val => {
-                    const stem = Math.floor(val);
-                    const leaf = Math.round((val - stem) * 10);
-                    if (!stemData[stem]) stemData[stem] = [];
-                    stemData[stem].push(leaf);
-                });
+            // Vertical lines: for each x, draw from (x, 0) to (x, y)
+            const lineX: (number | null)[] = [];
+            const lineY: (number | null)[] = [];
+            uniqueValues.forEach((x, i) => {
+                lineX.push(x, x, null); // null for segment separation
+                lineY.push(0, frequencies[i], null);
+            });
 
-                return [{
-                    type: 'scatter' as const,
-                    mode: 'markers' as const,
-                    x: Object.keys(stemData).map(Number),
-                    y: Object.values(stemData).map(leaves => leaves.length),
-                    marker: { color: navbarColor, size: 8 },
-                    name: 'Stem Plot'
-                }];
-
-            case 'auto': // 'auto' - box plot
-                return [{
-                    type: 'box' as const,
-                    y: hideOutliers ? stats.nonOutliers : stats.sorted,
-                    name: 'Values',
-                    marker: { color: navbarColor },
-                    boxpoints: 'all' as const,
-                    jitter: 0.3,
-                    pointpos: -1.8
-                }];
+            return {
+                type: 'stem',
+                plotData: [
+                    {
+                        x: lineX,
+                        y: lineY,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: navbarColor, width: 2 },
+                        name: 'Stem',
+                        showlegend: false,
+                    },
+                    {
+                        x: uniqueValues,
+                        y: frequencies,
+                        type: 'scatter',
+                        mode: 'markers',
+                        marker: {
+                            size: 8,
+                            color: navbarColor,
+                            symbol: 'circle',
+                            line: { width: 1, color: navbarColor }
+                        },
+                        name: 'Frequency',
+                        showlegend: false,
+                    }
+                ] as any,
+                layout: {
+                    // No title
+                    xaxis: {
+                        title: { text: 'Réponses', standoff: 10 },
+                        tickmode: "array" as const,
+                        tickvals: uniqueValues,
+                        ticktext: uniqueValues.map(v => v.toString())
+                    },
+                    yaxis: {
+                        // No label
+                        rangemode: "tozero" as const
+                    }
+                }
+            };
+        } else {
+            // Histogram
+            const navbarColor = getNavbarColor();
+            // Get light-foreground color from CSS variable
+            let lightForeground = '#f3f4f6';
+            if (typeof window !== 'undefined') {
+                const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--light-foreground');
+                if (cssVar) lightForeground = cssVar.trim();
+            }
+            // Get grid color from CSS variable
+            let gridColor = '#ebf0f5';
+            if (typeof window !== 'undefined') {
+                const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--muted');
+                if (cssVar) gridColor = cssVar.trim();
+            }
+            return {
+                type: 'histogram',
+                plotData: [{
+                    x: values,
+                    type: 'histogram',
+                    nbinsx: Math.min(Math.ceil(Math.sqrt(values.length)), 50),
+                    name: 'Frequency',
+                    marker: {
+                        color: navbarColor,
+                        line: { color: lightForeground, width: 1 },
+                        opacity: 0.85
+                    }
+                }] as any,
+                layout: {
+                    // No title
+                    xaxis: {
+                        title: { text: 'Réponses', standoff: 10 }, // Move up with standoff
+                        gridcolor: gridColor
+                    },
+                    yaxis: {
+                        // No label
+                        rangemode: "tozero" as const,
+                        gridcolor: gridColor
+                    }
+                }
+            };
         }
-    }, [stats, chartType, hideOutliers]);
+    }, [processedData, chartType]);
 
-    // Chart layout
-    const chartLayout = useMemo(() => ({
-        title: {
-            text: chartType === 'histogram' ? 'Value Distribution' :
-                  chartType === 'stem' ? 'Stem and Leaf Plot' :
-                  'Box Plot (Auto)',
-            font: { size: 16 }
-        },
-        xaxis: {
-            title: {
-                text: chartType === 'stem' ? 'Stem' : 'Value'
-            },
-            showgrid: true
-        },
-        yaxis: {
-            title: {
-                text: chartType === 'stem' ? 'Leaf Count' : 'Value'
-            },
-            showgrid: true
-        },
-        margin: { l: 50, r: 50, t: 50, b: 50 },
-        showlegend: false,
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)'
-    }), [chartType]);    if (!stats) {
+    if (data.length === 0) {
         return (
-            <div className="flex items-center justify-center p-8 text-gray-500">
-                No data available
+            <div className="flex items-center justify-center bg-gray-50 rounded-lg" style={{ width: '100%', height: '100%' }}>
+                <p className="text-gray-500">No data to display</p>
             </div>
         );
     }
 
+    if (!chartData) return null;
+
     return (
-        <div ref={containerRef} className="w-full">
-            {/* Controls */}
-            <div className={`flex ${layout === 'left' ? 'flex-col space-y-2' : 'flex-wrap gap-2'} mb-4`}>
-                <div className={`flex ${layout === 'left' ? 'flex-col space-y-2' : 'flex-wrap gap-2'}`}>
+        <div ref={containerRef} className={`w-full h-full flex ${layout === 'left' ? 'flex-row' : 'flex-col'}`} style={{ height: '100%', background: 'transparent' }}>
+            {/* Controls - position based on layout prop */}
+            <div className={`flex ${layout === 'left' ? 'flex-col justify-center mr-2' : 'flex-wrap justify-center'} ${layout === 'left' ? 'items-start' : 'items-center'}`} style={{ background: 'transparent' }}>
+                <div className={`flex gap-1 border rounded-lg p-1 ${layout === 'left' ? 'flex-col' : ''}`} style={{ background: 'transparent' }}>
                     <button
                         onClick={() => setChartType('auto')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${chartType === 'auto'
-                                ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                        className={`px-3 py-2 text-sm rounded flex items-center justify-center transition-colors ${chartType === 'auto'
+                            ? 'text-white'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
+                        style={chartType === 'auto' ? { background: 'var(--navbar)' } : {}}
+                        aria-label="Automatique"
+                        title="Automatique"
                     >
-                        <ChartNoAxesColumn className="w-4 h-4" />
-                        <span>Box Plot</span>
+                        <Settings2 size={20} />
                     </button>
-
-                    <button
-                        onClick={() => setChartType('histogram')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${chartType === 'histogram'
-                                ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                            }`}
-                    >
-                        <BarChart3 className="w-4 h-4" />
-                        <span>Histogram</span>
-                    </button>
-
                     <button
                         onClick={() => setChartType('stem')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${chartType === 'stem'
-                                ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                        className={`px-3 py-2 text-sm rounded flex items-center justify-center transition-colors ${chartType === 'stem'
+                            ? 'text-white'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
+                        style={chartType === 'stem' ? { background: 'var(--navbar)' } : {}}
+                        aria-label="Diagramme en bâtons"
+                        title="Diagramme en bâtons"
                     >
-                        <Settings2 className="w-4 h-4" />
-                        <span>Stem Plot</span>
+                        <ChartNoAxesColumn size={20} />
                     </button>
-                </div>
-
-                <div className={`flex ${layout === 'left' ? 'flex-col space-y-2' : 'flex-wrap gap-2'}`}>
                     <button
-                        onClick={() => setHideOutliers(!hideOutliers)}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${hideOutliers
-                                ? 'bg-orange-100 text-orange-700 border border-orange-300'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                        onClick={() => setChartType('histogram')}
+                        className={`px-3 py-2 text-sm rounded flex items-center justify-center transition-colors ${chartType === 'histogram'
+                            ? 'text-white'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
+                        style={chartType === 'histogram' ? { background: 'var(--navbar)' } : {}}
+                        aria-label="Histogramme"
+                        title="Histogramme"
                     >
-                        {hideOutliers ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        <span>{hideOutliers ? 'Show' : 'Hide'} Outliers</span>
+                        <BarChart3 size={20} />
                     </button>
-
-                    <button
-                        onClick={() => {
-                            setChartType('auto');
-                            setHideOutliers(false);
-                        }}
-                        className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition-colors"
-                    >
-                        <RotateCcw className="w-4 h-4" />
-                        <span>Reset</span>
-                    </button>
+                    {/* Outlier toggle - only show if outliers exist */}
+                    {processedData.hasOutliers && (
+                        <button
+                            onClick={() => setHideOutliers(!hideOutliers)}
+                            className={`px-3 py-2 text-sm rounded flex items-center justify-center transition-colors ${hideOutliers
+                                ? 'text-white bg-[var(--secondary)]'
+                                : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            style={hideOutliers ? { background: 'var(--secondary)', color: 'white' } : {}}
+                            aria-label={hideOutliers ? 'Afficher les données aberrantes' : 'Masquer les données aberrantes'}
+                            title={hideOutliers ? 'Afficher les données aberrantes' : 'Masquer les données aberrantes'}
+                        >
+                            {hideOutliers ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    )}
                 </div>
             </div>
-
-            {/* Statistics Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                    <div className="font-semibold text-blue-700">Mean</div>
-                    <div className="text-lg font-mono">{stats.mean.toFixed(2)}</div>
-                </div>
-                <div className="bg-green-50 p-3 rounded-lg">
-                    <div className="font-semibold text-green-700">Median</div>
-                    <div className="text-lg font-mono">{stats.median.toFixed(2)}</div>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-lg">
-                    <div className="font-semibold text-purple-700">Min</div>
-                    <div className="text-lg font-mono">{stats.min.toFixed(2)}</div>
-                </div>
-                <div className="bg-red-50 p-3 rounded-lg">
-                    <div className="font-semibold text-red-700">Max</div>
-                    <div className="text-lg font-mono">{stats.max.toFixed(2)}</div>
-                </div>
-            </div>
-
-            {/* Chart */}
-            <div className="w-full h-96 bg-white rounded-lg border border-gray-200 p-4">
+            {/* Chart fills remaining space, no scrollbar */}
+            <div className="flex-grow w-full" style={{ height: '100%', overflow: 'hidden', background: 'transparent' }}>
                 <Plot
                     ref={plotRef}
-                    data={chartData}
-                    layout={chartLayout}
-                    style={{ width: '100%', height: '100%' }}
-                    useResizeHandler={true}
-                    config={{
-                        displayModeBar: false,
-                        responsive: true
+                    data={chartData.plotData}
+                    layout={{
+                        ...chartData.layout,
+                        autosize: true,
+                        margin: { t: 50, r: 50, b: 50, l: 50 },
+                        plot_bgcolor: 'rgba(0,0,0,0)',
+                        paper_bgcolor: 'rgba(0,0,0,0)',
                     }}
+                    config={{
+                        responsive: true,
+                        displayModeBar: false,
+                    }}
+                    style={{ width: '100%', height: '100%', background: 'transparent' }}
                 />
             </div>
         </div>

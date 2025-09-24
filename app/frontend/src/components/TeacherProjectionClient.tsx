@@ -6,7 +6,7 @@ import { Resizable } from 're-resizable';
 import { createLogger } from '@/clientLogger';
 import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
 import QuestionCard from '@/components/QuestionCard';
-import StatisticsChart from '@/components/StatisticsChart';
+// import StatisticsChart from '@/components/StatisticsChart'; // Lazy loaded below
 import { Timer, ChevronDown, ChevronRight } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import QrCodeWithLogo from "@components/QrCodeWithLogo";
@@ -65,6 +65,21 @@ const QuestionDisplay = React.memo(({
     code: string;
     bringToFront: (id: string) => void;
 }) => {
+    // Lazy load StatisticsChart after component mounts
+    const [StatisticsChart, setStatisticsChart] = useState<React.ComponentType<any> | null>(null);
+
+    useEffect(() => {
+        // Load StatisticsChart after the page has loaded
+        const loadChart = async () => {
+            const { default: ChartComponent } = await import('@/components/StatisticsChart');
+            setStatisticsChart(() => ChartComponent);
+        };
+
+        // Small delay to ensure page is fully loaded
+        const timer = setTimeout(loadChart, 100);
+        return () => clearTimeout(timer);
+    }, []);
+
     // Remove debugging logs - issue was memoization blocking React re-renders
     // console.log('🔍 QuestionDisplay render with props:', {
     //     showStats,
@@ -168,7 +183,7 @@ const QuestionDisplay = React.memo(({
                             </div>
 
                             {/* Show StatisticsChart for numeric questions when stats should be shown */}
-                            {isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values && (
+                            {isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values && StatisticsChart && (
                                 <div style={{
                                     flex: '1 1 0', // Take remaining space for numeric questions
                                     width: '100%',
