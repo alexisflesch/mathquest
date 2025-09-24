@@ -69,6 +69,14 @@
             "matrice de Gram",
             "endomorphisme autoadjoint"
           ]
+        },
+        {
+          "nom": "Symétries et projections",
+          "tags": [
+            "symétrie vectorielle",
+            "projection vectorielle",
+            "somme directe"
+          ]
         }
       ]
     }
