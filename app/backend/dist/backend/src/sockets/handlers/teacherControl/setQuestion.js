@@ -90,7 +90,12 @@ function setQuestionHandler(io, socket) {
                     include: {
                         questions: {
                             include: {
-                                question: true
+                                question: {
+                                    include: {
+                                        multipleChoiceQuestion: true,
+                                        numericQuestion: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -329,32 +334,105 @@ function setQuestionHandler(io, socket) {
             if (question) {
                 // ⚠️ SECURITY: Use standard filtering function to remove sensitive data
                 const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/quiz/liveQuestion')));
-                const filteredQuestion = filterQuestionForClient(question);
+                let filteredQuestion = filterQuestionForClient(question);
+                // Ensure timeLimit is present and valid (schema requires positive integer)
+                if (filteredQuestion.timeLimit == null || filteredQuestion.timeLimit <= 0) {
+                    logger.warn(`Question ${questionUid} has invalid timeLimit: ${filteredQuestion.timeLimit}, using default 30s`);
+                    filteredQuestion.timeLimit = 30; // Default to 30 seconds
+                }
+                // Create flat payload format that matches emitQuestionHandler and frontend expectations
                 const gameQuestionPayload = {
-                    question: filteredQuestion,
-                    timer: canonicalTimer, // MODERNIZATION: use canonicalTimer only
-                    questionIndex: foundQuestionIndex,
+                    ...filteredQuestion,
+                    currentQuestionIndex: foundQuestionIndex,
                     totalQuestions: gameState.questionUids.length
                 };
-                // Send the question to the live room
-                // --- DEBUG: Log sockets in the live room before emitting ---
-                const liveRoomSockets = io.sockets.adapter.rooms.get(liveRoom);
-                const liveRoomSocketIds = liveRoomSockets ? Array.from(liveRoomSockets) : [];
-                logger.info({
-                    liveRoom,
-                    liveRoomSocketIds,
-                    payload: gameQuestionPayload
-                }, '[DEBUG] Emitting game_question to live room');
-                // --- FORCE CONSOLE LOG FOR TEST VISIBILITY ---
-                logger.info('[setQuestion] Emitting game_question:', {
-                    liveRoom,
-                    liveRoomSocketIds,
-                    payload: gameQuestionPayload
-                });
-                io.to(liveRoom).emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
-                // Also emit the same payload to the projection room for canonical question delivery
-                const projectionRoom = `projection_${gameId}`;
-                io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
+                // Validate the payload with the same schema as emitQuestionHandler
+                const { questionDataForStudentSchema } = await Promise.resolve().then(() => __importStar(require('@shared/types/socketEvents.zod')));
+                const questionParseResult = questionDataForStudentSchema.safeParse(gameQuestionPayload);
+                if (!questionParseResult.success) {
+                    logger.error({
+                        errors: questionParseResult.error.errors,
+                        gameQuestionPayload,
+                        schema: 'questionDataForStudentSchema',
+                        payloadKeys: Object.keys(gameQuestionPayload)
+                    }, '❌ [VALIDATION ERROR] [setQuestion] Invalid GAME_QUESTION payload, not emitting');
+                }
+                else {
+                    logger.info('✅ [VALIDATION SUCCESS] [setQuestion] Payload validation passed, proceeding to emit', {
+                        questionUid: gameQuestionPayload.uid,
+                        questionType: gameQuestionPayload.questionType,
+                        currentQuestionIndex: gameQuestionPayload.currentQuestionIndex,
+                        totalQuestions: gameQuestionPayload.totalQuestions
+                    });
+                    // Send the question to the live room
+                    // --- DEBUG: Log sockets in the live room before emitting ---
+                    const liveRoomSockets = io.sockets.adapter.rooms.get(liveRoom);
+                    const liveRoomSocketIds = liveRoomSockets ? Array.from(liveRoomSockets) : [];
+                    logger.info({
+                        liveRoom,
+                        liveRoomSocketIds,
+                        payload: gameQuestionPayload
+                    }, '📡 [EMIT] Emitting game_question to live room');
+                    // --- FORCE CONSOLE LOG FOR TEST VISIBILITY ---
+                    logger.info('🚀 [SOCKET EMIT] Emitting game_question event:', {
+                        event: 'game_question',
+                        liveRoom,
+                        liveRoomSocketIds,
+                        socketCount: liveRoomSocketIds.length,
+                        questionUid: gameQuestionPayload.uid,
+                        questionType: gameQuestionPayload.questionType,
+                        currentQuestionIndex: gameQuestionPayload.currentQuestionIndex,
+                        totalQuestions: gameQuestionPayload.totalQuestions
+                    });
+                    io.to(liveRoom).emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
+                    // Also emit the same payload to the projection room for canonical question delivery
+                    const projectionRoom = `projection_${gameId}`;
+                    logger.info('📺 [PROJECTION] Also emitting to projection room:', {
+                        projectionRoom,
+                        questionUid: gameQuestionPayload.uid
+                    });
+                    io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
+                    // --- MODERNIZATION: Check if stats are currently shown and update them for the new question ---
+                    try {
+                        const projectionDisplayState = await gameStateService_1.default.getProjectionDisplayState(gameInstance.accessCode);
+                        if (projectionDisplayState && projectionDisplayState.showStats) {
+                            logger.info({
+                                accessCode: gameInstance.accessCode,
+                                questionUid,
+                                showStats: projectionDisplayState.showStats
+                            }, '[STATS_UPDATE] Stats are currently shown, updating for new question');
+                            // Get stats for the new question
+                            const { getAnswerStats } = await Promise.resolve().then(() => __importStar(require('./helpers')));
+                            const answerStats = await getAnswerStats(gameInstance.accessCode, questionUid);
+                            // Emit updated stats to projection
+                            const { PROJECTOR_EVENTS } = await Promise.resolve().then(() => __importStar(require('@shared/types/socket/events')));
+                            const projectionStatsPayload = {
+                                show: true,
+                                stats: answerStats || {},
+                                questionUid: questionUid,
+                                timestamp: Date.now()
+                            };
+                            io.to(projectionRoom).emit(PROJECTOR_EVENTS.PROJECTION_SHOW_STATS, projectionStatsPayload);
+                            logger.info({
+                                projectionStatsPayload,
+                                questionUid
+                            }, '[STATS_UPDATE] Emitted updated stats for new question');
+                        }
+                        else {
+                            logger.debug({
+                                accessCode: gameInstance.accessCode,
+                                showStats: projectionDisplayState?.showStats
+                            }, '[STATS_UPDATE] Stats not currently shown, no update needed');
+                        }
+                    }
+                    catch (statsError) {
+                        logger.error({
+                            error: statsError,
+                            questionUid,
+                            accessCode: gameInstance.accessCode
+                        }, '[STATS_UPDATE] Error updating stats for new question');
+                    }
+                }
             }
             logger.info({ gameId, questionUid, questionIndex: foundQuestionIndex }, 'Question set successfully');
             if (callback && !callbackCalled) {

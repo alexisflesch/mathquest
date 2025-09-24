@@ -9,7 +9,6 @@ import ProfileForm from '../../components/profile/ProfileForm';
 import AccountUpgradeForm from '../../components/profile/AccountUpgradeForm';
 import TeacherUpgradeForm from '../../components/profile/TeacherUpgradeForm';
 import Snackbar from '../../components/Snackbar';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 function ProfilePageInner() {
     const router = useRouter();
@@ -245,3 +244,7 @@ export default function ProfilePage() {
         </Suspense>
     );
 }
+
+// Disable prerendering for this page to avoid webpack runtime issues
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';

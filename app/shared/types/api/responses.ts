@@ -38,14 +38,16 @@ export interface LoginResponse {
 export interface RegisterResponse {
     success: boolean;
     message: string;
-    token: string;
+    token?: string; // Optional - only provided for verified users
     user: {
         id: string;
         username: string;
         email?: string;
         avatar: string;
         role: UserRole;
+        emailVerified?: boolean;
     };
+    requiresEmailVerification?: boolean; // Flag indicating email verification is needed
 }
 
 export interface UpgradeAccountResponse {
@@ -63,11 +65,34 @@ export interface UpgradeAccountResponse {
 
 export interface PasswordResetResponse {
     message: string;
+    success: boolean;
     resetToken?: string; // Only in development
 }
 
 export interface PasswordResetConfirmResponse {
     message: string;
+}
+
+export interface SendEmailVerificationResponse {
+    message: string;
+    success: boolean;
+}
+
+export interface VerifyEmailResponse {
+    message: string;
+    success: boolean;
+    user?: {
+        id: string;
+        username: string;
+        email?: string;
+        role: UserRole;
+        avatarEmoji?: string;
+    };
+}
+
+export interface ResendEmailVerificationResponse {
+    message: string;
+    success: boolean;
 }
 
 export interface AuthStatusResponse {

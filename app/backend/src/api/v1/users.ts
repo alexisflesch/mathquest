@@ -20,6 +20,11 @@ const getUserService = (): UserService => {
     return userServiceInstance;
 };
 
+// Function to inject mock service for testing
+export const __setUserServiceForTesting = (mockService: UserService): void => {
+    userServiceInstance = mockService;
+};
+
 // GET /api/v1/users/:userId - Get user by ID
 router.get('/:userId', optionalAuth, async (req: Request, res: Response<PublicUser | ErrorResponse>): Promise<void> => {
     try {

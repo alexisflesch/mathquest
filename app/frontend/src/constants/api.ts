@@ -9,20 +9,29 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:3007/api/v1';
 export const FRONTEND_API_BASE = '/api';
 
-// Authentication Endpoints (Frontend API routes)
+// Authentication Endpoints (Next.js Frontend API routes)
+// These proxy to the backend and ensure consistent cookie handling
 export const FRONTEND_AUTH_ENDPOINTS = {
     LOGIN: '/api/auth/universal-login',
-    LOGOUT: '/api/v1/auth/logout',
-    STATUS: '/api/v1/auth/status',
-    REGISTER: '/api/v1/auth/register',
-    PROFILE: '/api/v1/auth/profile',
-    UPGRADE: '/api/v1/auth/upgrade',
-    RESET_PASSWORD_CONFIRM: '/api/v1/auth/reset-password/confirm',
-    CLEAR_COOKIES: '/api/v1/auth/clear-cookies'
+    LOGOUT: '/api/auth/logout',
+    STATUS: '/api/auth/status',
+    REGISTER: '/api/auth/register',
+    PROFILE: '/api/auth/profile',
+    UPGRADE: '/api/auth/upgrade',
+    UPGRADE_TO_TEACHER: '/api/auth/upgrade-to-teacher',
+    VERIFY_EMAIL: '/api/auth/verify-email',
+    SEND_EMAIL_VERIFICATION: '/api/auth/send-email-verification',
+    RESEND_EMAIL_VERIFICATION: '/api/auth/resend-email-verification',
+    CLEAR_COOKIES: '/api/auth/clear-cookies',
+    RESET_PASSWORD: '/api/auth/reset-password',
+    RESET_PASSWORD_CONFIRM: '/api/auth/reset-password/confirm',
 } as const;
 
 // Backend API Endpoints (V1 API)
 export const BACKEND_ENDPOINTS = {
+    // Authentication
+    // Note: Reset password endpoints moved to FRONTEND_AUTH_ENDPOINTS
+
     // Questions
     QUESTIONS: 'questions',
     QUESTIONS_FILTERS: 'questions/filters',

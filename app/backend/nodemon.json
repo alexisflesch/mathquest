@@ -10,7 +10,7 @@
         "dist/**",
         "node_modules/**"
     ],
-    "exec": "ts-node -r tsconfig-paths/register src/server.ts",
+    "exec": "node --max-old-space-size=1024 --max-semi-space-size=256 node_modules/.bin/ts-node -r tsconfig-paths/register src/server.ts",
     "env": {
         "NODE_ENV": "development"
     },

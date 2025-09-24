@@ -1,16 +1,7 @@
 /**
  * MathQuest Landing Page
  * 
- * This comp  //  // No automatic redirects - let users navigate from the main landing page
-  useEffect(() => {
-    if (isLoading) return;
-    // All user types stay on landing page - no redirects to separate home pages
-    console.log('[LandingPage] User state loaded, showing landing page for all users');
-  }, [isLoading]);tomatic redirections - show landing page content for all users
-  if (isLoading) {
-    // Only show loading state during auth check
-    return null;
-  } the main entry point for the application, providing:
+ * This component serves as the main entry point for the application, providing:
  * - A welcome introduction to the MathQuest platform
  * - Role selection between Student and Teacher modes
  * - Smart navigation that remembers previous user roles
@@ -26,7 +17,6 @@ import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
 import InfinitySpin from '@/components/InfinitySpin';
 import { useEffect } from 'react';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function Home() {
   const { isStudent, isTeacher, isLoading, refreshAuth, canJoinGame } = useAuth();
@@ -88,17 +78,17 @@ export default function Home() {
           {/* Description */}
           <div className="text-center mb-8">
             <p className="text-lg text-muted-foreground mb-4">
-              🧠 Une alternative libre à Kahoot avec une base de question partagée.
+              🧠 Une alternative libre à Kahoot avec une base de questions partagée.
             </p>
             {/* <p className="text-success font-medium mb-6">
               🔓 Pas besoin de compte pour jouer !
             </p> */}
 
             <div className="text-left text-muted-foreground space-y-2 max-w-2xl mt-6">
-              <p>• Créez vos quiz personnalisés ou utilisez la base de questions partagée</p>
+              <p>• Créez vos quiz personnalisés en utilisant la base de questions partagée</p>
               <p>• Animez vos cours en temps réel avec scores et classements</p>
+              <p>• Jouez en solo ou en mode multi-joueurs</p>
               <p>• Support natif de LaTeX pour les formules mathématiques</p>
-              <p>• Jouez en solo, en duel ou en mode multi-joueurs</p>
               {/* <p>• Interface adaptée mobile, tablette et ordinateur</p> */}
             </div>
           </div>
@@ -126,8 +116,18 @@ export default function Home() {
               </a>
             </div>
           </div>
+          {/* Avertissement développement en bas de page */}
+          <div className="w-full mt-10">
+            <div className="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg p-4 shadow-sm text-base">
+              <strong>⚠️ En développement :</strong> certaines fonctionnalités peuvent manquer et le service être interrompu pour mise à jour.
+              Auto-hébergez l&apos;application si possible.
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';

@@ -7,8 +7,6 @@ import type {
 // Import all dashboard payloads except GameControlStatePayload
 import type {
     JoinDashboardPayload,
-    PauseTimerPayload,
-    StartTimerPayload,
     SetQuestionPayload,
     LockAnswersPayload,
     EndGamePayload,
@@ -16,7 +14,6 @@ import type {
     DashboardTimerUpdatedPayload,
     DashboardAnswersLockChangedPayload,
     DashboardGameStatusChangedPayload,
-    DashboardParticipantUpdatePayload,
     DashboardAnswerStatsUpdatePayload,
     QuestionForDashboard
 } from '@shared/types/socket/dashboardPayloads';
@@ -26,8 +23,6 @@ import type { GameControlStatePayload } from '@shared/types/socketEvents.zod.das
 // Re-export for local use
 export type {
     JoinDashboardPayload,
-    PauseTimerPayload,
-    StartTimerPayload,
     SetQuestionPayload,
     LockAnswersPayload,
     EndGamePayload,
@@ -35,7 +30,6 @@ export type {
     DashboardTimerUpdatedPayload,
     DashboardAnswersLockChangedPayload,
     DashboardGameStatusChangedPayload,
-    DashboardParticipantUpdatePayload,
     DashboardAnswerStatsUpdatePayload,
     QuestionForDashboard,
     // Only export canonical GameControlStatePayload from zod.dashboard

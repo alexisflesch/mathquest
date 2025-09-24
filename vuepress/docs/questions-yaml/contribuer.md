@@ -1,8 +1,8 @@
 ---
-title: Contribuer à la base commune de questions
+title: 🤝 Contribuer à la base commune de questions
 ---
 
-# Contribuer à la base commune de questions
+# 🤝 Contribuer à la base commune de questions
 
 Vous souhaitez enrichir la base de questions partagée de MathQuest (hébergée sur GitHub) ? Voici comment proposer vos propres questions et les rendre accessibles à tous.
 
@@ -13,7 +13,7 @@ Vous souhaitez enrichir la base de questions partagée de MathQuest (hébergée 
 La structure des dossiers est organisée par **Niveau** (`CP`, `CE1`, ...), puis **Discipline**, puis éventuellement **thème** ou **auteur**.
 
 
-## 1. Préparer vos fichiers YAML
+## 📝 1. Préparer vos fichiers YAML
 - Utilisez un éditeur de texte pour créer vos fichiers YAML. Préférez un éditeur qui supporte la coloration syntaxique YAML (comme VSCode, Sublime Text, etc.).
 - Rédigez vos questions au format YAML en respectant la [structure officielle](./README.md).
 - Utilisez les clés en anglais (`uid`, `text`, `answerOptions`, etc.), mais les valeurs (énoncés, thèmes, etc.) peuvent être en français.
@@ -23,7 +23,7 @@ La structure des dossiers est organisée par **Niveau** (`CP`, `CE1`, ...), puis
 - **Attention**: les sauts de ligne dans le yaml seront conservés dans l'affichage final ! C'est un parti pris pour éviter l'utilisation de balises HTML et pour simplifier l'expérience utilisateur lors de la rédaction des questions.
 
 
-## 2. Proposer une contribution
+## 🚀 2. Proposer une contribution
 
 Deux possibilités :
 - **Contact direct (recommandé pour débuter)** : envoyez vos fichiers ou questions à alexis.flesch@gmail.com (idéal si vous n'êtes pas à l'aise avec GitHub).
@@ -32,13 +32,13 @@ Deux possibilités :
     - Ajoutez vos fichiers YAML dans le bon dossier (`questions/6e/`, etc.), puis ouvrez une Pull Request vers la branche principale du dépôt d'origine. Décrivez brièvement votre contribution (niveau, thèmes, nombre de questions, etc.).
 
 
-## 3. Ajouter vos fichiers/questions
+## 📂 3. Ajouter vos fichiers/questions
 
 - Placez vos fichiers YAML dans le dossier approprié (ex : `questions/6e/`, `questions/test/`, etc.).
 - Respectez l'organisation existante (un fichier par question ou un fichier pour un lot, selon le dossier).
 
 
-## 4. Vérifier la validité
+## ✅ 4. Vérifier la validité
 
 - Relisez soigneusement chaque question avant de proposer une contribution.
 - Utilisez le script d'import local pour vérifier que vos fichiers sont valides et importables (dans `scripts/import_questions.py`).
@@ -50,15 +50,15 @@ Deux possibilités :
 - Corrigez toute erreur de format ou de validation.
 
 
-## 5. Revue et intégration
+## 🔎 5. Revue et intégration
 
 - Les mainteneurs vérifieront la qualité, la cohérence et l'absence de doublons.
 - Après validation, vos questions seront intégrées à la base commune et disponibles pour tous !
 
 
-## 6. Bonnes pratiques et conventions
+## 🌟 6. Bonnes pratiques et conventions
 
-Pour les niveaux, utilisez les noms standards : `6e`, `5e`, ..., `L1`, `L2`, `L3`, `M1`, `M2`. Pour les disciplines, les thèmes et les "tags", vous pouvez vous référer aux menus déroulants ci-dessous. Si vous souhaitez améliorer la nomenclature ou proposer de nouveaux thèmes/tags, n'hésitez pas à le mentionner dans votre contribution.
+Pour les niveaux, utilisez les noms standards : `CP`, `CE1`, ..., `L1`, `L2`, `L3`, `M1`, `M2`. Pour les disciplines, les thèmes et les "tags", vous pouvez vous référer aux menus déroulants ci-dessous. Si vous souhaitez améliorer la nomenclature ou proposer de nouveaux thèmes/tags, n'hésitez pas à le mentionner dans votre contribution.
 
 <QuestionsExplorer />
 

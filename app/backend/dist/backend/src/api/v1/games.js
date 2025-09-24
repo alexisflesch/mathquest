@@ -53,6 +53,7 @@ exports.__setGameParticipantServiceForTesting = __setGameParticipantServiceForTe
 router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(schemas_1.CreateGameRequestSchema), async (req, res) => {
     try {
         // Debug: Log the full request body, user, and headers
+        console.log('GAMES API HIT - req.user:', req.user, 'playMode:', req.body.playMode);
         logger.info('Games POST request body debug', {
             fullBody: req.body,
             keys: Object.keys(req.body),
@@ -69,16 +70,28 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             });
             return;
         }
+        logger.info('Games API - playMode check passed', { playMode });
         // Use unified user model or allow student ID
         let userId = undefined;
         let role = undefined;
         if (req.user) {
             userId = req.user.userId;
             role = req.user.role;
+            logger.info('Games API - using authenticated user', { userId, role });
         }
         else if (initiatorStudentId) {
             userId = initiatorStudentId;
             role = 'STUDENT';
+            logger.info('Games API - using initiatorStudentId', { userId, role });
+        }
+        else if (playMode === 'practice') {
+            // Allow guest users to create practice games
+            userId = `guest-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            role = 'GUEST';
+            logger.info('Games API - allowing guest practice game', { userId, role, playMode });
+        }
+        else {
+            logger.info('Games API - no authentication path available', { playMode, hasUser: !!req.user, initiatorStudentId });
         }
         // Allow GUEST users as well as STUDENT and TEACHER
         if (!userId || !role || !['STUDENT', 'TEACHER', 'GUEST'].includes(role.toUpperCase())) {
@@ -102,6 +115,14 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
                     nbOfQuestions
                 });
                 finalgameTemplateId = template.id;
+                // For practice sessions, update the practiceSettings to include the newly created gameTemplateId
+                if (playMode === 'practice' && settings && typeof settings === 'object' && 'practiceSettings' in settings) {
+                    settings.practiceSettings.gameTemplateId = template.id;
+                    logger.info({
+                        gameTemplateId: template.id,
+                        practiceSettings: settings.practiceSettings
+                    }, 'Updated practiceSettings with gameTemplateId for student-created practice session');
+                }
             }
             catch (err) {
                 res.status(400).json({ error: err.message || 'Failed to create game template' });

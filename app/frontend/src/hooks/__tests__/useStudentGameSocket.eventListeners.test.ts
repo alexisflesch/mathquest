@@ -1,8 +1,10 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
-import { useStudentGameSocket, AnswerReceived } from '../useStudentGameSocket';
+import { useStudentGameSocket } from '../useStudentGameSocket';
 import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
 import type { GameTimerState } from '@shared/types/core/timer';
+import type { AnswerReceivedPayload } from '@shared/types/socketEvents';
+import type { GameEndedPayload } from '@shared/types/socket/payloads';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
@@ -98,19 +100,15 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        // Canonical payload for LiveQuestionPayload
-        const questionPayload: LiveQuestionPayload = {
-            question: {
-                uid: 'q1',
-                text: 'What is 2+2?',
-                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
-                answerOptions: ['3', '4', '5', '6']
-                // explanation and correctAnswers removed for security
-            },
-            timer: createTimerState(30000, 'q1'),
-            questionIndex: 0,
+        // Canonical payload for game_question - direct question object
+        const questionPayload = {
+            uid: 'q1',
+            text: 'What is 2+2?',
+            questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
+            timeLimit: 30,
+            currentQuestionIndex: 0,
             totalQuestions: 5,
-            questionState: 'active'
+            multipleChoiceQuestion: { answerOptions: ['3', '4', '5', '6'] }
         };
 
         act(() => {
@@ -123,7 +121,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.currentQuestion).toEqual(questionPayload.question);
+            expect(result.current.gameState.currentQuestion).toEqual(questionPayload);
             expect(result.current.gameState.questionIndex).toBe(0);
             expect(result.current.gameState.totalQuestions).toBe(5);
             // Timer state is now managed by useSimpleTimer hook
@@ -143,19 +141,15 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        // Canonical payload for LiveQuestionPayload
-        const questionPayload: LiveQuestionPayload = {
-            question: {
-                uid: 'q1',
-                text: 'What is 2+2?',
-                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
-                answerOptions: ['3', '4', '5', '6']
-                // explanation and correctAnswers removed for security
-            },
-            timer: createTimerState(30000, 'q1', 'pause'),
-            questionIndex: 0,
+        // Canonical payload for game_question - direct question object
+        const questionPayload = {
+            uid: 'q1',
+            text: 'What is 2+2?',
+            questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
+            timeLimit: 30,
+            currentQuestionIndex: 0,
             totalQuestions: 5,
-            questionState: 'paused'
+            multipleChoiceQuestion: { answerOptions: ['3', '4', '5', '6'] }
         };
 
         act(() => {
@@ -223,10 +217,10 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const answerResponse: AnswerReceived = {
-            received: true,
-            correct: true,
-            questionUid: 'q1'
+        const answerResponse: AnswerReceivedPayload = {
+            questionUid: 'q1',
+            timeSpent: 5000,
+            correct: true
         };
 
         act(() => {
@@ -238,7 +232,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
         });
     });
 
-    it('should handle answer_received rejection event', async () => {
+    it('should handle answer_received failure event', async () => {
         const hookProps = {
             accessCode: 'TEST123',
             userId: 'user-123',
@@ -247,9 +241,10 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const answerResponse: AnswerReceived = {
-            rejected: true,
-            message: 'Too late to answer'
+        const answerResponse: AnswerReceivedPayload = {
+            questionUid: 'q1',
+            timeSpent: 8000,
+            correct: false
         };
 
         act(() => {
@@ -295,7 +290,8 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const gameResults = {
+        const gameResults: GameEndedPayload = {
+            accessCode: 'TEST123',
             score: 85,
             totalQuestions: 5,
             correct: 4

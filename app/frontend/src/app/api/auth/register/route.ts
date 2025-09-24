@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BACKEND_API_BASE_URL } from '@/config/api';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import {
+    RegisterRequestSchema,
+    RegisterResponseSchema,
+    ErrorResponseSchema,
+    type RegisterRequest,
+    type RegisterResponse,
+    type ErrorResponse
+} from '@shared/types/api/schemas';
 
 /**
  * Next.js API route that proxies registration requests to the backend
@@ -8,7 +16,26 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
  */
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (jsonError) {
+            return NextResponse.json(
+                { error: 'Invalid JSON in request body' },
+                { status: 400 }
+            );
+        }
+
+        // Validate the request body
+        let validatedRequest: RegisterRequest;
+        try {
+            validatedRequest = RegisterRequestSchema.parse(body);
+        } catch (validationError: any) {
+            return NextResponse.json(
+                { error: 'Invalid request data', details: validationError.errors },
+                { status: 400 }
+            );
+        }
 
         // Forward the request to the backend registration endpoint
         const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/auth/register`, {
@@ -16,7 +43,7 @@ export async function POST(request: NextRequest) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify(validatedRequest),
         });
 
         if (!backendResponse.ok) {

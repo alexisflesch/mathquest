@@ -1,0 +1,321 @@
+- uid: "gpt5-ce1-math-calcul-001"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Addition"
+  text: "Camille a 27 billes. Son ami lui en donne 15 de plus. Combien de billes a Camille maintenant ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "additions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 42
+  explanation: "On calcule 27 + 15 = 42."
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-002"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Soustraction"
+  text: "Paul a 56 cartes. Il en perd 20 dans la cour. Combien de cartes lui reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "soustractions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 36
+  explanation: "On calcule 56 - 20 = 36."
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-nombres-001"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Comparer des nombres"
+  text: "Quel est le plus grand nombre parmi ces propositions ?"
+  questionType: "single_choice"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "84"
+    - "92"
+    - "76"
+    - "59"
+  correctAnswers: [false, true, false, false]
+  explanation: "92 est le plus grand des quatre nombres proposés."
+  feedbackWaitTime: 10
+
+- uid: "gpt5-ce1-math-calcul-003"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Addition"
+  text: "Léa a 34 billes. Elle en gagne 9. Combien en a-t-elle maintenant ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "additions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 43
+  explanation: "34 + 9 = 43"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-004"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Addition"
+  text: "Tom a 18 autocollants. Sa mère lui en donne 7. Combien en a-t-il en tout ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "additions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 25
+  explanation: "18 + 7 = 25"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-005"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Addition"
+  text: "Il y a 45 élèves et 6 nouveaux arrivent. Combien d'élèves y aura-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "additions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 51
+  explanation: "45 + 6 = 51"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-006"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Addition"
+  text: "Dans un sac il y a 12 billes rouges et 14 billes bleues. Combien y en a-t-il au total ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "additions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 26
+  explanation: "12 + 14 = 26"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-007"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Soustraction"
+  text: "Émilie a 40 gommes. Elle en donne 13 à ses camarades. Combien lui en reste-t-il ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "soustractions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 27
+  explanation: "40 - 13 = 27"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-008"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Soustraction"
+  text: "Un panier contient 60 pommes, on en vend 22. Combien restent-ils ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "soustractions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 38
+  explanation: "60 - 22 = 38"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-009"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Soustraction"
+  text: "Il y a 33 élèves dans la classe de Jeanne, 9 sont absents aujourd'hui. Combien sont présents ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "soustractions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 24
+  explanation: "33 - 9 = 24"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-calcul-010"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Calcul mental - Soustraction"
+  text: "Un magasin avait 50 ballons, il en reste 17 après une fête. Combien ont été utilisés ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["calcul mental", "soustractions"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 33
+  explanation: "50 - 17 = 33"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-nombres-002"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Comparer des nombres"
+  text: "Parmi ces nombres, lequel est le plus petit ?"
+  questionType: "single_choice"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "48"
+    - "36"
+    - "52"
+    - "61"
+  correctAnswers: [false, true, false, false]
+  explanation: "36 est le plus petit"
+  feedbackWaitTime: 10
+
+- uid: "gpt5-ce1-math-nombres-003"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Comparer des nombres"
+  text: "Quel nombre est supérieur à 77 ?"
+  questionType: "single_choice"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "74"
+    - "80"
+    - "66"
+    - "77"
+  correctAnswers: [false, true, false, false]
+  explanation: "80 est supérieur à 77"
+  feedbackWaitTime: 10
+
+- uid: "gpt5-ce1-math-nombres-004"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Ordre croissant"
+  text: "Range par ordre croissant les nombres 45, 12 et 39"
+  questionType: "single_choice"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 25
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "12, 39, 45"
+    - "39, 12, 45"
+    - "45, 39, 12"
+    - "12, 45, 39"
+  correctAnswers: [true, false, false, false]
+  explanation: "12 < 39 < 45"
+  feedbackWaitTime: 10
+
+- uid: "gpt5-ce1-math-nombres-005"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Comparer des nombres"
+  text: "Parmi ces nombres, lequel est pair ?"
+  questionType: "single_choice"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "31"
+    - "42"
+    - "55"
+    - "67"
+  correctAnswers: [false, true, false, false]
+  explanation: "42 est pair"
+  feedbackWaitTime: 10
+
+- uid: "gpt5-ce1-math-donnees-002"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Lecture de pictogramme"
+  text: "Sur un pictogramme, 3 étoiles représentent 9 points. Combien 5 étoiles représentent-elles de points ?"
+  questionType: "numeric"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un pictogramme"]
+  timeLimit: 25
+  difficulty: 1
+  gradeLevel: "CE1"
+  correctAnswer: 15
+  explanation: "Si 3 étoiles valent 9 points, 1 étoile vaut 3 points, donc 5 étoiles valent 3x5=15 points"
+  feedbackWaitTime: 15
+
+- uid: "gpt5-ce1-math-donnees-004"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Interpréter un graphique simple"
+  text: "Un graphique montre que 10 enfants aiment les pommes, 8 préfèrent les poires. Quel est le fruit le moins aimé ?"
+  questionType: "single_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un graphique"]
+  timeLimit: 25
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "La pomme"
+    - "La poire"
+    - "Les deux"
+  correctAnswers: [false, true, false]
+  explanation: "8 < 10 donc les poires sont moins aimées"
+  feedbackWaitTime: 10
+
+- uid: "gpt5-ce1-math-donnees-005"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Question sur un tableau"
+  text: "Dans un tableau, 3 enfants ont choisi rouge, 2 bleu et 4 vert. Quel choix a le plus de votes ?"
+  questionType: "single_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un tableau"]
+  timeLimit: 25
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "Rouge"
+    - "Bleu"
+    - "Vert"
+  correctAnswers: [false, false, true]
+  explanation: "4 votes pour vert, c'est le plus grand nombre"
+  feedbackWaitTime: 10
+
+- uid: "gpt5-ce1-math-donnees-001"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Lecture de tableau simple"
+  text: "Dans la classe, 12 enfants préfèrent les pommes 🍎, 8 préfèrent les poires 🍐 et 5 préfèrent les bananes 🍌. Quel fruit est le plus apprécié ?"
+  questionType: "single_choice"
+  themes: ["Organisation et gestion de données"]
+  tags: ["lire un tableau"]
+  timeLimit: 25
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "Pommes"
+    - "Poires"
+    - "Bananes"
+  correctAnswers: [true, false, false]
+  explanation: "Les pommes ont 12 votes, c'est le plus grand nombre donc ce sont elles qui sont le plus appréciées."
+  feedbackWaitTime: 10

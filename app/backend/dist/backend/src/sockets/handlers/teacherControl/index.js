@@ -10,7 +10,6 @@ const timerAction_1 = require("./timerAction");
 const lockAnswers_1 = require("./lockAnswers");
 const endGame_1 = require("./endGame");
 const pauseTimer_1 = require("./pauseTimer");
-const disconnect_1 = require("./disconnect");
 const showCorrectAnswers_1 = require("./showCorrectAnswers");
 const toggleProjectionStats_1 = require("./toggleProjectionStats");
 const revealLeaderboardHandler_1 = require("./revealLeaderboardHandler");
@@ -53,8 +52,6 @@ function registerTeacherControlHandlers(io, socket) {
     // NEW: Handle reveal leaderboard (trophy button)
     logger.info({ event: events_1.TEACHER_EVENTS.REVEAL_LEADERBOARD }, 'Registering reveal_leaderboard handler');
     socket.on(events_1.TEACHER_EVENTS.REVEAL_LEADERBOARD, (0, revealLeaderboardHandler_1.revealLeaderboardHandler)(io, socket));
-    // Handle disconnect
-    logger.info('Registering disconnect handler');
-    socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));
+    // Note: Teacher disconnect handler is now called from connectionHandlers.ts to avoid conflicts
 }
 exports.default = registerTeacherControlHandlers;

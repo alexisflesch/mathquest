@@ -9,7 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.filterQuestionForClient = filterQuestionForClient;
 /**
  * Filters a database question object to only include data safe to send to clients.
- * Uses the canonical database format with answerOptions.
+ * Handles both polymorphic and legacy question formats.
  *
  * @param questionObject - The question object from the database (Prisma format)
  * @returns FilteredQuestion - The question data safe for client emission
@@ -18,16 +18,57 @@ function filterQuestionForClient(questionObject) {
     if (!questionObject) {
         throw new Error('Cannot filter null or undefined question object');
     }
-    return {
+    // DIAGNOSTIC: Log the entire question object to debug polymorphic structure
+    console.log(`[DIAGNOSTIC] filterQuestionForClient called for question ${questionObject.uid}:`, {
+        uid: questionObject.uid,
+        questionType: questionObject.questionType,
+        hasMultipleChoiceQuestion: !!questionObject.multipleChoiceQuestion,
+        hasNumericQuestion: !!questionObject.numericQuestion,
+        multipleChoiceQuestionData: questionObject.multipleChoiceQuestion,
+        numericQuestionData: questionObject.numericQuestion,
+        fullQuestionObject: JSON.stringify(questionObject, null, 2)
+    });
+    const baseQuestion = {
         uid: questionObject.uid,
         questionType: questionObject.questionType || questionObject.defaultMode,
         text: questionObject.text,
-        answerOptions: questionObject.answerOptions || [],
-        // Additional properties for frontend compatibility
-        timeLimit: questionObject.timeLimit,
+        timeLimit: questionObject.timeLimit, // MANDATORY
         gradeLevel: questionObject.gradeLevel,
         difficulty: questionObject.difficulty,
         themes: questionObject.themes,
-        // Note: correctAnswers and explanation are intentionally excluded for security
     };
+    // Handle multiple choice and single choice questions
+    if (questionObject.questionType === 'multipleChoice' || questionObject.defaultMode === 'multipleChoice' ||
+        questionObject.questionType === 'singleChoice' || questionObject.defaultMode === 'singleChoice') {
+        const answerOptions = questionObject.multipleChoiceQuestion?.answerOptions;
+        if (!answerOptions) {
+            console.error(`[DIAGNOSTIC] Missing answer options for question ${questionObject.uid}:`, {
+                questionType: questionObject.questionType,
+                defaultMode: questionObject.defaultMode,
+                multipleChoiceQuestion: questionObject.multipleChoiceQuestion,
+                hasMultipleChoiceQuestion: !!questionObject.multipleChoiceQuestion
+            });
+            throw new Error(`Multiple/single choice question ${questionObject.uid} is missing answer options`);
+        }
+        return {
+            ...baseQuestion,
+            multipleChoiceQuestion: {
+                answerOptions: answerOptions
+            }
+        };
+    }
+    // Handle numeric questions
+    if (questionObject.questionType === 'numeric' || questionObject.defaultMode === 'numeric') {
+        const unit = questionObject.numericQuestion?.unit;
+        const result = {
+            ...baseQuestion,
+            numericQuestion: {
+                // Convert null to undefined for Zod compatibility
+                ...(unit !== null && unit !== undefined ? { unit } : {})
+            }
+        };
+        return result;
+    }
+    // For other question types
+    return baseQuestion;
 }

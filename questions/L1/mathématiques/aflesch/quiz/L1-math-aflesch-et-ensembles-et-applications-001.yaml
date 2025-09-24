@@ -1,0 +1,199 @@
+# Questions de Mathématiques niveau L1 pour MathQuest
+# Thème : Ensembles et applications
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt1-ensembles-et-applications-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Appartenance et inclusion"
+  tags: ["appartenance", "inclusion"]
+  questionType: "multiple_choice"
+  timeLimit: 120
+  difficulty: 2
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Parmi ces assertions, lesquelles sont vraies ?
+  answerOptions:
+    - \( \sqrt{2} \in \mathbb{Q} \)
+    - \( \sqrt{2} \subset \mathbb{C} \)
+    - \( \left\{ \sqrt{2}, \pi \right\} \in \mathbb{R} \)
+    - \( \left\{ \sqrt{2}, \pi \right\} \subset \mathbb{C} \)
+    - \( \left\{ \varnothing \right\} \in \mathcal{P}(\mathbb{R}) \)
+    - \( \left\{ \varnothing \right\} \subset \mathcal{P}(\mathbb{R}) \)
+    - \( \left\{ \varnothing, \left\{ 2 \right\} \right\} \subset \mathcal{P}(\mathbb{Q}) \)
+    - \( \mathbb{Z} \subset \mathbb{C} \)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, true, true, true, true, true, false]
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-002"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Injection et surjection"
+  tags: ["injection", "surjection", "bijection"]
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 2
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Soit \(f\) l'application définie par:
+    \[ \begin{array}{ccccc}
+            f & \colon & \mathbb{C} & \rightarrow & \mathbb{R} \\
+              &        & z          & \mapsto     & |z|
+        \end{array}
+    \]
+  answerOptions:
+    - \(f\) n'est ni injective ni surjective.
+    - \(f\) est injective et non surjective
+    - \(f\) est non injective et surjective.
+    - \(f\) est injective et surjective.
+    - Aucune des réponses ci-dessus.
+  correctAnswers: [true, false, false, false, false]
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-003"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Injection et surjection"
+  tags: ["injection", "surjection", "bijection"]
+  questionType: "multiple_choice"
+  timeLimit: 120
+  difficulty: 2
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Comment choisir les ensembles \(E\) et \(F\) pour que l'application
+    \(f\colon E\rightarrow F\) définie par \(f(x)=x^2\) soit bijective?
+  answerOptions:
+    - \(E=[0,1]\) et \(F=[0,1]\)
+    - \(E=[-1,1]\) et \(F=[0,1]\)
+    - \(E=\mathbb{R}\) et \(F=\mathbb{R}\)
+    - Aucune des propositions ci-dessus
+  correctAnswers: [true, false, false, false]
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-003b"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Injection et surjection"
+  tags: ["injection", "surjection", "bijection"]
+  questionType: "multiple_choice"
+  timeLimit: 120
+  difficulty: 2
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Soit \(f\) une application de \(E=\left\{ 1;2 \right\}\) vers \(F=\left\{ 3;4;5 \right\}\). Alors:
+  answerOptions:
+    - \(f\) ne peut pas être injective
+    - \(f\) ne peut pas être surjective
+    - \(f\) ne peut pas être bijective
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, true, true, false]
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-003c"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Injection et surjection"
+  tags: ["injection", "surjection", "bijection"]
+  questionType: "numeric"
+  timeLimit: 120
+  difficulty: 2
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Combien y a-t-il d'éléments dans l'ensemble des parties de
+    \(\{ \{1;2\};2\}\)?
+  correctAnswer: 4
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-004"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Nombre de parties d'un ensemble"
+  tags: ["parties"]
+  questionType: "numeric"
+  timeLimit: 120
+  difficulty: 2
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Combien y a-t-il d'éléments dans l'ensemble des parties de
+    \(\{ \{1;2\};2\}\)?
+  correctAnswer: 4
+
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-005"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Inclusion d'ensembles"
+  tags: ["inclusion", "parties"]
+  questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
+  timeLimit: 60
+  difficulty: 2
+  text: |
+    Soit \(E=\{ a;b \}\). Alors, \(\{ \{a\};\{b\} \}\) est inclus dans \(\mathcal{P}(E)\).
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers: [true, false]
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-006"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Complémentaire d'un ensemble"
+  tags: ["complémentaire", "union", "intersection"]
+  excludedFrom: ["practice", "tournament"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Soient \(E\) un ensemble et \(A\) et \(B\) deux parties de \(E\). Le complémentaire
+    de \(A \cup \bar{B}\) est :
+  answerOptions:
+    - \(A \cap \bar{B}\)
+    - \(A \cup \bar{B}\)
+    - \(\bar{A} \cap B\)
+    - \(\bar{A} \cup B\)
+    - Aucune des propositions ci-dessus
+  correctAnswers: [false, false, true, false, false]
+
+
+
+- uid: "aflesch-mt1-ensembles-et-applications-007"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Ensembles et applications"]
+  title: "Élément d'un ensemble"
+  tags: ["appartenance", "inclusion"]
+  excludedFrom: ["practice", "tournament"]
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 2
+  text: |
+    Soit \(E\) un ensemble. L'assertion «\(a\) est un élément de \(E\)»
+    est synonyme de :
+  answerOptions:
+    - \( \{a\} \subset E \)
+    - \( \{a\} \in E \)
+    - \( a \in \mathscr{P}(E) \)
+    - \( a \subset E \)
+    - Aucune des propositions ci-dessus
+  correctAnswers: [true, false, false, false, false]

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, Target, Dumbbell, SquareArrowRight, BarChart3 } from "lucide-react";
+import { Users, Target, Dumbbell, SquareArrowRight, BarChart3, Info } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
 import { TournamentListItem, MyTournamentsResponse, MyTournamentsResponseSchema } from '@shared/types/api/schemas';
 import { useAuth } from '@/components/AuthProvider';
@@ -106,7 +106,8 @@ export default function MyTournamentsPage() {
             apiUrl = `my-tournaments?mode=${mode}`;
         } else if (userState === 'student' || userState === 'guest') {
             const cookie_id = typeof window !== "undefined" ? localStorage.getItem("mathquest_cookie_id") : null;
-            if (!cookie_id && !userProfile.userId) {
+            // For guests, don't require cookie_id - they can see empty list
+            if (userState === 'student' && !cookie_id && !userProfile.userId) {
                 setError("Identité utilisateur introuvable.");
                 setLoading(false);
                 return;
@@ -135,7 +136,12 @@ export default function MyTournamentsPage() {
         // Wait for auth to finish loading
         if (isLoading) return;
 
-
+        // Redirect anonymous users or show message
+        if (userState === 'anonymous') {
+            setError("Veuillez vous connecter ou jouer en tant qu'invité pour voir vos tournois.");
+            setLoading(false);
+            return;
+        }
 
         loadGames(gameMode);
     }, [isLoading, isAuthenticated, userState, userProfile.userId, gameMode]);
@@ -184,7 +190,7 @@ export default function MyTournamentsPage() {
                                 <Link
                                     href={isCompleted ? `/leaderboard/${game.code}` : `/live/${game.code}`}
                                     className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center"
-                                    title={isCompleted ? "Voir le classement" : "Rejoindre le lobby"}
+                                    title={isCompleted ? "Voir le classement" : "Rejoindre l'activité"}
                                 >
                                     {isCompleted ? (
                                         <BarChart3 style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
@@ -196,7 +202,7 @@ export default function MyTournamentsPage() {
                                 <Link
                                     href={`/leaderboard/${game.code}`}
                                     className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center"
-                                    title={isCompleted ? "Voir les statistiques" : "Voir le classement"}
+                                    title={isCompleted ? "Voir les résultats" : "Voir le classement"}
                                 >
                                     {isCompleted ? (
                                         <BarChart3 style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
@@ -227,7 +233,7 @@ export default function MyTournamentsPage() {
                             <li key={t.id} className="flex items-center gap-4 pt-0 pb-0 pl-2 pr-1 rounded bg-base-200">
                                 <span className="font-mono text-lg">{t.code}</span>
                                 <span className="flex-1 truncate">{formatActivityDate(t)}</span>
-                                <Link href={`/live/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Rejoindre le lobby">
+                                <Link href={`/live/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Rejoindre l'activité">
                                     <SquareArrowRight style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
                                 </Link>
                             </li>
@@ -269,7 +275,7 @@ export default function MyTournamentsPage() {
                             <span className="font-mono text-lg">{t.code}</span>
                             <span className="flex-1 truncate">{formatActivityDate(t)}</span>
                             {t.position && <span className="badge badge-secondary text-xs px-2 py-1">#{t.position}</span>}
-                            <Link href={`/leaderboard/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Voir les statistiques">
+                            <Link href={`/leaderboard/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Voir les résultats">
                                 <BarChart3 style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
                             </Link>
                         </li>
@@ -284,6 +290,17 @@ export default function MyTournamentsPage() {
             <div className="card w-full max-w-2xl shadow-xl bg-base-100 my-6">
                 <div className="card-body items-center gap-8 w-full">
                     <h1 className="card-title text-3xl text-center mb-8">Mes activités</h1>
+
+                    {/* Guest warning banner */}
+                    {showGuestWarning && (
+                        <div className="alert alert-info w-full">
+                            <Info className="stroke-current shrink-0 w-6 h-6" />
+                            <div>
+                                <h3 className="font-bold">Session invité</h3>
+                                <div className="text-xs">Vos données sont sauvegardées temporairement. Enregistrez votre compte pour conserver votre progression.</div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Tab Navigation */}
                     <GameModeToggle

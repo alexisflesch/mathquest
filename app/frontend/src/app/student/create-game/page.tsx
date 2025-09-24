@@ -21,9 +21,11 @@ import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import EnhancedSingleSelectDropdown from "@/components/EnhancedSingleSelectDropdown";
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
-import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
+import { QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
+import { QuestionsFiltersResponseSchema, type QuestionsFiltersResponse } from '@shared/types/api/schemas';
 import { useAuth } from '@/components/AuthProvider';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { sortGradeLevels } from '@/utils/gradeLevelSort';
 
 // Create a logger for this component
 const logger = createLogger('CreateTournament');
@@ -55,13 +57,22 @@ function StudentCreateTournamentPageInner() {
     const [availableThemes, setAvailableThemes] = useState<string[]>([]);
 
     useEffect(() => {
-        makeApiRequest<QuestionsFiltersResponse>('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
+        const params = new URLSearchParams();
+        if (isTraining) {
+            params.append('mode', 'practice');
+        } else {
+            params.append('mode', 'tournament');
+        }
+
+        const url = params.toString() ? `/api/questions/filters?${params.toString()}` : '/api/questions/filters';
+
+        makeApiRequest<QuestionsFiltersResponse>(url, undefined, undefined, QuestionsFiltersResponseSchema)
             .then((data) => {
-                // Filter out null values to match local Filters interface
+                // Extract values from FilterOption objects to match local Filters interface
                 const cleanedData = {
-                    gradeLevel: data.gradeLevel.filter((n): n is string => n !== null),
-                    disciplines: data.disciplines,
-                    themes: data.themes
+                    gradeLevel: sortGradeLevels(data.gradeLevel.map(option => option.value)),
+                    disciplines: data.disciplines.map(option => option.value),
+                    themes: data.themes.map(option => option.value)
                 };
                 setFilters(cleanedData);
                 logger.debug("Loaded filters", cleanedData);
@@ -69,7 +80,7 @@ function StudentCreateTournamentPageInner() {
             .catch((err) => {
                 logger.error("Error loading filters", err);
             });
-    }, []);
+    }, [isTraining]);
 
     // Fetch disciplines when niveau changes
     useEffect(() => {
@@ -81,10 +92,15 @@ function StudentCreateTournamentPageInner() {
             // Use secure filters API to get disciplines filtered by niveau
             const params = new URLSearchParams();
             params.append('gradeLevel', niveau);
+            if (isTraining) {
+                params.append('mode', 'practice');
+            } else {
+                params.append('mode', 'tournament');
+            }
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    setAvailableDisciplines(data.disciplines.sort());
+                    setAvailableDisciplines(data.disciplines.filter(option => option.isCompatible).map(option => option.value).sort());
                 })
                 .catch(err => {
                     logger.error("Error loading disciplines", err);
@@ -96,21 +112,26 @@ function StudentCreateTournamentPageInner() {
             setDiscipline("");
             setThemes([]);
         }
-    }, [niveau]);
+    }, [niveau, isTraining]);
 
     // Fetch themes when discipline changes
     useEffect(() => {
-        if (niveau && discipline) {
+        if (discipline && niveau) {
             setThemes([]);
 
-            // Use secure filters API to get themes filtered by niveau and discipline
+            // Use secure filters API to get themes filtered by discipline and niveau
             const params = new URLSearchParams();
             params.append('gradeLevel', niveau);
             params.append('discipline', discipline);
+            if (isTraining) {
+                params.append('mode', 'practice');
+            } else {
+                params.append('mode', 'tournament');
+            }
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    setAvailableThemes(data.themes.sort());
+                    setAvailableThemes(data.themes.filter(option => option.isCompatible).map(option => option.value).sort());
                 })
                 .catch(err => {
                     logger.error("Error loading themes", err);
@@ -120,9 +141,7 @@ function StudentCreateTournamentPageInner() {
             setAvailableThemes([]);
             setThemes([]);
         }
-    }, [niveau, discipline]);
-
-    // Check if enough questions exist for the selected filters
+    }, [discipline, niveau, isTraining]);    // Check if enough questions exist for the selected filters
     useEffect(() => {
         if (niveau && discipline && themes.length > 0) {
             setLoading(true);
@@ -135,6 +154,14 @@ function StudentCreateTournamentPageInner() {
                 discipline: discipline,
                 themes: themes.join(',')
             });
+
+            // Add mode parameter based on training flag
+            if (isTraining) {
+                listParams.append('mode', 'practice');
+            } else {
+                listParams.append('mode', 'tournament');
+            }
+
             makeApiRequest<string[]>(`/api/questions/list?${listParams.toString()}`)
                 .then((questions) => {
                     const count = questions.length;
@@ -343,6 +370,7 @@ function StudentCreateTournamentPageInner() {
                                 value={niveau}
                                 onChange={(val) => { setNiveau(val); setStep(2); }}
                                 placeholder="Niveau"
+                                data-testid="grade-level-dropdown"
                             />
                         </div>
                     )}
@@ -355,6 +383,7 @@ function StudentCreateTournamentPageInner() {
                                 value={discipline}
                                 onChange={(val) => { setDiscipline(val); setStep(3); }}
                                 placeholder="Discipline"
+                                data-testid="discipline-dropdown"
                             />
                         </div>
                     )}
@@ -368,14 +397,18 @@ function StudentCreateTournamentPageInner() {
                                 onChange={setThemes}
                                 placeholder="Thèmes"
                                 disabled={availableThemes.length === 0}
+                                data-testid="themes-dropdown"
                             />
-                            <button
-                                className="btn btn-primary btn-lg mt-2"
-                                disabled={themes.length === 0}
-                                onClick={() => setStep(4)}
-                            >
-                                Valider les thèmes
-                            </button>
+                            <div className="flex justify-end w-full">
+                                <button
+                                    className="btn btn-primary btn-sm mt-2"
+                                    disabled={themes.length === 0}
+                                    onClick={() => setStep(4)}
+                                    style={{ minWidth: 90 }}
+                                >
+                                    Valider
+                                </button>
+                            </div>
                         </div>
                     )}
                     {/* Step 4: Number of Questions */}
@@ -391,14 +424,14 @@ function StudentCreateTournamentPageInner() {
                                         style={
                                             numQuestions === n
                                                 ? {
-                                                    background: 'var(--navbar)',
+                                                    background: 'var(--primary)',
                                                     color: 'var(--primary-foreground)',
-                                                    borderColor: 'var(--navbar)'
+                                                    borderColor: 'var(--primary)'
                                                 }
                                                 : {
                                                     background: 'var(--dropdown)',
                                                     color: 'var(--dropdown-foreground)',
-                                                    borderColor: 'var(--navbar)'
+                                                    borderColor: 'var(--primary)'
                                                 }
                                         }
                                         onClick={() => setNumQuestions(n)}
@@ -408,12 +441,15 @@ function StudentCreateTournamentPageInner() {
                                     </button>
                                 ))}
                             </div>
-                            <button
-                                className="btn btn-primary btn-lg mt-2"
-                                onClick={() => setStep(5)}
-                            >
-                                Valider
-                            </button>
+                            <div className="flex justify-end w-full">
+                                <button
+                                    className="btn btn-primary btn-sm mt-2"
+                                    onClick={() => setStep(5)}
+                                    style={{ minWidth: 90 }}
+                                >
+                                    Valider
+                                </button>
+                            </div>
                         </div>
                     )}
                     {/* Step 5: Confirmation */}
@@ -440,13 +476,16 @@ function StudentCreateTournamentPageInner() {
                                     ? "Mode entraînement : vous allez être redirigé vers une session d'entraînement personnalisée."
                                     : "Le tournoi est prêt ! Vous allez être redirigé vers le lobby, où vous pourrez récupérer le lien à partager."}
                             </div>
-                            <button
-                                className="btn btn-primary w-fit self-center mt-4"
-                                disabled={!canCreate || loading}
-                                onClick={handleCreateTournament}
-                            >
-                                {loading ? 'Création...' : isTraining ? 'Commencer l\'entraînement' : 'Continuer'}
-                            </button>
+                            <div className="flex justify-end w-full mt-4">
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    disabled={!canCreate || loading}
+                                    onClick={handleCreateTournament}
+                                    style={{ minWidth: 120 }}
+                                >
+                                    {loading ? 'Création...' : isTraining ? 'Démarrer' : 'Continuer'}
+                                </button>
+                            </div>
                             {/* The tournament code and copy button are no longer shown after creation */}
                             {/* 
                             {created && tournamentCode && (

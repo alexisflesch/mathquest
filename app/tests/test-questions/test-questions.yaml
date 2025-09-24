@@ -1,0 +1,77 @@
+# Test Questions for E2E Testing - 5 Second Time Limits
+# These are mock questions for testing purposes only
+
+- uid: "test-q1"
+  author: "test"
+  discipline: "Mathématiques"
+  title: "Test Question 1"
+  text: "Combien font 2 + 2 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["test"]
+  timeLimit: 5
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+  explanation: "2 + 2 = 4"
+  feedbackWaitTime: 2
+
+- uid: "test-q2"
+  author: "test"
+  discipline: "Mathématiques"
+  title: "Test Question 2"
+  text: "Combien font 3 + 1 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["test"]
+  timeLimit: 5
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+  explanation: "3 + 1 = 4"
+  feedbackWaitTime: 2
+
+- uid: "test-q3"
+  author: "test"
+  discipline: "Mathématiques"
+  title: "Test Question 3"
+  text: "Combien font 1 + 3 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["test"]
+  timeLimit: 5
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+  explanation: "1 + 3 = 4"
+  feedbackWaitTime: 2
+
+- uid: "test-q4"
+  author: "test"
+  discipline: "Mathématiques"
+  title: "Test Question 4"
+  text: "Combien font 4 + 0 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["test"]
+  timeLimit: 5
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+  explanation: "4 + 0 = 4"
+  feedbackWaitTime: 2
+
+- uid: "test-q5"
+  author: "test"
+  discipline: "Mathématiques"
+  title: "Test Question 5"
+  text: "Combien font 2 + 2 + 0 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["test"]
+  timeLimit: 5
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+  explanation: "2 + 2 + 0 = 4"
+  feedbackWaitTime: 2

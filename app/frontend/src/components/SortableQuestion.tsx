@@ -30,11 +30,14 @@ export interface SortableQuestionProps {
     liveStatus?: 'run' | 'pause' | 'stop';
     onImmediateUpdateActiveTimer?: (newTime: number) => void; // Gardé pour la synchro active
     disabled?: boolean;
-    stats?: number[]; // Accepts number[] for per-question stats bar
+    stats?: { type: 'multipleChoice'; data: number[] } | { type: 'numeric'; data: number[] }; // Accepts stats for per-question display
     durationMs: number; // Canonical duration from parent
     onResume?: (uid: string) => void;
     // Modernization: allow extra className for question state
     className?: string;
+    // NEW: Control behavior props
+    hideExplanation?: boolean; // Hide explanation/justification section
+    keepTitleWhenExpanded?: boolean; // Keep title visible when expanded (only hide fake titles)
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -70,7 +73,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs, className }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs, className, hideExplanation, keepTitleWhenExpanded }: SortableQuestionProps) => {
     // ...existing code...
 
     // ...existing code...
@@ -86,8 +89,9 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         transition,
         zIndex: isDragging ? 10 : undefined,
         opacity: isDragging ? 0.7 : 1,
-        touchAction: 'none', // Important pour dnd-kit
-    };
+        // Allow native touch scrolling when not dragging; only disable touch-action while actively dragging
+        touchAction: isDragging ? 'none' : undefined,
+    } as React.CSSProperties;
 
     // --- États et Refs pour l'édition du timer (conservés ici) ---
     // SUPPRESSION de localTimeLeftMs pour l'affichage du timer (utilise liveTimeLeft)
@@ -160,7 +164,6 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     // Debug log for timer state after stop
     React.useEffect(() => {
         if (isActive && liveStatus === 'stop') {
-            // eslint-disable-next-line no-console
             console.log('[DEBUG][SortableQuestion] After stop:', {
                 q_uid: q.uid,
                 durationMs,
@@ -368,7 +371,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
 
     // JSX pour afficher les réponses pendant l'édition
     const answersWhileEditing = editingTimer && open ? (
-        <div className="transition-all duration-300 ease-in-out overflow-hidden max-h-[500px] opacity-100">
+        <div className="transition-all duration-300 ease-in-out max-h-[500px] opacity-100">
             <ul className={`ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none no-top-border ${isActive ? "answers-selected" : ""}`} style={{ borderTop: '1px solid var(--border-color)' }}>
                 <li className="mb-2 font-medium text-base text-couleur-global-neutral-700">
                     <MathJaxWrapper>{q.text}</MathJaxWrapper>
@@ -421,6 +424,8 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         onEditTimer={onEditTimer} // Pass down for test button
                         showSet44sButton={false} // Only set true in teacher dashboard context
                         stats={stats}
+                        hideExplanation={hideExplanation}
+                        keepTitleWhenExpanded={keepTitleWhenExpanded}
                     />
                 )}
                 {/* Affiche les réponses si en mode édition ET si elles sont ouvertes */}

@@ -95,6 +95,7 @@ export const joinGamePayloadSchema = z.object({
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),
   username: z.string().min(1, { message: "Username cannot be empty." }),
   avatarEmoji: z.string().optional(),
+  isDiffered: z.boolean().optional(),
 });
 
 // Leave game payload schema for unified flow
@@ -153,20 +154,52 @@ export const notificationPayloadSchema = z.object({
 // === CANONICAL SPLIT: Student vs. Teacher Question Payloads ===
 
 // Student: never receives correctAnswers or explanation
-export const questionDataForStudentSchema = z.object({
+const rawQuestionDataForStudentSchema = z.object({
   uid: z.string().min(1, { message: "Question UID cannot be empty." }),
   title: z.string().min(1).optional(),
   text: z.string().min(1, { message: "Question text cannot be empty." }),
-  answerOptions: z.array(z.string().min(1)).min(1, { message: "At least one answer option is required." }),
   questionType: z.string().min(1, { message: "Question type cannot be empty." }),
   timeLimit: z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }),
   currentQuestionIndex: z.number().int({ message: "Question index must be an integer." }).nonnegative({ message: "Question index cannot be negative." }).optional(),
   totalQuestions: z.number().int({ message: "Total questions must be an integer." }).positive({ message: "Total questions must be positive." }).optional(),
+
+  // Polymorphic question data (student doesn't get correct answers)
+  multipleChoiceQuestion: z.object({
+    answerOptions: z.array(z.string().min(1)).min(1, { message: "At least one answer option is required." })
+  }).optional(),
+  numericQuestion: z.object({
+    unit: z.string().optional()
+  }).optional(),
+
+  // Legacy fields for backward compatibility
+  answerOptions: z.array(z.string().min(1)).optional()
+});
+
+export const questionDataForStudentSchema = rawQuestionDataForStudentSchema.refine((data) => {
+  // For multiple choice questions, ensure answer options exist
+  if (data.questionType === 'multipleChoice') {
+    return !!(data.multipleChoiceQuestion || data.answerOptions);
+  }
+  return true;
+}, {
+  message: "Multiple choice questions must have answer options"
 });
 
 // Teacher/Projection: includes correctAnswers and explanation
-export const questionDataForTeacherSchema = questionDataForStudentSchema.extend({
-  correctAnswers: z.array(z.boolean()),
+export const questionDataForTeacherSchema = rawQuestionDataForStudentSchema.extend({
+  // Polymorphic question data with correct answers for teachers
+  multipleChoiceQuestion: z.object({
+    answerOptions: z.array(z.string().min(1)).min(1, { message: "At least one answer option is required." }),
+    correctAnswers: z.array(z.boolean())
+  }).optional(),
+  numericQuestion: z.object({
+    correctAnswer: z.number(),
+    tolerance: z.number().optional(),
+    unit: z.string().optional()
+  }).optional(),
+
+  // Legacy fields for backward compatibility
+  correctAnswers: z.array(z.boolean()).optional(),
   explanation: z.string().optional(),
 });
 
@@ -240,7 +273,7 @@ export const gameJoinedPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
   participant: participantDataSchema,
   gameStatus: z.enum(['pending', 'active', 'completed', 'archived']),
-  gameMode: z.enum(['tournament', 'quiz', 'practice', 'class']),
+  gameMode: z.enum(['tournament', 'quiz', 'practice']),
   differedAvailableFrom: z.string().datetime({ message: "Invalid datetime string for differedAvailableFrom. Must be an ISO string." }).optional(),
   differedAvailableTo: z.string().datetime({ message: "Invalid datetime string for differedAvailableTo. Must be an ISO string." }).optional(),
 });
@@ -254,7 +287,13 @@ export const requestNextQuestionPayloadSchema = z.object({
 // Canonical event payload schemas (for tournament-style events)
 export const correctAnswersPayloadSchema = z.object({
   questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
+  // For multiple choice questions
   correctAnswers: z.array(z.boolean()).optional(),
+  // For numeric questions
+  numericAnswer: z.object({
+    correctAnswer: z.number(),
+    tolerance: z.number().optional()
+  }).optional(),
   /**
    * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
    */
@@ -274,7 +313,7 @@ export const gameStateUpdatePayloadSchema = z.object({
   totalQuestions: z.number().int().positive().optional(),
   timer: z.number().int().nonnegative().optional(),
   participants: z.array(participantDataSchema).optional(),
-  gameMode: z.enum(['tournament', 'quiz', 'practice', 'class']).optional(),
+  gameMode: z.enum(['tournament', 'quiz', 'practice']).optional(),
 }).catchall(z.any()); // Allow additional properties for flexibility
 
 // Answer received payload schema
@@ -428,34 +467,9 @@ export const serverToClientEventsSchema = z.object({
   feedback: z.function().args(feedbackPayloadSchema).returns(z.void()),
 });
 
-// Additional teacher control schemas
-export const startTimerPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }).optional(),
-  accessCode: z.string().min(1, { message: "Access code cannot be empty." }).optional(),
-  durationMs: z.number().int().positive({ message: "durationMs must be a positive integer (ms)." }),
-}).refine(data => data.gameId || data.accessCode, {
-  message: "Either gameId or accessCode must be provided.",
-});
-
-export const pauseTimerPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }).optional(),
-  accessCode: z.string().min(1, { message: "Access code cannot be empty." }).optional(),
-}).refine(data => data.gameId || data.accessCode, {
-  message: "Either gameId or accessCode must be provided.",
-});
-
 // Tournament schemas
 export const startTournamentPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
-});
-
-// Projector schemas
-export const joinProjectorPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }),
-});
-
-export const leaveProjectorPayloadSchema = z.object({
-  gameId: z.string().min(1, { message: "Game ID cannot be empty." }),
 });
 
 // DEPRECATED LOBBY SCHEMAS - Use unified join flow instead

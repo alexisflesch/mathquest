@@ -128,13 +128,10 @@ const EnhancedMultiSelectDropdown: React.FC<EnhancedMultiSelectDropdownProps> = 
                     }}
                 >
                     {options
-                        .filter(option => {
-                            // Show option if it's compatible OR if user has selected it (even if incompatible)
-                            return option.isCompatible || (selected ?? []).includes(option.value);
-                        })
                         .map((option) => {
                             const isSelected = (selected ?? []).includes(option.value);
                             const isIncompatible = !option.isCompatible;
+                            if (!isSelected && isIncompatible) return null;
 
                             return (
                                 <label
@@ -160,7 +157,7 @@ const EnhancedMultiSelectDropdown: React.FC<EnhancedMultiSelectDropdownProps> = 
                                             className="ml-2 flex-shrink-0"
                                             title={incompatibleTooltip}
                                         >
-                                            <AlertTriangle size={14} className="text-warning-foreground" />
+                                            <AlertTriangle size={14} className="text-orange-500" />
                                         </div>
                                     )}
                                 </label>

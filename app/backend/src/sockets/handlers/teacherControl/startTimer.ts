@@ -4,11 +4,9 @@ import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/services/gameStateService';
 import createLogger from '@/utils/logger';
 import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
-import { startTimerPayloadSchema, dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
+import { dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import type { GameTimerState } from '@shared/types/core/timer';
-
-import { StartTimerPayload } from './types';
 
 // Create a handler-specific logger
 const logger = createLogger('StartTimerHandler');

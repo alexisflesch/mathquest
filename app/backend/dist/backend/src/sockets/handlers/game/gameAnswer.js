@@ -170,6 +170,7 @@ function gameAnswerHandler(io, socket, context) {
             }
             // Compute time penalty using canonical timer for all modes
             let canonicalElapsedMs = undefined;
+            let totalPresentationMs = undefined;
             let timeSpentForSubmission = 0;
             if (timer) {
                 if (timer.totalPlayTimeMs !== undefined && timer.lastStateChange !== undefined) {
@@ -181,9 +182,18 @@ function gameAnswerHandler(io, socket, context) {
                     }
                     timeSpentForSubmission = canonicalElapsedMs ?? 0;
                 }
+                // FIX: Also calculate total presentation time for fair penalty calculation
+                if (timer.questionPresentedAt) {
+                    totalPresentationMs = Date.now() - timer.questionPresentedAt;
+                }
+                else if (timer.startedAt) {
+                    // Fallback for timers created before the fix
+                    totalPresentationMs = Date.now() - timer.startedAt;
+                }
             }
             if (gameInstance.playMode === 'practice') {
                 timeSpentForSubmission = 0;
+                totalPresentationMs = 0;
             }
             // Submit answer using the new scoring service (handles duplicates and scoring)
             const submissionResult = await participantService.submitAnswer(gameInstance.id, userId, {
@@ -192,7 +202,9 @@ function gameAnswerHandler(io, socket, context) {
                 timeSpent: timeSpentForSubmission,
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
-            }, isDeferred // PATCH: propagate deferred mode)
+            }, isDeferred, // PATCH: propagate deferred mode
+            context.attemptCount, // NEW: Pass attempt count for deferred sessions
+            totalPresentationMs // FIX: Pass total presentation time for fair penalty calculation
             );
             scoringPerformed = true;
             scoringMode = (gameInstance.status === 'completed') ? 'DEFERRED' : gameInstance.playMode;
@@ -343,12 +355,31 @@ function gameAnswerHandler(io, socket, context) {
                 // --- Practice and Deferred Mode Feedback Logic ---
                 if (gameInstance.playMode === 'practice') {
                     // Practice mode: send correctAnswers and feedback immediately
-                    const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
+                    const question = await prisma_1.prisma.question.findUnique({
+                        where: { uid: questionUid },
+                        include: {
+                            multipleChoiceQuestion: true,
+                            numericQuestion: true,
+                        }
+                    });
+                    // Extract correct answer data based on question type
+                    let correctAnswersData;
+                    if (question?.questionType === 'numeric' && question.numericQuestion) {
+                        correctAnswersData = {
+                            correctAnswer: question.numericQuestion.correctAnswer,
+                            tolerance: question.numericQuestion.tolerance,
+                        };
+                    }
+                    else if (question?.questionType === 'multiple-choice' && question.multipleChoiceQuestion) {
+                        correctAnswersData = {
+                            correctAnswers: question.multipleChoiceQuestion.correctAnswers,
+                        };
+                    }
                     socket.emit(events_1.SOCKET_EVENTS.GAME.ANSWER_RECEIVED, {
                         questionUid,
                         timeSpent,
                         correct: isCorrect,
-                        correctAnswers: question && Array.isArray(question.correctAnswers) ? question.correctAnswers : undefined,
+                        ...correctAnswersData,
                         explanation: question?.explanation || undefined
                     });
                     // For practice mode, we don't automatically send the next question

@@ -93,11 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isStudent, setIsStudent] = useState(false);
     const [isTeacher, setIsTeacher] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [authError, setAuthError] = useState<string | null>(null);
     const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
 
     // Auth refresh caching to prevent excessive API calls
     const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
     const AUTH_CACHE_DURATION = 30000; // 30 seconds cache
+    const MAX_LOADING_TIME = 10000; // 10 seconds max loading time
 
     // Utility methods
     const canCreateQuiz = useCallback(() => {
@@ -127,14 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Register guest user in database so they can be found during upgrade
             try {
                 const result = await makeApiRequest<RegisterResponse>(
-                    'auth/register',
+                    AUTH_ENDPOINTS.REGISTER,
                     {
                         method: 'POST',
                         body: JSON.stringify({
                             username,
                             avatar,
                             cookieId,
-                            role: 'STUDENT'
+                            role: 'GUEST'
                             // No email/password for guest users
                         }),
                     },
@@ -148,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Store guest profile in localStorage
                     localStorage.setItem('mathquest_username', username);
                     localStorage.setItem('mathquest_avatar', avatar);
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, result.user.id);
 
                     // Update state with userId from registration response
                     setUserState('guest');
@@ -170,31 +173,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     error: dbError instanceof Error ? dbError.message : 'Unknown error'
                 });
 
-                // Try to get the existing user by cookieId through the auth status endpoint
+                // Try to get the existing user by cookieId through the players/cookie endpoint
                 try {
-                    const statusResult = await makeApiRequest<AuthStatusResponse>(
-                        'auth/status',
+                    const lookupResult = await makeApiRequest<{ user: { id: string; username: string; email?: string; role: string; avatarEmoji: string; createdAt: string } }>(
+                        `players/cookie/${cookieId}`,
                         {},
-                        undefined,
-                        AuthStatusResponseSchema
+                        undefined
                     );
-                    if (statusResult && statusResult.user && statusResult.user.id) {
+                    if (lookupResult && lookupResult.user && lookupResult.user.id) {
                         // Found existing user - use their userId
                         setUserState('guest');
                         setUserProfile({
                             username,
                             avatar,
                             cookieId,
-                            userId: statusResult.user.id
+                            userId: lookupResult.user.id
                         });
 
-                        logger.info('Found existing guest user, profile updated with userId', {
-                            username, avatar, cookieId, userId: statusResult.user.id
+                        // Store userId in localStorage
+                        localStorage.setItem(STORAGE_KEYS.USER_ID, lookupResult.user.id);
+
+                        logger.info('Found existing guest user via players/cookie endpoint', {
+                            username, avatar, cookieId, userId: lookupResult.user.id
                         });
                         return;
                     }
                 } catch (lookupError) {
-                    logger.warn('Could not lookup existing user', { lookupError });
+                    logger.warn('Could not lookup existing user via players/cookie endpoint', { lookupError });
                 }
 
                 // If we can't find the user, create profile without userId
@@ -351,7 +356,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const registerStudent = useCallback(async (email: string, password: string, username: string, avatar: string) => {
         try {
             const result = await makeApiRequest<RegisterResponse>(
-                'auth/register',
+                AUTH_ENDPOINTS.REGISTER,
                 {
                     method: 'POST',
                     body: JSON.stringify({ email, password, username, avatar, role: 'STUDENT' }),
@@ -360,24 +365,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 RegisterResponseSchema
             );
 
-            if (result.success && result.user && result.token) {
-                // Clear any guest data
-                localStorage.removeItem('mathquest_cookie_id');
+            if (result.success && result.user) {
+                // Check if email verification is required
+                if ('requiresEmailVerification' in result && result.requiresEmailVerification) {
+                    // Email verification required - don't update auth state
+                    logger.info('Student registration successful, email verification required', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                    // The frontend will handle showing the verification modal
+                    return;
+                }
 
-                // Update to student state
-                setUserState('student');
-                setUserProfile({
-                    username: result.user.username,
-                    avatar: result.user.avatar || '',
-                    email: result.user.email,
-                    role: result.user.role,
-                    userId: result.user.id
-                });
+                // If we have a token, the user is verified and can be logged in
+                if (result.token) {
+                    // Clear any guest data
+                    localStorage.removeItem('mathquest_cookie_id');
 
-                logger.info('Student registered', {
-                    userId: result.user.id,
-                    email: result.user.email
-                });
+                    // Update to student state
+                    setUserState('student');
+                    setUserProfile({
+                        username: result.user.username,
+                        avatar: result.user.avatar || '',
+                        email: result.user.email,
+                        role: result.user.role,
+                        userId: result.user.id
+                    });
+
+                    logger.info('Student registered and logged in', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                }
             } else {
                 throw new Error('Erreur lors de la création du compte');
             }
@@ -450,24 +469,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 RegisterResponseSchema
             );
 
-            if (result.success && result.user && result.token) {
-                // Clear any guest data
-                localStorage.removeItem('mathquest_cookie_id');
+            if (result.success && result.user) {
+                // Check if email verification is required
+                if ('requiresEmailVerification' in result && result.requiresEmailVerification) {
+                    // Email verification required - don't update auth state
+                    logger.info('Teacher registration successful, email verification required', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                    // The frontend will handle showing the verification modal
+                    return;
+                }
 
-                // Update to teacher state
-                setUserState('teacher');
-                setUserProfile({
-                    username: result.user.username,
-                    avatar: result.user.avatar || avatar,
-                    email: result.user.email,
-                    role: result.user.role,
-                    userId: result.user.id
-                });
+                // If we have a token, the user is verified and can be logged in
+                if (result.token) {
+                    // Clear any guest data
+                    localStorage.removeItem('mathquest_cookie_id');
 
-                logger.info('Teacher registered', {
-                    userId: result.user.id,
-                    email: result.user.email
-                });
+                    // Update to teacher state
+                    setUserState('teacher');
+                    setUserProfile({
+                        username: result.user.username,
+                        avatar: result.user.avatar || avatar,
+                        email: result.user.email,
+                        role: result.user.role,
+                        userId: result.user.id
+                    });
+
+                    logger.info('Teacher registered and logged in', {
+                        userId: result.user.id,
+                        email: result.user.email
+                    });
+                }
             } else {
                 throw new Error('Erreur lors de la création du compte enseignant');
             }
@@ -576,6 +609,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLastAuthCheck(now);
         logger.info('Refreshing authentication state', { force, shouldShowLoading });
 
+        // Set up loading timeout to prevent infinite loading
+        let loadingTimeout: NodeJS.Timeout | null = null;
+        if (shouldShowLoading) {
+            loadingTimeout = setTimeout(() => {
+                logger.warn('Auth refresh timeout reached, forcing completion');
+                setIsLoading(false);
+            }, MAX_LOADING_TIME);
+        }
+
         let detectedState: UserState = 'anonymous';
         let profile: UserProfile = {};
         let studentLoggedIn = false;
@@ -598,10 +640,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const username = localStorage.getItem('mathquest_username');
             const avatar = localStorage.getItem('mathquest_avatar');
             const cookieId = localStorage.getItem('mathquest_cookie_id');
+            const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
 
             if (username && avatar) {
                 // Has guest profile
-                profile = { username, avatar, cookieId: cookieId || undefined };
+                profile = {
+                    username,
+                    avatar,
+                    cookieId: cookieId || undefined,
+                    userId: userId || undefined
+                };
                 detectedState = 'guest';
             }
         }
@@ -664,6 +712,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         role: data.user.role,
                         userId: data.user.id
                     };
+                    // Store userId in localStorage for persistence
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                 }
             } else if (data.authState === 'student') {
                 // Student account 
@@ -679,6 +729,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         role: data.user.role,
                         userId: data.user.id
                     };
+                    // Store userId in localStorage for persistence
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                 }
             } else if (data.authState === 'guest') {
                 // Guest user authenticated in database - preserve localStorage profile
@@ -689,6 +741,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Keep existing localStorage profile, but add userId from database if available
                 if (profile.username && profile.avatar && data.user?.id) {
                     profile.userId = data.user.id;
+                    // Store userId in localStorage for persistence
+                    localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                     logger.debug('Guest user authenticated, preserving localStorage profile with database userId', {
                         localUsername: profile.username,
                         localAvatar: profile.avatar,
@@ -705,6 +759,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             cookieId: profile.cookieId,
                             userId: data.user.id
                         };
+                        // Store userId in localStorage for persistence
+                        localStorage.setItem(STORAGE_KEYS.USER_ID, data.user.id);
                         logger.debug('Guest user authenticated, using database profile as fallback', {
                             databaseUsername: data.user.username,
                             databaseAvatar: data.user.avatar
@@ -721,6 +777,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     detectedState = 'student';
                     studentLoggedIn = true;
                     teacherLoggedIn = false;
+                } else {
+                    // No fallback tokens - check if we have guest data in localStorage
+                    if (typeof window !== 'undefined') {
+                        const username = localStorage.getItem('mathquest_username');
+                        const avatar = localStorage.getItem('mathquest_avatar');
+                        const cookieId = localStorage.getItem('mathquest_cookie_id');
+                        const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
+
+                        if (username && avatar) {
+                            // Found guest data in localStorage, preserve it
+                            profile = {
+                                username,
+                                avatar,
+                                cookieId: cookieId || undefined,
+                                userId: userId || undefined
+                            };
+                            detectedState = 'guest';
+                            logger.debug('Preserving guest data from localStorage despite anonymous auth status');
+                        } else {
+                            // No guest data, explicitly set anonymous state
+                            detectedState = 'anonymous';
+                            profile = {};
+                        }
+                    } else {
+                        // No window, set anonymous
+                        detectedState = 'anonymous';
+                        profile = {};
+                    }
+                    studentLoggedIn = false;
+                    teacherLoggedIn = false;
                 }
             }
 
@@ -733,6 +819,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
         } catch (error) {
             logger.error('Error fetching auth status:', error);
+
+            // Check if this is a cookie-related error (401/403) or network error with cookies present
+            const isAuthError = error instanceof Error &&
+                ((error.message.includes('401') || error.message.includes('403')) ||
+                    (error as any).statusCode === 401 ||
+                    (error as any).statusCode === 403 ||
+                    error.message.includes('Unauthorized') ||
+                    error.message.includes('Forbidden'));
+
+            // Also treat network errors as potential auth issues when cookies are present
+            const hasCookies = typeof window !== 'undefined' &&
+                (document.cookie.includes('authToken=') || document.cookie.includes('teacherToken='));
+            const isNetworkError = error instanceof ReferenceError && error.message.includes('fetch') ||
+                error instanceof TypeError && error.message.includes('fetch');
+
+            const shouldClearAuth = isAuthError || (isNetworkError && hasCookies);
+
+            if (shouldClearAuth) {
+                logger.warn('Authentication error detected, clearing invalid cookies', {
+                    isAuthError,
+                    isNetworkError,
+                    hasCookies
+                });
+
+                // Clear invalid cookies to prevent repeated failures
+                if (typeof window !== 'undefined') {
+                    // Clear auth-related cookies
+                    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    document.cookie = 'teacherToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+                    // Clear localStorage auth data if cookies are invalid
+                    localStorage.removeItem(STORAGE_KEYS.TEACHER_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+                    localStorage.removeItem(STORAGE_KEYS.AVATAR);
+                    localStorage.removeItem(STORAGE_KEYS.COOKIE_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USER_ID);
+
+                    logger.info('Cleared invalid authentication data');
+                }
+
+                // Force anonymous state when cookies are invalid
+                detectedState = 'anonymous';
+                profile = {};
+                studentLoggedIn = false;
+                teacherLoggedIn = false;
+
+                // Set user-friendly error message
+                setAuthError('Votre session a expiré. Veuillez vous reconnecter.');
+            } else if (isNetworkError) {
+                // Network error without cookies - still clear localStorage to prevent guest fallback
+                logger.warn('Network error detected, clearing localStorage to prevent stale guest data', {
+                    isNetworkError,
+                    hasCookies: false
+                });
+
+                if (typeof window !== 'undefined') {
+                    // Clear localStorage auth data to prevent fallback to stale guest state
+                    localStorage.removeItem(STORAGE_KEYS.TEACHER_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+                    localStorage.removeItem(STORAGE_KEYS.AVATAR);
+                    localStorage.removeItem(STORAGE_KEYS.COOKIE_ID);
+                    localStorage.removeItem(STORAGE_KEYS.USER_ID);
+
+                    logger.info('Cleared localStorage due to network error');
+                }
+
+                // Force anonymous state when network fails
+                detectedState = 'anonymous';
+                profile = {};
+                studentLoggedIn = false;
+                teacherLoggedIn = false;
+
+                // Set network error message
+                setAuthError('Problème de connexion. Vérifiez votre connexion internet.');
+            }
+
+            // Clear loading timeout if it exists
+            if (loadingTimeout) {
+                clearTimeout(loadingTimeout);
+            }
         }
 
         // Update all states
@@ -744,18 +910,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTeacherId(fetchedTeacherId);
         setIsLoading(false);
 
+        // Clear any previous auth errors on successful refresh
+        setAuthError(null);
+
+        // Clear loading timeout if it exists
+        if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+        }
+
         logger.info('Refreshed Auth State', {
             userState: detectedState,
             studentLoggedIn,
             teacherLoggedIn,
             isAuthenticated: studentLoggedIn || teacherLoggedIn,
-            profile: { ...profile, cookieId: profile.cookieId ? '[HIDDEN]' : undefined }
+            profile: { ...profile, cookieId: profile.cookieId ? '[HIDDEN]' : undefined },
+            userIdPresent: !!profile.userId,
+            userIdValue: profile.userId
         });
     }, []);
 
     useEffect(() => {
         refreshAuth(true); // Initial check on mount - force refresh
-    }, [refreshAuth]);
+    }, []); // Remove refreshAuth dependency to prevent multiple calls
 
     // Log state changes for debugging
     useEffect(() => {
@@ -975,6 +1151,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isTeacher,
         isLoading,
         teacherId,
+
+        // Error state
+        authError,
 
         // Methods
         refreshAuth,

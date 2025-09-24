@@ -131,7 +131,6 @@ export default function CreateQuizPage() {
         setOffset(0); // Reset offset
         setHasMore(true); // Assume there's more data
         fetchQuestions(true); // Fetch with reset
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedLevel, selectedDiscipline, selectedThemes]); // Dependencies that trigger a full reset
 
     useEffect(() => {

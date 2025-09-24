@@ -3,6 +3,8 @@ import { optionalAuth } from '@/middleware/auth';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { TournamentListItemSchema, MyTournamentsResponseSchema } from '@shared/types/api/schemas';
+import type { TournamentListItem, MyTournamentsResponse } from '@shared/types/api/schemas';
+import type { ErrorResponse } from '@shared/types/api/requests';
 
 const logger = createLogger('MyTournamentsAPI');
 const router = express.Router();
@@ -12,7 +14,7 @@ const router = express.Router();
  * GET /api/v1/my-tournaments?mode=tournament|quiz|practice
  * Returns games created by and participated in by the user
  */
-router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/', optionalAuth, async (req: Request, res: Response<MyTournamentsResponse | ErrorResponse>): Promise<void> => {
     try {
         const userId = req.user?.userId;
         const userRole = req.user?.role;
@@ -29,9 +31,9 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        let pending: any[] = [];
-        let active: any[] = [];
-        let ended: any[] = [];
+        let pending: TournamentListItem[] = [];
+        let active: TournamentListItem[] = [];
+        let ended: TournamentListItem[] = [];
 
         if (userRole === 'TEACHER' && userId) {
             // For teachers, get games they created
@@ -69,7 +71,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                         code: game.accessCode,
                         name: game.name || 'Tournoi sans nom',
                         statut: game.status,
-                        playMode: mode, // Add playMode to response
+                        playMode: mode as 'quiz' | 'tournament' | 'practice', // Add playMode to response
                         createdAt: game.createdAt.toISOString(),
                         date_debut: game.startedAt?.toISOString() || null,
                         date_fin: game.endedAt?.toISOString() || null,
@@ -105,7 +107,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
             } catch (error) {
                 logger.error({ error, userId }, 'Error fetching teacher tournaments');
             }
-        } else if ((userRole === 'STUDENT' || !userRole) && (cookieId || userId)) {
+        } else if (userRole === 'STUDENT' || userRole === 'GUEST' || (!userRole && (cookieId || userId))) {
             // For students/guests, get tournaments they participated in
             try {
                 // Find user by cookieId if provided, otherwise use userId
@@ -124,15 +126,24 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                 }
 
                 if (targetUserId) {
-                    // Get games the user participated in
+                    // Get games the user participated in OR initiated (for practice sessions)
                     const participatedGames = await prisma.gameInstance.findMany({
                         where: {
                             playMode: mode as any,
-                            participants: {
-                                some: {
-                                    userId: targetUserId
-                                }
-                            }
+                            OR: [
+                                // Games they participated in
+                                {
+                                    participants: {
+                                        some: {
+                                            userId: targetUserId
+                                        }
+                                    }
+                                },
+                                // For practice sessions, also include games they initiated
+                                ...(mode === 'practice' ? [{
+                                    initiatorUserId: targetUserId
+                                }] : [])
+                            ]
                         },
                         select: {
                             id: true,
@@ -183,7 +194,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                             code: game.accessCode,
                             name: game.name || 'Tournoi sans nom',
                             statut: game.status,
-                            playMode: mode, // Add playMode to response
+                            playMode: mode as 'quiz' | 'tournament' | 'practice', // Add playMode to response
                             createdAt: game.createdAt.toISOString(),
                             date_debut: game.startedAt?.toISOString() || null,
                             date_fin: game.endedAt?.toISOString() || null,

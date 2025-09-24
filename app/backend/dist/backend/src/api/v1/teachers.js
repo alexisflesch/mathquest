@@ -41,7 +41,16 @@ router.get('/profile', auth_1.teacherAuth, async (req, res) => {
             res.status(404).json({ error: 'Teacher not found' });
             return;
         }
-        res.status(200).json({ user });
+        // Return user data without sensitive information
+        const publicUser = {
+            id: user.id,
+            username: user.username,
+            email: user.email || undefined,
+            role: user.role,
+            avatarEmoji: user.avatarEmoji || '🐼', // Default to panda if null
+            createdAt: user.createdAt.toISOString()
+        };
+        res.status(200).json({ user: publicUser });
     }
     catch (error) {
         logger.error({ error }, 'Error fetching teacher profile');

@@ -25,19 +25,6 @@ export const setTimerPayloadSchema = z.object({
   questionUid: z.string().optional(),
 });
 
-export const lockUnlockPayloadSchema = z.object({
-  quizId: z.string(),
-  teacherId: z.string().optional(),
-  tournamentCode: z.string().optional(),
-});
-
-export const endQuizPayloadSchema = z.object({
-  quizId: z.string(),
-  teacherId: z.string().optional(),
-  tournamentCode: z.string().optional(),
-  forceEnd: z.boolean().optional(),
-});
-
 export const closeQuestionPayloadSchema = z.object({
   quizId: z.string(),
   questionUid: z.string(),
@@ -63,24 +50,6 @@ export const pauseResumePayloadSchema = z.object({
   quizId: z.string(),
   teacherId: z.string().optional(),
   tournamentCode: z.string().optional(),
-});
-
-export const joinTournamentPayloadSchema = z.object({
-  code: z.string(),
-  username: z.string().optional(),
-  avatar: z.string().optional(),
-  isDeferred: z.boolean().optional(),
-  userId: z.string().optional(),
-  classId: z.string().optional(),
-  cookieId: z.string().optional(),
-});
-
-export const tournamentAnswerPayloadSchema = z.object({
-  code: z.string(),
-  questionUid: z.string(),
-  answerIdx: z.union([z.number(), z.array(z.number())]),
-  clientTimestamp: z.number(),
-  isDeferred: z.boolean().optional(),
 });
 
 export const updateTournamentCodePayloadSchema = z.object({
@@ -111,14 +80,6 @@ export const gameTimerUpdatePayloadSchema = z.object({
 export const startTournamentPayloadSchema = z.object({
   code: z.string(),
   teacherId: z.string(),
-});
-
-export const pauseTournamentPayloadSchema = z.object({
-  code: z.string(),
-});
-
-export const resumeTournamentPayloadSchema = z.object({
-  code: z.string(),
 });
 
 

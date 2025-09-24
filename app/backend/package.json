@@ -4,7 +4,9 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc && npx prisma generate && cp -r src/db/generated dist/backend/src/db/",
-    "start": "node -r dotenv/config dist/backend/src/server.js",
+    "start": "node --max-old-space-size=1024 --max-semi-space-size=256 -r dotenv/config dist/backend/src/server.js",
+    "start:memory-limited": "node --max-old-space-size=1024 --max-semi-space-size=256 -r dotenv/config dist/backend/src/server.js",
+    "start:ultra-limited": "node --max-old-space-size=128 --max-semi-space-size=32 -r dotenv/config dist/backend/src/server.js",
     "dev": "nodemon src/server.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
@@ -14,7 +16,8 @@
     "test:init-db": "node tests/support/initTestDb.js",
     "test:clean": "npm run test:init-db && jest",
     "type-check": "tsc --project tsconfig.json --noEmit --pretty",
-    "cleanup:redis": "npx ts-node scripts/cleanup-redis-game.ts"
+    "dev:memory": "nodemon --max-old-space-size=512 src/server.ts",
+    "monitor:memory": "node -e \"setInterval(() => { const mem = process.memoryUsage(); console.log(new Date().toISOString(), 'Memory:', Math.round(mem.heapUsed / 1024 / 1024) + 'MB used,', Math.round(mem.heapTotal / 1024 / 1024) + 'MB total,', Math.round(mem.external / 1024 / 1024) + 'MB external'); }, 30000);\""
   },
   "_moduleAliases": {
     "@": "dist/backend/src",
@@ -25,11 +28,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
     "@prisma/client": "^6.7.0",
     "@socket.io/redis-adapter": "^8.3.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.1",
     "@types/ioredis": "^4.28.10",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.15.18",
     "@types/socket.io": "^3.0.1",
     "bcrypt": "^6.0.0",
@@ -50,10 +57,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@types/bcrypt": "^5.0.2",
-    "@types/cookie-parser": "^1.4.8",
     "@types/jest": "^29.5.14",
-    "@types/jsonwebtoken": "^9.0.9",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@types/supertest": "^6.0.3",
@@ -63,6 +67,7 @@
     "eslint": "^9.26.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
+    "ioredis-mock": "^8.9.0",
     "jest": "^29.7.0",
     "prettier": "^3.5.3",
     "redis": "^4.6.7",

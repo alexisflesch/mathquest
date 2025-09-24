@@ -1,14 +1,27 @@
-export default async function (): Promise<void> {
-    // Give time for any remaining connections to close
-    console.log('Global teardown: Waiting for connections to close...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Force exit the process if needed
-    // This is a bit of a hack, but it helps with tests where connections might be hanging
-    if (process.env.FORCE_EXIT === 'true') {
-        console.log('Global teardown: Forcing process exit');
-        process.exit(0);
+// Global teardown for Jest tests
+export default async (): Promise<void> => {
+    // Clean up Redis connections
+    try {
+        const { redisClient } = require('../../src/config/redis');
+        if (redisClient && redisClient.disconnect) {
+            await redisClient.disconnect();
+        }
+    } catch (error) {
+        // Ignore errors during cleanup
     }
 
-    console.log('Global teardown completed');
+    // Clean up database connections
+    try {
+        const { prisma } = require('../../src/db/prisma');
+        if (prisma && prisma.$disconnect) {
+            await prisma.$disconnect();
+        }
+    } catch (error) {
+        // Ignore errors during cleanup
+    }
+
+    // Force garbage collection if available
+    if (global.gc) {
+        global.gc();
+    }
 };

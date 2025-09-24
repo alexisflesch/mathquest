@@ -1,0 +1,66 @@
+# Questions de Mathématiques niveau L2 pour MathQuest
+# Thème : Espaces préhilbertiens
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt3-espaces-prehilbertiens-001"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Espaces préhilbertiens"]
+  tags: ["espace orthogonal"]
+  title: "Orthogonal d'une partie"
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  excludedFrom: ["practice", "tournament"]
+  text: |
+        Soient \(E\) un espace euclidien et \(A\) une partie non vide de \(E\). Que peut-on dire?
+  answerOptions:
+    - \(\left( A^\bot \right)^\bot = A\)
+    - \(E^\bot = \left\{ 0_E \right\}\)
+    - Si \(A\) est un sous-espace vectoriel de \(E\) alors \(\mathrm{dim}(A)=\mathrm{dim}\left(A^\bot\right)\)
+  correctAnswers: [false, true, false]
+
+
+- uid: "aflesch-mt3-espaces-prehilbertiens-002"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Espaces préhilbertiens"]
+  tags: ["orthogonalité", "produit scalaire", "norme euclidienne"]
+  title: "Propriétés du produit scalaire"
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Soient \(u\) et \(v\) deux vecteurs d'un espace préhilbertien \(\left( E,\langle\cdot\vert\cdot\rangle \right)\). Alors, \(u+v\) et \(u-v\) sont orthogonaux ssi:
+  answerOptions:
+    - \(u\bot v\)
+    - \(\|u\|=\|v\|\)
+    - aucune des propositions ci-dessus
+  correctAnswers: [false, true, false]
+
+
+
+- uid: "aflesch-mt3-espaces-prehilbertiens-003"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Espaces préhilbertiens"]
+  tags: ["norme euclidienne"]
+  title: "Calcul de norme"
+  questionType: "single_choice"
+  timeLimit: 120
+  difficulty: 1
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    On munit \(\mathbb{R}_3[X]\) du produit scalaire défini par:
+    \[\forall (P,Q)\in \mathbb{R}_3[X]^2, \quad \left\langle P|Q \right\rangle = \int_0^1 P(t)Q(t)\,\mathrm{d}t.\]
+  answerOptions:
+    - \(\|1+X\|^2 = \sqrt{2}\)
+    - \(\|1+X\|^2 = 2\)
+    - \(\displaystyle\|1+X\|^2 = \frac{7}{3}\)
+    - \(\displaystyle\|1+X\|^2 = \frac{3}{2}\)
+    - Aucune des réponses ci-dessus n'est correcte
+  correctAnswers: [false, false, true, false, false]

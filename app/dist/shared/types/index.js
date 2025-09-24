@@ -25,11 +25,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SOCKET_EVENTS = exports.PROJECTOR_EVENTS = exports.LOBBY_EVENTS = exports.TOURNAMENT_EVENTS = exports.GAME_EVENTS = exports.TEACHER_EVENTS = void 0;
 // Export consolidated core types (new unified type system)
 __exportStar(require("./core"), exports);
+// export type { Question as QuizQuestion } from './quiz/question'; // Removed - unused
 __exportStar(require("./socket/payloads"), exports);
 __exportStar(require("./socket/events"), exports); // Export socket event constants
-__exportStar(require("./util/typeGuards"), exports); // Export type guards for runtime validation
 __exportStar(require("./util/logger"), exports);
-__exportStar(require("./util/typeErrors"), exports); // Export type error helpers
 __exportStar(require("./util/typeMapping"), exports); // Export type mapping utilities
 __exportStar(require("./util/schemaValidation"), exports); // Export schema validation utilities
 __exportStar(require("./util/schemaDefinitions"), exports); // Export schema definitions
@@ -41,5 +40,6 @@ Object.defineProperty(exports, "TOURNAMENT_EVENTS", { enumerable: true, get: fun
 Object.defineProperty(exports, "LOBBY_EVENTS", { enumerable: true, get: function () { return events_1.LOBBY_EVENTS; } });
 Object.defineProperty(exports, "PROJECTOR_EVENTS", { enumerable: true, get: function () { return events_1.PROJECTOR_EVENTS; } });
 Object.defineProperty(exports, "SOCKET_EVENTS", { enumerable: true, get: function () { return events_1.SOCKET_EVENTS; } });
+// export type { TournamentState } from './tournament/state'; // Removed - unused
 // Export shared constants
 __exportStar(require("../constants"), exports);

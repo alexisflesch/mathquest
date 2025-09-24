@@ -13,6 +13,7 @@ const redis_adapter_1 = require("@socket.io/redis-adapter");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const socketAuth_1 = require("./middleware/socketAuth");
+const socketRateLimit_1 = require("./middleware/socketRateLimit");
 const connectionHandlers_1 = require("./handlers/connectionHandlers");
 // Create a socket-specific logger
 const logger = (0, logger_1.default)('SocketIO');
@@ -49,6 +50,8 @@ function initializeSocketIO(server) {
     });
     // Set up Redis adapter for horizontal scaling
     io.adapter((0, redis_adapter_1.createAdapter)(redis_1.redisClient, subClient));
+    // Add rate limiting middleware first (before auth)
+    io.use(socketRateLimit_1.socketRateLimitMiddleware);
     // Add authentication middleware
     io.use(socketAuth_1.socketAuthMiddleware);
     // Register connection handlers
@@ -89,6 +92,7 @@ function configureSocketServer(socketServer) {
     }
     io = socketServer;
     // --- Ensure middleware is applied in test/configure mode ---
+    io.use(socketRateLimit_1.socketRateLimitMiddleware);
     io.use(socketAuth_1.socketAuthMiddleware);
 }
 /**

@@ -35,6 +35,15 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(data, { status: backendResponse.status });
         }
 
+        // Convert date strings to Date objects for frontend compatibility
+        if (data.gameTemplates) {
+            data.gameTemplates = data.gameTemplates.map((template: any) => ({
+                ...template,
+                createdAt: new Date(template.createdAt),
+                updatedAt: new Date(template.updatedAt)
+            }));
+        }
+
         return NextResponse.json(data);
     } catch (error) {
         console.error('Frontend API route error:', error);
@@ -47,7 +56,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (jsonError) {
+            return NextResponse.json(
+                { error: 'Invalid JSON in request body' },
+                { status: 400 }
+            );
+        }
 
         // Extract JWT token from cookies (teacherToken or authToken)
         const cookieHeader = request.headers.get('cookie');

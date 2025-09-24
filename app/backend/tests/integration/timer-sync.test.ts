@@ -1,0 +1,257 @@
+// Set up environment variables for testing
+process.env.DATABASE_URL = "postgresql://postgre:dev123@localhost:5432/mathquest_test";
+process.env.REDIS_URL = "redis://localhost:6379";
+process.env.JWT_SECRET = "your key should be long and secure";
+process.env.ADMIN_PASSWORD = "abc";
+process.env.PORT = "3007"; // Use a different port to avoid conflicts
+process.env.LOG_LEVEL = "info";
+
+import { Server as SocketIOServer } from 'socket.io';
+import { io as ioc, Socket as ClientSocket } from 'socket.io-client';
+import { createServer, Server as HttpServer } from 'http';
+import { redisClient } from '../../src/config/redis';
+import { prisma } from '../../src/db/prisma';
+import { TEACHER_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
+import * as jwt from 'jsonwebtoken';
+import { GameTimerUpdatePayload } from '@shared/types/core/timer';
+import gameStateService from '../../src/core/services/gameStateService';
+import { configureSocketServer, registerHandlers } from '../../src/sockets';
+
+describe('Timer Synchronization Tests', () => {
+    let io: SocketIOServer;
+    let httpServer: HttpServer;
+    let serverAddress: string;
+    let teacherSocket: ClientSocket, playerSocket: ClientSocket, projectionSocket: ClientSocket;
+    let testUser: any, testGameTemplate: any, testGameInstance: any, testQuestion: any;
+    let accessCode: string;
+    let gameId: string;
+    let token: string;
+
+    // Helper to create a client socket
+    const createClient = (authToken: string): ClientSocket => {
+        return ioc(serverAddress, {
+            auth: { token: authToken },
+            transports: ['websocket'],
+            forceNew: true,
+        });
+    };
+
+    beforeAll(async () => {
+        // Setup HTTP and Socket.IO server
+        httpServer = createServer();
+        io = new SocketIOServer(httpServer);
+
+        // Configure the socket server with middleware and handlers
+        configureSocketServer(io);
+        registerHandlers(io);
+
+        await new Promise<void>(resolve => httpServer.listen(() => {
+            const port = (httpServer.address() as any).port;
+            serverAddress = `http://localhost:${port}`;
+            resolve();
+        }));
+
+        // Create test data
+        const now = Date.now();
+        testUser = await prisma.user.create({
+            data: {
+                username: `UserTimerSync${now}`,
+                email: `user-timer-sync-${now}@test.com`,
+                role: 'TEACHER',
+                passwordHash: 'hashed-password',
+            },
+        });
+
+        token = jwt.sign({ userId: testUser.id, email: testUser.email }, process.env.JWT_SECRET as string);
+
+        testGameTemplate = await prisma.gameTemplate.create({
+            data: {
+                name: 'Timer Sync Test Template',
+                description: 'A template for testing timer sync.',
+                creatorId: testUser.id,
+                gradeLevel: 'CM1',
+                themes: ['test'],
+                discipline: 'math',
+            },
+        });
+
+        testQuestion = await prisma.question.create({
+            data: {
+                text: 'What is 2+2?',
+                questionType: 'numeric',
+                timeLimit: 30,
+                discipline: 'math',
+                themes: ['arithmetic'],
+                difficulty: 1,
+                numericQuestion: { create: { correctAnswer: 4 } },
+            },
+        });
+
+        // Create the relationship between question and game template
+        await prisma.questionsInGameTemplate.create({
+            data: {
+                gameTemplateId: testGameTemplate.id,
+                questionUid: testQuestion.uid,
+                sequence: 0,
+            },
+        });
+
+        testGameInstance = await prisma.gameInstance.create({
+            data: {
+                name: 'Timer Sync Test Game',
+                accessCode: `SYNC${now}`.slice(0, 10),
+                status: 'pending',
+                playMode: 'quiz',
+                gameTemplateId: testGameTemplate.id,
+                initiatorUserId: testUser.id,
+            },
+        });
+
+        accessCode = testGameInstance.accessCode;
+        gameId = testGameInstance.id;
+    });
+
+    afterAll(async () => {
+        // Disconnect sockets
+        if (teacherSocket?.connected) teacherSocket.disconnect();
+        if (playerSocket?.connected) playerSocket.disconnect();
+        if (projectionSocket?.connected) projectionSocket.disconnect();
+
+        // Close server
+        if (io) io.close();
+        if (httpServer?.listening) httpServer.close();
+
+        // Cleanup database
+        await prisma.questionsInGameTemplate.deleteMany({ where: { gameTemplateId: testGameTemplate.id } });
+        await prisma.question.delete({ where: { uid: testQuestion.uid } });
+        await prisma.gameInstance.delete({ where: { id: testGameInstance.id } });
+        await prisma.gameTemplate.delete({ where: { id: testGameTemplate.id } });
+        await prisma.user.delete({ where: { id: testUser.id } });
+
+        // Cleanup Redis
+        await redisClient.del(`mathquest:game:${accessCode}`);
+        await redisClient.quit();
+    });
+
+    beforeEach((done: (error?: any) => void) => {
+        // Connect all clients
+        teacherSocket = createClient(token);
+        playerSocket = createClient(token); // Using same user for simplicity
+        projectionSocket = createClient(token);
+
+        const connections = [
+            new Promise<void>(resolve => teacherSocket.on('connect', resolve)),
+            new Promise<void>(resolve => playerSocket.on('connect', resolve)),
+            new Promise<void>(resolve => projectionSocket.on('connect', resolve))
+        ];
+
+        Promise.all(connections).then(() => {
+            // Join rooms after all sockets are connected
+            const playerJoin = new Promise<void>(resolve => {
+                playerSocket.emit(SOCKET_EVENTS.GAME.JOIN_GAME, { accessCode, userId: testUser.id, username: 'Player' });
+                playerSocket.on(SOCKET_EVENTS.GAME.GAME_JOINED, () => resolve());
+            });
+
+            const projectionJoin = new Promise<void>(resolve => {
+                projectionSocket.emit(SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION, { gameId });
+                projectionSocket.on(SOCKET_EVENTS.PROJECTOR.PROJECTION_JOINED, () => resolve());
+            });
+
+            // For this test, we assume the teacher is implicitly in the dashboard room.
+            // The main goal is to verify player and projection sync.
+            Promise.all([playerJoin, projectionJoin]).then(() => {
+                // Initialize game state in Redis so timer actions can work
+                gameStateService.initializeGameState(gameId).then(() => {
+                    done();
+                }).catch(err => {
+                    done(err);
+                });
+            });
+        });
+    });
+
+    it('should synchronize timer actions (run, pause, stop) across all clients', async () => {
+        const testTimeout = 8000; // 8 seconds timeout for async operations
+
+        // Helper to create a listener for a specific timer action
+        const createListener = (socket: ClientSocket, action: 'run' | 'pause' | 'stop', clientName: string) => {
+            return new Promise<GameTimerUpdatePayload>((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    reject(new Error(`Timeout waiting for '${action}' on ${clientName} socket`));
+                }, testTimeout);
+
+                // Different clients listen to different events
+                const eventName = clientName === 'Projection'
+                    ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED
+                    : SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED;
+
+                // All clients should receive the same canonical event
+                socket.on(eventName, (payload: GameTimerUpdatePayload) => {
+                    if (payload.timer.status === action) {
+                        clearTimeout(timeoutId);
+                        resolve(payload);
+                    }
+                });
+            });
+        };
+
+        // --- Test RUN action ---
+        console.log('Testing RUN action...');
+        const playerRunPromise = createListener(playerSocket, 'run', 'Player');
+        const projectionRunPromise = createListener(projectionSocket, 'run', 'Projection');
+
+        teacherSocket.emit(TEACHER_EVENTS.TIMER_ACTION, {
+            accessCode,
+            action: 'run',
+            questionUid: testQuestion.uid,
+            durationMs: 30000,
+        });
+
+        const [playerPayloadRun, projectionPayloadRun] = await Promise.all([playerRunPromise, projectionRunPromise]);
+
+        expect(playerPayloadRun.timer.status).toBe('run');
+        expect(projectionPayloadRun.timer.status).toBe('run');
+        expect(playerPayloadRun.questionUid).toBe(testQuestion.uid);
+        expect(projectionPayloadRun.questionUid).toBe(testQuestion.uid);
+        expect(projectionPayloadRun.timer.status).toBe('run');
+        expect(playerPayloadRun.questionUid).toBe(testQuestion.uid);
+        expect(projectionPayloadRun.questionUid).toBe(testQuestion.uid);
+
+        // --- Test PAUSE action ---
+        console.log('Testing PAUSE action...');
+        const playerPausePromise = createListener(playerSocket, 'pause', 'Player');
+        const projectionPausePromise = createListener(projectionSocket, 'pause', 'Projection');
+
+        teacherSocket.emit(TEACHER_EVENTS.TIMER_ACTION, {
+            accessCode,
+            action: 'pause',
+            questionUid: testQuestion.uid,
+        });
+
+        const [playerPayloadPause, projectionPayloadPause] = await Promise.all([playerPausePromise, projectionPausePromise]);
+
+        expect(playerPayloadPause.timer.status).toBe('pause');
+        expect(projectionPayloadPause.timer.status).toBe('pause');
+        expect(playerPayloadPause.questionUid).toBe(testQuestion.uid);
+        expect(projectionPayloadPause.questionUid).toBe(testQuestion.uid);
+
+        // --- Test STOP action ---
+        console.log('Testing STOP action...');
+        const playerStopPromise = createListener(playerSocket, 'stop', 'Player');
+        const projectionStopPromise = createListener(projectionSocket, 'stop', 'Projection');
+
+        teacherSocket.emit(TEACHER_EVENTS.TIMER_ACTION, {
+            accessCode,
+            action: 'stop',
+            questionUid: testQuestion.uid,
+        });
+
+        const [playerPayloadStop, projectionPayloadStop] = await Promise.all([playerStopPromise, projectionStopPromise]);
+
+        expect(playerPayloadStop.timer.status).toBe('stop');
+        expect(projectionPayloadStop.timer.status).toBe('stop');
+        expect(playerPayloadStop.questionUid).toBe(testQuestion.uid);
+        expect(projectionPayloadStop.questionUid).toBe(testQuestion.uid);
+    });
+});
+

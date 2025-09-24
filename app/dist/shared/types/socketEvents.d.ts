@@ -16,6 +16,7 @@ export interface JoinGamePayload {
     userId: string;
     username: string;
     avatarEmoji?: string;
+    isDiffered?: boolean;
 }
 /**
  * @deprecated Use JoinGamePayload instead
@@ -50,7 +51,7 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData;
     gameStatus: 'pending' | 'active' | 'completed' | 'archived';
-    gameMode: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode: 'tournament' | 'quiz' | 'practice';
     differedAvailableFrom?: string;
     differedAvailableTo?: string;
 }
@@ -71,7 +72,7 @@ export interface GameStateUpdatePayload {
     totalQuestions?: number;
     timer?: number;
     participants?: ParticipantData[];
-    gameMode?: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode?: 'tournament' | 'quiz' | 'practice';
 }
 export interface QuestionData {
     uid: string;
@@ -104,18 +105,6 @@ export interface LeaveLobbyPayload {
  */
 export interface GetParticipantsPayload {
     accessCode: string;
-}
-/**
- * Payload for joining a projection session
- */
-export interface JoinProjectorPayload {
-    gameId: string;
-}
-/**
- * Payload for leaving a projection session
- */
-export interface LeaveProjectorPayload {
-    gameId: string;
 }
 /**
  * Shared payload for joining live games (both quiz and tournament modes)
@@ -245,6 +234,11 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     correct_answers: (payload: {
         questionUid: string;
         correctAnswers?: boolean[];
+        numericAnswer?: {
+            correctAnswer: number;
+            tolerance?: number;
+        };
+        terminatedQuestions?: Record<string, boolean>;
     }) => void;
     feedback: (payload: {
         questionUid: string;
@@ -304,13 +298,4 @@ export interface AnswerReceivedPayload {
     correct?: boolean;
     correctAnswers?: boolean[];
     explanation?: string;
-}
-/**
- * Teacher to Server Events
- */
-export interface TeacherToServerEvents {
-    /**
-     * Teacher requests to reveal the full leaderboard (trophy button)
-     */
-    reveal_leaderboard: (payload: RevealLeaderboardPayload) => void;
 }

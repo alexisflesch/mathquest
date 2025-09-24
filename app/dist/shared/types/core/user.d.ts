@@ -1,11 +1,12 @@
 /**
  * User-related shared types
  */
-export type UserRole = 'STUDENT' | 'TEACHER';
+export type UserRole = 'STUDENT' | 'TEACHER' | 'GUEST';
 export interface User {
     id: string;
     username: string;
     email?: string;
+    emailVerified?: boolean;
     avatarEmoji: string;
     role: UserRole;
     cookieId?: string;
@@ -17,6 +18,7 @@ export interface PublicUser {
     id: string;
     username: string;
     email?: string;
+    emailVerified?: boolean;
     avatarEmoji: string;
     role: UserRole;
     createdAt: string;
@@ -33,11 +35,6 @@ export interface UserRegistrationData {
 export interface UserLoginData {
     email: string;
     password: string;
-}
-export interface UserProfileUpdate {
-    username?: string;
-    avatarEmoji?: string;
-    email?: string;
 }
 export interface UserUpgradeData {
     email: string;

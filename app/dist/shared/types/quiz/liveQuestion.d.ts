@@ -12,8 +12,13 @@ export interface FilteredQuestion {
     uid: string;
     text: string;
     questionType: string;
-    answerOptions: string[];
-    timeLimit?: number;
+    timeLimit: number;
+    multipleChoiceQuestion?: {
+        answerOptions: string[];
+    };
+    numericQuestion?: {
+        unit?: string;
+    };
     gradeLevel?: string;
     difficulty?: number;
     themes?: string[];
@@ -35,7 +40,7 @@ export interface LiveQuestionPayload {
 }
 /**
  * Filters a database question object to only include data safe to send to clients.
- * Uses the canonical database format with answerOptions.
+ * Handles both polymorphic and legacy question formats.
  *
  * @param questionObject - The question object from the database (Prisma format)
  * @returns FilteredQuestion - The question data safe for client emission

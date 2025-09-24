@@ -32,52 +32,333 @@ export interface ScoreResult {
 }
 
 /**
- * Core scoring calculation
- * @param isCorrect Whether the answer is correct
- * @param serverTimeSpent Time spent in milliseconds (server-calculated)
+ * Core scoring calculation with new balanced scoring system
  * @param question Question object with timeLimit and other properties
+ * @param answer User's submitted answer
+ * @param serverTimeSpent Time spent in current timer session (milliseconds)
+ * @param totalPresentationTime Total time since question was first presented (milliseconds)
+ * @param accessCode Game access code to get total questions for scaling
  * @returns Score for this answer
  */
-export function calculateAnswerScore(
-    isCorrect: boolean,
+export async function calculateAnswerScore(
+    question: any,
+    answer: any,
     serverTimeSpent: number,
-    question: any
-): { score: number, timePenalty: number } {
-    if (!isCorrect || !question) return { score: 0, timePenalty: 0 };
+    totalPresentationTime: number,
+    accessCode?: string
+): Promise<{ score: number, timePenalty: number }> {
+    if (!question) return { score: 0, timePenalty: 0 };
 
-    const baseScore = 1000;
+    // Get total questions for game scaling (default to 10 if not available)
+    let totalQuestions = 10;
+    if (accessCode) {
+        try {
+            const gameDataKey = `mathquest:game:${accessCode}`;
+            const gameData = await redisClient.get(gameDataKey);
+            if (gameData) {
+                const parsed = JSON.parse(gameData);
+                if (parsed.questionUids && Array.isArray(parsed.questionUids)) {
+                    totalQuestions = parsed.questionUids.length;
+                }
+            } else {
+                // Redis didn't have metadata for this game - try to derive question count from DB
+                try {
+                    const gi = await prisma.gameInstance.findUnique({
+                        where: { accessCode },
+                        select: { gameTemplateId: true }
+                    });
+                    if (gi && gi.gameTemplateId) {
+                        const qCount = await prisma.questionsInGameTemplate.count({ where: { gameTemplateId: gi.gameTemplateId } });
+                        if (qCount > 0) totalQuestions = qCount;
+                    }
+                } catch (dbErr) {
+                    logger.warn({ error: dbErr, accessCode }, 'Failed to fetch question count from DB; falling back to default of 10');
+                }
+            }
+        } catch (error) {
+            logger.warn({ error, accessCode }, 'Failed to get total questions for scaling, using default of 10');
+        }
+    }
 
-    // Convert milliseconds to seconds for penalty calculation
+    // Calculate base score per question (scaled so total game = 1000 points)
+    const baseScorePerQuestion = 1000 / totalQuestions;
+
+    // Calculate correctness score based on question type
+    let correctnessScore = 0;
+
+    if (question.multipleChoiceQuestion) {
+        // Balanced partial scoring for multiple-choice questions
+        // raw_score = max(0, (C_B / B) - (C_M / M))
+        // where:
+        //  - B = number of correct options
+        //  - C_B = number of correctly selected options
+        //  - M = number of incorrect options
+        //  - C_M = number of incorrectly selected options
+        try {
+            const mc = question.multipleChoiceQuestion;
+            const correctAnswersArr = Array.isArray(mc.correctAnswers) ? mc.correctAnswers : [];
+            const B = correctAnswersArr.filter(Boolean).length;
+            const M = Math.max(0, correctAnswersArr.length - B);
+
+            const selected = Array.isArray(answer) ? answer : (typeof answer === 'number' ? [answer] : []);
+            const selectedSet = new Set(selected);
+
+            let C_B = 0;
+            let C_M = 0;
+            for (let i = 0; i < correctAnswersArr.length; i++) {
+                const isCorrect = !!correctAnswersArr[i];
+                if (selectedSet.has(i)) {
+                    if (isCorrect) C_B++;
+                    else C_M++;
+                }
+            }
+
+            const partCorrect = B > 0 ? (C_B / B) : 0;
+            const partIncorrect = M > 0 ? (C_M / M) : 0;
+            const raw_score = Math.max(0, partCorrect - partIncorrect);
+            correctnessScore = raw_score;
+        } catch (err) {
+            logger.warn({ error: err, questionUid: question.uid }, 'Failed to compute partial multiple-choice score, falling back to strict correctness');
+            correctnessScore = checkAnswerCorrectness(question, answer) ? 1 : 0;
+        }
+    } else if (question.numericQuestion || question.questionType === 'numeric') {
+        // Numeric questions: binary correct/incorrect
+        const isCorrect = checkAnswerCorrectness(question, answer);
+        correctnessScore = isCorrect ? 1 : 0;
+    } else {
+        // Default: check if answer is correct
+        const isCorrect = checkAnswerCorrectness(question, answer);
+        correctnessScore = isCorrect ? 1 : 0;
+    }
+
+    // Apply time penalty using logarithmic decay
+    // Get duration from timer Redis key instead of database
+    let timeLimit = 60000; // Default 60 seconds in ms
+    if (accessCode) {
+        try {
+            // Try the basic timer key first (for live/quiz mode)
+            let timerKey = `mathquest:timer:${accessCode}:${question.uid}`;
+            let timerData = await redisClient.get(timerKey);
+
+            if (!timerData) {
+                // If not found, we might need to check if this is a more complex key pattern
+                // For now, use the simple pattern as it's the most common
+                logger.warn({ accessCode, questionUid: question.uid }, 'Timer data not found in Redis, using default duration');
+            } else {
+                const parsed = JSON.parse(timerData);
+                if (parsed.durationMs) {
+                    timeLimit = parsed.durationMs;
+                }
+            }
+        } catch (error) {
+            logger.warn({ error, accessCode, questionUid: question.uid }, 'Failed to get duration from timer Redis key, using default');
+        }
+    }
+
+    const timeLimitSeconds = timeLimit / 1000;
     const serverTimeSpentSeconds = Math.max(0, serverTimeSpent / 1000);
-    const timePenalty = Math.floor(serverTimeSpentSeconds * 10); // 10 points per second
+    // FIX: Use total presentation time for penalty calculation to ensure fairness after timer restarts
+    const totalPresentationSeconds = Math.max(0, totalPresentationTime / 1000);
 
-    const finalScore = Math.max(baseScore - timePenalty, 0);
+    // Get restart count to determine penalty caps
+    let restartCount = 0;
+    if (accessCode) {
+        try {
+            const timerKey = `mathquest:timer:${accessCode}:${question.uid}`;
+            const timerData = await redisClient.get(timerKey);
+            if (timerData) {
+                const parsed = JSON.parse(timerData);
+                restartCount = parsed.restartCount || 0;
+            }
+        } catch (error) {
+            logger.warn({ error, accessCode, questionUid: question.uid }, 'Failed to get restart count from timer, using default of 0');
+        }
+    }
+
+    // NEW: Dynamic penalty caps based on restart count
+    // First session (restartCount=0): 0-30% penalty
+    // Second session (restartCount=1): 30-50% penalty (starts from 30%)
+    // Third+ session (restartCount>=2): capped at 50% penalty
+    let basePenaltyPercent = 0.0; // 0% base penalty for first session
+    let maxPenaltyPercent = 0.3;  // 30% max penalty for first session
+
+    if (restartCount === 1) {
+        // Second session: start from 30%, go up to 50%
+        basePenaltyPercent = 0.3; // Start from 30%
+        maxPenaltyPercent = 0.5;  // Go up to 50%
+    } else if (restartCount >= 2) {
+        // Third+ session: capped at 50%
+        basePenaltyPercent = 0.5; // Fixed at 50%
+        maxPenaltyPercent = 0.5;  // Capped at 50%
+    }
+
+    // Calculate time penalty factor based on current session time (not total presentation time for restarts)
+    let effectiveTimeSpent = serverTimeSpentSeconds;
+    if (restartCount >= 1) {
+        // For restarted sessions, use current session time, not total presentation time
+        effectiveTimeSpent = serverTimeSpentSeconds;
+    } else {
+        // For first session, use server time spent (not total presentation time)
+        effectiveTimeSpent = serverTimeSpentSeconds;
+    }
+
+    // Logarithmic time penalty: time_penalty_factor = min(1, log(t + 1) / log(T + 1))
+    const timePenaltyFactor = Math.min(1, Math.log(effectiveTimeSpent + 1) / Math.log(timeLimitSeconds + 1));
+
+    // Calculate penalty with dynamic caps
+    const penaltyRange = maxPenaltyPercent - basePenaltyPercent;
+    const dynamicPenaltyPercent = basePenaltyPercent + (penaltyRange * timePenaltyFactor);
+
+    // Final score calculation
+    const scoreBeforePenalty = baseScorePerQuestion * correctnessScore;
+    const timePenalty = scoreBeforePenalty * dynamicPenaltyPercent;
+    const finalScore = Math.max(0, scoreBeforePenalty - timePenalty);
 
     logger.info({
         questionType: question.questionType,
-        baseScore,
-        serverTimeSpent,
+        totalQuestions,
+        baseScorePerQuestion,
+        correctnessScore,
         serverTimeSpentSeconds,
+        totalPresentationSeconds,  // Log both times for debugging
+        effectiveTimeSpent,
+        timeLimitSeconds,
+        restartCount,
+        basePenaltyPercent,
+        maxPenaltyPercent,
+        dynamicPenaltyPercent,
+        timePenaltyFactor,
+        scoreBeforePenalty,
         timePenalty,
         finalScore,
-        isCorrect
-    }, 'Score calculation details (diagnostic)');
+        answer,
+        note: 'NEW: Dynamic penalty caps based on restart count - First session: 0-30%, Second: 30-50%, Third+: 50% cap'
+    }, 'New scoring calculation with dynamic penalty caps for restarted questions');
 
-    // Return both score and timePenalty for answer record
     return {
-        score: finalScore,
-        timePenalty
+        score: Math.round(finalScore * 100) / 100, // Round to 2 decimal places
+        timePenalty: Math.round(timePenalty * 100) / 100
     };
 }
 
 /**
  * Check if the answer is correct for a given question
- * @param question Question object with correctAnswers
+ * @param question Question object with correctAnswers, correctAnswer, tolerance, and questionType
  * @param answer User's submitted answer
  * @returns Whether the answer is correct
  */
 export function checkAnswerCorrectness(question: any, answer: any): boolean {
-    if (!question || !question.correctAnswers) return false;
+    if (!question) return false;
+
+    // Debug: Log the complete question structure
+    logger.info({
+        questionUid: question.uid,
+        questionTitle: question.title,
+        hasNumericQuestion: !!question.numericQuestion,
+        hasMultipleChoiceQuestion: !!question.multipleChoiceQuestion,
+        numericQuestionData: question.numericQuestion,
+        multipleChoiceQuestionData: question.multipleChoiceQuestion,
+        submittedAnswer: answer,
+        submittedAnswerType: typeof answer
+    }, '[DEBUG] Question structure and answer for correctness check');
+
+    // Numeric questions: check with tolerance (polymorphic structure)
+    if (question.numericQuestion) {
+        const numericQuestion = question.numericQuestion;
+        logger.info({
+            questionUid: question.uid,
+            correctAnswer: numericQuestion.correctAnswer,
+            tolerance: numericQuestion.tolerance,
+            submittedAnswer: answer,
+            submittedAnswerType: typeof answer
+        }, '[DEBUG] Numeric question correctness check details');
+
+        if (numericQuestion.correctAnswer === undefined) {
+            logger.warn({
+                questionUid: question.uid,
+                numericQuestion
+            }, '[DEBUG] Numeric question has undefined correctAnswer');
+            return false;
+        }
+
+        if (typeof answer !== 'number') {
+            // Try to parse as number
+            const parsedAnswer = parseFloat(answer);
+            if (isNaN(parsedAnswer)) {
+                logger.warn({
+                    questionUid: question.uid,
+                    originalAnswer: answer,
+                    parsedAnswer
+                }, '[DEBUG] Could not parse answer as number');
+                return false;
+            }
+            answer = parsedAnswer;
+        }
+
+        const tolerance = numericQuestion.tolerance || 0;
+        const difference = Math.abs(answer - numericQuestion.correctAnswer);
+        const isWithinTolerance = difference <= tolerance;
+
+        logger.info({
+            questionUid: question.uid,
+            correctAnswer: numericQuestion.correctAnswer,
+            submittedAnswer: answer,
+            tolerance,
+            difference,
+            isWithinTolerance
+        }, '[DEBUG] Numeric answer tolerance check result');
+
+        return isWithinTolerance;
+    }
+
+    // Multiple choice questions: use correctAnswers array (polymorphic structure)
+    if (question.multipleChoiceQuestion) {
+        const multipleChoiceQuestion = question.multipleChoiceQuestion;
+        if (!multipleChoiceQuestion.correctAnswers) return false;
+
+        // Multiple choice (multiple answers): answer is array of indices, correctAnswers is boolean array
+        if (Array.isArray(multipleChoiceQuestion.correctAnswers) && Array.isArray(answer)) {
+            // Check that all and only correct indices are selected
+            const correctIndices = multipleChoiceQuestion.correctAnswers
+                .map((v: boolean, i: number) => v ? i : -1)
+                .filter((i: number) => i !== -1);
+            // Sort both arrays for comparison
+            const submitted = [...answer].sort();
+            const correct = [...correctIndices].sort();
+            return (
+                submitted.length === correct.length &&
+                submitted.every((v, i) => v === correct[i])
+            );
+        }
+        // Multiple choice (single answer): answer is index, correctAnswers is boolean array
+        if (Array.isArray(multipleChoiceQuestion.correctAnswers) && typeof answer === 'number') {
+            return multipleChoiceQuestion.correctAnswers[answer] === true;
+        }
+        // Fallback: direct comparison for other types
+        if (multipleChoiceQuestion.correctAnswers) {
+            return multipleChoiceQuestion.correctAnswers === answer;
+        }
+
+        return false;
+    }
+
+    // Legacy fallback for old flat structure (should not be used with polymorphic data)
+    // Numeric questions: check with tolerance
+    if (question.questionType === 'numeric' && question.correctAnswer !== undefined) {
+        if (typeof answer !== 'number') {
+            // Try to parse as number
+            const parsedAnswer = parseFloat(answer);
+            if (isNaN(parsedAnswer)) return false;
+            answer = parsedAnswer;
+        }
+
+        const tolerance = question.tolerance || 0;
+        const difference = Math.abs(answer - question.correctAnswer);
+        return difference <= tolerance;
+    }
+
+    // Multiple choice questions: use correctAnswers array
+    if (!question.correctAnswers) return false;
 
     // Multiple choice (multiple answers): answer is array of indices, correctAnswers is boolean array
     if (Array.isArray(question.correctAnswers) && Array.isArray(answer)) {
@@ -109,13 +390,17 @@ export function checkAnswerCorrectness(question: any, answer: any): boolean {
  * @param gameInstanceId Game instance ID
  * @param userId User ID
  * @param answerData Answer submission data
+ * @param isDeferredOverride Optional override for deferred mode detection
+ * @param attemptCountOverride Optional attempt count override for deferred sessions
  * @returns Score result with details
  */
 export async function submitAnswerWithScoring(
     gameInstanceId: string,
     userId: string,
     answerData: AnswerSubmissionPayload,
-    isDeferredOverride?: boolean
+    isDeferredOverride?: boolean,
+    attemptCountOverride?: number,
+    totalPresentationMs?: number
 ): Promise<ScoreResult> {
     try {
         logger.info({
@@ -123,7 +408,8 @@ export async function submitAnswerWithScoring(
             userId,
             answerData,
             isDeferredOverride,
-            note: '[DIAGNOSTIC] submitAnswerWithScoring called with isDeferredOverride'
+            attemptCountOverride,
+            note: '[DIAGNOSTIC] submitAnswerWithScoring called with isDeferredOverride and attemptCountOverride'
         }, '[DIAGNOSTIC] Top-level entry to submitAnswerWithScoring');
 
         logger.info({
@@ -175,9 +461,21 @@ export async function submitAnswerWithScoring(
         const isDeferred = gameInstance?.playMode === 'tournament' && gameInstance?.status === 'completed';
         logger.info({ gameInstanceId, userId, playMode: gameInstance?.playMode, status: gameInstance?.status, isDeferred }, '[LOG] GameInstance fetch result (using status for deferred mode)');
         // Use canonical attemptCount for all modes (deferred bug workaround removed)
-        const attemptCount = participant.nbAttempts;
+        // NEW: Use attemptCountOverride for deferred sessions if provided
+        const attemptCount = (isDeferred && attemptCountOverride !== undefined) ? attemptCountOverride : participant.nbAttempts;
         // Use canonical attemptCount for all modes (deferred bug workaround removed)
         const attemptCountForTimer = attemptCount;
+
+        logger.info({
+            gameInstanceId,
+            userId,
+            isDeferred,
+            participantNbAttempts: participant.nbAttempts,
+            attemptCountOverride,
+            finalAttemptCount: attemptCount,
+            attemptCountForTimer,
+            note: 'DEFERRED_FIX: Attempt count selection for timer and scoring'
+        }, '[DEFERRED_FIX] Attempt count determination');
         // FIX: Always use attempt-namespaced key for DEFERRED participants
         let answerKey: string;
         if (isDeferred) {
@@ -288,7 +586,11 @@ export async function submitAnswerWithScoring(
         // Different answer or first submission - proceed with scoring
         logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid }, '[LOG] Proceeding to fetch question for scoring');
         const question = await prisma.question.findUnique({
-            where: { uid: answerData.questionUid }
+            where: { uid: answerData.questionUid },
+            include: {
+                multipleChoiceQuestion: true,
+                numericQuestion: true
+            }
         });
         if (!question) {
             logger.error({ gameInstanceId, userId, questionUid: answerData.questionUid }, '[ERROR] Question not found');
@@ -310,12 +612,14 @@ export async function submitAnswerWithScoring(
         }
         // Calculate server-side timing (SECURITY FIX: always use CanonicalTimerService)
         let serverTimeSpent: number = 0;
+        let totalPresentationTime: number = 0;
         let timerDebugInfo: any = {};
         const canonicalTimerService = new CanonicalTimerService(redisClient);
         const playMode = gameInstance.playMode;
         const accessCode = gameInstance.accessCode;
         const questionUid = answerData.questionUid;
         if (playMode !== 'practice') {
+            // Get both current session time AND total presentation time
             serverTimeSpent = await canonicalTimerService.getElapsedTimeMs(
                 accessCode,
                 questionUid,
@@ -324,6 +628,22 @@ export async function submitAnswerWithScoring(
                 userId,
                 attemptCountForTimer
             );
+
+            // Get total time since question was first presented (for fair penalty calculation)
+            // FIX: Use provided totalPresentationMs if available, otherwise fall back to canonical timer service
+            if (totalPresentationMs !== undefined) {
+                totalPresentationTime = totalPresentationMs;
+            } else {
+                totalPresentationTime = await canonicalTimerService.getTotalPresentationTimeMs(
+                    accessCode,
+                    questionUid,
+                    playMode,
+                    isDeferred,
+                    userId,
+                    attemptCountForTimer
+                );
+            }
+
             // Use canonical public timer key util for all modes
             const timerKey = getTimerKey({
                 accessCode,
@@ -344,18 +664,20 @@ export async function submitAnswerWithScoring(
                 attemptCount,
                 attemptCountForTimer,
                 serverTimeSpent,
+                totalPresentationTime,
                 timerState,
                 timerKey,
-                note: '[MODERN] CanonicalTimerService.getElapsedTimeMs used for penalty, using canonical attemptCount in all modes.'
+                note: '[MODERN] CanonicalTimerService.getElapsedTimeMs and getTotalPresentationTimeMs used for penalty, using canonical attemptCount in all modes.'
             };
         } else {
             serverTimeSpent = 0;
+            totalPresentationTime = 0;
             timerDebugInfo = { playMode, note: 'Practice mode: no timer' };
         }
         // [LOG REMOVED] Noisy timer/mode diagnostic
+        // Calculate if answer is correct for Redis storage
         const isCorrect = checkAnswerCorrectness(question, answerData.answer);
-        logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid, isCorrect }, '[LOG] Answer correctness check result');
-        const { score: newScore, timePenalty } = calculateAnswerScore(isCorrect, serverTimeSpent, question);
+        const { score: newScore, timePenalty } = await calculateAnswerScore(question, answerData.answer, serverTimeSpent, totalPresentationTime, gameInstance.accessCode);
         logger.info({
             gameInstanceId,
             userId,
@@ -363,11 +685,12 @@ export async function submitAnswerWithScoring(
             newScore,
             timePenalty,
             serverTimeSpent,
+            totalPresentationTime,
             isDeferred,
             playMode: gameInstance?.playMode,
             attemptCount,
             timerDebugInfo
-        }, '[TIME_PENALTY] Calculated score and time penalty (canonical)');
+        }, '[TIME_PENALTY] Calculated score and time penalty (canonical) with presentation time fix');
         // Replace previous score for this question (not increment)
         let scoreDelta = newScore - previousScore;
 
@@ -425,12 +748,20 @@ export async function submitAnswerWithScoring(
             const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
             // [LOG REMOVED] Noisy log for Redis participant update
             const redisParticipantData = await redisClient.hget(participantKey, userId);
+            let participantData;
             if (redisParticipantData) {
-                const participantData = JSON.parse(redisParticipantData);
+                participantData = JSON.parse(redisParticipantData);
                 participantData.score = currentTotalScore;
-                await redisClient.hset(participantKey, userId, JSON.stringify(participantData));
-                // [LOG REMOVED] Noisy log for Redis participant update
+            } else {
+                // Create initial participant data if it doesn't exist
+                participantData = {
+                    score: currentTotalScore,
+                    userId: userId,
+                    timestamp: Date.now()
+                };
             }
+            await redisClient.hset(participantKey, userId, JSON.stringify(participantData));
+            // [LOG REMOVED] Noisy log for Redis participant update
 
             if (isDeferred) {
                 // 🔒 DEFERRED MODE FIX: Update session state instead of global leaderboard

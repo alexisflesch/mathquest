@@ -32,9 +32,6 @@
             "@shared/*": [
                 "../shared/*"
             ],
-            "@logger": [
-                "../shared/logger.ts"
-            ],
             "@db": [
                 "../backend-backup/db/index.ts"
             ],
@@ -56,8 +53,10 @@
         "../shared/types/**/*.ts",
         "../shared/constants/**/*.ts",
         "../shared/logger.ts",
+        "../shared/prenoms.json",
         "../backend-backup/db/index.ts",
-        "next.config.ts"
+        "next.config.ts",
+        "tests/**/*" // Include test files for VSCode TypeScript language server
     ],
     "exclude": [
         "node_modules",

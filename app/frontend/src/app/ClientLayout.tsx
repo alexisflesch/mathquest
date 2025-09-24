@@ -6,6 +6,7 @@ import { logger, getCurrentLogLevel, setLogLevel, LogLevel } from '@/clientLogge
 import { MathJaxContext } from 'better-react-mathjax';
 import AppNav from '@/components/AppNav';
 import InfinitySpin from '@/components/InfinitySpin';
+import AuthErrorBanner from '@/components/AuthErrorBanner';
 
 // Loading screen component
 function LoadingScreen() {
@@ -57,6 +58,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
     return (
         <>
+            <AuthErrorBanner />
             <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
             <main className={`min-h-screen transition-all ease-in-out pt-14 md:pt-0 ${sidebarCollapsed ? 'md:ml-12' : 'md:ml-64'}`} style={{ transitionDuration: '220ms' }}>
                 {children}
@@ -71,6 +73,10 @@ export default function ClientLayout({
     children: React.ReactNode;
 }) {
     useEffect(() => {
+        // Dev-only: previous code attempted to forcibly unregister Service Workers and clear caches.
+        // That behavior has been removed to eliminate any runtime service worker activity during local dev.
+        // If you need to clear SWs manually while debugging, use an incognito window or the ?unregisterSW=1 hook in layout.tsx.
+
         // Example of client-side logging in action
         logger.debug('Layout mounted - Debug level message');
         logger.info('Application initialized');

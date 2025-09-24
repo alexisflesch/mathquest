@@ -19,15 +19,17 @@
         },
         "moduleResolution": "node",
         "downlevelIteration": true,
-        "jsx": "react-jsx" // Enable JSX support for TSX files in shared examples
+        "types": [
+            "node"
+        ],
     },
     "include": [
         "src/**/*",
-        "tests/**/*",
-        "../shared/**/*.ts" // Only include shared TypeScript files, exclude .tsx examples
+        "../shared/**/*.ts"
     ],
     "exclude": [
         "node_modules",
+        "src/tests",
         "../shared/types/examples" // Exclude shared TSX examples directory
     ],
     "ts-node": {

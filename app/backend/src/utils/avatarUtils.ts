@@ -3,60 +3,16 @@
  * Ensures consistent animal emoji avatars across the platform
  */
 
-// Allowed animal emoji avatars - comprehensive list of animal emojis
-export const ALLOWED_ANIMAL_AVATARS = [
-    // Mammals - Land
-    '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🦁', '🐯', '🐸', '🐵', '🐰', '🐺', '🦝', '🐷', '🐮', '🐹',
-    '🐭', '🐗', '🦏', '🦛', '🐘', '🦒', '🦌', '🐄', '🐂', '🐃', '🐎', '🦄', '🦓', '🐑', '🐐', '🦙',
-    '🦘', '🐪', '🐫', '🦔', '🦇', '🐿️', '🦫', '🦦', '🦨', '🦡',
+import {
+    ALLOWED_ANIMAL_AVATARS,
+    EXTRA_ALLOWED_AVATARS,
+    ALL_ALLOWED_AVATARS,
+    type AllowedAvatar
+} from '@shared/constants/avatars';
 
-    // Birds
-    '🐔', '🐓', '🐣', '🐤', '🐥', '🦆', '🦅', '🦉', '🦚', '🦜', '🦢', '🐧', '🕊️', '🦃', '🦩',
-
-    // Marine Animals
-    '🐳', '🐋', '🐬', '🦭', '🐟', '🐠', '🐡', '🦈', '🐙', '🦑', '🦞', '🦀', '🐚', '🦐',
-
-    // Reptiles & Amphibians
-    '🐢', '🦎', '🐍', '🐲', '🐉', '🦕', '🦖',
-
-    // Insects & Small Creatures
-    '🐛', '🦋', '🐌', '🐞', '🐜', '🦗', '🕷️', '🦂', '🐝', '🪲', '🪳'
-] as const;
-
-export const EXTRA_ALLOWED_AVATARS = [
-    // Personnages / Créatures
-    '🤖', // Robot
-    '👽', // Extra-terrestre
-    '👾', // Monstre pixelisé
-    '🧸', // Nounours
-
-    // Symboles liés aux animaux
-    '🐾', // Empreintes de pattes
-
-    // Fruits / Objets ludiques
-    '🍉', // Pastèque
-    '🍎', // Pomme
-    '🍇', // Raisin (fun, coloré)
-
-    // Icônes visuelles ludiques
-    '⭐',  // Étoile
-    '🌟', // Étoile brillante
-    '⚡',  // Éclair
-    '🌈', // Arc-en-ciel
-
-    // Animaux manquants ou particuliers
-    '🐊', // Crocodile
-    '🐇', // Lapin de profil
-    '🪼', // Méduse
-
-    // Accessoires-personnages
-    '👑', // Couronne
-    '🎩', // Chapeau haut-de-forme
-    '🕶️', // Lunettes de soleil
-] as const;
-
-
-export type AllowedAvatar = typeof ALLOWED_ANIMAL_AVATARS[number];
+// Re-export for backward compatibility
+export { ALLOWED_ANIMAL_AVATARS, EXTRA_ALLOWED_AVATARS, ALL_ALLOWED_AVATARS };
+export type { AllowedAvatar };
 
 /**
  * Validates if the provided avatar is one of the allowed animal emojis
@@ -64,7 +20,7 @@ export type AllowedAvatar = typeof ALLOWED_ANIMAL_AVATARS[number];
  * @returns true if valid, false otherwise
  */
 export function isValidAvatar(avatar: string): avatar is AllowedAvatar {
-    return ALLOWED_ANIMAL_AVATARS.includes(avatar as AllowedAvatar);
+    return ALL_ALLOWED_AVATARS.includes(avatar as AllowedAvatar);
 }
 
 /**
@@ -78,7 +34,7 @@ export function validateAvatar(avatar: string): void {
     }
 
     if (!isValidAvatar(avatar)) {
-        throw new Error(`Invalid avatar. Must be one of the allowed animal emojis: ${ALLOWED_ANIMAL_AVATARS.join(', ')}`);
+        throw new Error(`Invalid avatar. Must be one of the allowed emojis: ${ALL_ALLOWED_AVATARS.join(', ')}`);
     }
 }
 

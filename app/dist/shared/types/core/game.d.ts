@@ -1,7 +1,7 @@
 /**
  * Game-related shared types
  */
-export type PlayMode = 'quiz' | 'tournament' | 'practice' | 'class';
+export type PlayMode = 'quiz' | 'tournament' | 'practice';
 export interface GameTemplate {
     id: string;
     name: string;
@@ -75,15 +75,6 @@ export interface GameInstanceCreationData {
     differedAvailableFrom?: Date;
     differedAvailableTo?: Date;
 }
-export interface GameInstanceUpdateData {
-    name?: string;
-    status?: string;
-    currentQuestionIndex?: number | null;
-    leaderboard?: any;
-    settings?: any;
-    startedAt?: Date | null;
-    endedAt?: Date | null;
-}
 /**
  * Game state interface for runtime game management
  * Used to track active game state in Redis and memory
@@ -118,22 +109,6 @@ export interface GameState {
         /** Whether to show leaderboard between questions */
         showLeaderboard: boolean;
     };
-}
-/**
- * Full game state response from getFullGameState service
- * This is the canonical payload structure sent to projection and dashboard
- */
-export interface FullGameStateResponse {
-    /** Access code for the game */
-    accessCode: string;
-    /** Current game state */
-    gameState: GameState;
-    /** List of participants in the game */
-    participants: any[];
-    /** Answers submitted by participants */
-    answers: Record<string, any[]>;
-    /** Current leaderboard data */
-    leaderboard: any[];
 }
 /**
  * Game status enumeration

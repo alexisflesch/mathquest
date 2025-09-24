@@ -25,13 +25,13 @@ const TEST_CONFIG = {
     backendUrl: 'http://localhost:3007',
     timeout: 30000,
     user: {
-        username: 'TestUser',
+        username: 'Pierre',
         avatar: '🐨'
     },
     tournament: {
         gradeLevel: 'CP',
         discipline: 'Mathématiques',
-        themes: ['addition']
+        themes: ['Calcul']
     }
 };
 
@@ -108,37 +108,45 @@ async function createTournament(context: BrowserContext, page: Page): Promise<To
     log('Creating tournament via API...');
 
     try {
-        // Get cookies from the browser context for debugging
-        const cookies = await context.cookies();
-        log('Available cookies for API request', {
-            cookieNames: cookies.map(c => c.name),
-            authToken: cookies.find(c => c.name === 'authToken')?.value?.substring(0, 20) + '...' || 'none',
-            teacherToken: cookies.find(c => c.name === 'teacherToken')?.value?.substring(0, 20) + '...' || 'none'
-        });
-
-        // Use page.request to make authenticated API call
-        const response = await page.request.post('/api/games', {
-            data: {
-                name: TEST_CONFIG.user.username,
-                playMode: 'tournament',
-                gradeLevel: TEST_CONFIG.tournament.gradeLevel,
-                discipline: TEST_CONFIG.tournament.discipline,
-                themes: TEST_CONFIG.tournament.themes,
-                nbOfQuestions: 2,
-                settings: {
-                    defaultMode: 'direct',
-                    avatar: TEST_CONFIG.user.avatar,
-                    username: TEST_CONFIG.user.username
+        // Use page.evaluate to call the frontend API directly with fetch
+        const response = await page.evaluate(async (data) => {
+            try {
+                const result = await fetch('/api/games', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data),
+                    credentials: 'include'
+                });
+                if (!result.ok) {
+                    const errorText = await result.text();
+                    throw new Error(`${result.status} - ${errorText}`);
                 }
+                const jsonData = await result.json();
+                return { success: true, data: jsonData };
+            } catch (error: any) {
+                return { success: false, error: error.message };
+            }
+        }, {
+            name: TEST_CONFIG.user.username,
+            playMode: 'tournament',
+            gradeLevel: TEST_CONFIG.tournament.gradeLevel,
+            discipline: TEST_CONFIG.tournament.discipline,
+            themes: TEST_CONFIG.tournament.themes,
+            nbOfQuestions: 2,
+            settings: {
+                defaultMode: 'direct',
+                avatar: TEST_CONFIG.user.avatar,
+                username: TEST_CONFIG.user.username
             }
         });
 
-        if (!response.ok()) {
-            const errorText = await response.text();
-            throw new Error(`Failed to create tournament: ${response.status()} - ${errorText}`);
+        if (!response.success) {
+            throw new Error(`Failed to create tournament: ${response.error}`);
         }
 
-        const tournamentData = await response.json();
+        const tournamentData = response.data;
         log('Tournament created successfully', tournamentData);
 
         return {
@@ -157,8 +165,12 @@ async function startTournament(page: Page, accessCode: string): Promise<void> {
     log('Starting tournament...');
 
     try {
-        // Navigate to lobby
-        await page.goto(`${TEST_CONFIG.baseUrl}/lobby/${accessCode}`);
+        // Navigate to live page (not lobby - lobby is part of live page)
+        await page.goto(`${TEST_CONFIG.baseUrl}/live/${accessCode}`);
+
+        // Wait for socket connection and game join to complete
+        log('Waiting for socket connection and game join...');
+        await page.waitForTimeout(5000); // Give time for socket to connect and joinGame to execute
 
         // Wait for lobby to load
         await page.waitForSelector('text=Participants connectés', { timeout: 10000 });
@@ -191,7 +203,7 @@ async function startTournament(page: Page, accessCode: string): Promise<void> {
         log('Redirected to live tournament page');
 
         // Wait for question to appear
-        await page.waitForSelector('[data-testid="question-text"], .question-text, .question, text=/Question/', { timeout: 15000 });
+        await page.waitForSelector('[data-testid="question-text"], .question-text, .question', { timeout: 15000 });
         log('First question loaded');
 
         log('Tournament started successfully');
@@ -344,7 +356,7 @@ test.describe('Tournament Full Flow E2E', () => {
 
             // Enable console logging
             page.on('console', msg => {
-                log(`Browser Console [${msg.defaultMode()}]:`, msg.text());
+                log(`Browser Console [${msg.type()}]:`, msg.text());
             });
 
             // Enable network logging

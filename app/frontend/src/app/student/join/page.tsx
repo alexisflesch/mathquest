@@ -24,15 +24,17 @@ import { useRouter } from "next/navigation";
 import { makeApiRequest } from '@/config/api';
 import { GameJoinResponse } from '@/types/api';
 import { useAuthState } from '@/hooks/useAuthState';
+import { useAuth } from '@/components/AuthProvider';
 import type { GameStatus } from '@shared/types/core/game';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed' | 'expired', message: string }>(null);
+    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed' | 'expired' | 'error', message: string }>(null);
     const router = useRouter();
-    const { userProfile } = useAuthState();
+    const { userProfile, userState } = useAuthState();
+    const { getCurrentUserId } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,7 +44,14 @@ export default function StudentJoinPage() {
             return;
         }
         try {
-            if (!userProfile.userId) {
+            const currentUserId = getCurrentUserId();
+            let userIdToUse = currentUserId;
+
+            // Fallback for guest users if getCurrentUserId() doesn't work
+            if (!userIdToUse && userState === 'guest') {
+                userIdToUse = userProfile.cookieId || `guest_${Date.now()}`;
+                console.log('[JoinPage] Using fallback userId for guest user:', userIdToUse);
+            } if (!userIdToUse) {
                 setError("Impossible de récupérer l'identifiant utilisateur. Veuillez vous reconnecter.");
                 return;
             }
@@ -62,9 +71,25 @@ export default function StudentJoinPage() {
             }
 
             // For quiz/tournament games, proceed with join logic
+            console.log('[JoinPage] Attempting to join game with userProfile:', {
+                userState,
+                userId: currentUserId,
+                username: userProfile.username,
+                hasProfile: !!userProfile
+            });
+
+            if (!currentUserId) {
+                console.error('[JoinPage] No userId available for game joining - user needs to re-register');
+                setModal({
+                    type: 'error',
+                    message: "Votre session a expiré. Veuillez vous reconnecter."
+                });
+                return;
+            }
+
             const data = await makeApiRequest<GameJoinResponse>(`/api/games/${code}/join`, {
                 method: 'POST',
-                body: JSON.stringify({ userId: userProfile.userId }),
+                body: JSON.stringify({ userId: userIdToUse }),
             });
             const game = data.gameInstance;
             const status = game.status;
@@ -155,7 +180,7 @@ export default function StudentJoinPage() {
             >
                 {modal?.type === 'notfound' && (
                     <div className="dialog-modal-content gap-4">
-                        <span>Le code que vous avez saisi n'existe pas.</span>
+                        <span>Le code que vous avez saisi n&apos;existe pas.</span>
                         <div className="dialog-modal-actions">
                             <button
                                 className="dialog-modal-btn"
@@ -205,4 +230,7 @@ export default function StudentJoinPage() {
         </div>
     );
 }
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 

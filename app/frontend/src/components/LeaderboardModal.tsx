@@ -29,12 +29,14 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
     leaderboard,
     currentUserId,
 }) => {
-    // Sort leaderboard by score (descending) and add ranks if not present
+    // Sort leaderboard by exact score (descending) and add ranks if not present
+    // Display rounded score only in UI
     const sortedLeaderboard = React.useMemo(() => {
         const sorted = [...leaderboard].sort((a, b) => b.score - a.score);
         return sorted.map((entry, index) => ({
             ...entry,
-            rank: entry.rank ?? index + 1
+            rank: entry.rank ?? index + 1,
+            displayScore: Math.round(entry.score)
         }));
     }, [leaderboard]);
 
@@ -76,9 +78,14 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                     style={{
                                         backgroundColor: 'var(--card-bg)',
                                         borderColor: 'var(--border)',
-                                        color: 'var(--text)'
+                                        color: 'var(--text)',
+                                        position: 'relative'
                                     }}
                                 >
+                                    {/* Ribbon for current user, overlays card */}
+                                    {isCurrentUser && (
+                                        <span className="ribbon-diagonal"></span>
+                                    )}
                                     {/* Rank Number */}
                                     <div className="flex-shrink-0 mr-3 w-8 h-8 flex items-center justify-center">
                                         <span
@@ -94,8 +101,8 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                         <div
                                             className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
                                             style={{
-                                                backgroundColor: isCurrentUser ? 'var(--primary)' : 'var(--input-bg)',
-                                                color: isCurrentUser ? 'white' : 'var(--text)'
+                                                backgroundColor: 'var(--input-bg)',
+                                                color: 'var(--text)'
                                             }}
                                         >
                                             {entry.avatarEmoji || '👤'}
@@ -109,14 +116,6 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                             style={{ color: 'var(--text)' }}
                                         >
                                             {entry.username}
-                                            {isCurrentUser && (
-                                                <span
-                                                    className="ml-2 text-xs opacity-75"
-                                                    style={{ color: 'var(--text-muted)' }}
-                                                >
-                                                    (Vous)
-                                                </span>
-                                            )}
                                         </p>
                                     </div>
 
@@ -126,7 +125,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                                             className="text-sm font-semibold"
                                             style={{ color: 'var(--text)' }}
                                         >
-                                            {entry.score} pts
+                                            {entry.displayScore} pts
                                         </span>
                                     </div>
                                 </div>

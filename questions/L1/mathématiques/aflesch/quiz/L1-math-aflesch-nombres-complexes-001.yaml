@@ -1,0 +1,211 @@
+# Questions de Mathématiques niveau L1 pour MathQuest
+# Thème : Nombres complexes
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt1-nombres-complexes-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Un calcul de module facile"
+  tags: ["module"]
+  excludedFrom: ["practice", "tournament"]
+  questionType: "single_choice"
+  timeLimit: 60
+  difficulty: 2
+  text: |
+        Quel est le module du nombre complexe \(\sqrt{2}+i\sqrt{6}\)?
+  answerOptions:
+    - \(\sqrt{2}\)
+    - \(2\sqrt{2}\)
+    - \(\sqrt{4}\)
+    - \(2\sqrt{6}\)
+    - \(\sqrt{16}\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, true, false, false, false, false]
+
+
+- uid: "aflesch-mt1-nombres-complexes-002"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Forme exponentielle d'un nombre négatif"
+  tags: ["forme exponentielle"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Sous forme exponentielle, le nombre \(z=-2\) s'écrit:
+    \[ z=-2\mathrm{e}^{i0}\]
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers: [false, true]
+
+
+- uid: "aflesch-mt1-nombres-complexes-003"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Un calcul d'argument"
+  tags: ["argument"]
+  excludedFrom: ["practice", "tournament"]
+  questionType: "single_choice"
+  timeLimit: 120
+  difficulty: 2
+  text: |
+   Soit:
+   \[ z = \left(\frac{1}{1+i\sqrt{3}}\right)^{12}\]
+   Alors,
+  answerOptions:
+  - \(\mathrm{arg}(z) = \frac{\pi}{3}\)
+  - \(\mathrm{arg}(z) = -\frac{\pi}{3}\)
+  - \(\mathrm{arg}(z) = \frac{\pi}{6}\)
+  - \(\mathrm{arg}(z) = -\frac{\pi}{6}\)
+  - \(\mathrm{arg}(z) = \pi\)
+  - \(\mathrm{arg}(z) = -\pi\)
+  - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, false, false, false, true]
+
+
+- uid: "aflesch-mt1-nombres-complexes-004"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Formules du cours"
+  tags: ["module", "forme algébrique", "argument"]
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 2
+  text: |
+   Soient \(z\) et \(z'\) deux nombres complexes non nuls. Parmi les formules ci-après, laquelle (lesquelles) est (sont) correcte(s) ?
+  answerOptions:
+    - \(|zz'|=|z|\times |z'|\)
+    - \(|z+z'| = |z| + |z'|\)
+    - \(\mathrm{Re}(z+z') = \mathrm{Re}(z)+\mathrm{Re}(z')\)
+    - \(\mathrm{Im}(zz') = \mathrm{Im}(z)\mathrm{Im}(z')\)
+    - \(\mathrm{arg}(z+z')=\mathrm{arg}(z)\mathrm{arg}(z')\)
+  correctAnswers: [true, false, true, false, false]
+
+
+- uid: "aflesch-mt1-nombres-complexes-005"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Nombre de racines"
+  tags: ["racines carrées"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Tout nombre complexe non nul admet exactement:
+  answerOptions:
+    - Une racine carrée
+    - Deux racines carrées
+    - Trois racines carrées
+    - Une infinité de racines carrées
+    - Cela dépend du nombre complexe
+  correctAnswers: [false, true, false, false, false]
+
+
+- uid: "aflesch-mt1-nombres-complexes-006"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Nombre de solutions d'une équation"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Combien l'équation d'inconnue \(z\in\mathbb{C}\) suivante admet-elle de solutions?
+    \[ \mathrm{e}^{z} = 2 \]
+  answerOptions:
+    - Zéro
+    - Une
+    - Deux
+    - Trois
+    - Une infinité
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, false, true, false]
+
+
+- uid: "aflesch-mt1-nombres-complexes-007"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes"]
+  title: "Cours : formule de Moivre"
+  tags: ["forme exponentielle"]
+  questionType: "multiple_choice"
+  excludedFrom: ["practice", "tournament"]
+  timeLimit: 90
+  difficulty: 1
+  text: |
+    Quelle(s) formule(s) est (sont) correcte(s)?
+  answerOptions:
+  - \(\displaystyle \forall a\in\mathbb{Z}, \forall b\in\mathbb{R},\,\left(\mathrm{e}^{ia}\right)^b = \mathrm{e}^{iab}\)
+  - \(\displaystyle \forall a\in\mathbb{R}, \forall b\in\mathbb{R},\,\left(\mathrm{e}^{ia}\right)^b = \mathrm{e}^{iab}\)
+  - \(\displaystyle \forall a\in\mathbb{Z}, \forall b\in\mathbb{R},\,\left(\mathrm{e}^{ib}\right)^a = \mathrm{e}^{iab}\)
+  - \(\displaystyle \forall a\in\mathbb{R}, \forall b\in\mathbb{R},\,\left(\mathrm{e}^{ib}\right)^a = \mathrm{e}^{iab}\)
+  - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, true, false, false]
+
+
+- uid: "aflesch-mt1-nombres-complexes-008"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes", "Ensembles et applications"]
+  title: "Propriétés de la fonction carré complexe"
+  tags: ["injection", "surjection", "bijection", "racines carrées"]
+  questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
+  timeLimit: 60
+  difficulty: 1
+  text: |
+    Que peut-on dire de l'application \(f\) définie ci-dessous?
+    \[\begin{array}{ccccc}
+            f & \colon & \mathbb{C} & \rightarrow & \mathbb{C} \\
+              &        & z          & \mapsto     & z^2
+        \end{array}
+    \]
+  answerOptions:
+    - \(f\) n'est ni injective ni surjective
+    - \(f\) est injective et non surjective
+    - \(f\) est non injective et surjective
+    - \(f\) est injective et surjective
+  correctAnswers: [true, false, false, false]
+
+
+- uid: "aflesch-mt1-nombres-complexes-008b"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Nombres complexes", "Ensembles et applications"]
+  title: "Propriétés de la fonction carré complexe"
+  tags: ["injection", "surjection", "bijection", "racines carrées"]
+  questionType: "single_choice"
+  excludedFrom: ["practice", "tournament"]
+  timeLimit: 120
+  difficulty: 3
+  text: |
+    Soit \(f\) définie par:
+    \[\begin{array}{ccccc}
+            f & \colon & \mathbb{C} & \rightarrow & \mathbb{C} \\
+              &        & z          & \mapsto     & z^2+1
+        \end{array}
+    \]
+    On note \(\mathcal{I}\) l'ensemble des imaginaires purs. Alors, \(f^{-1}(\mathbb{R})=\ldots\)
+  answerOptions:
+    - \(\mathbb{R}\)
+    - \(\varnothing\)
+    - \([1,+\infty[\)
+    - \(\mathcal{I}\)
+    - \(\mathbb{R}\cup\mathcal{I}\)
+    - Aucune des réponses ci-dessus
+  correctAnswers: [false, false, false, false, true, false]

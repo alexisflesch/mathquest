@@ -38,11 +38,26 @@ export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEven
 
         handleConnection(socket);
 
-        // Create custom disconnect handler that includes practice session cleanup
-        socket.on('disconnect', (reason) => {
+        // Create custom disconnect handler that includes all cleanup
+        socket.on('disconnect', async (reason) => {
+            logger.info({ socketId: socket.id, reason }, 'Socket disconnecting - starting cleanup');
+
             // Handle practice session cleanup first
             handlePracticeSessionDisconnect(io, socket);
-            // Note: Game-specific disconnect handler is registered in game/index.ts
+
+            // Handle game-specific disconnect logic
+            const { disconnectHandler: gameDisconnectHandler } = await import('./game/disconnect');
+            await gameDisconnectHandler(io, socket)();
+
+            // Handle teacher dashboard disconnect logic
+            const { disconnectHandler: teacherDisconnectHandler } = await import('./teacherControl/disconnect');
+            await teacherDisconnectHandler(io, socket)();
+
+            // Handle main disconnect logic (for general participant tracking)
+            const { disconnectHandler: mainDisconnectHandler } = await import('./disconnectHandler');
+            await mainDisconnectHandler(io, socket)(reason);
+
+            logger.info({ socketId: socket.id, reason }, 'Socket disconnect cleanup completed');
         });
 
         // Register feature-specific handlers

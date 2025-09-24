@@ -84,11 +84,10 @@ async function sendFirstQuestionAndStartTimer({ io, target, gameInstance, questi
         currentQuestionIndex: 0,
         totalQuestions: 1
     };
-    // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-    if (canonicalPayload.timeLimit == null) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { timeLimit, ...rest } = canonicalPayload;
-        canonicalPayload = rest;
+    // Ensure timeLimit is present and valid (schema requires positive integer)
+    if (canonicalPayload.timeLimit == null || canonicalPayload.timeLimit <= 0) {
+        logger.warn(`Question ${canonicalPayload.uid} has invalid timeLimit: ${canonicalPayload.timeLimit}, using default 30s`);
+        canonicalPayload.timeLimit = 30; // Default to 30 seconds
     }
     const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
     if (!parseResult.success) {

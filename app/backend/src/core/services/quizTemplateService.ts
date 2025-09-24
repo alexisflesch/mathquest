@@ -58,7 +58,12 @@ export class gameTemplateService {
                 include: {
                     questions: {
                         include: {
-                            question: true
+                            question: {
+                                include: {
+                                    multipleChoiceQuestion: true,
+                                    numericQuestion: true
+                                }
+                            }
                         }
                     }
                 }
@@ -81,7 +86,12 @@ export class gameTemplateService {
                 include: includeQuestions ? {
                     questions: {
                         include: {
-                            question: true
+                            question: {
+                                include: {
+                                    multipleChoiceQuestion: true,
+                                    numericQuestion: true
+                                }
+                            }
                         },
                         orderBy: {
                             sequence: 'asc'

@@ -38,7 +38,7 @@ export interface SocketValidationConfig {
 export class SocketValidationMiddleware {
     private config: Required<SocketValidationConfig>;
     private socket: Socket;
-    private originalHandlers = new Map<string, Function>();
+    private originalHandlers = new Map<string, (...args: any[]) => void>();
 
     constructor(socket: Socket, config: SocketValidationConfig = {}) {
         this.socket = socket;

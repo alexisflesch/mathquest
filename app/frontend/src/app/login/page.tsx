@@ -8,12 +8,14 @@ import { useAuth } from '../../components/AuthProvider';
 import AuthModeToggle, { AuthMode } from '../../components/auth/AuthModeToggle';
 import GuestForm from '../../components/auth/GuestForm';
 import StudentAuthForm from '../../components/auth/StudentAuthForm';
+import { FRONTEND_AUTH_ENDPOINTS } from '@/constants/api';
 import AvatarGrid from '../../components/ui/AvatarGrid';
+import UsernameSelector from '../../components/ui/UsernameSelector';
 import Image from 'next/image';
 import InfinitySpin from '@/components/InfinitySpin';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import EmailVerificationModal from '../../components/auth/EmailVerificationModal';
 
-function LoginPageInner() {
+function LoginPageInnerComponent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { userState, userProfile, setGuestProfile, universalLogin, loginStudent, registerStudent, loginTeacher, registerTeacher, logout } = useAuth();
@@ -27,6 +29,11 @@ function LoginPageInner() {
     const [isTeacherSignup, setIsTeacherSignup] = useState(false);
     const [adminPassword, setAdminPassword] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('');
+    const [accountUsername, setAccountUsername] = useState('');
+
+    // Email verification modal state
+    const [showEmailVerificationModal, setShowEmailVerificationModal] = useState(false);
+    const [registeredUserEmail, setRegisteredUserEmail] = useState('');
 
     // URL params for redirect after login  
     const returnTo = searchParams?.get('returnTo') || '/';
@@ -54,6 +61,12 @@ function LoginPageInner() {
         }
     }, [searchParams]);
 
+    // Map simpleMode to authMode
+    useEffect(() => {
+        if (simpleMode === 'guest') setAuthMode('guest');
+        else setAuthMode('student'); // 'Compte' tab always shows account form
+    }, [simpleMode]);
+
     const handleGuestSubmit = async (guestData: { username: string; avatar: string }) => {
         setIsLoading(true);
         setError('');
@@ -67,12 +80,6 @@ function LoginPageInner() {
             setIsLoading(false);
         }
     };
-
-    // Map simpleMode to authMode
-    useEffect(() => {
-        if (simpleMode === 'guest') setAuthMode('guest');
-        else setAuthMode('student'); // 'Compte' tab always shows account form
-    }, [simpleMode]);
 
     // Unified account form submit handler
     const handleAccountAuth = async (data: { email: string; password: string; confirmPassword?: string; username?: string; avatar?: string }) => {
@@ -88,6 +95,8 @@ function LoginPageInner() {
                     // Use universal login - automatically detects if user is student or teacher
                     await universalLogin(data.email, data.password);
                 }
+                // Login successful, redirect to target page
+                router.push(finalRedirectUrl);
             } else {
                 if (!data.username) throw new Error('Nom d\'utilisateur requis pour l\'inscription');
                 if (!data.avatar) throw new Error('Avatar requis pour l\'inscription');
@@ -96,13 +105,16 @@ function LoginPageInner() {
 
                 // Registration - use appropriate endpoint based on teacher checkbox
                 if (isTeacherSignup) {
-                    // Need to create teacher registration function
                     await registerTeacher(data.email, data.password, data.username, adminPassword, data.avatar);
                 } else {
                     await registerStudent(data.email, data.password, data.username, data.avatar);
                 }
+
+                // Both student and teacher registrations require email verification
+                setRegisteredUserEmail(data.email);
+                setShowEmailVerificationModal(true);
+                // Don't redirect immediately - let the modal handle the flow
             }
-            router.push(finalRedirectUrl);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Erreur lors de l\'authentification');
         } finally {
@@ -111,6 +123,34 @@ function LoginPageInner() {
     };
 
     // Handler for guest upgrade form - removed as upgrade is now in profile page
+
+    // Handle resending email verification
+    const handleResendEmailVerification = async () => {
+        try {
+            const response = await fetch(FRONTEND_AUTH_ENDPOINTS.RESEND_EMAIL_VERIFICATION, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: registeredUserEmail }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de l\'envoi de l\'email');
+            }
+        } catch (error) {
+            throw error; // Re-throw to let the modal handle the error display
+        }
+    };
+
+    // Handle email verification modal close
+    const handleEmailVerificationModalClose = () => {
+        setShowEmailVerificationModal(false);
+        setRegisteredUserEmail('');
+        // Redirect to final destination after modal is closed
+        router.push(finalRedirectUrl);
+    };
 
     // Only anonymous users should reach this point (all authenticated users are redirected)
     // Show loading state while authentication is being determined
@@ -181,13 +221,16 @@ function LoginPageInner() {
                             <form onSubmit={e => {
                                 e.preventDefault();
                                 const form = e.currentTarget;
-                                handleAccountAuth({
+                                const formData = {
                                     email: form.email.value,
                                     password: form.password.value,
                                     confirmPassword: form.confirmPassword?.value,
-                                    username: form.username?.value,
+                                    username: accountUsername, // Use state directly
                                     avatar: selectedAvatar
-                                });
+                                };
+                                console.log('Form submission data:', formData);
+                                console.log('accountUsername state:', accountUsername);
+                                handleAccountAuth(formData);
                             }} className="space-y-4">
                                 {/* Only one set of fields, in correct order */}
                                 <div>
@@ -218,6 +261,16 @@ function LoginPageInner() {
                                         autoComplete={studentAuthMode === 'login' ? 'current-password' : 'new-password'}
                                         required
                                     />
+                                    {studentAuthMode === 'login' && (
+                                        <div className="mt-1 text-right">
+                                            <Link
+                                                href="/reset-password"
+                                                className="text-sm text-[color:var(--primary)] hover:text-[color:var(--primary-hover)]"
+                                            >
+                                                Mot de passe oublié ?
+                                            </Link>
+                                        </div>
+                                    )}
                                     {studentAuthMode === 'signup' && (
                                         <p className="text-xs text-[color:var(--muted-foreground)] mt-1">Minimum 6 caractères</p>
                                     )}
@@ -241,16 +294,10 @@ function LoginPageInner() {
                                 )}
                                 {studentAuthMode === 'signup' && (
                                     <div>
-                                        <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                                            <User className="inline w-4 h-4 mr-2" />
-                                            Pseudo
-                                        </label>
-                                        <input
-                                            type="text"
+                                        <UsernameSelector
                                             id="username"
-                                            name="username"
-                                            maxLength={20}
-                                            className="input input-bordered input-lg w-full"
+                                            value={accountUsername}
+                                            onChange={setAccountUsername}
                                             required
                                         />
                                     </div>
@@ -326,6 +373,14 @@ function LoginPageInner() {
                     )}
                 </div>
             </div>
+
+            {/* Email Verification Modal */}
+            <EmailVerificationModal
+                isOpen={showEmailVerificationModal}
+                onClose={handleEmailVerificationModalClose}
+                userEmail={registeredUserEmail}
+                onResendEmail={handleResendEmailVerification}
+            />
         </div>
     );
 }
@@ -333,7 +388,10 @@ function LoginPageInner() {
 export default function LoginPage() {
     return (
         <Suspense fallback={<div>Chargement...</div>}>
-            <LoginPageInner />
+            <LoginPageInnerComponent />
         </Suspense>
     );
 }
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';

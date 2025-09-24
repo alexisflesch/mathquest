@@ -1,0 +1,95 @@
+- uid: "gpt5-mt3-integrales-generalisees-002"
+  author: "gpt5"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Convergence p-intégrale à l'infini"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Pour quelle condition suffisante sur \(p\) l’intégrale généralisée suivante converge-t-elle ?
+    \[
+    \int_1^{+\infty} \frac{1}{x^p}\,dx
+    \]
+  answerOptions:
+    - '\(p > 0\)'
+    - '\(p > 1\)'
+    - '\(p \geq 1\)'
+    - '\(p < 1\)'
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt5-mt3-integrales-generalisees-003"
+  author: "gpt5"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Identification de divergences"
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Parmi les intégrales suivantes, lesquelles sont divergentes ?
+  answerOptions:
+    - '\(\int_{0}^{1} \frac{1}{\sqrt{x}}\,dx\)'
+    - '\(\int_{0}^{1} \frac{1}{x}\,dx\)'
+    - '\(\int_{1}^{+\infty} \frac{1}{x^2}\,dx\)'
+    - '\(\int_{1}^{+\infty} \frac{1}{\sqrt{x}}\,dx\)'
+    - 'Elles sont toutes convergentes'
+  correctAnswers: [false, true, false, true, false]
+
+- uid: "gpt5-mt3-integrales-generalisees-004"
+  author: "gpt5"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Valeur d’une intégrale convergente"
+  questionType: "numeric"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Calculer la valeur de l'intégrale généralisée :
+    \[
+    \int_{1}^{+\infty} \frac{1}{x^2}\,dx
+    \]
+  correctAnswer: 1
+
+- uid: "gpt5-mt3-integrales-generalisees-005"
+  author: "gpt5"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence"]
+  title: "Intégrale logarithmique"
+  questionType: "numeric"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Donner la valeur de l’intégrale suivante :
+    \[
+    \int_{0}^{1} \ln(x)\,dx
+    \]
+  correctAnswer: -1
+
+
+- uid: "aflesch-mt3-integrales-generalisees-006"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["absolue convergence"]
+  title: "Convergence absolue"
+  questionType: "multiple_choice"
+  timeLimit: 30
+  difficulty: 2
+  text: |
+    Laquelle des affirmations suivantes est correcte ?
+  answerOptions:
+    - "Si une intégrale converge absolument, elle converge forcément."
+    - "Une intégrale peut converger sans être absolument convergente."
+    - "Si une intégrale converge, elle converge aussi absolument."
+    - "La convergence absolue implique la divergence."
+  correctAnswers: [true, true, false, false]

@@ -14,12 +14,12 @@ export interface EnhancedFiltersResponse {
     gradeLevel: FilterOption[];
     disciplines: FilterOption[];
     themes: FilterOption[];
-    authors: FilterOption[];
+    tags: FilterOption[];
 }
 
 export interface EnhancedFilters {
     levels: FilterOption[];
     disciplines: FilterOption[];
     themes: FilterOption[];
-    authors: FilterOption[];
+    tags: FilterOption[];
 }

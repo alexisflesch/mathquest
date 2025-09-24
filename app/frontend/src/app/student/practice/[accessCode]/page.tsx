@@ -28,12 +28,33 @@ const logger = createLogger('PracticeSessionWithAccessCode');
 // Simple user data functions for practice mode
 function getUserId(): string {
     if (typeof window === 'undefined') return 'practice-user';
-    return localStorage.getItem('mathquest_user_id') || `practice-${Date.now()}`;
+
+    // First try to get existing user ID
+    let userId = localStorage.getItem('mathquest_user_id');
+
+    // If no stored user ID, generate one and store it for stability
+    if (!userId) {
+        userId = `practice-${Date.now()}`;
+        localStorage.setItem('mathquest_user_id', userId);
+        logger.info('Generated and stored stable userId for practice session', { userId });
+    }
+
+    return userId;
 }
 
 function getUsername(): string {
     if (typeof window === 'undefined') return 'Practice User';
-    return localStorage.getItem('mathquest_username') || 'Practice User';
+
+    // First try to get existing username
+    let username = localStorage.getItem('mathquest_username');
+
+    // If no stored username, use default and store it
+    if (!username) {
+        username = 'Practice User';
+        localStorage.setItem('mathquest_username', username);
+    }
+
+    return username;
 }
 
 interface PracticeParams {
@@ -48,8 +69,22 @@ export default function PracticeSessionWithAccessCodePage() {
     const router = useRouter();
     const params = useParams();
     const accessCode = params?.accessCode as string;
-    const userId = getUserId();
-    const username = getUsername();
+
+    // Make userId stable to prevent infinite re-renders
+    const userId = useMemo(() => {
+        if (typeof window === 'undefined') return 'practice-user';
+        let storedUserId = localStorage.getItem('mathquest_user_id');
+        if (!storedUserId) {
+            storedUserId = `practice-${Date.now()}`;
+            localStorage.setItem('mathquest_user_id', storedUserId);
+        }
+        return storedUserId;
+    }, []); // Empty dependency array to make it stable
+
+    const username = useMemo(() => {
+        if (typeof window === 'undefined') return 'Practice User';
+        return localStorage.getItem('mathquest_username') || 'Practice User';
+    }, []); // Empty dependency array to make it stable
 
     // State for game instance loading (minimal public info)
     const [gameInstance, setGameInstance] = useState<PublicGameInstance | null>(null);
@@ -72,6 +107,9 @@ export default function PracticeSessionWithAccessCodePage() {
     const [snackbarMessage, setSnackbarMessage] = useState<string>("");
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
 
+    // Numeric question state
+    const [numericAnswer, setNumericAnswer] = useState<string>('');
+
     // Feedback overlay state (exactly like live page)
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
     const [feedbackText, setFeedbackText] = useState<string>("");
@@ -79,6 +117,10 @@ export default function PracticeSessionWithAccessCodePage() {
 
     // Stats modal state
     const [showStatsModal, setShowStatsModal] = useState(false);
+
+    // Connection status tracking
+    const [connectionLost, setConnectionLost] = useState(false);
+    const [reconnecting, setReconnecting] = useState(false);
 
     // Extract practice parameters from game instance instead of URL
     useEffect(() => {
@@ -135,6 +177,22 @@ export default function PracticeSessionWithAccessCodePage() {
         fetchGameInstance();
     }, [accessCode, router]);
 
+    // Make settings stable to prevent infinite re-renders
+    const practiceSettings = useMemo(() => ({
+        discipline: practiceParams.discipline,
+        gradeLevel: practiceParams.level,
+        themes: practiceParams.themes,
+        questionCount: practiceParams.limit,
+        showImmediateFeedback: true,
+        allowRetry: true,
+        randomizeQuestions: false,
+        gameTemplateId: practiceParams.gameTemplateId
+    }), [practiceParams.discipline, practiceParams.level, practiceParams.themes, practiceParams.limit, practiceParams.gameTemplateId]);
+
+    // Make autoStart stable
+    const shouldAutoStart = useMemo(() => !loading && !error && practiceParams.discipline !== '',
+        [loading, error, practiceParams.discipline]);
+
     // Initialize practice session hook with auto-start when params are ready
     const {
         state: practiceState,
@@ -146,42 +204,41 @@ export default function PracticeSessionWithAccessCodePage() {
         clearError: clearPracticeError
     } = usePracticeSession({
         userId,
-        settings: {
-            discipline: practiceParams.discipline,
-            gradeLevel: practiceParams.level,
-            themes: practiceParams.themes,
-            questionCount: practiceParams.limit,
-            showImmediateFeedback: true,
-            allowRetry: true,
-            randomizeQuestions: false,
-            gameTemplateId: practiceParams.gameTemplateId
-        },
-        autoStart: !loading && !error && practiceParams.discipline !== '' // Only auto-start when we have params
+        settings: practiceSettings,
+        autoStart: shouldAutoStart
     });
 
     // Manual session start trigger (fallback) - ensure session starts when params are ready
     useEffect(() => {
         // Only start if we have valid parameters and are connected but no session exists
+        // AND there's no stored session ID (which would indicate we're trying to recover)
+        const hasStoredSession = localStorage.getItem(`practice_session_${userId}`);
         if (practiceParams.discipline && practiceParams.level &&
-            practiceState.connected && !practiceState.session && !practiceState.connecting) {
+            practiceState.connected && !practiceState.session && !practiceState.connecting &&
+            !hasStoredSession) {
             logger.debug('Manually starting practice session with params', practiceParams);
             startSession();
         }
     }, [practiceParams.discipline, practiceParams.level, practiceState.connected,
-    practiceState.session, practiceState.connecting, startSession]);
+    practiceState.session, practiceState.connecting, startSession, userId]);
 
     // Reset selected answers when question changes (like live page)
     const currentQuestionUid = practiceState.currentQuestion?.uid;
     useEffect(() => {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
+        setNumericAnswer('');
         setSnackbarOpen(false);
         setShowFeedbackOverlay(false);
     }, [currentQuestionUid]);
 
     // Helper: is multiple choice (exactly like live page)
     const isMultipleChoice = useMemo(() => {
-        return practiceState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
+        const questionType = practiceState.currentQuestion?.questionType;
+        // Handle both camelCase (from backend) and snake_case (from constants)
+        return questionType === QUESTION_TYPES.MULTIPLE_CHOICE ||
+            questionType === 'multipleChoice' ||
+            questionType === 'multiple_choice';
     }, [practiceState.currentQuestion?.questionType]);
 
     // Handle single choice answer submission (exactly like live page)
@@ -221,6 +278,29 @@ export default function PracticeSessionWithAccessCodePage() {
         submitAnswer(practiceState.currentQuestion.uid, selectedAnswers, clientTimestamp);
     };
 
+    // Handle numeric answer submission
+    const handleNumericSubmit = () => {
+        if (!practiceState.currentQuestion || !numericAnswer.trim()) return;
+
+        const numericValue = parseFloat(numericAnswer);
+        if (isNaN(numericValue)) {
+            setSnackbarMessage("Veuillez entrer un nombre valide.");
+            setSnackbarType("error");
+            setSnackbarOpen(true);
+            return;
+        }
+
+        const clientTimestamp = Date.now();
+        logger.debug('Submitting numeric answer', {
+            questionUid: practiceState.currentQuestion.uid,
+            answer: numericValue,
+            clientTimestamp
+        });
+
+        // For numeric questions, submit the numeric value as the first (and only) answer
+        submitAnswer(practiceState.currentQuestion.uid, [numericValue], clientTimestamp);
+    };
+
     // Handle next question request (exactly like live page)
     const handleRequestNextQuestion = async () => {
         if (!practiceState.currentQuestion) return;
@@ -244,13 +324,27 @@ export default function PracticeSessionWithAccessCodePage() {
     // Use canonical QuestionDataForStudent directly for QuestionCard
     const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
         if (!practiceState.currentQuestion) return null;
-        return {
+
+        const baseQuestion = {
             uid: practiceState.currentQuestion.uid,
             text: practiceState.currentQuestion.text,
             questionType: practiceState.currentQuestion.questionType,
-            answerOptions: practiceState.currentQuestion.answerOptions || [],
             timeLimit: practiceState.currentQuestion.timeLimit ?? 30 // fallback to 30s if missing
         };
+
+        // Use polymorphic structure for the question data
+        const result: QuestionDataForStudent = {
+            ...baseQuestion,
+            multipleChoiceQuestion: practiceState.currentQuestion.multipleChoiceQuestion,
+            numericQuestion: practiceState.currentQuestion.numericQuestion
+        };
+
+        // Add legacy fallback for backward compatibility
+        if (practiceState.currentQuestion.answerOptions) {
+            result.answerOptions = practiceState.currentQuestion.answerOptions;
+        }
+
+        return result;
     }, [practiceState.currentQuestion]);
 
     // Determine if component should be readonly (showing answers like live page)
@@ -278,14 +372,48 @@ export default function PracticeSessionWithAccessCodePage() {
         }
     }, [practiceState.lastFeedback, practiceState.hasAnswered]);
 
-    // Handle socket errors
+    // Handle socket errors and connection status
     useEffect(() => {
         if (practiceState.error) {
-            setSnackbarType("error");
-            setSnackbarMessage(practiceState.error);
-            setSnackbarOpen(true);
+            const isConnectionError = practiceState.error.includes('serveur') ||
+                practiceState.error.includes('connexion') ||
+                practiceState.error.includes('réseau') ||
+                practiceState.error.includes('connection') ||
+                practiceState.error.includes('network');
+
+            if (isConnectionError) {
+                setConnectionLost(true);
+                setReconnecting(true);
+                setSnackbarMessage("Connexion perdue, tentative de reconnexion...");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+
+                // Auto-hide snackbar after 3 seconds and try to reconnect
+                setTimeout(() => {
+                    setSnackbarOpen(false);
+                    // Trigger reconnection by clearing error and attempting to restart session
+                    clearPracticeError();
+                    setReconnecting(false);
+                    setConnectionLost(false);
+                }, 3000);
+            } else {
+                // For non-connection errors, show the error normally
+                setSnackbarType("error");
+                setSnackbarMessage(practiceState.error);
+                setSnackbarOpen(true);
+            }
+        } else {
+            // Connection restored
+            if (connectionLost) {
+                setConnectionLost(false);
+                setReconnecting(false);
+                setSnackbarMessage("Connexion rétablie");
+                setSnackbarType("success");
+                setSnackbarOpen(true);
+                setTimeout(() => setSnackbarOpen(false), 2000);
+            }
         }
-    }, [practiceState.error]);
+    }, [practiceState.error, connectionLost, clearPracticeError]);
 
     // Game instance loading state
     if (loading) {
@@ -319,59 +447,40 @@ export default function PracticeSessionWithAccessCodePage() {
         return <LoadingScreen message="Connexion à la session d'entraînement..." />;
     }
 
-    // Error state with better UX
-    if (practiceState.error) {
+    // Error state with better UX - only show for non-connection errors
+    if (practiceState.error && !connectionLost) {
         const isConnectionError = practiceState.error.includes('serveur') ||
             practiceState.error.includes('connexion') ||
-            practiceState.error.includes('réseau');
+            practiceState.error.includes('réseau') ||
+            practiceState.error.includes('connection') ||
+            practiceState.error.includes('network');
 
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 flex items-center justify-center p-4">
-                <div className="text-center bg-white dark:bg-base-200 p-8 rounded-lg shadow-lg max-w-md w-full">
-                    <div className="text-red-600 dark:text-red-400 mb-4">
-                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d={isConnectionError
-                                    ? "M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                                    : "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"} />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-2">
-                        {isConnectionError ? 'Problème de connexion' : 'Erreur'}
-                    </h2>
-                    <p className="text-red-600 dark:text-red-300 mb-6">{practiceState.error}</p>
+        // Don't show error component for connection errors - handle via snackbar instead
+        if (!isConnectionError) {
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 flex items-center justify-center p-4">
+                    <div className="text-center bg-white dark:bg-base-200 p-8 rounded-lg shadow-lg max-w-md w-full">
+                        <div className="text-red-600 dark:text-red-400 mb-4">
+                            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-2">Erreur</h2>
+                        <p className="text-red-600 dark:text-red-300 mb-6">{practiceState.error}</p>
 
-                    <div className="space-y-3">
-                        {isConnectionError && (
+                        <div className="space-y-3">
                             <button
-                                onClick={() => {
-                                    clearPracticeError();
-                                    // Try to reconnect
-                                    setTimeout(() => window.location.reload(), 100);
-                                }}
-                                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                                onClick={() => window.location.reload()}
+                                className="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
                             >
-                                Réessayer la connexion
+                                Recharger la page
                             </button>
-                        )}
-
-                        <button
-                            onClick={() => router.push('/student/practice')}
-                            className="w-full bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                            Retour aux paramètres
-                        </button>
-
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                            Recharger la page
-                        </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
 
     // Session completed state
@@ -414,6 +523,18 @@ export default function PracticeSessionWithAccessCodePage() {
     // Main practice interface (exactly matching live page structure)
     return (
         <div className="main-content">
+            {/* Connection status indicator */}
+            {(connectionLost || reconnecting) && (
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+                    <div className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span className="text-sm font-medium">
+                            {reconnecting ? "Tentative de reconnexion..." : "Connexion perdue"}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Feedback Overlay - exactly like live page */}
             {showFeedbackOverlay && (
                 <div className="feedback-overlay">
@@ -450,10 +571,16 @@ export default function PracticeSessionWithAccessCodePage() {
                             isQuizMode={false} // Set to false to show question title like live page in practice mode
                             readonly={isReadonly}
                             correctAnswers={practiceState.lastFeedback && practiceState.currentQuestion ?
-                                practiceState.currentQuestion.answerOptions.map((_, answerIdx) =>
-                                    practiceState.lastFeedback?.correctAnswers[answerIdx] || false
-                                ) : undefined
+                                (practiceState.currentQuestion.multipleChoiceQuestion?.answerOptions ||
+                                    practiceState.currentQuestion.answerOptions || []).map((_, answerIdx) =>
+                                        practiceState.lastFeedback?.correctAnswers[answerIdx] || false
+                                    ) : undefined
                             }
+                            // Numeric question props
+                            numericAnswer={numericAnswer}
+                            setNumericAnswer={setNumericAnswer}
+                            handleNumericSubmit={handleNumericSubmit}
+                            numericCorrectAnswer={practiceState.lastFeedback?.numericCorrectAnswer}
                         />
                     ) : (
                         <div className="text-center text-lg text-gray-500 p-8">
@@ -469,25 +596,16 @@ export default function PracticeSessionWithAccessCodePage() {
                     <div className="mt-4">
                         <div className="flex justify-between items-center">
                             {/* Left side: Explanation button - always available after answering */}
-                            {practiceState.hasAnswered && practiceState.currentQuestion ? (
+                            {practiceState.hasAnswered && practiceState.currentQuestion && practiceState.lastFeedback?.explanation ? (
                                 <button
                                     className="btn btn-outline btn-sm flex items-center gap-2"
-                                    onClick={() => {
-                                        // If we already have explanation, show it
-                                        if (practiceState.lastFeedback?.explanation) {
-                                            setShowFeedbackOverlay(true);
-                                        } else if (practiceState.currentQuestion) {
-                                            // Otherwise request explanation from server
-                                            requestFeedback(practiceState.currentQuestion.uid);
-                                        }
-                                    }}
-                                    title={practiceState.lastFeedback?.explanation ? "Explication" : "Pas d'explication disponible"}
-                                    disabled={!practiceState.lastFeedback?.explanation}
+                                    onClick={() => setShowFeedbackOverlay(true)}
+                                    title="Explication"
                                 >
                                     <MessageCircle size={16} />
                                 </button>
                             ) : (
-                                <div></div> // Empty div to maintain spacing
+                                <div></div>
                             )}
 
                             {/* Right side: Next question or home button */}
@@ -497,7 +615,7 @@ export default function PracticeSessionWithAccessCodePage() {
                                     onClick={handleRequestNextQuestion}
                                     disabled={!practiceState.currentQuestion}
                                 >
-                                    Suivant →
+                                    Suivant
                                 </button>
                             ) : (
                                 <button
@@ -518,7 +636,7 @@ export default function PracticeSessionWithAccessCodePage() {
                 title={
                     <div className="flex items-center gap-3 justify-center">
                         <BarChart3 size={24} strokeWidth={2.4} />
-                        <span>Bilan de l'entraînement</span>
+                        <span>Bilan de l&apos;entraînement</span>
                     </div>
                 }
                 size="md"

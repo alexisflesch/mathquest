@@ -13,14 +13,19 @@ jest.mock('socket.io-client', () => ({
     io: jest.fn(),
 }));
 
+// --- Mock useGameSocket ---
+jest.mock('@/hooks/useGameSocket');
+
 // --- Actual imports ---
 import { renderHook, act } from '@testing-library/react';
 import { io } from 'socket.io-client';
+import { useGameSocket } from '@/hooks/useGameSocket';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // --- Mocks ---
 const mockedIo = io as jest.MockedFunction<typeof io>;
+const mockedUseGameSocket = useGameSocket as jest.MockedFunction<typeof useGameSocket>;
 
 const mockSocket = {
     connected: false,
@@ -30,6 +35,21 @@ const mockSocket = {
     disconnect: jest.fn(),
     connect: jest.fn(),
     id: 'mockSocketId',
+};
+
+const mockGameSocketReturn = {
+    socket: mockSocket,
+    socketState: {
+        connected: false,
+        connecting: false,
+        error: null,
+        reconnectAttempts: 0
+    },
+    connect: jest.fn(),
+    disconnect: jest.fn(() => mockSocket.disconnect()),
+    reconnect: jest.fn(),
+    emitTimerAction: jest.fn(),
+    onTimerUpdate: jest.fn()
 };
 
 // --- Test Suite ---
@@ -45,6 +65,10 @@ describe('useTeacherQuizSocket Connection', () => {
         mockSocket.disconnect.mockClear();
         mockSocket.connect.mockClear();
         mockSocket.connected = false;
+
+        // Mock useGameSocket to return our mock socket
+        mockedUseGameSocket.mockReturnValue(mockGameSocketReturn as any);
+
         mockedIo.mockReturnValue(mockSocket as any);
 
         const mockLocalStorage = (() => {

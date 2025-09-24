@@ -1482,6 +1482,9 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 .question-text-in-live-page {
   white-space: pre-line;
   text-align: left;
+  overflow-y: auto;
+  max-height: 200px;
+  /* Adjust as needed for your layout */
 }
 
 

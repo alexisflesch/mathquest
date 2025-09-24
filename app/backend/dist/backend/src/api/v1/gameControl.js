@@ -147,6 +147,7 @@ router.post('/:accessCode/question', auth_1.teacherAuth, (0, validation_1.valida
                         uid: updatedGameState.questionData.uid,
                         text: updatedGameState.questionData.text,
                         questionType: updatedGameState.questionData.questionType,
+                        timeLimit: updatedGameState.questionData.timeLimit || 30, // Add mandatory timeLimit
                         answerOptions: updatedGameState.questionData.answerOptions
                     },
                     timer: canonicalTimer, // [MODERNIZATION] Canonical timer state
@@ -238,9 +239,19 @@ router.post('/:accessCode/end-question', auth_1.teacherAuth, async (req, res) =>
                 };
                 io.to([liveRoom, projectionRoom]).emit('question_ended', payload);
             }
-            // Send leaderboard update to both live and projection
+            // 🔒 SECURITY FIX: Send leaderboard update using snapshot for students, live for projection
             if (fullGameState.leaderboard.length > 0) {
-                io.to([liveRoom, projectionRoom]).emit('leaderboard_update', {
+                // Import snapshot service
+                const { getLeaderboardSnapshot } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/leaderboardSnapshotService')));
+                // Send snapshot to students (live room) to prevent score cheating
+                const studentSnapshot = await getLeaderboardSnapshot(accessCode);
+                if (studentSnapshot.length > 0) {
+                    io.to(liveRoom).emit('leaderboard_update', {
+                        leaderboard: studentSnapshot
+                    });
+                }
+                // Send live data to projection room (teachers need current state)
+                io.to(projectionRoom).emit('leaderboard_update', {
                     leaderboard: fullGameState.leaderboard
                 });
             }

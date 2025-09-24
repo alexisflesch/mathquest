@@ -61,7 +61,12 @@ export async function getGameControlState(
             include: {
                 questions: {
                     include: {
-                        question: true // Include the full question details
+                        question: {
+                            include: {
+                                multipleChoiceQuestion: true,
+                                numericQuestion: true
+                            }
+                        }
                     },
                     orderBy: {
                         sequence: 'asc' // Ensure questions are in correct order
@@ -188,126 +193,189 @@ export async function getGameControlState(
 
 /**
  * Helper function to get statistics of answers for a specific question
- * Properly handles both single choice and multiple choice questions
+ * For multiple choice questions: returns percentages per option
+ * For numeric questions: returns all numeric values for frontend processing
  */
-export async function getAnswerStats(accessCode: string, questionUid: string): Promise<Record<string, number>> {
-    const stats: Record<string, number> = {};
-
+export async function getAnswerStats(accessCode: string, questionUid: string): Promise<Record<string, any>> {
     try {
         // Get all answers for this question from Redis
         const answersHash = await redisClient.hgetall(`${ANSWERS_KEY_PREFIX}${accessCode}:${questionUid}`);
 
         if (!answersHash) {
-            return stats;
+            return {};
         }
 
-        // Get the question to understand its type and structure
-        const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-        if (!question) {
-            logger.error({ questionUid }, 'Question not found for stats calculation');
-            return stats;
-        }
-
-        const isMultipleChoice = question.questionType === 'multiple_choice_multiple_answers' ||
-            question.questionType === 'MULTIPLE_CHOICE_MULTIPLE_ANSWERS';
-
-        // Track which users selected which options (for percentage calculation)
-        const userSelections = new Map<string, Set<string>>(); // userId -> Set of selected options
-
-        // Process each answer to build the statistics
-        Object.values(answersHash).forEach(answerJson => {
-            try {
-                const answerData = JSON.parse(answerJson as string);
-                const userId = answerData.userId;
-
-                if (!userId) return;
-
-                // Initialize user's selections if not exists
-                if (!userSelections.has(userId)) {
-                    userSelections.set(userId, new Set());
-                }
-
-                const userOptionSet = userSelections.get(userId)!;
-
-                // Handle different answer structures
-                let selectedOptions = answerData.answer?.selectedOption || answerData.answer;
-
-                logger.debug({
-                    accessCode,
-                    questionUid,
-                    userId,
-                    rawAnswer: answerData.answer,
-                    selectedOptions,
-                    selectedOptionsType: typeof selectedOptions,
-                    isArray: Array.isArray(selectedOptions),
-                    isMultipleChoice
-                }, 'Processing answer for stats - DETAILED');
-
-                // Always handle as an array for consistency
-                let optionsArray: any[];
-                if (Array.isArray(selectedOptions)) {
-                    optionsArray = selectedOptions;
-                } else if (selectedOptions !== undefined && selectedOptions !== null) {
-                    optionsArray = [selectedOptions];
-                } else {
-                    optionsArray = [];
-                }
-
-                // Add each option to the user's set
-                optionsArray.forEach(option => {
-                    if (option !== undefined && option !== null) {
-                        userOptionSet.add(option.toString());
-                    }
-                });
-
-                logger.debug({
-                    accessCode,
-                    questionUid,
-                    userId,
-                    optionsArray,
-                    userSelections: Array.from(userOptionSet)
-                }, 'User selections after processing');
-
-            } catch (e) {
-                logger.error({ error: e }, 'Error parsing answer data');
+        // Get the question to understand its type and structure (polymorphic)
+        const question = await prisma.question.findUnique({
+            where: { uid: questionUid },
+            include: {
+                multipleChoiceQuestion: true,
+                numericQuestion: true
             }
         });
-
-        // Now count how many users selected each option
-        const optionCounts: Record<string, number> = {};
-        userSelections.forEach((optionSet, userId) => {
-            optionSet.forEach(option => {
-                optionCounts[option] = (optionCounts[option] || 0) + 1;
-            });
-        });
-
-        logger.debug({
-            accessCode,
-            questionUid,
-            optionCounts,
-            totalUsers: userSelections.size
-        }, 'Option counts before percentage conversion');
-
-        // Convert user counts to percentages
-        const totalUsers = userSelections.size;
-        if (totalUsers > 0) {
-            Object.keys(optionCounts).forEach(optionKey => {
-                const userCount = optionCounts[optionKey];
-                stats[optionKey] = Math.round((userCount / totalUsers) * 100);
-            });
+        if (!question) {
+            logger.error({ questionUid }, 'Question not found for stats calculation');
+            return {};
         }
 
-        logger.debug({
-            accessCode,
-            questionUid,
-            isMultipleChoice,
-            totalUsers: userSelections.size,
-            finalStats: stats
-        }, 'Answer stats calculated');
+        // Check if this is a numeric question
+        const isNumericQuestion = question.questionType === 'numeric' && question.numericQuestion;
 
-        return stats;
+        if (isNumericQuestion) {
+            // For numeric questions, collect all numeric values for frontend statistics calculation
+            const numericValues: number[] = [];
+
+            Object.values(answersHash).forEach(answerJson => {
+                try {
+                    const answerData = JSON.parse(answerJson as string);
+                    const answer = answerData.answer;
+
+                    // Convert answer to number if needed
+                    let numericAnswer: number;
+                    if (typeof answer === 'number') {
+                        numericAnswer = answer;
+                    } else if (typeof answer === 'string') {
+                        numericAnswer = parseFloat(answer);
+                    } else {
+                        logger.warn({
+                            accessCode,
+                            questionUid,
+                            userId: answerData.userId,
+                            answer,
+                            answerType: typeof answer
+                        }, 'Non-numeric answer found for numeric question');
+                        return; // Skip invalid answers
+                    }
+
+                    if (!isNaN(numericAnswer)) {
+                        numericValues.push(numericAnswer);
+                    }
+                } catch (e) {
+                    logger.error({ error: e }, 'Error parsing answer data for numeric question');
+                }
+            });
+
+            logger.debug({
+                accessCode,
+                questionUid,
+                numericValues,
+                totalAnswers: numericValues.length
+            }, 'Numeric question stats calculated');
+
+            // Return all numeric values for frontend to calculate statistics
+            return {
+                type: 'numeric',
+                values: numericValues,
+                totalAnswers: numericValues.length
+            };
+        } else {
+            // For multiple choice questions, use the existing logic
+            const stats: Record<string, number> = {};
+            const isMultipleChoice = question.questionType === 'multiple_choice_multiple_answers' ||
+                question.questionType === 'MULTIPLE_CHOICE_MULTIPLE_ANSWERS';
+
+            // Track which users selected which options (for percentage calculation)
+            const userSelections = new Map<string, Set<string>>(); // userId -> Set of selected options
+
+            // Process each answer to build the statistics
+            Object.values(answersHash).forEach(answerJson => {
+                try {
+                    const answerData = JSON.parse(answerJson as string);
+                    const userId = answerData.userId;
+
+                    if (!userId) return;
+
+                    // Initialize user's selections if not exists
+                    if (!userSelections.has(userId)) {
+                        userSelections.set(userId, new Set());
+                    }
+
+                    const userOptionSet = userSelections.get(userId)!;
+
+                    // Handle different answer structures
+                    let selectedOptions = answerData.answer?.selectedOption || answerData.answer;
+
+                    logger.debug({
+                        accessCode,
+                        questionUid,
+                        userId,
+                        rawAnswer: answerData.answer,
+                        selectedOptions,
+                        selectedOptionsType: typeof selectedOptions,
+                        isArray: Array.isArray(selectedOptions),
+                        isMultipleChoice
+                    }, 'Processing answer for stats - DETAILED');
+
+                    // Always handle as an array for consistency
+                    let optionsArray: any[];
+                    if (Array.isArray(selectedOptions)) {
+                        optionsArray = selectedOptions;
+                    } else if (selectedOptions !== undefined && selectedOptions !== null) {
+                        optionsArray = [selectedOptions];
+                    } else {
+                        optionsArray = [];
+                    }
+
+                    // Add each option to the user's set
+                    optionsArray.forEach(option => {
+                        if (option !== undefined && option !== null) {
+                            userOptionSet.add(option.toString());
+                        }
+                    });
+
+                    logger.debug({
+                        accessCode,
+                        questionUid,
+                        userId,
+                        optionsArray,
+                        userSelections: Array.from(userOptionSet)
+                    }, 'User selections after processing');
+
+                } catch (e) {
+                    logger.error({ error: e }, 'Error parsing answer data');
+                }
+            });
+
+            // Now count how many users selected each option
+            const optionCounts: Record<string, number> = {};
+            userSelections.forEach((optionSet, userId) => {
+                optionSet.forEach(option => {
+                    optionCounts[option] = (optionCounts[option] || 0) + 1;
+                });
+            });
+
+            logger.debug({
+                accessCode,
+                questionUid,
+                optionCounts,
+                totalUsers: userSelections.size
+            }, 'Option counts before percentage conversion');
+
+            // Convert user counts to percentages
+            const totalUsers = userSelections.size;
+            if (totalUsers > 0) {
+                Object.keys(optionCounts).forEach(optionKey => {
+                    const userCount = optionCounts[optionKey];
+                    stats[optionKey] = Math.round((userCount / totalUsers) * 100);
+                });
+            }
+
+            logger.debug({
+                accessCode,
+                questionUid,
+                isMultipleChoice,
+                totalUsers: userSelections.size,
+                finalStats: stats
+            }, 'Multiple choice answer stats calculated');
+
+            return {
+                type: 'multipleChoice',
+                stats,
+                totalUsers
+            };
+        }
     } catch (error) {
         logger.error({ accessCode, questionUid, error }, 'Error getting answer stats');
-        return stats;
+        return {};
     }
 }

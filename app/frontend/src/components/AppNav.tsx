@@ -322,7 +322,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                                             <span className="font-semibold text-yellow-300">Non connecté</span>
                                         </div>
                                         <div className="ml-7 text-yellow-100 text-sm">
-                                            Connectez-vous en mode invité ou avec un compte pour accéder à l'appli
+                                            Connectez-vous en mode invité ou avec un compte pour accéder à l&apos;appli
                                         </div>
                                     </div>
                                 </div>
@@ -506,7 +506,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                                                             <span className="font-semibold text-yellow-300">Non connecté</span>
                                                         </div>
                                                         <div className="ml-7 text-yellow-100 text-sm">
-                                                            Connectez-vous en mode invité ou avec un compte pour accéder à l'appli
+                                                            Connectez-vous en mode invité ou avec un compte pour accéder à l&apos;appli
                                                         </div>
                                                     </div>
                                                 </div>

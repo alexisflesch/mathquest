@@ -52,7 +52,7 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
             durationMs: typeof parseResult.data.durationMs === 'number' ? parseResult.data.durationMs : 30000
         };
         // Pass canonical object (with durationMs) to service
-        const question = await getQuestionService().createQuestion(req.user.userId, questionData);
+        const question = await getQuestionService().createQuestion(questionData);
         res.status(201).json({ question });
     }
     catch (error) {
@@ -68,7 +68,7 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
  */
 router.get('/filters', async (req, res) => {
     try {
-        const { gradeLevel, discipline, theme, author } = req.query;
+        const { gradeLevel, discipline, theme, tag, mode } = req.query;
         const filterCriteria = {};
         if (gradeLevel) {
             filterCriteria.gradeLevel = Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel];
@@ -79,8 +79,11 @@ router.get('/filters', async (req, res) => {
         if (theme) {
             filterCriteria.theme = Array.isArray(theme) ? theme : [theme];
         }
-        if (author) {
-            filterCriteria.author = Array.isArray(author) ? author : [author];
+        if (tag) {
+            filterCriteria.tag = Array.isArray(tag) ? tag : [tag];
+        }
+        if (mode) {
+            filterCriteria.mode = mode;
         }
         const compatibleFilters = await getQuestionService().getAvailableFilters(filterCriteria);
         // Return only compatible filters for each field
@@ -88,7 +91,7 @@ router.get('/filters', async (req, res) => {
             gradeLevel: (compatibleFilters.gradeLevel || []).filter((v) => typeof v === 'string'),
             disciplines: (compatibleFilters.disciplines || []).filter((v) => typeof v === 'string'),
             themes: (compatibleFilters.themes || []).filter((v) => typeof v === 'string'),
-            authors: (compatibleFilters.authors || []).filter((v) => typeof v === 'string'),
+            tags: (compatibleFilters.tags || []).filter((v) => typeof v === 'string'),
         });
     }
     catch (error) {
@@ -104,7 +107,7 @@ router.get('/filters', async (req, res) => {
  */
 router.get('/list', async (req, res) => {
     try {
-        const { gradeLevel, discipline, themes, limit } = req.query;
+        const { gradeLevel, discipline, themes, limit, mode } = req.query;
         // Convert to appropriate types for filtering
         const filters = {};
         if (gradeLevel)
@@ -115,6 +118,10 @@ router.get('/list', async (req, res) => {
             filters.themes = Array.isArray(themes)
                 ? themes
                 : themes.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        }
+        // Add mode parameter for filtering based on excludedFrom
+        if (mode) {
+            filters.mode = mode;
         }
         // Students can only see non-hidden questions
         filters.includeHidden = false;
@@ -163,13 +170,16 @@ router.get('/:uid', auth_1.optionalAuth, async (req, res) => {
  */
 router.get('/', auth_1.teacherAuth, async (req, res) => {
     try {
+        logger.info('Starting questions endpoint request');
         const { discipline, theme, // Frontend sends 'theme', not 'themes'
         themes, level, // Frontend sends 'level', not 'gradeLevel'
-        gradeLevel, author, // Frontend sends 'author'
+        gradeLevel, tag, // Frontend sends 'tag'
         difficulty, tags, questionType, includeHidden, // req.query.includeHidden (string | undefined)
+        mode, // mode parameter for filtering based on excludedFrom
         page = '1', pageSize = '20', limit, // Frontend uses 'limit' instead of 'pageSize'
         offset // Frontend uses 'offset' for pagination
          } = req.query;
+        logger.info('Extracted query parameters', { discipline, theme, themes, level, gradeLevel, tag, difficulty, tags, questionType, includeHidden, mode, page, pageSize, limit, offset });
         // Convert to appropriate types
         const filters = {};
         if (discipline) {
@@ -204,22 +214,22 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
                 filters.gradeLevel = levelParam;
             }
         }
-        if (author) {
-            // Handle both single values and arrays (consistent with filters endpoint)
-            if (Array.isArray(author)) {
-                filters.authors = author;
+        // Handle tags from both 'tag' and 'tags' parameters
+        const tagParam = tag || tags;
+        if (tagParam) {
+            if (Array.isArray(tagParam)) {
+                filters.tags = tagParam;
             }
-            else {
-                filters.author = author;
+            else if (typeof tagParam === 'string') {
+                filters.tags = tagParam.split(',').map(t => t.trim()).filter(t => t.length > 0);
             }
-        }
-        if (tags) {
-            filters.tags = Array.isArray(tags)
-                ? tags
-                : tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
         }
         if (questionType)
             filters.questionType = questionType;
+        // Handle mode parameter for excluding questions from specific modes
+        if (mode) {
+            filters.mode = mode;
+        }
         // Handle includeHidden filter
         // If includeHidden query param is provided (e.g., 'true' or 'false')
         if (typeof includeHidden === 'string') {
@@ -251,8 +261,11 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
                 take: Number(pageSize)
             };
         }
+        logger.info('About to call getQuestionService().getQuestions', { filters, pagination });
         const result = await getQuestionService().getQuestions(filters, pagination);
         // Debug logging
+        logger.info(`Filters used: ${JSON.stringify(filters)}`);
+        logger.info(`Pagination used: ${JSON.stringify(pagination)}`);
         logger.info(`Returning ${result.questions.length} questions for API request`);
         if (result.questions.length > 0) {
             logger.info(`First question sample: ${JSON.stringify(result.questions[0], null, 2)}`);
@@ -260,7 +273,7 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
         res.status(200).json(result);
     }
     catch (error) {
-        logger.error({ error }, 'Error fetching questions');
+        logger.error({ error: error instanceof Error ? { message: error.message, stack: error.stack } : error }, 'Error fetching questions');
         res.status(500).json({ error: 'An error occurred while fetching questions' });
     }
 });
@@ -275,18 +288,20 @@ router.put('/:uid', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(sc
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
-        // Zod validation for question update (partial allowed, using questionSchema.partial())
+        // Zod validation for question update (partial allowed, using questionUpdateSchema)
         // It's important that the input to updateQuestion matches QuestionUpdateData
-        const updateParseResult = question_zod_1.questionSchema.partial().safeParse(req.body);
+        const updateParseResult = question_zod_1.questionUpdateSchema.safeParse(req.body);
         if (!updateParseResult.success) {
             res.status(400).json({ error: 'Validation failed', details: updateParseResult.error.errors });
             return;
         }
         // Construct the updateData object carefully to match QuestionUpdateData
         const { uid: bodyUid, ...restOfBody } = updateParseResult.data;
+        // Convert null values to undefined to match TypeScript types
+        const cleanedData = Object.fromEntries(Object.entries(restOfBody).map(([key, value]) => [key, value === null ? undefined : value]));
         const updateData = {
             uid: req.params.uid,
-            ...restOfBody,
+            ...cleanedData,
         };
         const updatedQuestion = await getQuestionService().updateQuestion(updateData);
         res.status(200).json({ question: updatedQuestion });

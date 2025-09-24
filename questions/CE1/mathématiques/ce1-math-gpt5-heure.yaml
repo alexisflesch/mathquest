@@ -1,0 +1,19 @@
+- uid: "gpt5-ce1-math-mesures-002"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Lire l’heure"
+  text: "L’horloge de la classe indique la petite aiguille sur le 8 et la grande aiguille sur le 12. Quelle heure est-il ?"
+  questionType: "single_choice"
+  themes: ["Grandeurs et mesures"]
+  tags: ["unités de temps", "utilisation d'instruments"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CE1"
+  answerOptions:
+    - "8 heures"
+    - "12 heures"
+    - "6 heures"
+    - "10 heures"
+  correctAnswers: [true, false, false, false]
+  explanation: "Quand la grande aiguille est sur le 12, c'est une heure pleine. La petite aiguille sur le 8 indique 8 heures."
+  feedbackWaitTime: 15

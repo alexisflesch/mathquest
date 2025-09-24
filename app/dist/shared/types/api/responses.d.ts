@@ -31,14 +31,16 @@ export interface LoginResponse {
 export interface RegisterResponse {
     success: boolean;
     message: string;
-    token: string;
+    token?: string;
     user: {
         id: string;
         username: string;
         email?: string;
         avatar: string;
         role: UserRole;
+        emailVerified?: boolean;
     };
+    requiresEmailVerification?: boolean;
 }
 export interface UpgradeAccountResponse {
     success: boolean;
@@ -54,10 +56,30 @@ export interface UpgradeAccountResponse {
 }
 export interface PasswordResetResponse {
     message: string;
+    success: boolean;
     resetToken?: string;
 }
 export interface PasswordResetConfirmResponse {
     message: string;
+}
+export interface SendEmailVerificationResponse {
+    message: string;
+    success: boolean;
+}
+export interface VerifyEmailResponse {
+    message: string;
+    success: boolean;
+    user?: {
+        id: string;
+        username: string;
+        email?: string;
+        role: UserRole;
+        avatarEmoji?: string;
+    };
+}
+export interface ResendEmailVerificationResponse {
+    message: string;
+    success: boolean;
 }
 export interface AuthStatusResponse {
     authState: 'anonymous' | 'student' | 'teacher' | 'guest';

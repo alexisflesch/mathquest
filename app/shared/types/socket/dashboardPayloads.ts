@@ -27,19 +27,6 @@ export interface GameIdentificationPayload {
 export interface JoinDashboardPayload extends GameIdentificationPayload { }
 
 /**
- * Payload for starting a timer (semantically distinct from pausing)
- */
-export interface StartTimerPayload extends GameIdentificationPayload {
-    /** Duration in seconds to set for the timer */
-    duration: number;
-}
-
-/**
- * Payload for pausing a timer (semantically distinct from joining dashboard)
- */
-export interface PauseTimerPayload extends GameIdentificationPayload { }
-
-/**
  * Consolidated SetQuestionPayload with consistent naming
  */
 export interface SetQuestionPayload {
@@ -103,18 +90,19 @@ export interface DashboardGameStatusChangedPayload {
 }
 
 /**
- * Dashboard participant count update
- */
-export interface DashboardParticipantUpdatePayload {
-    participantCount: number;
-}
-
-/**
  * Dashboard answer statistics update
  */
 export interface DashboardAnswerStatsUpdatePayload {
     questionUid: string;
-    stats: Record<string, number>; // Map of option id to count
+    stats: Record<string, number> | {
+        type: 'multipleChoice';
+        stats: Record<string, number>;
+        totalUsers: number;
+    } | {
+        type: 'numeric';
+        values: number[];
+        totalAnswers: number;
+    };
 }
 
 /**

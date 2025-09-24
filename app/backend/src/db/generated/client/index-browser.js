@@ -129,7 +129,10 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   resetToken: 'resetToken',
   resetTokenExpiresAt: 'resetTokenExpiresAt',
-  avatarEmoji: 'avatarEmoji'
+  avatarEmoji: 'avatarEmoji',
+  emailVerificationToken: 'emailVerificationToken',
+  emailVerificationTokenExpiresAt: 'emailVerificationTokenExpiresAt',
+  emailVerified: 'emailVerified'
 };
 
 exports.Prisma.TeacherProfileScalarFieldEnum = {
@@ -157,9 +160,21 @@ exports.Prisma.QuestionScalarFieldEnum = {
   excludedFrom: 'excludedFrom',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
+  feedbackWaitTime: 'feedbackWaitTime',
+  isHidden: 'isHidden'
+};
+
+exports.Prisma.MultipleChoiceQuestionScalarFieldEnum = {
+  questionUid: 'questionUid',
   answerOptions: 'answerOptions',
-  correctAnswers: 'correctAnswers',
-  feedbackWaitTime: 'feedbackWaitTime'
+  correctAnswers: 'correctAnswers'
+};
+
+exports.Prisma.NumericQuestionScalarFieldEnum = {
+  questionUid: 'questionUid',
+  correctAnswer: 'correctAnswer',
+  tolerance: 'tolerance',
+  unit: 'unit'
 };
 
 exports.Prisma.GameTemplateScalarFieldEnum = {
@@ -240,14 +255,14 @@ exports.Prisma.JsonNullValueFilter = {
 };
 exports.UserRole = exports.$Enums.UserRole = {
   STUDENT: 'STUDENT',
-  TEACHER: 'TEACHER'
+  TEACHER: 'TEACHER',
+  GUEST: 'GUEST'
 };
 
 exports.PlayMode = exports.$Enums.PlayMode = {
   quiz: 'quiz',
   tournament: 'tournament',
-  practice: 'practice',
-  class: 'class'
+  practice: 'practice'
 };
 
 exports.ParticipantStatus = exports.$Enums.ParticipantStatus = {
@@ -262,6 +277,8 @@ exports.Prisma.ModelName = {
   TeacherProfile: 'TeacherProfile',
   StudentProfile: 'StudentProfile',
   Question: 'Question',
+  MultipleChoiceQuestion: 'MultipleChoiceQuestion',
+  NumericQuestion: 'NumericQuestion',
   GameTemplate: 'GameTemplate',
   QuestionsInGameTemplate: 'QuestionsInGameTemplate',
   GameInstance: 'GameInstance',

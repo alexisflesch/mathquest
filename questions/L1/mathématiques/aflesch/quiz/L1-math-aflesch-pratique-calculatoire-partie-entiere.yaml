@@ -1,0 +1,24 @@
+# Questions de Mathématiques niveau L1 pour MathQuest
+# Thème : Pratique calculatoire
+# Auteur : Alexis Flesch
+
+- uid: "aflesch-mt1-pratique-calculatoire-partie-entiere-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Définition de la partie entière"
+  tags: ["propriétés partie entière"]
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  excludedFrom: ["practice", "tournament"]
+  text: |
+    Soit \(x\in\mathbb{R}\). Quel encadrement est vrai ?
+  answerOptions:
+    -  \(x \leq \left\lfloor x \right\rfloor <  x + 1\)
+    -  \(x \leq \left\lfloor x \right\rfloor \leq x + 1\)
+    -  \(\left\lfloor x \right\rfloor \leq x <  \left\lfloor x \right\rfloor + 1\)
+    - ils sont tous faux
+  correctAnswers: [false, false, true, false]
+

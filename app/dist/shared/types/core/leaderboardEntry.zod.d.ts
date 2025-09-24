@@ -18,8 +18,8 @@ export declare const LeaderboardEntrySchema: z.ZodObject<{
     username: string;
     score: number;
     avatarEmoji?: string | undefined;
-    rank?: number | undefined;
     attemptCount?: number | undefined;
+    rank?: number | undefined;
     participationType?: ParticipationType | undefined;
     participationId?: string | undefined;
 }, {
@@ -27,8 +27,8 @@ export declare const LeaderboardEntrySchema: z.ZodObject<{
     username: string;
     score: number;
     avatarEmoji?: string | undefined;
-    rank?: number | undefined;
     attemptCount?: number | undefined;
+    rank?: number | undefined;
     participationType?: ParticipationType | undefined;
     participationId?: string | undefined;
 }>;

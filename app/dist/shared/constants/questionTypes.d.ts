@@ -17,34 +17,12 @@ export declare const QUESTION_TYPES: {
     readonly MULTIPLE_CHOICE: "multiple_choice";
     /** Multiple choice with single answer - canonical type */
     readonly MULTIPLE_CHOICE_SINGLE_ANSWER: "multiple_choice_single_answer";
+    /** Numeric question - new polymorphic type */
+    readonly NUMERIC: "numeric";
     /** Multiple choice - alternative English form */
     readonly MULTIPLE_CHOICE_EN: "multiple_choice";
 };
 /**
- * Type guard to check if a string is a valid question type
- */
-export declare function isValidQuestionType(type: string): type is typeof QUESTION_TYPES[keyof typeof QUESTION_TYPES];
-/**
  * Type-safe question type values
  */
 export type QuestionType = typeof QUESTION_TYPES[keyof typeof QUESTION_TYPES];
-/**
- * Common timeout constants used throughout the application
- * Extracted from various hardcoded values found during audit
- */
-export declare const TIMEOUT_CONSTANTS: {
-    /** Default question timer (30 seconds) */
-    readonly DEFAULT_QUESTION_TIMER: 30000;
-    /** Feedback display duration (3 seconds) */
-    readonly FEEDBACK_DISPLAY_DURATION: 3000;
-    /** Socket reconnection delay (100ms) */
-    readonly SOCKET_RECONNECT_DELAY: 100;
-    /** Game redirect timeout (3 seconds) */
-    readonly GAME_REDIRECT_TIMEOUT: 3000;
-    /** Snackbar auto-hide duration (5 seconds) */
-    readonly SNACKBAR_DURATION: 5000;
-};
-/**
- * Type for timeout values
- */
-export type TimeoutConstant = typeof TIMEOUT_CONSTANTS[keyof typeof TIMEOUT_CONSTANTS];

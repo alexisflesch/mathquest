@@ -27,8 +27,19 @@ import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@s
 
 const logger = createLogger('useProjectionQuizSocket');
 
+// Answer stats can be legacy format or new format with type discrimination
+type AnswerStats = Record<string, number> | {
+    type: 'multipleChoice';
+    stats: Record<string, number>;
+    totalUsers: number;
+} | {
+    type: 'numeric';
+    values: number[];
+    totalAnswers: number;
+};
+
 // Stable empty objects to prevent unnecessary re-renders
-const EMPTY_STATS: Record<string, number> = {};
+const EMPTY_STATS: AnswerStats = {};
 const EMPTY_LEADERBOARD: Array<{ userId: string; username: string; avatarEmoji?: string; score: number }> = [];
 
 /**
@@ -82,7 +93,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
     // NEW: Projection display state
     const [showStats, setShowStats] = useState<boolean>(false);
-    const [currentStats, setCurrentStats] = useState<Record<string, number>>(EMPTY_STATS);
+    const [currentStats, setCurrentStats] = useState<AnswerStats>(EMPTY_STATS);
     const [showCorrectAnswers, setShowCorrectAnswers] = useState<boolean>(false);
     const [correctAnswersData, setCorrectAnswersData] = useState<{
         questionUid: string;
@@ -91,19 +102,28 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         answerOptions?: string[];
     } | null>(null);
 
+    // Debug: Track currentStats state changes
+    // useEffect(() => {
+    //     console.log('🔍 [HOOK] currentStats STATE CHANGED to:', currentStats);
+    // }, [currentStats]);
+
     // NEW: Listen for initial stats state from backend (always sent on join)
     useEffect(() => {
         if (!socket.socket) return;
         const handleInitialStatsState = (payload: { showStats: boolean; currentStats: Record<string, number>; statsQuestionUid: string | null; timestamp?: number }) => {
             console.log('🟢 [PROJECTION] Received PROJECTION_STATS_STATE:', payload);
-            setShowStats(!!payload.showStats);
-            setCurrentStats(payload.currentStats || EMPTY_STATS);
+
+            // Only update if we're not currently showing stats, to avoid overwriting live updates
+            if (!showStats) {
+                setShowStats(!!payload.showStats);
+                setCurrentStats(payload.currentStats || EMPTY_STATS);
+            }
         };
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, handleInitialStatsState);
         return () => {
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, handleInitialStatsState);
         };
-    }, [socket.socket]);
+    }, [socket.socket, showStats]); // Add showStats as dependency
 
     // Error state that page can handle
     const [socketError, setSocketError] = useState<any>(null);
@@ -310,7 +330,6 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         // Handle leaderboard updates when students join (UX enhancement for teacher projection)
         const handleLeaderboardUpdate = (payload: ProjectionLeaderboardUpdatePayload) => {
             // DEBUG: Log raw leaderboard update event
-            console.log('🟡 [PROJECTION] Received PROJECTION_LEADERBOARD_UPDATE event:', payload);
             logger.info('🟡 [PROJECTION] Received PROJECTION_LEADERBOARD_UPDATE event:', payload);
             // Validate with Zod
             const parseResult = ProjectionLeaderboardUpdatePayloadSchema.safeParse(payload);
@@ -384,7 +403,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 }
 
                 // Ensure currentQuestionIndex matches timer.questionUid if possible
-                let newGameState = { ...payload.gameState };
+                const newGameState = { ...payload.gameState };
                 if (
                     payload.gameState.timer &&
                     payload.gameState.timer.questionUid &&
@@ -566,6 +585,13 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_HIDE_STATS, handleProjectionHideStats);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, handleProjectionCorrectAnswers);
 
+        // DEBUG: Listen for any events that might be related to stats updates
+        (socket.socket as any).onAny((event: string, ...args: any[]) => {
+            if (event.includes('projection') || event.includes('stats') || event.includes('answer') || event.includes('student')) {
+                console.log('📨 [SOCKET] Received event:', event, 'with data:', args);
+            }
+        });
+
         // DEBUG: Add a catch-all listener to see what events are being received
         const handleAnyEvent = (eventName: string, ...args: any[]) => {
             if (eventName.includes('projection') || eventName.includes('stats')) {
@@ -613,12 +639,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
     }, [socket.socket]);
 
     // Memoize currentStats to prevent unnecessary re-renders when object content hasn't changed
-    const memoizedCurrentStats = useMemo(() => {
-        if (Object.keys(currentStats).length === 0) {
-            return EMPTY_STATS;
-        }
-        return currentStats;
-    }, [currentStats]);
+    // Return currentStats directly without memoization to ensure updates are detected
+    const statsToReturn = Object.keys(currentStats).length === 0 ? EMPTY_STATS : currentStats;
 
     // Return clean interface using canonical types only
 
@@ -650,7 +672,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
             // NEW: Projection display state
             showStats,
-            currentStats: memoizedCurrentStats,
+            currentStats: statsToReturn,
             showCorrectAnswers,
             correctAnswersData,
 
@@ -676,6 +698,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         leaderboard?.length, // Only re-render if count changes
         leaderboardUpdateTrigger,
         showStats,
+        currentStats, // Add currentStats to trigger re-renders when stats change
         showCorrectAnswers,
         correctAnswersData?.questionUid, // Only if question changes
         optimizedTimerStatus, // Use optimized status instead of timerState?.status

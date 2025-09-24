@@ -19,14 +19,8 @@ import {
     getParticipantsPayloadSchema
 } from '@shared/types/socketEvents.zod';
 import { GameParticipant, ParticipantStatus } from '@shared/types/core/participant';
-import { LobbyParticipant } from '@shared/types/lobbyParticipantListPayload';
+import { LobbyParticipantListPayload } from '@shared/types/lobbyParticipantListPayload';
 import { z } from 'zod';
-
-// Modern unified participant payload
-interface UnifiedParticipantListPayload {
-    participants: GameParticipant[];
-    creator: GameParticipant;
-}
 
 // Create a handler-specific logger
 const logger = createLogger('LobbyHandler');
@@ -36,12 +30,6 @@ const LOBBY_KEY_PREFIX = 'mathquest:lobby:';
 
 // Store intervals for game status checking
 const gameStatusCheckIntervals = new Map<string, NodeJS.Timeout>();
-
-// Modern unified participant payload
-interface UnifiedParticipantListPayload {
-    participants: GameParticipant[];
-    creator: GameParticipant;
-}
 
 export async function emitParticipantList(io: SocketIOServer, accessCode: string) {
     try {
@@ -134,9 +122,9 @@ export async function emitParticipantList(io: SocketIOServer, accessCode: string
             isCreatorInParticipants: participants.some(p => p.userId === creator.userId)
         }, '[PARTICIPANT_LIST] Creator info loaded from database');
 
-        // For now, send in the format the frontend expects (LobbyParticipantListPayload)
-        // TODO: Update frontend to handle UnifiedParticipantListPayload
-        const lobbyPayload = {
+        // Send in the format the frontend expects (LobbyParticipantListPayload)
+        // Using shared LobbyParticipantListPayload type for consistency
+        const lobbyPayload: LobbyParticipantListPayload = {
             participants: participants.map(p => ({
                 userId: p.userId,
                 username: p.username,

@@ -8,7 +8,7 @@
  * Types are inferred from Zod schemas for runtime validation.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SetQuestionRequestSchema = exports.TeacherUpgradeRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.RenameGameInstanceRequestSchema = exports.RenameGameTemplateRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
+exports.SetQuestionRequestSchema = exports.ResendEmailVerificationRequestSchema = exports.VerifyEmailRequestSchema = exports.SendEmailVerificationRequestSchema = exports.TeacherUpgradeRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.RenameGameInstanceRequestSchema = exports.RenameGameTemplateRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
 // Export schemas for runtime validation
 var schemas_1 = require("./schemas");
 Object.defineProperty(exports, "LoginRequestSchema", { enumerable: true, get: function () { return schemas_1.LoginRequestSchema; } });
@@ -30,6 +30,9 @@ Object.defineProperty(exports, "PasswordResetRequestSchema", { enumerable: true,
 Object.defineProperty(exports, "PasswordResetConfirmRequestSchema", { enumerable: true, get: function () { return schemas_1.PasswordResetConfirmRequestSchema; } });
 Object.defineProperty(exports, "ProfileUpdateRequestSchema", { enumerable: true, get: function () { return schemas_1.ProfileUpdateRequestSchema; } });
 Object.defineProperty(exports, "TeacherUpgradeRequestSchema", { enumerable: true, get: function () { return schemas_1.TeacherUpgradeRequestSchema; } });
+Object.defineProperty(exports, "SendEmailVerificationRequestSchema", { enumerable: true, get: function () { return schemas_1.SendEmailVerificationRequestSchema; } });
+Object.defineProperty(exports, "VerifyEmailRequestSchema", { enumerable: true, get: function () { return schemas_1.VerifyEmailRequestSchema; } });
+Object.defineProperty(exports, "ResendEmailVerificationRequestSchema", { enumerable: true, get: function () { return schemas_1.ResendEmailVerificationRequestSchema; } });
 Object.defineProperty(exports, "SetQuestionRequestSchema", { enumerable: true, get: function () { return schemas_1.SetQuestionRequestSchema; } });
 // Note: SetQuestionRequest is now defined in schemas.ts with Zod validation
 // No request body needed for end-question and end-game endpoints

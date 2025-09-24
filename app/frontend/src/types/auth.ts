@@ -6,7 +6,7 @@
  */
 
 // Import shared auth types instead of defining duplicates
-import type { UserState, GuestProfileData } from '@shared/types';
+import type { UserState } from '@shared/types/core/user';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Re-export shared types for convenience
@@ -16,7 +16,7 @@ export interface UserProfile {
     username?: string;
     avatar?: string;
     email?: string;
-    role?: 'STUDENT' | 'TEACHER';
+    role?: 'STUDENT' | 'TEACHER' | 'GUEST';
     userId?: string;
     cookieId?: string;    // Pour les invités
 }
@@ -32,6 +32,7 @@ export interface AuthContextType {
     isTeacher: boolean;
     isLoading: boolean;
     teacherId?: string;
+    authError?: string | null;
 
     // Méthodes principales
     refreshAuth: (force?: boolean) => void;

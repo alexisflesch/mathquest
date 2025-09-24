@@ -6,6 +6,7 @@ import { Resizable } from 're-resizable';
 import { createLogger } from '@/clientLogger';
 import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
 import QuestionCard from '@/components/QuestionCard';
+// import StatisticsChart from '@/components/StatisticsChart'; // Lazy loaded below
 import { Timer, ChevronDown, ChevronRight } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import QrCodeWithLogo from "@components/QrCodeWithLogo";
@@ -36,7 +37,7 @@ const TimerDisplay = React.memo(({ timeLeftMs }: { timeLeftMs: number | null }) 
 });
 TimerDisplay.displayName = 'TimerDisplay';
 
-// Memoized Question component
+// Question component with optimized re-rendering
 const QuestionDisplay = React.memo(({
     currentTournamentQuestion,
     currentQuestionUid,
@@ -46,7 +47,7 @@ const QuestionDisplay = React.memo(({
     setZoomFactors,
     correctAnswersData,
     showStats,
-    statsToShow,
+    currentStats,
     tournamentUrl,
     code,
     bringToFront
@@ -59,12 +60,58 @@ const QuestionDisplay = React.memo(({
     setZoomFactors: React.Dispatch<React.SetStateAction<{ question: number; classement: number }>>;
     correctAnswersData: any;
     showStats: boolean;
-    statsToShow: any;
+    currentStats: any;
     tournamentUrl: string;
     code: string;
     bringToFront: (id: string) => void;
 }) => {
+    // Lazy load StatisticsChart after component mounts
+    const [StatisticsChart, setStatisticsChart] = useState<React.ComponentType<any> | null>(null);
+
+    useEffect(() => {
+        // Load StatisticsChart after the page has loaded
+        const loadChart = async () => {
+            const { default: ChartComponent } = await import('@/components/StatisticsChart');
+            setStatisticsChart(() => ChartComponent);
+        };
+
+        // Small delay to ensure page is fully loaded
+        const timer = setTimeout(loadChart, 100);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Remove debugging logs - issue was memoization blocking React re-renders
+    // console.log('🔍 QuestionDisplay render with props:', {
+    //     showStats,
+    //     currentStats,
+    //     currentStatsStringified: JSON.stringify(currentStats),
+    //     currentStatsReference: currentStats,
+    //     isNumericQuestion: currentTournamentQuestion?.questionType === QUESTION_TYPES.NUMERIC
+    // });
+
     const currentQuestion = currentTournamentQuestion;
+    const isNumericQuestion = currentQuestion?.questionType === QUESTION_TYPES.NUMERIC;
+
+    // Extract stats for multiple choice questions using useMemo to handle updates
+    const statsToShow = useMemo(() => {
+        if (!showStats || !currentQuestion?.multipleChoiceQuestion?.answerOptions) {
+            return undefined;
+        }
+
+        const answerOptions = currentQuestion.multipleChoiceQuestion.answerOptions;
+        const numOptions = answerOptions.length;
+        if (numOptions > 0) {
+            const extractedStats = extractMultipleChoiceStats(currentStats);
+            const statsArray: number[] = [];
+            for (let i = 0; i < numOptions; i++) {
+                const value = extractedStats[i.toString()] || 0;
+                statsArray.push(value);
+            }
+            // Backend already sends percentage values, no need to scale
+            return { stats: statsArray, totalAnswers: currentStats?.totalUsers || 0 };
+        }
+        return undefined;
+    }, [showStats, currentQuestion?.multipleChoiceQuestion?.answerOptions, currentStats]);
 
     return (
         <div
@@ -79,7 +126,7 @@ const QuestionDisplay = React.memo(({
                     onZoomOut={() => setZoomFactors(z => ({ ...z, question: Math.max(z.question - 0.1, 0.5) }))}
                 />
             </div>
-            <div className="card-body w-full h-full p-4 overflow-auto">
+            <div className="card-body w-full h-full p-4 overflow-hidden">
                 {!currentTournamentQuestion ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">
                         <QrCodeWithLogo
@@ -90,8 +137,8 @@ const QuestionDisplay = React.memo(({
                     </div>
                 ) : (
                     <div
-                        className="w-full h-full flex items-start justify-center"
-                        style={{ position: 'relative' }}
+                        className={`w-full h-full flex flex-col items-start justify-start ${isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values ? '' : 'overflow-y-auto'}`}
+                        style={{ position: 'relative', minHeight: 0 }}
                     >
                         <div
                             style={{
@@ -99,35 +146,77 @@ const QuestionDisplay = React.memo(({
                                 transformOrigin: 'top center',
                                 width: `calc(100% / ${zoomFactors.question})`,
                                 maxWidth: `calc(100% / ${zoomFactors.question})`,
+                                // For numeric questions with charts, use full height; otherwise auto
+                                height: (isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values)
+                                    ? `calc(100% / ${zoomFactors.question})`
+                                    : 'auto',
+                                minHeight: (isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values)
+                                    ? `calc(100% / ${zoomFactors.question})`
+                                    : 'auto',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 alignItems: 'center',
-                                justifyContent: 'center',
+                                justifyContent: 'flex-start'
                             }}
                         >
-                            <QuestionCard
-                                key={questionKey}
-                                currentQuestion={currentTournamentQuestion}
-                                questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex((uid: string) => uid === currentQuestionUid) ?? 0 : 0}
-                                totalQuestions={gameState?.questionUids.length ?? 0}
-                                isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-                                selectedAnswer={null}
-                                setSelectedAnswer={() => { }}
-                                selectedAnswers={[]}
-                                setSelectedAnswers={() => { }}
-                                handleSingleChoice={() => { }}
-                                handleSubmitMultiple={() => { }}
-                                answered={false}
-                                isQuizMode={true}
-                                readonly={true}
-                                correctAnswers={correctAnswersData?.correctAnswers || []}
-                                stats={showStats ? statsToShow : undefined}
-                                showStats={showStats}
-                            />
+                            <div style={{ flex: '0 0 auto', width: '100%' }}>
+                                <QuestionCard
+                                    key={`${questionKey}-${currentQuestionUid}-${showStats ? 'stats' : 'nostats'}`}
+                                    currentQuestion={currentTournamentQuestion}
+                                    questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex((uid: string) => uid === currentQuestionUid) ?? 0 : 0}
+                                    totalQuestions={gameState?.questionUids.length ?? 0}
+                                    isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
+                                    selectedAnswer={null}
+                                    setSelectedAnswer={() => { }}
+                                    selectedAnswers={[]}
+                                    setSelectedAnswers={() => { }}
+                                    handleSingleChoice={() => { }}
+                                    handleSubmitMultiple={() => { }}
+                                    answered={false}
+                                    isQuizMode={true}
+                                    readonly={true}
+                                    correctAnswers={correctAnswersData?.correctAnswers || []}
+                                    stats={showStats && !isNumericQuestion ? statsToShow : undefined}
+                                    showStats={showStats && !isNumericQuestion}
+                                    projectionMode={true} // Add this prop to hide input fields in projection
+                                />
+                            </div>
+
+                            {/* Show StatisticsChart for numeric questions when stats should be shown */}
+                            {isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values && StatisticsChart && (
+                                <div style={{
+                                    flex: '1 1 0', // Take remaining space for numeric questions
+                                    width: '100%',
+                                    minHeight: '300px', // Minimum height for usability
+                                    marginTop: '20px',
+                                    overflow: 'hidden',
+                                    pointerEvents: 'auto' // Enable pointer events for chart interactions
+                                }}
+                                    onPointerDown={e => e.stopPropagation()} // Prevent drag when interacting with chart
+                                >
+                                    <StatisticsChart data={currentStats.values} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
             </div>
         </div>
+    );
+}, (prevProps, nextProps) => {
+    // Custom comparison: only re-render if meaningful props change
+    // This prevents re-rendering when only object references change but content is the same
+    return (
+        prevProps.currentTournamentQuestion === nextProps.currentTournamentQuestion &&
+        prevProps.currentQuestionUid === nextProps.currentQuestionUid &&
+        prevProps.questionKey === nextProps.questionKey &&
+        prevProps.showStats === nextProps.showStats &&
+        prevProps.zoomFactors.question === nextProps.zoomFactors.question &&
+        prevProps.correctAnswersData === nextProps.correctAnswersData &&
+        prevProps.tournamentUrl === nextProps.tournamentUrl &&
+        prevProps.code === nextProps.code &&
+        // Deep compare currentStats to avoid unnecessary re-renders
+        JSON.stringify(prevProps.currentStats) === JSON.stringify(nextProps.currentStats)
     );
 });
 QuestionDisplay.displayName = 'QuestionDisplay';
@@ -136,7 +225,6 @@ QuestionDisplay.displayName = 'QuestionDisplay';
 const LeaderboardDisplay = React.memo(({
     hookLeaderboard,
     correctAnswersData,
-    shouldAnimatePodium,
     shouldShowQRCode,
     tournamentUrl,
     code,
@@ -146,7 +234,6 @@ const LeaderboardDisplay = React.memo(({
 }: {
     hookLeaderboard: any[];
     correctAnswersData: any;
-    shouldAnimatePodium: boolean;
     shouldShowQRCode: boolean;
     tournamentUrl: string;
     code: string;
@@ -167,7 +254,7 @@ const LeaderboardDisplay = React.memo(({
                     onZoomOut={() => setZoomFactors(z => ({ ...z, classement: Math.max(z.classement - 0.1, 0.5) }))}
                 />
             </div>
-            <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-hidden">
+            <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-visible">
                 {shouldShowQRCode ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">
                         <QrCodeWithLogo
@@ -188,20 +275,13 @@ const LeaderboardDisplay = React.memo(({
                         }}
                     >
                         <ClassementPodium
-                            key="leaderboard-podium"
-                            top3={hookLeaderboard.slice(0, 3).map((entry) => ({
+                            leaderboard={hookLeaderboard.map((entry) => ({
                                 userId: entry.userId,
                                 name: entry.username || 'Unknown Player',
                                 avatarEmoji: entry.avatarEmoji || '👤',
                                 score: entry.score,
                             }))}
-                            others={hookLeaderboard.slice(3).map((entry) => ({
-                                userId: entry.userId,
-                                name: entry.username || 'Unknown Player',
-                                score: entry.score,
-                            }))}
                             correctAnswers={correctAnswersData?.correctAnswers || []}
-                            animate={shouldAnimatePodium}
                         />
                     </div>
                 )}
@@ -240,19 +320,19 @@ const DraggableResizable = React.memo(({
         top: element?.y ?? 0,
         width: element?.w ?? 200,
         height: element?.h ?? 100,
-        zIndex: element?.z ?? 1,
         touchAction: 'none',
         transform: dragTransform,
         // Remove transition to prevent jump-back effect during drag end
         background: 'transparent',
     };
 
-    const handleResizeStop = useCallback((_e: any, dir: any, ref: any, d: any) => {
+    const handleResizeStop = useCallback((_e: any, _dir: any, _ref: any, d: { width: number; height: number }) => {
+        if (!element) return;
         updateElement(id, {
-            w: (element?.w ?? 200) + d.width,
-            h: (element?.h ?? 100) + d.height,
+            w: (element.w ?? 200) + d.width,
+            h: (element.h ?? 100) + d.height,
         });
-    }, [id, element?.w, element?.h, updateElement]);
+    }, [id, element, updateElement]);
 
     return (
         <Resizable
@@ -324,7 +404,25 @@ function formatTimerMs(timeLeftMs: number | null) {
     return formatTimer(seconds);
 }
 
-type StatsData = { stats: number[]; totalAnswers: number };
+// Helper function to extract stats from the new union type
+function extractMultipleChoiceStats(currentStats: any): Record<string, number> {
+    if (!currentStats || typeof currentStats !== 'object') {
+        return {};
+    }
+
+    // If it's the new format with type discrimination
+    if (currentStats.type === 'multipleChoice') {
+        return currentStats.stats || {};
+    }
+
+    // If it's the legacy format (plain object) or new numeric format, return as-is for legacy compatibility
+    if (currentStats.type === 'numeric') {
+        return {}; // Numeric questions don't have option-based stats
+    }
+
+    // Legacy format - return as-is
+    return currentStats;
+}
 
 export default function TeacherProjectionClient({ code, gameId }: { code: string, gameId: string }) {
     const {
@@ -341,17 +439,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         currentQuestion: rawCurrentQuestion
     } = useProjectionQuizSocket(code, gameId);
 
-    // Track animation state for podium
-    const [shouldAnimatePodium, setShouldAnimatePodium] = useState(false);
-    useEffect(() => {
-        if (leaderboardUpdateTrigger > 0) {
-            setShouldAnimatePodium(true);
-            // Optionally reset after animation duration (e.g. 2s)
-            const timeout = setTimeout(() => setShouldAnimatePodium(false), 2000);
-            return () => { clearTimeout(timeout); };
-        }
-        return undefined;
-    }, [leaderboardUpdateTrigger]);
+    // ...existing code...
     const currentQuestion: QuestionDataForStudent | null = (rawCurrentQuestion && typeof rawCurrentQuestion === 'object')
         ? (rawCurrentQuestion as QuestionDataForStudent)
         : null;
@@ -425,30 +513,6 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         classement: !hookLeaderboard || hookLeaderboard.length === 0,
     };
 
-    // Canonical: build stats array exactly as in TeacherDashboardClient
-    let statsArray: number[] = [];
-    let totalAnswers = 0;
-    let numOptions = 0;
-    if (currentTournamentQuestion && Array.isArray(currentTournamentQuestion.answerOptions)) {
-        numOptions = currentTournamentQuestion.answerOptions.length;
-        if (numOptions > 0 && currentStats && typeof currentStats === 'object') {
-            for (let i = 0; i < numOptions; i++) {
-                const count = currentStats[i.toString()] || 0;
-                statsArray.push(count);
-                totalAnswers += count;
-            }
-            if (totalAnswers > 0) {
-                statsArray = statsArray.map(count => (count / totalAnswers) * 100);
-            } else {
-                statsArray = Array(numOptions).fill(0);
-            }
-        }
-    }
-    const statsToShow: StatsData = {
-        stats: statsArray,
-        totalAnswers
-    };
-
     return (
         <div className="main-content w-full max-w-none px-0" style={{ position: 'relative' }}>
             <DndContext
@@ -510,7 +574,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         setZoomFactors={setZoomFactors}
                         correctAnswersData={correctAnswersData}
                         showStats={showStats}
-                        statsToShow={statsToShow}
+                        currentStats={currentStats}
                         tournamentUrl={tournamentUrl}
                         code={code}
                         bringToFront={bringToFront}
@@ -551,7 +615,6 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                     <LeaderboardDisplay
                         hookLeaderboard={hookLeaderboard}
                         correctAnswersData={correctAnswersData}
-                        shouldAnimatePodium={shouldAnimatePodium}
                         shouldShowQRCode={shouldShowQRCode.classement}
                         tournamentUrl={tournamentUrl}
                         code={code}

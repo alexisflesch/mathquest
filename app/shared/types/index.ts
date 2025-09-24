@@ -12,12 +12,10 @@ export * from './core';
 
 // Re-export specific types to avoid naming conflicts
 export type { TournamentQuestion } from './tournament/question';
-export type { Question as QuizQuestion } from './quiz/question';
+// export type { Question as QuizQuestion } from './quiz/question'; // Removed - unused
 export * from './socket/payloads';
 export * from './socket/events';  // Export socket event constants
-export * from './util/typeGuards'; // Export type guards for runtime validation
 export * from './util/logger';
-export * from './util/typeErrors'; // Export type error helpers
 export * from './util/typeMapping'; // Export type mapping utilities
 export * from './util/schemaValidation'; // Export schema validation utilities
 export * from './util/schemaDefinitions'; // Export schema definitions
@@ -34,7 +32,7 @@ export {
 
 // Explicit exports to avoid naming conflicts
 export type { BaseQuizState, ExtendedQuizState } from './quiz/state';
-export type { TournamentState } from './tournament/state';
+// export type { TournamentState } from './tournament/state'; // Removed - unused
 
 // Export shared constants
 export * from '../constants';

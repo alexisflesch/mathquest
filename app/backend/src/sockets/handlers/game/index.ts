@@ -95,9 +95,18 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             if (socket.data.deferredAttemptCount) {
                 attemptCount = socket.data.deferredAttemptCount;
             } else {
-                attemptCount = participant?.nbAttempts || 1;
+                // FIXED: Use currentDeferredAttemptNumber for deferred sessions, not total nbAttempts
+                attemptCount = (participant as any)?.currentDeferredAttemptNumber || 1;
                 // Store for this socket/session
                 socket.data.deferredAttemptCount = attemptCount;
+                // Debug log for attempt count fix
+                console.log('[DEBUG][ATTEMPT_COUNT_FIX]', {
+                    accessCode,
+                    userId,
+                    participantNbAttempts: participant?.nbAttempts,
+                    currentDeferredAttemptNumber: (participant as any)?.currentDeferredAttemptNumber,
+                    finalAttemptCount: attemptCount
+                });
             }
             sessionKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
             // Log the attemptCount and sessionKey for deferred answer submission
@@ -158,14 +167,20 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
         console.log('[DEBUG][TIMER_FETCH] Raw timer loaded:', timer);
         canonicalTimer = toCanonicalTimer(timer, durationMs);
         console.log('[DEBUG][TIMER_FETCH] Canonical timer:', canonicalTimer);
-        const context = { timer: canonicalTimer, gameState, participant, gameInstance: contextGameInstance };
+        const context = {
+            timer: canonicalTimer,
+            gameState,
+            participant,
+            gameInstance: contextGameInstance,
+            attemptCount: isDeferred ? attemptCount : undefined
+        };
         // Call the DRY handler
         return gameAnswerHandler(io, socket, context)(payload);
     });
 
     socket.on(GAME_EVENTS.REQUEST_PARTICIPANTS, requestParticipantsHandler(io, socket));
     socket.on(GAME_EVENTS.REQUEST_NEXT_QUESTION, requestNextQuestionHandler(io, socket));
-    socket.on('disconnect', disconnectHandler(io, socket));
+    // Note: Disconnect handler is now registered in connectionHandlers.ts to avoid conflicts
 
     // Direct handler for start_game in practice mode
     socket.on(GAME_EVENTS.START_GAME, async (payload: any) => {
@@ -201,7 +216,14 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
                     gameTemplate: {
                         include: {
                             questions: {
-                                include: { question: true },
+                                include: {
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true,
+                                        }
+                                    }
+                                },
                                 orderBy: { sequence: 'asc' }
                             }
                         }
@@ -255,10 +277,10 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
                 totalQuestions: gameInstance.gameTemplate.questions.length
             };
             // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-            if (canonicalPayload.timeLimit == null) {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { timeLimit, ...rest } = canonicalPayload;
-                canonicalPayload = rest;
+            // Ensure timeLimit is present and valid (schema requires positive integer)
+            if (canonicalPayload.timeLimit == null || canonicalPayload.timeLimit <= 0) {
+                logger.warn(`Question ${canonicalPayload.uid} has invalid timeLimit: ${canonicalPayload.timeLimit}, using default 30s`);
+                canonicalPayload.timeLimit = 30; // Default to 30 seconds
             }
             const parseResult = questionDataSchema.safeParse(canonicalPayload);
             if (!parseResult.success) {

@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameInstanceUpdateDataSchema = exports.GameInstanceCreationDataSchema = exports.GameTemplateUpdateDataSchema = exports.GameTemplateCreationDataSchema = exports.GameInstanceSchema = exports.GameTemplateSchema = exports.GameParticipantRecordSchema = exports.GameInstanceBaseSchema = exports.GameTemplateBaseSchema = exports.PlayModeSchema = void 0;
+exports.GameInstanceCreationDataSchema = exports.GameTemplateUpdateDataSchema = exports.GameTemplateCreationDataSchema = exports.GameInstanceSchema = exports.GameTemplateSchema = exports.GameParticipantRecordSchema = exports.GameInstanceBaseSchema = exports.GameTemplateBaseSchema = exports.PlayModeSchema = void 0;
 /**
  * Zod schemas for game-related types
  */
 const zod_1 = require("zod");
-exports.PlayModeSchema = zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']);
+exports.PlayModeSchema = zod_1.z.enum(['quiz', 'tournament', 'practice']);
 // Base schemas without circular references
 exports.GameTemplateBaseSchema = zod_1.z.object({
     id: zod_1.z.string(),
@@ -87,13 +87,4 @@ exports.GameInstanceCreationDataSchema = zod_1.z.object({
     settings: zod_1.z.any().optional(),
     differedAvailableFrom: zod_1.z.coerce.date().optional(),
     differedAvailableTo: zod_1.z.coerce.date().optional()
-});
-exports.GameInstanceUpdateDataSchema = zod_1.z.object({
-    name: zod_1.z.string().optional(),
-    status: zod_1.z.string().optional(),
-    currentQuestionIndex: zod_1.z.number().nullable().optional(),
-    leaderboard: zod_1.z.any().optional(),
-    settings: zod_1.z.any().optional(),
-    startedAt: zod_1.z.coerce.date().nullable().optional(),
-    endedAt: zod_1.z.coerce.date().nullable().optional()
 });

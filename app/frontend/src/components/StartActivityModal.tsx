@@ -155,7 +155,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
 
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg text-[color:var(--foreground)]">
-                                    <span className="font-semibold">Démarrer l'activité </span>
+                                    <span className="font-semibold">Démarrer l&apos;activité </span>
                                     <span className="italic" style={{ color: 'var(--foreground)', fontWeight: 'normal' }}>{templateName}</span>
                                 </h3>
                                 <button
@@ -240,7 +240,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
                         style={{ borderColor: getModeColor(gameInfo?.mode || 'quiz') }}
                     >
                         <div className="text-sm mb-2 font-medium text-[color:var(--foreground)]">
-                            Code d'accès pour vos élèves :
+                            Code d&apos;accès pour vos élèves :
                         </div>
                         <div className="flex items-center gap-2">
                             <code
@@ -283,7 +283,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
                     <div className={gameInfo?.mode === 'quiz' ? "flex gap-3 justify-center" : "flex justify-center"}>
                         {gameInfo?.mode === 'quiz' && (
                             <button
-                                onClick={() => window.open(`/teacher/dashboard/${gameInfo.mode === 'quiz' ? gameInfo.gameCode : gameInfo.gameId}`, '_blank')}
+                                onClick={() => { window.location.href = `/teacher/dashboard/${gameInfo.mode === 'quiz' ? gameInfo.gameCode : gameInfo.gameId}`; }}
                                 className="px-4 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition disabled:opacity-50 min-w-[120px]"
                             >
                                 Piloter

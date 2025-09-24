@@ -51,18 +51,15 @@ export type {
     TournamentAnswer,
     AnswerSubmissionPayload,
     AnswerResponsePayload,
-    AnswerResult,
     AnswerStats,
     QuestionAnswerSummary
 } from './answer';
 
 export type {
     UserRole,
-    User,
     PublicUser,
     UserRegistrationData,
     UserLoginData,
-    UserProfileUpdate,
     UserUpgradeData
 } from './user';
 
@@ -73,14 +70,12 @@ export type {
     GameParticipantRecord,
     GameTemplateCreationData,
     GameTemplateUpdateData,
-    GameInstanceCreationData,
-    GameInstanceUpdateData
+    GameInstanceCreationData
 } from './game';
 
 export type {
     BaseQuestion,
     Question,
-    ClientQuestion,
     QuestionCreationPayload,
     QuestionUpdatePayload
 } from './question';

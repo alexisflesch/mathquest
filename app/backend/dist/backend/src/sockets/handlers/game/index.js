@@ -41,7 +41,6 @@ exports.registerGameHandlers = registerGameHandlers;
 const joinGame_1 = require("./joinGame");
 const gameAnswer_1 = require("./gameAnswer");
 const requestParticipants_1 = require("./requestParticipants");
-const disconnect_1 = require("./disconnect");
 const requestNextQuestion_1 = require("./requestNextQuestion");
 const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
@@ -129,9 +128,18 @@ function registerGameHandlers(io, socket) {
                 attemptCount = socket.data.deferredAttemptCount;
             }
             else {
-                attemptCount = participant?.nbAttempts || 1;
+                // FIXED: Use currentDeferredAttemptNumber for deferred sessions, not total nbAttempts
+                attemptCount = participant?.currentDeferredAttemptNumber || 1;
                 // Store for this socket/session
                 socket.data.deferredAttemptCount = attemptCount;
+                // Debug log for attempt count fix
+                console.log('[DEBUG][ATTEMPT_COUNT_FIX]', {
+                    accessCode,
+                    userId,
+                    participantNbAttempts: participant?.nbAttempts,
+                    currentDeferredAttemptNumber: participant?.currentDeferredAttemptNumber,
+                    finalAttemptCount: attemptCount
+                });
             }
             sessionKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
             // Log the attemptCount and sessionKey for deferred answer submission
@@ -198,13 +206,19 @@ function registerGameHandlers(io, socket) {
         console.log('[DEBUG][TIMER_FETCH] Raw timer loaded:', timer);
         canonicalTimer = (0, toCanonicalTimer_1.toCanonicalTimer)(timer, durationMs);
         console.log('[DEBUG][TIMER_FETCH] Canonical timer:', canonicalTimer);
-        const context = { timer: canonicalTimer, gameState, participant, gameInstance: contextGameInstance };
+        const context = {
+            timer: canonicalTimer,
+            gameState,
+            participant,
+            gameInstance: contextGameInstance,
+            attemptCount: isDeferred ? attemptCount : undefined
+        };
         // Call the DRY handler
         return (0, gameAnswer_1.gameAnswerHandler)(io, socket, context)(payload);
     });
     socket.on(events_1.GAME_EVENTS.REQUEST_PARTICIPANTS, (0, requestParticipants_1.requestParticipantsHandler)(io, socket));
     socket.on(events_1.GAME_EVENTS.REQUEST_NEXT_QUESTION, (0, requestNextQuestion_1.requestNextQuestionHandler)(io, socket));
-    socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));
+    // Note: Disconnect handler is now registered in connectionHandlers.ts to avoid conflicts
     // Direct handler for start_game in practice mode
     socket.on(events_1.GAME_EVENTS.START_GAME, async (payload) => {
         // Runtime validation with Zod
@@ -235,7 +249,14 @@ function registerGameHandlers(io, socket) {
                     gameTemplate: {
                         include: {
                             questions: {
-                                include: { question: true },
+                                include: {
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true,
+                                        }
+                                    }
+                                },
                                 orderBy: { sequence: 'asc' }
                             }
                         }
@@ -280,10 +301,10 @@ function registerGameHandlers(io, socket) {
                 totalQuestions: gameInstance.gameTemplate.questions.length
             };
             // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-            if (canonicalPayload.timeLimit == null) {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { timeLimit, ...rest } = canonicalPayload;
-                canonicalPayload = rest;
+            // Ensure timeLimit is present and valid (schema requires positive integer)
+            if (canonicalPayload.timeLimit == null || canonicalPayload.timeLimit <= 0) {
+                logger.warn(`Question ${canonicalPayload.uid} has invalid timeLimit: ${canonicalPayload.timeLimit}, using default 30s`);
+                canonicalPayload.timeLimit = 30; // Default to 30 seconds
             }
             const parseResult = questionDataSchema.safeParse(canonicalPayload);
             if (!parseResult.success) {

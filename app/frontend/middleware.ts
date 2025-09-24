@@ -39,8 +39,22 @@ export function middleware(request: NextRequest) {
     const userState = getUserState(request);
     const { pathname, origin, search } = request.nextUrl;
 
-    // Allow home and login for everyone
-    if (pathname === '/' || pathname === '/login') {
+    // Allow PWA files, static assets, and Next.js internal files
+    if (pathname.startsWith('/_next') ||
+        pathname.startsWith('/api') ||
+        pathname === '/favicon.ico' ||
+        pathname === '/favicon.svg' ||
+        pathname === '/robots.txt' ||
+        pathname === '/sitemap.xml' ||
+        pathname.match(/^\/icon-.*\.png$/) ||
+        pathname.match(/^\/screenshot-.*\.png$/) ||
+        pathname === '/burger.svg' ||
+        pathname === '/clear-auth.html') {
+        return NextResponse.next();
+    }
+
+    // Allow home, login, email verification, and password reset for everyone
+    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/reset-password')) {
         return NextResponse.next();
     }
 
@@ -66,7 +80,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Exclude all favicon.* files (svg, ico, png, etc) from auth middleware
-        '/((?!_next|api|static|favicon\\..*).*)',
+        // Match all routes except Next.js internal routes
+        '/((?!_next).*)',
     ],
 };

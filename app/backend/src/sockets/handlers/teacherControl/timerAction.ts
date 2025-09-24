@@ -1,15 +1,5 @@
 import type { Server as SocketIOServer, Socket } from 'socket.io';
 import type { ZodError } from 'zod';
-// Canonical timer event payload type matching Zod schema and projection handler
-interface CanonicalTimerUpdatePayload {
-    timer: any; // GameTimerState, but allow any for now to avoid circular import issues
-    questionUid: string;
-    questionIndex: number;
-    totalQuestions: number;
-    answersLocked: boolean;
-    gameId?: string;
-    serverTime: number; // Backend timestamp at emission
-}
 import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
 import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
@@ -24,6 +14,8 @@ import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 // (already imported above)
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import { dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
+import { getAnswerStats } from './helpers';
+import { ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
 
 import type { GameTimerState } from '@shared/types/core/timer';
 import type { DashboardQuestionChangedPayload } from '@shared/types/socket/dashboardPayloads';
@@ -189,7 +181,7 @@ interface CanonicalTimerRoom {
     extra?: Record<string, unknown>;
 }
 // (already imported above)
-type CanonicalDashboardTimerUpdatedPayload = CanonicalTimerUpdatePayload;
+type CanonicalDashboardTimerUpdatedPayload = z.infer<typeof dashboardTimerUpdatedPayloadSchema>;
 function emitCanonicalTimerEvents(
     io: SocketIOServer,
     rooms: CanonicalTimerRoom[],
@@ -206,7 +198,6 @@ function emitCanonicalTimerEvents(
         questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : -1,
         totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 0,
         answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
-        gameId: payloadBase.gameId,
         serverTime: Date.now()
     };
     const validation = dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
@@ -724,7 +715,8 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
             // Use canonicalTimer for all event payloads below
             // Get the current question UID for timer updates
             // If questionUid is provided in the payload, use it; otherwise use current question
-            let targetQuestionUid = questionUid;
+            // For 'edit' actions, we should NOT switch questions - stay on current question
+            let targetQuestionUid = action === 'edit' ? (gameState.questionUids && gameState.currentQuestionIndex >= 0 ? gameState.questionUids[gameState.currentQuestionIndex] : questionUid) : questionUid;
 
             // ...existing code...
 
@@ -756,7 +748,11 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
 
                         // Get the question data to send to players (without correct answers)
                         const question = await prisma.question.findUnique({
-                            where: { uid: targetQuestionUid }
+                            where: { uid: targetQuestionUid },
+                            include: {
+                                multipleChoiceQuestion: true,
+                                numericQuestion: true
+                            }
                         });
 
                         // Declare liveRoom and projectionRoom before use
@@ -764,12 +760,13 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                         const projectionRoom = `projection_${gameId}`;
 
                         if (question) {
-                            // Modernization: Use canonical, flat payload for game_question
+                            // Filter question and ensure timeLimit is valid
                             let filteredQuestion = filterQuestionForClient(question);
-                            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-                            if (filteredQuestion.timeLimit == null) {
-                                const { timeLimit, ...rest } = filteredQuestion;
-                                filteredQuestion = rest;
+
+                            // Ensure timeLimit is present and valid (schema requires positive integer)
+                            if (filteredQuestion.timeLimit == null || filteredQuestion.timeLimit <= 0) {
+                                logger.warn(`Question ${question.uid} has invalid timeLimit: ${filteredQuestion.timeLimit}, using default 30s`);
+                                filteredQuestion.timeLimit = 30; // Default to 30 seconds
                             }
                             const canonicalPayload = {
                                 ...filteredQuestion,
@@ -798,6 +795,51 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
 
                         logger.info({ gameId, targetQuestionUid, targetQuestionIndex },
                             '[TIMER_ACTION] Question switched and dashboard notified');
+
+                        // Check if stats are shown and update them for the new question
+                        try {
+                            const projectionState = await gameStateService.getProjectionDisplayState(accessCode);
+                            if (projectionState?.showStats) {
+                                logger.info({ accessCode, targetQuestionUid, showStats: projectionState.showStats },
+                                    '[TIMER_ACTION] Stats are shown, updating for new question');
+
+                                const newStats = await getAnswerStats(accessCode, targetQuestionUid);
+                                await gameStateService.updateProjectionDisplayState(accessCode, {
+                                    showStats: true,
+                                    currentStats: newStats,
+                                    statsQuestionUid: targetQuestionUid,
+                                    showCorrectAnswers: projectionState.showCorrectAnswers,
+                                    correctAnswersData: projectionState.correctAnswersData
+                                });
+
+                                // Emit updated stats to projection room
+                                const projectionRoom = `projection_${gameId}`;
+                                const statsPayload = {
+                                    questionUid: targetQuestionUid,
+                                    show: true,
+                                    stats: newStats,
+                                    timestamp: Date.now()
+                                };
+
+                                // Validate the payload with Zod schema
+                                const validation = ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
+                                if (validation.success) {
+                                    io.to(projectionRoom).emit('projection_show_stats', validation.data);
+                                    logger.info({ accessCode, targetQuestionUid, statsPayload: validation.data },
+                                        '[TIMER_ACTION] Updated and emitted validated stats for new question');
+                                } else {
+                                    logger.error({
+                                        accessCode,
+                                        targetQuestionUid,
+                                        error: validation.error.format(),
+                                        payload: statsPayload
+                                    }, '[TIMER_ACTION] Invalid stats payload, not emitting');
+                                }
+                            }
+                        } catch (error) {
+                            logger.error({ error, accessCode, targetQuestionUid },
+                                '[TIMER_ACTION] Error updating stats for new question');
+                        }
                     } else {
                         logger.warn({ gameId, targetQuestionUid, availableQuestions: gameState.questionUids },
                             '[TIMER_ACTION] Target question UID not found in game questions');
@@ -846,7 +888,6 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 questionIndex: typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1,
                 totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0,
                 answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
-                gameId,
                 serverTime: Date.now()
             });
             logger.info({

@@ -9,7 +9,6 @@ import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import EnhancedMultiSelectDropdown from '@/components/EnhancedMultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
-import { Search } from 'lucide-react';
 import { QuestionsResponseSchema, GameCreationResponseSchema, type QuestionsResponse, type GameCreationResponse } from '@/types/api';
 import { type FilterOption, type EnhancedFilters, type EnhancedFiltersResponse } from '@/types/enhancedFilters';
 import {
@@ -36,6 +35,7 @@ import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { sortGradeLevels } from '@/utils/gradeLevelSort';
 
 const logger = createLogger('CreateActivityPage');
 
@@ -125,12 +125,29 @@ export default function CreateActivityPage() {
         levels: [],
         disciplines: [],
         themes: [],
-        authors: []
+        tags: []
     });
+
+    // Calculate total time of selected questions
+    const calculateTotalTime = (questions: CartQuestion[]): string => {
+        const totalSeconds = questions.reduce((total, question) => {
+            const questionTime = question.customTime ?? (typeof question.durationMs === 'number' ? Math.round(question.durationMs / 1000) : 30);
+            return total + questionTime;
+        }, 0);
+
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        if (minutes > 0) {
+            return seconds > 0 ? `${minutes}m${seconds.toString().padStart(2, '0')}s` : `${minutes}m`;
+        } else {
+            return `${seconds}s`;
+        }
+    };
     const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
-    const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [openUid, setOpenUid] = useState<string | null>(null);
@@ -139,7 +156,8 @@ export default function CreateActivityPage() {
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const listRef = useRef<HTMLDivElement>(null);
-    const [tagSearch, setTagSearch] = useState('');
+    const mobileListRef = useRef<HTMLDivElement>(null);
+    const loadTriggerRef = useRef<HTMLDivElement>(null);
     const [showMobileCart, setShowMobileCart] = useState(false);
 
     // Drag and drop sensors
@@ -155,37 +173,119 @@ export default function CreateActivityPage() {
 
             // Add current selections - multiple values as separate parameters for OR logic
             selectedLevels.forEach(level => params.append('gradeLevel', level));
-            selectedDisciplines.forEach(discipline => params.append('discipline', discipline));
-            selectedThemes.forEach(theme => params.append('theme', theme));
-            selectedAuthors.forEach(author => params.append('author', author));
+            selectedDisciplines.forEach(discipline => params.append('disciplines', discipline));
+            selectedThemes.forEach(theme => params.append('themes', theme));
+            selectedTags.forEach(tag => params.append('tags', tag));
 
-            const url = `questions/filters?${params.toString()}`;
+            const url = `/api/questions/filters?${params.toString()}`;
 
-            const data = await makeApiRequest<EnhancedFiltersResponse>(url);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
 
             logger.debug('Enhanced filters API response:', data);
+            console.log('🔍 API Response:', data);
+            console.log('🔍 Disciplines from API (raw):', data.disciplines);
+            console.log('🔍 Disciplines first item:', data.disciplines?.[0]);
+            console.log('🔍 Themes from API (raw):', data.themes);
+            console.log('🔍 Themes first item:', data.themes?.[0]);
 
             // Helper function to process filter arrays with selection-based compatibility
             const processFilterOptions = (
                 apiResponse: (string | FilterOption)[],
                 currentSelected: string[]
             ): FilterOption[] => {
+                console.log('🔍 processFilterOptions called with:', { apiResponse, currentSelected });
+
                 const result: FilterOption[] = [];
 
-                // Extract compatible options from API response (normalize to strings first)
-                const compatibleOptions = apiResponse.map(item =>
-                    typeof item === 'string' ? item : item.value
-                );
+                // If API response already contains FilterOption objects, use them directly
+                if (apiResponse.length > 0 && typeof apiResponse[0] === 'object' && 'isCompatible' in apiResponse[0]) {
+                    console.log('✅ Using FilterOption objects directly from API');
+                    // Use the FilterOption objects directly from API
+                    (apiResponse as FilterOption[]).forEach(option => {
+                        result.push(option);
+                    });
+                } else {
+                    console.log('⚠️ Converting string array to FilterOption objects');
+                    // Fallback for string arrays - mark all as compatible
+                    const compatibleOptions = apiResponse.map(item =>
+                        typeof item === 'string' ? item : item.value
+                    );
 
-                // Add all compatible options from API (these are always compatible)
-                compatibleOptions.forEach(option => {
-                    result.push({ value: option, isCompatible: true });
+                    compatibleOptions.forEach(option => {
+                        result.push({ value: option, isCompatible: true });
+                    });
+                }
+
+                // Add any selected options that are NOT in the API response (these are incompatible)
+                const apiValues = result.map(item => item.value);
+                currentSelected.forEach(selected => {
+                    if (!apiValues.includes(selected)) {
+                        console.log('⚠️ Adding incompatible selected option:', selected);
+                        result.push({ value: selected, isCompatible: false });
+                    }
+                });
+
+                console.log('🎯 processFilterOptions result:', result);
+                return result;
+            };
+
+            // Special handling for grade levels to apply educational ordering
+            const processGradeLevelOptions = (
+                apiResponse: FilterOption[] | string[],
+                currentSelected: string[]
+            ): FilterOption[] => {
+                // Debug: Log the original API response
+                logger.info('GRADE_DEBUG - Original API response:', apiResponse);
+
+                const result: FilterOption[] = [];
+                const addedValues = new Set<string>();
+
+                let compatibleGradeLevels: FilterOption[] = [];
+
+                // Handle both string arrays and FilterOption arrays
+                if (apiResponse.length > 0 && typeof apiResponse[0] === 'object' && 'isCompatible' in apiResponse[0]) {
+                    // Use the FilterOption objects directly from API
+                    compatibleGradeLevels = apiResponse as FilterOption[];
+                } else {
+                    // Convert string array to FilterOption array (mark all as compatible)
+                    compatibleGradeLevels = (apiResponse as string[]).map(level => ({
+                        value: level,
+                        isCompatible: true
+                    }));
+                }
+
+                logger.info('GRADE_DEBUG - Compatible grade levels with compatibility flags:', compatibleGradeLevels);
+
+                const sortedGradeLevels = sortGradeLevels(compatibleGradeLevels.map(g => g.value));
+                logger.info('GRADE_DEBUG - Sorted grade levels:', sortedGradeLevels);
+
+                // Add sorted compatible options maintaining their compatibility status from API
+                sortedGradeLevels.forEach(gradeLevel => {
+                    if (!addedValues.has(gradeLevel) && gradeLevel) {
+                        const originalItem = compatibleGradeLevels.find(item => item.value === gradeLevel);
+
+                        const newItem = {
+                            value: gradeLevel,
+                            isCompatible: originalItem?.isCompatible ?? true
+                        };
+                        logger.info('GRADE_DEBUG - Adding grade level:', newItem);
+                        result.push(newItem);
+                        addedValues.add(gradeLevel);
+                    }
                 });
 
                 // Add any selected options that are NOT in the API response (these are incompatible)
+                const apiGradeLevelValues = compatibleGradeLevels.map(g => g.value);
                 currentSelected.forEach(selected => {
-                    if (!compatibleOptions.includes(selected)) {
-                        result.push({ value: selected, isCompatible: false });
+                    if (!apiGradeLevelValues.includes(selected) && !addedValues.has(selected) && selected) {
+                        const newItem = { value: selected, isCompatible: false };
+                        logger.info('GRADE_DEBUG - Adding incompatible selected:', newItem);
+                        result.push(newItem);
+                        addedValues.add(selected);
                     }
                 });
 
@@ -193,23 +293,29 @@ export default function CreateActivityPage() {
             };
 
             const processedFilters: EnhancedFilters = {
-                levels: processFilterOptions(data.gradeLevel || [], selectedLevels),
+                levels: processGradeLevelOptions(data.gradeLevel || [], selectedLevels),
                 disciplines: processFilterOptions(data.disciplines || [], selectedDisciplines),
                 themes: processFilterOptions(data.themes || [], selectedThemes),
-                authors: processFilterOptions(data.authors || [], selectedAuthors)
+                tags: processFilterOptions(data.tags || [], selectedTags)
             };
+
+            // Debug: Log the processed levels to check for duplicates
+            logger.info('GRADE_DEBUG - Processed grade levels:', processedFilters.levels);
+            logger.info('GRADE_DEBUG - Grade level values:', processedFilters.levels.map(l => l.value));
+            const uniqueValues = new Set(processedFilters.levels.map(l => l.value));
+            logger.info('GRADE_DEBUG - Unique count:', uniqueValues.size, 'Total count:', processedFilters.levels.length);
 
             logger.debug('Processed dynamic filters:', processedFilters);
             setFilters(processedFilters);
         } catch (error) {
             logger.error('Error fetching dynamic filters:', error);
         }
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]);
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags]);
 
     // Fetch filters whenever selections change
     useEffect(() => {
         fetchFilters();
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]);
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags]);
 
     const fetchQuestions = useCallback(async (reset = false) => {
         if (loadingQuestions || loadingMore) return;
@@ -226,7 +332,7 @@ export default function CreateActivityPage() {
             selectedLevels.forEach(level => params.append('gradeLevel', level));
             selectedDisciplines.forEach(discipline => params.append('discipline', discipline));
             selectedThemes.forEach(theme => params.append('theme', theme));
-            selectedAuthors.forEach(author => params.append('author', author));
+            selectedTags.forEach(tag => params.append('tag', tag));
 
             // Add pagination and other parameters
             params.append('limit', BATCH_SIZE.toString());
@@ -238,34 +344,53 @@ export default function CreateActivityPage() {
             const data = await makeApiRequest<QuestionsResponse>(url, undefined, undefined, QuestionsResponseSchema);
 
             const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as any[];
+            const paginationMeta = Array.isArray(data) ? null : data;
+
+            logger.debug('[fetchQuestions Debug]', {
+                reset,
+                currentOffset: reset ? 0 : offset,
+                apiResponseLength: newQuestionsFromApi.length,
+                batchSize: BATCH_SIZE,
+                willHaveMore: newQuestionsFromApi.length === BATCH_SIZE,
+                paginationMeta,
+                url: url
+            });
 
             const transformedQuestions: Question[] = newQuestionsFromApi
-                .filter((q: any) =>
-                    typeof q.text === 'string' && q.text.trim() !== '' &&
-                    (Array.isArray(q.answers) || Array.isArray(q.answerOptions))
-                )
+                .filter((q: any) => {
+                    // Updated filter to handle polymorphic questions
+                    const hasText = typeof q.text === 'string' && q.text.trim() !== '';
+                    const hasQuestionData =
+                        // Multiple choice: has answerOptions (legacy) or multipleChoiceQuestion
+                        (Array.isArray(q.answerOptions) || q.multipleChoiceQuestion?.answerOptions) ||
+                        // Numeric: has correctAnswer (legacy) or numericQuestion
+                        (typeof q.correctAnswer === 'number' || q.numericQuestion?.correctAnswer) ||
+                        // Legacy format with answers array
+                        Array.isArray(q.answers);
+
+                    return hasText && hasQuestionData;
+                })
                 .map((q: any) => {
                     // Convert API format to canonical Question format
                     let answerOptions: string[] = [];
                     let correctAnswers: boolean[] = [];
 
-                    if (Array.isArray(q.answers)) {
-                        // Legacy format with {text, correct} objects
-                        answerOptions = q.answers.map((a: any) => a.text || a.texte || '');
-                        correctAnswers = q.answers.map((a: any) => Boolean(a.correct));
-                    } else if (Array.isArray(q.answerOptions)) {
-                        // Database format with separate arrays
-                        answerOptions = q.answerOptions;
-                        correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [];
+                    if (q.multipleChoiceQuestion) {
+                        // Polymorphic format - multiple choice question
+                        answerOptions = q.multipleChoiceQuestion.answerOptions || [];
+                        correctAnswers = q.multipleChoiceQuestion.correctAnswers || [];
                     }
 
-                    return {
+                    const transformedQuestion = {
                         uid: q.uid,
                         title: q.title || q.titre,
                         text: q.text || q.question,
                         questionType: q.questionType || q.defaultMode || QUESTION_TYPES.SINGLE_CHOICE,
                         answerOptions,
                         correctAnswers,
+                        // Add polymorphic fields for new format
+                        multipleChoiceQuestion: q.multipleChoiceQuestion,
+                        numericQuestion: q.numericQuestion,
                         gradeLevel: q.gradeLevel,
                         discipline: q.discipline || q.category || q.subject,
                         themes: q.themes,
@@ -276,20 +401,55 @@ export default function CreateActivityPage() {
                         difficulty: q.difficulty || q.difficulte,
                         author: q.author || q.auteur,
                     } satisfies Question;
+
+                    // Debug logging for numeric questions
+                    if (q.questionType === 'numeric') {
+                        console.log('[CreateActivityPage] Transformed numeric question:', {
+                            uid: q.uid,
+                            original: q,
+                            transformed: transformedQuestion
+                        });
+                    }
+
+                    return transformedQuestion;
                 });
 
             if (reset) {
                 setQuestions(transformedQuestions);
-                setOffset(transformedQuestions.length); // Next offset starts after these questions
+                setOffset(newQuestionsFromApi.length); // Use raw API response length for correct offset
+
+                // Preserve expanded state if the currently expanded question is still in the new list
+                if (openUid) {
+                    const expandedQuestionStillExists = transformedQuestions.some(q => q.uid === openUid);
+                    if (!expandedQuestionStillExists) {
+                        setOpenUid(null); // Only clear if the expanded question is no longer in the list
+                    }
+                }
             } else {
                 setQuestions(prev => {
                     const existingUids = new Set(prev.map(pq => pq.uid));
                     const filteredNew = transformedQuestions.filter(nq => !existingUids.has(nq.uid));
                     return [...prev, ...filteredNew];
                 });
-                setOffset(prevOffset => prevOffset + transformedQuestions.length); // Increment offset by number of new questions fetched
+                setOffset(prevOffset => prevOffset + newQuestionsFromApi.length); // Use raw API response length for correct offset
             }
-            setHasMore(transformedQuestions.length === BATCH_SIZE);
+
+            // Use pagination metadata if available, otherwise fall back to length comparison
+            if (paginationMeta && typeof paginationMeta.page === 'number' && typeof paginationMeta.totalPages === 'number') {
+                setHasMore(paginationMeta.page < paginationMeta.totalPages);
+                logger.debug('[fetchQuestions] Using pagination metadata:', {
+                    currentPage: paginationMeta.page,
+                    totalPages: paginationMeta.totalPages,
+                    hasMore: paginationMeta.page < paginationMeta.totalPages
+                });
+            } else {
+                setHasMore(newQuestionsFromApi.length === BATCH_SIZE); // Fallback to length comparison
+                logger.debug('[fetchQuestions] Using length comparison fallback:', {
+                    responseLength: newQuestionsFromApi.length,
+                    batchSize: BATCH_SIZE,
+                    hasMore: newQuestionsFromApi.length === BATCH_SIZE
+                });
+            }
             setLoadingQuestions(false);
             setLoadingMore(false);
         } catch (error) {
@@ -297,7 +457,7 @@ export default function CreateActivityPage() {
             setLoadingQuestions(false);
             setLoadingMore(false);
         }
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors, offset, loadingQuestions, loadingMore]); // Added offset to dependencies
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags, offset]); // Removed loadingQuestions and loadingMore from dependencies
 
     // Helper functions for cart management
     const addToCart = (question: Question) => {
@@ -344,22 +504,148 @@ export default function CreateActivityPage() {
         setOffset(0); // Reset offset
         setHasMore(true); // Assume there's more data
         fetchQuestions(true); // Fetch with reset
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]); // Dependencies that trigger a full reset
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedTags]); // Dependencies that trigger a full reset
 
     useEffect(() => {
+        let lastScrollTime = 0;
+        const THROTTLE_MS = 100; // Throttle scroll events
+
         const handleScroll = () => {
-            const el = listRef.current;
-            if (!el || loadingQuestions || loadingMore || !hasMore) return;
-            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
+            const now = Date.now();
+            if (now - lastScrollTime < THROTTLE_MS) {
+                return; // Throttle rapid scroll events
+            }
+            lastScrollTime = now;
+
+            // Get the current scroll containers (refs might change)
+            const desktopEl = listRef.current;
+            const mobileEl = mobileListRef.current;
+
+            // Determine which element is visible and should be used for scroll detection
+            let el: HTMLDivElement | null = null;
+            let layout = '';
+
+            // In test environments, offsetParent might not work reliably
+            // So we also check if the element exists and has dimensions
+            if (desktopEl) {
+                const isDesktopVisible = desktopEl.offsetParent !== null ||
+                    (desktopEl.clientHeight > 0 && desktopEl.clientWidth > 0);
+                if (isDesktopVisible) {
+                    el = desktopEl;
+                    layout = 'desktop';
+                }
+            }
+
+            if (!el && mobileEl) {
+                const isMobileVisible = mobileEl.offsetParent !== null ||
+                    (mobileEl.clientHeight > 0 && mobileEl.clientWidth > 0);
+                if (isMobileVisible) {
+                    el = mobileEl;
+                    layout = 'mobile';
+                }
+            }
+
+            if (!el) {
+                logger.debug('[Infinite Scroll] No visible element found during scroll');
+                return;
+            }
+
+            // Use different thresholds for mobile vs desktop
+            const threshold = layout === 'mobile' ? 300 : 150;
+
+            const debugInfo = {
+                hasElement: !!el,
+                loadingQuestions,
+                loadingMore,
+                hasMore,
+                scrollTop: el.scrollTop,
+                clientHeight: el.clientHeight,
+                scrollHeight: el.scrollHeight,
+                threshold: el.scrollHeight - threshold,
+                shouldLoad: el.scrollTop + el.clientHeight >= el.scrollHeight - threshold,
+                layout,
+                distanceFromBottom: el.scrollHeight - (el.scrollTop + el.clientHeight)
+            };
+
+            // Always log scroll events for debugging
+            logger.debug('[Infinite Scroll] Scroll event:', debugInfo);
+
+            // Check if we should skip (loading states)
+            if (loadingQuestions || loadingMore || !hasMore) {
+                logger.debug('[Infinite Scroll] Skipping - loading or no more data');
+                return;
+            }
+
+            // Only trigger if there's actually scrollable content
+            if (el.scrollHeight <= el.clientHeight) {
+                logger.debug('[Infinite Scroll] Skipping - no scrollable content');
+                return;
+            }
+
+            // Check if we're near the bottom
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) {
+                logger.info('[Infinite Scroll] Triggering load more');
                 setLoadingMore(true);
                 fetchQuestions(false); // Fetch more, don't reset
             }
         };
-        const el = listRef.current;
-        if (el) el.addEventListener('scroll', handleScroll);
-        return () => { if (el) el.removeEventListener('scroll', handleScroll); };
+
+        // Attach listeners to both elements (only one will be visible at a time)
+        const desktopEl = listRef.current;
+        const mobileEl = mobileListRef.current;
+
+        const attachedElements: HTMLDivElement[] = [];
+
+        if (desktopEl) {
+            logger.debug('[Infinite Scroll] Attaching desktop scroll listener');
+            desktopEl.addEventListener('scroll', handleScroll);
+            attachedElements.push(desktopEl);
+        }
+
+        if (mobileEl) {
+            logger.debug('[Infinite Scroll] Attaching mobile scroll listener');
+            mobileEl.addEventListener('scroll', handleScroll);
+            attachedElements.push(mobileEl);
+        }
+
+        if (attachedElements.length === 0) {
+            logger.warn('[Infinite Scroll] No elements found for scroll listeners');
+        }
+
+        return () => {
+            attachedElements.forEach(el => {
+                el.removeEventListener('scroll', handleScroll);
+            });
+        };
     }, [fetchQuestions, loadingQuestions, loadingMore, hasMore]);
+
+    // Backup intersection observer for more reliable infinite scroll
+    useEffect(() => {
+        const triggerElement = loadTriggerRef.current;
+        if (!triggerElement || !hasMore || loadingQuestions || loadingMore) {
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const [entry] = entries;
+                if (entry.isIntersecting) {
+                    logger.info('[Intersection Observer] Triggering load more');
+                    setLoadingMore(true);
+                    fetchQuestions(false);
+                }
+            },
+            {
+                rootMargin: '100px' // Trigger 100px before the element comes into view
+            }
+        );
+
+        observer.observe(triggerElement);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [fetchQuestions, hasMore, loadingQuestions, loadingMore]);
 
     const handleSaveActivity = async () => {
         setSavingActivity(true);
@@ -484,8 +770,8 @@ export default function CreateActivityPage() {
             {/* Content */}
             <div className="mx-auto w-full px-2 sm:px-4 md:px-6 lg:px-8 py-6 flex-1 flex flex-col min-h-0 overflow-x-hidden">
                 {/* Filters Row */}
-                <div className="flex flex-col xl:flex-row gap-4 mb-6 flex-shrink-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row gap-4 xl:flex-1">
+                <div className="flex flex-col xl:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6 flex-shrink-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row gap-2 sm:gap-4 xl:flex-1">
                         <EnhancedMultiSelectDropdown
                             options={filters.levels || []}
                             selected={selectedLevels}
@@ -505,22 +791,10 @@ export default function CreateActivityPage() {
                             placeholder="Thèmes"
                         />
                         <EnhancedMultiSelectDropdown
-                            options={filters.authors || []}
-                            selected={selectedAuthors}
-                            onChange={setSelectedAuthors}
-                            placeholder="Auteurs"
-                        />
-                    </div>
-                    <div className="relative flex-1 xl:max-w-md">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={16} className="text-gray-500" />
-                        </div>
-                        <input
-                            className="px-3 py-2 w-full pl-10 text-sm placeholder-gray-500 focus:outline-none focus:ring-0 transition-colors"
-                            type="text"
-                            placeholder="Rechercher par tag, thème, niveau, discipline..."
-                            value={tagSearch}
-                            onChange={e => setTagSearch(e.target.value)}
+                            options={filters.tags || []}
+                            selected={selectedTags}
+                            onChange={setSelectedTags}
+                            placeholder="Tags"
                         />
                     </div>
                 </div>
@@ -536,7 +810,9 @@ export default function CreateActivityPage() {
                             )}
                         </div>
                         <div className="question-list-simple flex-1 flex flex-col min-h-0 w-full overflow-x-hidden">
-                            <div className="overflow-y-auto flex-1" ref={listRef}>
+                            <div className="overflow-y-auto flex-1"
+                                style={{ maxHeight: '70vh' }}
+                                ref={listRef}>
                                 {loadingQuestions && questions.length === 0 ? (
                                     <div className="text-center text-[color:var(--muted-foreground)] text-lg py-8">
                                         Chargement des questions…
@@ -545,44 +821,32 @@ export default function CreateActivityPage() {
                                     <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
                                 ) : (
                                     <>
-                                        {questions
-                                            .filter((q) => {
-                                                if (!tagSearch.trim()) return true;
-                                                const search = tagSearch.trim().toLowerCase();
-                                                const tags = [
-                                                    ...(q.tags || []),
-                                                    q.themes,
-                                                    q.gradeLevel,
-                                                    q.discipline,
-                                                    q.title,
-                                                    q.text
-                                                ].filter(Boolean).map(String).map(s => s.toLowerCase());
-                                                return tags.some(t => t.includes(search));
-                                            })
-                                            .map(q => (
-                                                <QuestionDisplay
-                                                    key={q.uid}
-                                                    question={q}
-                                                    isActive={isQuestionSelected(q.uid)}
-                                                    isOpen={openUid === q.uid}
-                                                    onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
-                                                    timerStatus="stop"
-                                                    disabled={false}
-                                                    showControls={false}
-                                                    className=""
-                                                    showMeta={true}
-                                                    showCheckbox={true}
-                                                    checked={isQuestionSelected(q.uid)}
-                                                    onCheckboxChange={(checked) => {
-                                                        if (checked) {
-                                                            addToCart(q);
-                                                        } else {
-                                                            removeFromCart(q.uid);
-                                                        }
-                                                    }}
-                                                />
-                                            ))}
+                                        {questions.map(q => (
+                                            <QuestionDisplay
+                                                key={q.uid}
+                                                question={q}
+                                                isActive={isQuestionSelected(q.uid)}
+                                                isOpen={openUid === q.uid}
+                                                onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
+                                                timerStatus="stop"
+                                                disabled={false}
+                                                showControls={false}
+                                                className=""
+                                                showMeta={true}
+                                                showCheckbox={true}
+                                                checked={isQuestionSelected(q.uid)}
+                                                onCheckboxChange={(checked) => {
+                                                    if (checked) {
+                                                        addToCart(q);
+                                                    } else {
+                                                        removeFromCart(q.uid);
+                                                    }
+                                                }}
+                                            />
+                                        ))}
                                         {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
+                                        {/* Intersection observer trigger - desktop */}
+                                        {hasMore && !loadingMore && <div className="h-1"></div>}
                                     </>
                                 )}
                             </div>
@@ -593,7 +857,10 @@ export default function CreateActivityPage() {
                     <div className="flex-[1] flex flex-col min-h-0 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-4 flex-shrink-0">
                             <ShoppingCart size={20} className="text-[color:var(--foreground)] flex-shrink-0" />
-                            <h2 className="text-lg font-semibold text-[color:var(--foreground)] truncate min-w-0">Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'})</h2>
+                            <h2 className="text-lg font-semibold text-[color:var(--foreground)] truncate min-w-0">
+                                Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'}
+                                {selectedQuestions.length > 0 && ` - ${calculateTotalTime(selectedQuestions)}`})
+                            </h2>
                         </div>
 
                         {/* Cart Content - Flexible height */}
@@ -652,59 +919,48 @@ export default function CreateActivityPage() {
                 </div>
 
                 {/* Mobile Layout */}
-                <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden" style={{ minHeight: 200 }}>
+                <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
                     <div className="flex items-center gap-3 mb-4 flex-shrink-0">
                         <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Liste des questions</h2>
                         {loadingQuestions && (
                             <InfinitySpin size={24} />
                         )}
                     </div>
-                    <div className="question-list-simple flex-1 flex flex-col min-h-0 overflow-hidden">
-                        <div className="overflow-y-auto flex-1">
+                    <div className="question-list-simple flex-1 bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg min-h-0 overflow-hidden">
+                        <div className="overflow-y-auto h-full p-4"
+                            ref={mobileListRef}>
                             {loadingQuestions && questions.length === 0 ? (
                                 <div className="text-center text-[color:var(--muted-foreground)] py-8">Chargement des questions…</div>
                             ) : questions.length === 0 ? (
                                 <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
                             ) : (
                                 <>
-                                    {questions
-                                        .filter((q) => {
-                                            if (!tagSearch.trim()) return true;
-                                            const search = tagSearch.trim().toLowerCase();
-                                            const tags = [
-                                                ...(q.tags || []),
-                                                q.themes,
-                                                q.gradeLevel,
-                                                q.discipline,
-                                                q.title,
-                                                q.text
-                                            ].filter(Boolean).map(String).map(s => s.toLowerCase());
-                                            return tags.some(t => t.includes(search));
-                                        })
-                                        .map(q => (
-                                            <QuestionDisplay
-                                                key={q.uid}
-                                                question={q}
-                                                isActive={isQuestionSelected(q.uid)}
-                                                isOpen={openUid === q.uid}
-                                                onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
-                                                timerStatus="stop"
-                                                disabled={false}
-                                                showControls={false}
-                                                className=""
-                                                showMeta={true}
-                                                showCheckbox={true}
-                                                checked={isQuestionSelected(q.uid)}
-                                                onCheckboxChange={(checked) => {
-                                                    if (checked) {
-                                                        addToCart(q);
-                                                    } else {
-                                                        removeFromCart(q.uid);
-                                                    }
-                                                }}
-                                            />
-                                        ))}
+                                    {questions.map(q => (
+                                        <QuestionDisplay
+                                            key={q.uid}
+                                            question={q}
+                                            isActive={isQuestionSelected(q.uid)}
+                                            isOpen={openUid === q.uid}
+                                            onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
+                                            timerStatus="stop"
+                                            disabled={false}
+                                            showControls={false}
+                                            className=""
+                                            showMeta={true}
+                                            showCheckbox={true}
+                                            checked={isQuestionSelected(q.uid)}
+                                            onCheckboxChange={(checked) => {
+                                                if (checked) {
+                                                    addToCart(q);
+                                                } else {
+                                                    removeFromCart(q.uid);
+                                                }
+                                            }}
+                                        />
+                                    ))}
                                     {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
+                                    {/* Intersection observer trigger */}
+                                    {hasMore && !loadingMore && <div ref={loadTriggerRef} className="h-1"></div>}
                                 </>
                             )}
                         </div>
@@ -733,7 +989,10 @@ export default function CreateActivityPage() {
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <ShoppingCart size={20} className="text-[color:var(--foreground)]" />
-                                    <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Panier de l'activité</h2>
+                                    <h2 className="text-xl font-semibold text-[color:var(--foreground)]">
+                                        Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'}
+                                        {selectedQuestions.length > 0 && ` - ${calculateTotalTime(selectedQuestions)}`})
+                                    </h2>
                                 </div>
                                 <button
                                     onClick={() => setShowMobileCart(false)}
@@ -801,7 +1060,7 @@ export default function CreateActivityPage() {
             >
                 <div className="dialog-modal-content">
                     <p className="text-[color:var(--foreground)] mb-4">
-                        L'activité <strong>"{createdActivityName}"</strong> a été créée avec succès.
+                        L&apos;activité <strong>&quot;{createdActivityName}&quot;</strong> a été créée avec succès.
                     </p>
                     <div className="dialog-modal-actions">
                         <button

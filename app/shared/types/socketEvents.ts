@@ -45,6 +45,7 @@ export interface JoinGamePayload {
     userId: string;
     username: string;
     avatarEmoji?: string;
+    isDiffered?: boolean;
 }
 
 // ===== LEGACY EVENT PAYLOADS (DEPRECATED) =====
@@ -97,7 +98,7 @@ export interface GameJoinedPayload {
     accessCode: string;
     participant: ParticipantData; // Detailed information about the participant who joined
     gameStatus: 'pending' | 'active' | 'completed' | 'archived'; // Current status of the game
-    gameMode: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode: 'tournament' | 'quiz' | 'practice';
     differedAvailableFrom?: string; // ISO string
     differedAvailableTo?: string;   // ISO string
     // Potentially include initial game state info here if needed immediately on join
@@ -132,7 +133,7 @@ export interface GameStateUpdatePayload {
     totalQuestions?: number;
     timer?: number;
     participants?: ParticipantData[];
-    gameMode?: 'tournament' | 'quiz' | 'practice' | 'class';
+    gameMode?: 'tournament' | 'quiz' | 'practice';
 }
 
 export interface QuestionData {
@@ -170,22 +171,6 @@ export interface LeaveLobbyPayload {
  */
 export interface GetParticipantsPayload {
     accessCode: string;
-}
-
-// ===== Projector Event Payloads =====
-
-/**
- * Payload for joining a projection session
- */
-export interface JoinProjectorPayload {
-    gameId: string;
-}
-
-/**
- * Payload for leaving a projection session
- */
-export interface LeaveProjectorPayload {
-    gameId: string;
 }
 
 // ===== Shared Live Handler Payloads =====
@@ -269,7 +254,12 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     answers_locked: (payload: { locked: boolean }) => void;
     stats_update: (payload: any) => void;
     game_ended: (payload: { accessCode: string; correct?: number; total?: number; score?: number; totalQuestions?: number; /* any final stats */ }) => void;
-    correct_answers: (payload: { questionUid: string; correctAnswers?: boolean[] }) => void; // Backend emits this event
+    correct_answers: (payload: {
+        questionUid: string;
+        correctAnswers?: boolean[];
+        numericAnswer?: { correctAnswer: number; tolerance?: number };
+        terminatedQuestions?: Record<string, boolean>;
+    }) => void; // Backend emits this event
     feedback: (payload: { questionUid: string; feedbackRemaining: number;[key: string]: any }) => void; // Backend emits this event
     answer_feedback: (payload: { status: string; code: string; message: string }) => void; // Added for answer feedback
 
@@ -332,13 +322,4 @@ export interface AnswerReceivedPayload {
     explanation?: string;
 }
 
-/**
- * Teacher to Server Events
- */
-export interface TeacherToServerEvents {
-    /**
-     * Teacher requests to reveal the full leaderboard (trophy button)
-     */
-    reveal_leaderboard: (payload: RevealLeaderboardPayload) => void;
-    // ...existing events
-}
+

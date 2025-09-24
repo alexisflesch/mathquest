@@ -1,0 +1,470 @@
+# Questions de Mathématiques niveau CP pour MathQuest
+# Auteur : GPT-5
+
+- uid: "copilot-cp-math-somme12-001"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 1 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 2
+
+- uid: "copilot-cp-math-somme12-002"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 2 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 3
+
+- uid: "copilot-cp-math-somme12-003"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 3 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+
+- uid: "copilot-cp-math-somme12-004"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 4 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 5
+
+- uid: "copilot-cp-math-somme12-005"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 5 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 6
+
+- uid: "copilot-cp-math-somme12-006"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 6 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 7
+
+- uid: "copilot-cp-math-somme12-007"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 7 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 8
+
+- uid: "copilot-cp-math-somme12-008"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 8 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 9
+
+- uid: "copilot-cp-math-somme12-009"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 9 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 10
+
+- uid: "copilot-cp-math-somme12-010"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 11
+
+- uid: "copilot-cp-math-somme12-011"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 1 + 11 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12
+
+- uid: "copilot-cp-math-somme12-012"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 2 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 4
+
+- uid: "copilot-cp-math-somme12-013"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 3 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 5
+
+- uid: "copilot-cp-math-somme12-014"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 4 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 6
+
+- uid: "copilot-cp-math-somme12-015"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 5 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 7
+
+- uid: "copilot-cp-math-somme12-016"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 6 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 8
+
+- uid: "copilot-cp-math-somme12-017"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 7 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 9
+
+- uid: "copilot-cp-math-somme12-018"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 8 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 10
+
+- uid: "copilot-cp-math-somme12-019"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 9 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 11
+
+- uid: "copilot-cp-math-somme12-020"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 2 + 10 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12
+
+- uid: "copilot-cp-math-somme12-021"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 3 + 3 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 6
+
+- uid: "copilot-cp-math-somme12-022"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 3 + 4 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 7
+
+- uid: "copilot-cp-math-somme12-023"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 3 + 5 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 8
+
+- uid: "copilot-cp-math-somme12-024"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 3 + 6 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 9
+
+- uid: "copilot-cp-math-somme12-025"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 3 + 7 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 10
+
+- uid: "copilot-cp-math-somme12-026"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 3 + 8 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 11
+
+- uid: "copilot-cp-math-somme12-027"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 3 + 9 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12
+
+- uid: "copilot-cp-math-somme12-028"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 4 + 4 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 8
+
+- uid: "copilot-cp-math-somme12-029"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 4 + 5 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 9
+
+- uid: "copilot-cp-math-somme12-030"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 4 + 6 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 10
+
+- uid: "copilot-cp-math-somme12-031"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 4 + 7 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 11
+
+- uid: "copilot-cp-math-somme12-032"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 4 + 8 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12
+
+- uid: "copilot-cp-math-somme12-033"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 5 + 5 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 10
+
+- uid: "copilot-cp-math-somme12-034"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 5 + 6 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 11
+
+- uid: "copilot-cp-math-somme12-035"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 5 + 7 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12
+
+- uid: "copilot-cp-math-somme12-036"
+  author: "GPT-5"
+  discipline: "Mathématiques"
+  title: "Somme de deux nombres"
+  text: "Combien font 6 + 6 ?"
+  questionType: "numeric"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: "CP"
+  correctAnswer: 12

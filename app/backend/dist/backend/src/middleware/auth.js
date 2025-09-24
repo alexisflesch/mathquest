@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.optionalAuth = exports.teacherAuth = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const logger_1 = __importDefault(require("@/utils/logger"));
+const prisma_1 = require("@/db/prisma");
 // Create a middleware-specific logger
 const logger = (0, logger_1.default)('Auth');
 // JWT secret key should be stored in environment variables
@@ -13,7 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
 /**
  * Authentication middleware for teacher routes
  */
-const teacherAuth = (req, res, next) => {
+const teacherAuth = async (req, res, next) => {
     try {
         let token;
         // First, try to get the token from Authorization header
@@ -43,8 +44,28 @@ const teacherAuth = (req, res, next) => {
         }
         // Verify the token
         const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-        // Attach user info to request
-        req.user = decoded;
+        // Validate that the user actually exists in the database
+        const userExists = await prisma_1.prisma.user.findUnique({
+            where: { id: decoded.userId },
+            select: { id: true, username: true, role: true }
+        });
+        if (!userExists) {
+            logger.warn({
+                userId: decoded.userId,
+                username: decoded.username,
+                role: decoded.role
+            }, 'Authentication failed: User from JWT token does not exist in database');
+            res.status(401).json({ error: 'Invalid user credentials' });
+            return;
+        }
+        // Update the decoded payload with the actual user data from database
+        const validatedUser = {
+            userId: userExists.id,
+            username: userExists.username || decoded.username,
+            role: userExists.role
+        };
+        // Attach validated user info to request
+        req.user = validatedUser;
         next();
     }
     catch (error) {
@@ -58,7 +79,7 @@ exports.teacherAuth = teacherAuth;
  * Optional authentication middleware
  * Will set req.user if a valid token is provided but won't reject the request if no token is provided
  */
-const optionalAuth = (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
     try {
         let token;
         // First, try to get the token from Authorization header
@@ -95,8 +116,27 @@ const optionalAuth = (req, res, next) => {
         }
         // Verify the token
         const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-        // Attach user info to request
-        req.user = decoded;
+        // Validate that the user actually exists in the database
+        const userExists = await prisma_1.prisma.user.findUnique({
+            where: { id: decoded.userId },
+            select: { id: true, username: true, role: true }
+        });
+        if (!userExists) {
+            // Invalid user, but we still continue without authentication
+            logger.debug({
+                userId: decoded.userId,
+                username: decoded.username
+            }, 'Invalid user in optional authentication - continuing without auth');
+            return next();
+        }
+        // Update the decoded payload with the actual user data from database
+        const validatedUser = {
+            userId: userExists.id,
+            username: userExists.username || decoded.username,
+            role: userExists.role
+        };
+        // Attach validated user info to request
+        req.user = validatedUser;
     }
     catch (error) {
         // Invalid token, but we still continue without authentication

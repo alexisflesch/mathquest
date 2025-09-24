@@ -73,6 +73,10 @@ export class GameInstanceService {
         try {
             const accessCode = await this.generateUniqueAccessCode();
 
+            // Always clear Redis for this accessCode before creating a new game instance
+            const { clearGameRedisKeys } = await import('./redisCleanupUtil');
+            await clearGameRedisKeys(accessCode);
+
             // Set status: allow override from payload, otherwise use legacy logic
             let status: 'pending' | 'completed';
             let differedAvailableFrom: Date | undefined = undefined;
@@ -137,7 +141,12 @@ export class GameInstanceService {
                         include: {
                             questions: {
                                 include: {
-                                    question: true // Include the actual Question data
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true
+                                        }
+                                    }
                                 },
                                 orderBy: {
                                     sequence: 'asc' // Ensure questions are ordered by sequence
@@ -224,7 +233,12 @@ export class GameInstanceService {
                         include: {
                             questions: {
                                 include: {
-                                    question: true // Include the actual Question data
+                                    question: {
+                                        include: {
+                                            multipleChoiceQuestion: true,
+                                            numericQuestion: true
+                                        }
+                                    }
                                 },
                                 orderBy: {
                                     sequence: 'asc' // Ensure questions are ordered by sequence

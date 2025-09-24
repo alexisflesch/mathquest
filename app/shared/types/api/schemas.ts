@@ -27,7 +27,7 @@ export const RegisterRequestSchema = z.object({
     username: z.string().min(3, 'Username must be at least 3 characters'),
     email: z.string().email('Invalid email format').optional(),
     password: z.string().min(6, 'Password must be at least 6 characters').optional(), // Optional for guest users
-    role: z.enum(['STUDENT', 'TEACHER']).optional(),
+    role: z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     gradeLevel: z.string().optional(),
     avatar: z.string().optional(),
     cookieId: z.string().optional(),
@@ -42,7 +42,7 @@ export const UpgradeAccountRequestSchema = z.object({
     cookieId: z.string().min(1, 'Cookie ID is required'),
     email: z.string().email('Invalid email format'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
-    targetRole: z.enum(['STUDENT', 'TEACHER']).optional(),
+    targetRole: z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     adminPassword: z.string().optional()
 });
 
@@ -64,12 +64,24 @@ export const TeacherUpgradeRequestSchema = z.object({
     adminPassword: z.string().min(1, 'Admin password is required')
 });
 
+export const SendEmailVerificationRequestSchema = z.object({
+    email: z.string().email('Invalid email format')
+});
+
+export const VerifyEmailRequestSchema = z.object({
+    token: z.string().min(1, 'Verification token is required')
+});
+
+export const ResendEmailVerificationRequestSchema = z.object({
+    email: z.string().email('Invalid email format')
+});
+
 // --- Game API Request Schemas ---
 
 export const CreateGameRequestSchema = z.object({
     name: z.string().min(1, 'Game name is required'),
     gameTemplateId: z.string().uuid('Invalid game template ID').optional(),
-    playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
+    playMode: z.enum(['quiz', 'tournament', 'practice']),
     settings: z.record(z.any()).optional(),
     differedAvailableFrom: z.string().datetime().optional(),
     differedAvailableTo: z.string().datetime().optional(),
@@ -101,7 +113,7 @@ export const CreateGameTemplateRequestSchema = z.object({
     themes: z.array(z.string()).min(1, 'At least one theme is required'),
     discipline: z.string().optional(),
     description: z.string().optional(),
-    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: z.array(z.string()).min(1, 'At least one question is required') // Temporarily allow any string format
 });
 
@@ -111,7 +123,7 @@ export const UpdateGameTemplateRequestSchema = z.object({
     themes: z.array(z.string()).optional(),
     discipline: z.string().optional(),
     description: z.string().optional(),
-    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: z.array(z.string()).optional() // Temporarily allow any string format
 });
 
@@ -158,6 +170,10 @@ export const UpdateUserRequestSchema = z.object({
 export const CreateQuizTemplateRequestSchema = z.object({
     name: z.string().min(1, 'Quiz template name is required'),
     description: z.string().optional(),
+    gradeLevel: z.string().optional(),
+    themes: z.array(z.string()).min(1, 'At least one theme is required'),
+    discipline: z.string().optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).optional(),
     questionUids: z.array(z.string().uuid()).min(1, 'At least one question is required'),
     settings: z.record(z.any()).optional()
 });
@@ -178,7 +194,7 @@ const ApiUserSchema = z.object({
     username: z.string(),
     email: z.string().optional(),
     avatar: z.string(),
-    role: z.enum(['STUDENT', 'TEACHER'])
+    role: z.enum(['STUDENT', 'TEACHER', 'GUEST'])
 });
 
 // Auth Response Schemas
@@ -202,8 +218,9 @@ export const LoginResponseSchema = z.object({
 export const RegisterResponseSchema = z.object({
     success: z.boolean(),
     message: z.string(),
-    token: z.string(),
-    user: ApiUserSchema
+    token: z.string().optional(), // Optional for email verification cases
+    user: ApiUserSchema,
+    requiresEmailVerification: z.boolean().optional() // Indicates email verification needed
 });
 
 export const UpgradeAccountResponseSchema = z.object({
@@ -341,10 +358,18 @@ export const QuestionUidsResponseSchema = z.object({
     total: z.number()
 });
 
+// FilterOption schema for enhanced filters with compatibility information
+export const FilterOptionSchema = z.object({
+    value: z.string(),
+    label: z.string().optional(),
+    isCompatible: z.boolean()
+});
+
 export const QuestionsFiltersResponseSchema = z.object({
-    gradeLevel: z.array(z.string().nullable()),
-    disciplines: z.array(z.string()),
-    themes: z.array(z.string())
+    gradeLevel: z.array(FilterOptionSchema),
+    disciplines: z.array(FilterOptionSchema),
+    themes: z.array(FilterOptionSchema),
+    tags: z.array(FilterOptionSchema).optional()
 });
 
 export const QuestionsCountResponseSchema = z.object({
@@ -361,7 +386,7 @@ const ApiGameTemplateSchema = z.object({
     themes: z.array(z.string()),
     discipline: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
-    defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).nullable().optional(),
+    defaultMode: z.enum(['quiz', 'tournament', 'practice']).nullable().optional(),
     createdAt: z.coerce.date(),
     updatedAt: z.coerce.date(),
     creatorId: z.string(),
@@ -460,7 +485,7 @@ export const TournamentListItemSchema = z.object({
     code: z.string(),
     name: z.string(),
     statut: z.string(), // Consider stricter enum if possible
-    playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
+    playMode: z.enum(['quiz', 'tournament', 'practice']),
     createdAt: z.string(),
     date_debut: z.string().nullable(),
     date_fin: z.string().nullable(),
@@ -505,6 +530,9 @@ export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>;
 export type PasswordResetConfirmRequest = z.infer<typeof PasswordResetConfirmRequestSchema>;
 export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;
 export type TeacherUpgradeRequest = z.infer<typeof TeacherUpgradeRequestSchema>;
+export type SendEmailVerificationRequest = z.infer<typeof SendEmailVerificationRequestSchema>;
+export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequestSchema>;
+export type ResendEmailVerificationRequest = z.infer<typeof ResendEmailVerificationRequestSchema>;
 export type SetQuestionRequest = z.infer<typeof SetQuestionRequestSchema>;
 // Backward compatibility aliases
 export type UpgradeRequest = UpgradeAccountRequest;
@@ -581,12 +609,37 @@ export const PracticeQuestionDataSchema = z.object({
     uid: z.string().min(1, "Question UID is required"),
     title: z.string().min(1, "Question title is required"),
     text: z.string().min(1, "Question text is required"),
-    answerOptions: z.array(z.string()).min(2, "At least 2 answer options required"),
     questionType: z.string().min(1, "Question type is required"),
     timeLimit: z.number().int().min(1),
     gradeLevel: z.string().min(1, "Grade level is required"),
     discipline: z.string().min(1, "Discipline is required"),
-    themes: z.array(z.string()).min(1, "At least one theme is required")
+    themes: z.array(z.string()).min(1, "At least one theme is required"),
+
+    // Polymorphic question data
+    multipleChoiceQuestion: z.object({
+        answerOptions: z.array(z.string()).min(2, "At least 2 answer options required"),
+        correctAnswers: z.array(z.boolean())
+    }).optional(),
+    numericQuestion: z.object({
+        correctAnswer: z.number(),
+        tolerance: z.number().optional(),
+        unit: z.string().optional()
+    }).optional(),
+
+    // Legacy fields for backward compatibility
+    answerOptions: z.array(z.string()).optional(),
+    correctAnswers: z.array(z.boolean()).optional()
+}).refine((data) => {
+    // Ensure appropriate question type data exists
+    if (data.questionType === 'multipleChoice') {
+        return !!(data.multipleChoiceQuestion || data.answerOptions);
+    }
+    if (data.questionType === 'numeric') {
+        return !!data.numericQuestion;
+    }
+    return true;
+}, {
+    message: "Question must have appropriate type-specific data for its question type"
 });
 
 // Practice Statistics Schema

@@ -4,6 +4,7 @@ import * as http from 'http';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { socketAuthMiddleware } from './middleware/socketAuth';
+import { socketRateLimitMiddleware } from './middleware/socketRateLimit';
 import { registerConnectionHandlers } from './handlers/connectionHandlers';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
@@ -47,6 +48,9 @@ export function initializeSocketIO(server: http.Server): SocketIOServer<ClientTo
 
     // Set up Redis adapter for horizontal scaling
     io.adapter(createAdapter(redisClient, subClient));
+
+    // Add rate limiting middleware first (before auth)
+    io.use(socketRateLimitMiddleware);
 
     // Add authentication middleware
     io.use(socketAuthMiddleware);
@@ -93,6 +97,7 @@ export function configureSocketServer(socketServer: SocketIOServer<ClientToServe
     }
     io = socketServer;
     // --- Ensure middleware is applied in test/configure mode ---
+    io.use(socketRateLimitMiddleware);
     io.use(socketAuthMiddleware);
 }
 

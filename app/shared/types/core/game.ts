@@ -2,7 +2,7 @@
  * Game-related shared types
  */
 
-export type PlayMode = 'quiz' | 'tournament' | 'practice' | 'class'; // Use union type for Prisma compatibility
+export type PlayMode = 'quiz' | 'tournament' | 'practice'; // Use union type for Prisma compatibility
 
 export interface GameTemplate {
     id: string;
@@ -87,16 +87,6 @@ export interface GameInstanceCreationData {
     differedAvailableTo?: Date;
 }
 
-export interface GameInstanceUpdateData {
-    name?: string;
-    status?: string;
-    currentQuestionIndex?: number | null; // Allow null for Prisma compatibility
-    leaderboard?: any;
-    settings?: any;
-    startedAt?: Date | null; // Allow null for Prisma compatibility
-    endedAt?: Date | null; // Allow null for Prisma compatibility
-}
-
 /**
  * Game state interface for runtime game management
  * Used to track active game state in Redis and memory
@@ -131,23 +121,6 @@ export interface GameState {
         /** Whether to show leaderboard between questions */
         showLeaderboard: boolean;
     };
-}
-
-/**
- * Full game state response from getFullGameState service
- * This is the canonical payload structure sent to projection and dashboard
- */
-export interface FullGameStateResponse {
-    /** Access code for the game */
-    accessCode: string;
-    /** Current game state */
-    gameState: GameState;
-    /** List of participants in the game */
-    participants: any[];
-    /** Answers submitted by participants */
-    answers: Record<string, any[]>;
-    /** Current leaderboard data */
-    leaderboard: any[];
 }
 
 /**

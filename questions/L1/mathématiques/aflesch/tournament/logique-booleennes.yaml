@@ -1,0 +1,194 @@
+- uid: aflesch-l1-bool-001
+  title: 'Booléen — négation et conjonction'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « (non faux) et vrai » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'proposition'
+    - 'connecteurs logiques'
+    - 'table de vérité'
+    - 'négation'
+
+- uid: aflesch-l1-bool-002
+  title: 'Booléen — disjonction'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « vrai ou faux » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'proposition'
+    - 'connecteurs logiques'
+    - 'table de vérité'
+
+- uid: aflesch-l1-bool-003
+  title: 'Booléen — combinaison courte'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « (non vrai) ou vrai » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'table de vérité'
+    - 'négation'
+
+- uid: aflesch-l1-bool-004
+  title: 'Booléen — trois opérateurs'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « (faux ou vrai) et (non faux) » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'proposition'
+    - 'connecteurs logiques'
+    - 'table de vérité'
+    - 'négation'
+
+- uid: aflesch-l1-bool-005
+  title: 'Booléen — conjonction double'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « vrai et (faux ou faux) » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [false, true]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'connecteurs logiques'
+    - 'table de vérité'
+
+- uid: aflesch-l1-bool-006
+  title: 'Booléen — négation seule'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « (non faux) » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'négation'
+    - 'table de vérité'
+
+- uid: aflesch-l1-bool-007
+  title: 'Booléen — associativité'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « vrai et (faux ou vrai) » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'connecteurs logiques'
+    - 'table de vérité'
+
+- uid: aflesch-l1-bool-008
+  title: 'Booléen — combinaison mixte'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « ((non faux) et faux) ou faux » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [false, true]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'connecteurs logiques'
+    - 'table de vérité'
+
+- uid: aflesch-l1-bool-009
+  title: 'Booléen — double négation'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « non(non vrai) » ?' # déjà parenthésé
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'négation'
+    - 'table de vérité'
+
+- uid: aflesch-l1-bool-010
+  title: 'Booléen — conjonction et disjonction'
+  questionType: single_choice
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  text: 'Quelle est la valeur de vérité de « (faux et vrai) ou vrai » ?'
+  answerOptions:
+    - 'vrai'
+    - 'faux'
+  correctAnswers: [true, false]
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'connecteurs logiques'
+    - 'table de vérité'

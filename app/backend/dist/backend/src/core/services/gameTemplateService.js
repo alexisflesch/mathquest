@@ -23,7 +23,8 @@ class GameTemplateService {
             username = user?.username || 'Élève';
         }
         // 1. Find random questions matching the filters
-        const questions = await prisma_1.prisma.question.findMany({
+        // First get all matching questions to shuffle them
+        const allQuestions = await prisma_1.prisma.question.findMany({
             where: {
                 gradeLevel: data.gradeLevel,
                 discipline: data.discipline,
@@ -34,13 +35,28 @@ class GameTemplateService {
                     }
                 }
             },
-            orderBy: { updatedAt: 'desc' }, // fallback order
-            take: data.nbOfQuestions
+            select: { uid: true } // Only need UIDs for efficiency
         });
         // Only check that we have at least one question
-        if (questions.length === 0) {
+        if (allQuestions.length === 0) {
             throw new Error('No questions found for the selected filters');
         }
+        // Shuffle and take the requested number (Fisher-Yates shuffle)
+        const shuffledQuestions = [...allQuestions];
+        for (let i = shuffledQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
+        }
+        // Take only what we need
+        const selectedQuestionUids = shuffledQuestions
+            .slice(0, data.nbOfQuestions)
+            .map(q => q.uid);
+        // Now fetch the full question data for the selected UIDs
+        const questions = await prisma_1.prisma.question.findMany({
+            where: {
+                uid: { in: selectedQuestionUids }
+            }
+        });
         // Use whatever questions we found (even if less than requested)
         const actualNbOfQuestions = Math.min(questions.length, data.nbOfQuestions);
         // 2. Create the GameTemplate
@@ -54,8 +70,8 @@ class GameTemplateService {
                 description: "AUTO: Created from student UI",
                 defaultMode: data.playMode === 'practice' ? 'practice' : 'tournament',
                 questions: {
-                    create: questions.map((q, idx) => ({
-                        questionUid: q.uid,
+                    create: selectedQuestionUids.map((uid, idx) => ({
+                        questionUid: uid,
                         sequence: idx + 1
                     }))
                 }
@@ -67,6 +83,14 @@ class GameTemplateService {
         return gameTemplate;
     }
     async creategameTemplate(userId, data) {
+        // Validate that the creator user exists
+        const creator = await prisma_1.prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, username: true }
+        });
+        if (!creator) {
+            throw new Error(`Creator user with ID ${userId} does not exist`);
+        }
         const { questions, questionUids, ...rest } = data;
         // Convert questionUids to questions format if provided
         let questionData = questions;
@@ -78,6 +102,7 @@ class GameTemplateService {
         }
         logger.info({
             userId,
+            creatorUsername: creator.username,
             questionData,
             rest,
             fullCreateData: {

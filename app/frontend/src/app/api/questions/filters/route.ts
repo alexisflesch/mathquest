@@ -1,40 +1,117 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QuestionsFiltersResponseSchema } from '@shared/types/api/schemas';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
 
-        // Forward all query parameters to the backend
-        const queryParams = new URLSearchParams();
-        searchParams.forEach((value, key) => {
-            queryParams.append(key, value);
+        // Extract current filter selections from query parameters
+        const currentSelections = {
+            gradeLevel: searchParams.getAll('gradeLevel'),
+            disciplines: [
+                ...searchParams.getAll('disciplines'),
+                ...searchParams.getAll('discipline') // Handle both singular and plural
+            ],
+            themes: [
+                ...searchParams.getAll('themes'),
+                ...searchParams.getAll('theme') // Handle both singular and plural
+            ],
+            tags: [
+                ...searchParams.getAll('tags'),
+                ...searchParams.getAll('tag') // Handle both singular and plural
+            ]
+        };
+
+        // Extract mode parameter (practice, tournament, quiz)
+        const mode = searchParams.get('mode');
+
+        console.log('Current filter selections:', currentSelections);
+        console.log('Mode:', mode);
+
+        // Backend URL - use environment variable with fallback
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:3007/api/v1';
+
+        // Fetch all options (without filters) - but with mode parameter for excludedFrom filtering
+        const allOptionsParams = new URLSearchParams();
+        if (mode) {
+            allOptionsParams.append('mode', mode);
+        }
+        const allOptionsUrl = `${backendUrl}/questions/filters${allOptionsParams.toString() ? '?' + allOptionsParams.toString() : ''}`;
+        console.log('Fetching all options from backend:', allOptionsUrl);
+
+        const allOptionsResponse = await fetch(allOptionsUrl, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store'
         });
 
-        // Call the secure backend filters endpoint
-        // Use server-side environment variable for API routes
-        const backendUrl = `${process.env.BACKEND_API_URL || 'http://localhost:3007/api/v1'}/questions/filters?${queryParams.toString()}`;
-
-        const response = await fetch(backendUrl, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Backend API error: ${response.status}`);
+        if (!allOptionsResponse.ok) {
+            throw new Error(`Backend API error: ${allOptionsResponse.status}`);
         }
 
-        const data = await response.json();
+        const allOptions = await allOptionsResponse.json();
 
-        // The backend returns filters data directly, but we need to transform field names
-        // Backend returns: niveaux, disciplines, themes
-        // Frontend expects: niveaux, disciplines, themes (same structure)
+        // If no filters are selected, all options are compatible
+        if (currentSelections.gradeLevel.length === 0 && currentSelections.disciplines.length === 0 && currentSelections.themes.length === 0 && currentSelections.tags.length === 0) {
+            const transformToFilterOptions = (stringArray: string[]): Array<{ value: string, isCompatible: boolean }> => {
+                return (stringArray || []).map(value => ({
+                    value,
+                    isCompatible: true
+                }));
+            };
+
+            const result = {
+                gradeLevel: transformToFilterOptions(allOptions.gradeLevel || []),
+                disciplines: transformToFilterOptions(allOptions.disciplines || []),
+                themes: transformToFilterOptions(allOptions.themes || []),
+                tags: transformToFilterOptions(allOptions.tags || [])
+            };
+
+            const validatedResult = QuestionsFiltersResponseSchema.parse(result);
+            return NextResponse.json(validatedResult);
+        }
+
+        // Fetch compatible options with current selections
+        const compatibleParams = new URLSearchParams();
+        currentSelections.gradeLevel.forEach((level: string) => compatibleParams.append('gradeLevel', level));
+        currentSelections.disciplines.forEach((discipline: string) => compatibleParams.append('discipline', discipline));
+        currentSelections.themes.forEach((theme: string) => compatibleParams.append('theme', theme));
+        currentSelections.tags.forEach((tag: string) => compatibleParams.append('tag', tag));
+
+        // Add mode parameter to compatible options call
+        if (mode) {
+            compatibleParams.append('mode', mode);
+        }
+
+        const compatibleUrl = `${backendUrl}/questions/filters?${compatibleParams.toString()}`;
+        console.log('Fetching compatible options from backend:', compatibleUrl);
+
+        const compatibleResponse = await fetch(compatibleUrl, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store'
+        });
+
+        if (!compatibleResponse.ok) {
+            throw new Error(`Backend API error: ${compatibleResponse.status}`);
+        }
+
+        const compatibleOptions = await compatibleResponse.json();
+
+        // Transform to FilterOption arrays with incompatibility detection
+        const transformWithCompatibility = (allItems: string[], compatibleItems: string[]): Array<{ value: string, isCompatible: boolean }> => {
+            const compatibleSet = new Set(compatibleItems || []);
+            return (allItems || []).map(value => ({
+                value,
+                isCompatible: compatibleSet.has(value)
+            }));
+        };
+
         const result = {
-            gradeLevel: data.levels || [],
-            disciplines: data.disciplines || [],
-            themes: data.themes || []
+            gradeLevel: transformWithCompatibility(allOptions.gradeLevel || [], compatibleOptions.gradeLevel || []),
+            disciplines: transformWithCompatibility(allOptions.disciplines || [], compatibleOptions.disciplines || []),
+            themes: transformWithCompatibility(allOptions.themes || [], compatibleOptions.themes || []),
+            tags: transformWithCompatibility(allOptions.tags || [], compatibleOptions.tags || [])
         };
 
         // Validate the response

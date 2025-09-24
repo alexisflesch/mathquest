@@ -34,6 +34,16 @@ export type StudentProfile = $Result.DefaultSelection<Prisma.$StudentProfilePayl
  */
 export type Question = $Result.DefaultSelection<Prisma.$QuestionPayload>
 /**
+ * Model MultipleChoiceQuestion
+ * 
+ */
+export type MultipleChoiceQuestion = $Result.DefaultSelection<Prisma.$MultipleChoiceQuestionPayload>
+/**
+ * Model NumericQuestion
+ * 
+ */
+export type NumericQuestion = $Result.DefaultSelection<Prisma.$NumericQuestionPayload>
+/**
  * Model GameTemplate
  * 
  */
@@ -60,7 +70,8 @@ export type GameParticipant = $Result.DefaultSelection<Prisma.$GameParticipantPa
 export namespace $Enums {
   export const UserRole: {
   STUDENT: 'STUDENT',
-  TEACHER: 'TEACHER'
+  TEACHER: 'TEACHER',
+  GUEST: 'GUEST'
 };
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
@@ -69,8 +80,7 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 export const PlayMode: {
   quiz: 'quiz',
   tournament: 'tournament',
-  practice: 'practice',
-  class: 'class'
+  practice: 'practice'
 };
 
 export type PlayMode = (typeof PlayMode)[keyof typeof PlayMode]
@@ -263,6 +273,26 @@ export class PrismaClient<
     * ```
     */
   get question(): Prisma.QuestionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.multipleChoiceQuestion`: Exposes CRUD operations for the **MultipleChoiceQuestion** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MultipleChoiceQuestions
+    * const multipleChoiceQuestions = await prisma.multipleChoiceQuestion.findMany()
+    * ```
+    */
+  get multipleChoiceQuestion(): Prisma.MultipleChoiceQuestionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.numericQuestion`: Exposes CRUD operations for the **NumericQuestion** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more NumericQuestions
+    * const numericQuestions = await prisma.numericQuestion.findMany()
+    * ```
+    */
+  get numericQuestion(): Prisma.NumericQuestionDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.gameTemplate`: Exposes CRUD operations for the **GameTemplate** model.
@@ -747,6 +777,8 @@ export namespace Prisma {
     TeacherProfile: 'TeacherProfile',
     StudentProfile: 'StudentProfile',
     Question: 'Question',
+    MultipleChoiceQuestion: 'MultipleChoiceQuestion',
+    NumericQuestion: 'NumericQuestion',
     GameTemplate: 'GameTemplate',
     QuestionsInGameTemplate: 'QuestionsInGameTemplate',
     GameInstance: 'GameInstance',
@@ -769,7 +801,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "teacherProfile" | "studentProfile" | "question" | "gameTemplate" | "questionsInGameTemplate" | "gameInstance" | "gameParticipant"
+      modelProps: "user" | "teacherProfile" | "studentProfile" | "question" | "multipleChoiceQuestion" | "numericQuestion" | "gameTemplate" | "questionsInGameTemplate" | "gameInstance" | "gameParticipant"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1066,6 +1098,154 @@ export namespace Prisma {
           count: {
             args: Prisma.QuestionCountArgs<ExtArgs>
             result: $Utils.Optional<QuestionCountAggregateOutputType> | number
+          }
+        }
+      }
+      MultipleChoiceQuestion: {
+        payload: Prisma.$MultipleChoiceQuestionPayload<ExtArgs>
+        fields: Prisma.MultipleChoiceQuestionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MultipleChoiceQuestionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MultipleChoiceQuestionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>
+          }
+          findFirst: {
+            args: Prisma.MultipleChoiceQuestionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MultipleChoiceQuestionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>
+          }
+          findMany: {
+            args: Prisma.MultipleChoiceQuestionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>[]
+          }
+          create: {
+            args: Prisma.MultipleChoiceQuestionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>
+          }
+          createMany: {
+            args: Prisma.MultipleChoiceQuestionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MultipleChoiceQuestionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>[]
+          }
+          delete: {
+            args: Prisma.MultipleChoiceQuestionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>
+          }
+          update: {
+            args: Prisma.MultipleChoiceQuestionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>
+          }
+          deleteMany: {
+            args: Prisma.MultipleChoiceQuestionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MultipleChoiceQuestionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MultipleChoiceQuestionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>[]
+          }
+          upsert: {
+            args: Prisma.MultipleChoiceQuestionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MultipleChoiceQuestionPayload>
+          }
+          aggregate: {
+            args: Prisma.MultipleChoiceQuestionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMultipleChoiceQuestion>
+          }
+          groupBy: {
+            args: Prisma.MultipleChoiceQuestionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MultipleChoiceQuestionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MultipleChoiceQuestionCountArgs<ExtArgs>
+            result: $Utils.Optional<MultipleChoiceQuestionCountAggregateOutputType> | number
+          }
+        }
+      }
+      NumericQuestion: {
+        payload: Prisma.$NumericQuestionPayload<ExtArgs>
+        fields: Prisma.NumericQuestionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.NumericQuestionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.NumericQuestionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>
+          }
+          findFirst: {
+            args: Prisma.NumericQuestionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.NumericQuestionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>
+          }
+          findMany: {
+            args: Prisma.NumericQuestionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>[]
+          }
+          create: {
+            args: Prisma.NumericQuestionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>
+          }
+          createMany: {
+            args: Prisma.NumericQuestionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.NumericQuestionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>[]
+          }
+          delete: {
+            args: Prisma.NumericQuestionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>
+          }
+          update: {
+            args: Prisma.NumericQuestionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>
+          }
+          deleteMany: {
+            args: Prisma.NumericQuestionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.NumericQuestionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.NumericQuestionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>[]
+          }
+          upsert: {
+            args: Prisma.NumericQuestionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NumericQuestionPayload>
+          }
+          aggregate: {
+            args: Prisma.NumericQuestionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateNumericQuestion>
+          }
+          groupBy: {
+            args: Prisma.NumericQuestionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<NumericQuestionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.NumericQuestionCountArgs<ExtArgs>
+            result: $Utils.Optional<NumericQuestionCountAggregateOutputType> | number
           }
         }
       }
@@ -1453,6 +1633,8 @@ export namespace Prisma {
     teacherProfile?: TeacherProfileOmit
     studentProfile?: StudentProfileOmit
     question?: QuestionOmit
+    multipleChoiceQuestion?: MultipleChoiceQuestionOmit
+    numericQuestion?: NumericQuestionOmit
     gameTemplate?: GameTemplateOmit
     questionsInGameTemplate?: QuestionsInGameTemplateOmit
     gameInstance?: GameInstanceOmit
@@ -1721,6 +1903,9 @@ export namespace Prisma {
     resetToken: string | null
     resetTokenExpiresAt: Date | null
     avatarEmoji: string | null
+    emailVerificationToken: string | null
+    emailVerificationTokenExpiresAt: Date | null
+    emailVerified: boolean | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -1733,6 +1918,9 @@ export namespace Prisma {
     resetToken: string | null
     resetTokenExpiresAt: Date | null
     avatarEmoji: string | null
+    emailVerificationToken: string | null
+    emailVerificationTokenExpiresAt: Date | null
+    emailVerified: boolean | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -1745,6 +1933,9 @@ export namespace Prisma {
     resetToken: number
     resetTokenExpiresAt: number
     avatarEmoji: number
+    emailVerificationToken: number
+    emailVerificationTokenExpiresAt: number
+    emailVerified: number
     _all: number
   }
 
@@ -1759,6 +1950,9 @@ export namespace Prisma {
     resetToken?: true
     resetTokenExpiresAt?: true
     avatarEmoji?: true
+    emailVerificationToken?: true
+    emailVerificationTokenExpiresAt?: true
+    emailVerified?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -1771,6 +1965,9 @@ export namespace Prisma {
     resetToken?: true
     resetTokenExpiresAt?: true
     avatarEmoji?: true
+    emailVerificationToken?: true
+    emailVerificationTokenExpiresAt?: true
+    emailVerified?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -1783,6 +1980,9 @@ export namespace Prisma {
     resetToken?: true
     resetTokenExpiresAt?: true
     avatarEmoji?: true
+    emailVerificationToken?: true
+    emailVerificationTokenExpiresAt?: true
+    emailVerified?: true
     _all?: true
   }
 
@@ -1868,6 +2068,9 @@ export namespace Prisma {
     resetToken: string | null
     resetTokenExpiresAt: Date | null
     avatarEmoji: string | null
+    emailVerificationToken: string | null
+    emailVerificationTokenExpiresAt: Date | null
+    emailVerified: boolean | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -1897,6 +2100,9 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
     studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
     teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
     initiatedGameInstances?: boolean | User$initiatedGameInstancesArgs<ExtArgs>
@@ -1915,6 +2121,9 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1927,6 +2136,9 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -1939,9 +2151,12 @@ export namespace Prisma {
     resetToken?: boolean
     resetTokenExpiresAt?: boolean
     avatarEmoji?: boolean
+    emailVerificationToken?: boolean
+    emailVerificationTokenExpiresAt?: boolean
+    emailVerified?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "createdAt" | "role" | "resetToken" | "resetTokenExpiresAt" | "avatarEmoji", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "createdAt" | "role" | "resetToken" | "resetTokenExpiresAt" | "avatarEmoji" | "emailVerificationToken" | "emailVerificationTokenExpiresAt" | "emailVerified", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
     teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
@@ -1972,6 +2187,9 @@ export namespace Prisma {
       resetToken: string | null
       resetTokenExpiresAt: Date | null
       avatarEmoji: string | null
+      emailVerificationToken: string | null
+      emailVerificationTokenExpiresAt: Date | null
+      emailVerified: boolean | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -2409,6 +2627,9 @@ export namespace Prisma {
     readonly resetToken: FieldRef<"User", 'String'>
     readonly resetTokenExpiresAt: FieldRef<"User", 'DateTime'>
     readonly avatarEmoji: FieldRef<"User", 'String'>
+    readonly emailVerificationToken: FieldRef<"User", 'String'>
+    readonly emailVerificationTokenExpiresAt: FieldRef<"User", 'DateTime'>
+    readonly emailVerified: FieldRef<"User", 'Boolean'>
   }
     
 
@@ -4988,6 +5209,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     feedbackWaitTime: number | null
+    isHidden: boolean | null
   }
 
   export type QuestionMaxAggregateOutputType = {
@@ -5004,6 +5226,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     feedbackWaitTime: number | null
+    isHidden: boolean | null
   }
 
   export type QuestionCountAggregateOutputType = {
@@ -5022,9 +5245,8 @@ export namespace Prisma {
     excludedFrom: number
     createdAt: number
     updatedAt: number
-    answerOptions: number
-    correctAnswers: number
     feedbackWaitTime: number
+    isHidden: number
     _all: number
   }
 
@@ -5055,6 +5277,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     feedbackWaitTime?: true
+    isHidden?: true
   }
 
   export type QuestionMaxAggregateInputType = {
@@ -5071,6 +5294,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     feedbackWaitTime?: true
+    isHidden?: true
   }
 
   export type QuestionCountAggregateInputType = {
@@ -5089,9 +5313,8 @@ export namespace Prisma {
     excludedFrom?: true
     createdAt?: true
     updatedAt?: true
-    answerOptions?: true
-    correctAnswers?: true
     feedbackWaitTime?: true
+    isHidden?: true
     _all?: true
   }
 
@@ -5197,9 +5420,8 @@ export namespace Prisma {
     excludedFrom: string[]
     createdAt: Date
     updatedAt: Date
-    answerOptions: string[]
-    correctAnswers: boolean[]
     feedbackWaitTime: number | null
+    isHidden: boolean | null
     _count: QuestionCountAggregateOutputType | null
     _avg: QuestionAvgAggregateOutputType | null
     _sum: QuestionSumAggregateOutputType | null
@@ -5237,9 +5459,10 @@ export namespace Prisma {
     excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     feedbackWaitTime?: boolean
+    isHidden?: boolean
+    multipleChoiceQuestion?: boolean | Question$multipleChoiceQuestionArgs<ExtArgs>
+    numericQuestion?: boolean | Question$numericQuestionArgs<ExtArgs>
     gameTemplates?: boolean | Question$gameTemplatesArgs<ExtArgs>
     _count?: boolean | QuestionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["question"]>
@@ -5260,9 +5483,8 @@ export namespace Prisma {
     excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     feedbackWaitTime?: boolean
+    isHidden?: boolean
   }, ExtArgs["result"]["question"]>
 
   export type QuestionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -5281,9 +5503,8 @@ export namespace Prisma {
     excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     feedbackWaitTime?: boolean
+    isHidden?: boolean
   }, ExtArgs["result"]["question"]>
 
   export type QuestionSelectScalar = {
@@ -5302,13 +5523,14 @@ export namespace Prisma {
     excludedFrom?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     feedbackWaitTime?: boolean
+    isHidden?: boolean
   }
 
-  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "excludedFrom" | "createdAt" | "updatedAt" | "answerOptions" | "correctAnswers" | "feedbackWaitTime", ExtArgs["result"]["question"]>
+  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "excludedFrom" | "createdAt" | "updatedAt" | "feedbackWaitTime" | "isHidden", ExtArgs["result"]["question"]>
   export type QuestionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    multipleChoiceQuestion?: boolean | Question$multipleChoiceQuestionArgs<ExtArgs>
+    numericQuestion?: boolean | Question$numericQuestionArgs<ExtArgs>
     gameTemplates?: boolean | Question$gameTemplatesArgs<ExtArgs>
     _count?: boolean | QuestionCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -5318,6 +5540,8 @@ export namespace Prisma {
   export type $QuestionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Question"
     objects: {
+      multipleChoiceQuestion: Prisma.$MultipleChoiceQuestionPayload<ExtArgs> | null
+      numericQuestion: Prisma.$NumericQuestionPayload<ExtArgs> | null
       gameTemplates: Prisma.$QuestionsInGameTemplatePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -5336,9 +5560,8 @@ export namespace Prisma {
       excludedFrom: string[]
       createdAt: Date
       updatedAt: Date
-      answerOptions: string[]
-      correctAnswers: boolean[]
       feedbackWaitTime: number | null
+      isHidden: boolean | null
     }, ExtArgs["result"]["question"]>
     composites: {}
   }
@@ -5733,6 +5956,8 @@ export namespace Prisma {
    */
   export interface Prisma__QuestionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    multipleChoiceQuestion<T extends Question$multipleChoiceQuestionArgs<ExtArgs> = {}>(args?: Subset<T, Question$multipleChoiceQuestionArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    numericQuestion<T extends Question$numericQuestionArgs<ExtArgs> = {}>(args?: Subset<T, Question$numericQuestionArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     gameTemplates<T extends Question$gameTemplatesArgs<ExtArgs> = {}>(args?: Subset<T, Question$gameTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -5778,9 +6003,8 @@ export namespace Prisma {
     readonly excludedFrom: FieldRef<"Question", 'String[]'>
     readonly createdAt: FieldRef<"Question", 'DateTime'>
     readonly updatedAt: FieldRef<"Question", 'DateTime'>
-    readonly answerOptions: FieldRef<"Question", 'String[]'>
-    readonly correctAnswers: FieldRef<"Question", 'Boolean[]'>
     readonly feedbackWaitTime: FieldRef<"Question", 'Int'>
+    readonly isHidden: FieldRef<"Question", 'Boolean'>
   }
     
 
@@ -6169,6 +6393,44 @@ export namespace Prisma {
   }
 
   /**
+   * Question.multipleChoiceQuestion
+   */
+  export type Question$multipleChoiceQuestionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    where?: MultipleChoiceQuestionWhereInput
+  }
+
+  /**
+   * Question.numericQuestion
+   */
+  export type Question$numericQuestionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    where?: NumericQuestionWhereInput
+  }
+
+  /**
    * Question.gameTemplates
    */
   export type Question$gameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6208,6 +6470,2113 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: QuestionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MultipleChoiceQuestion
+   */
+
+  export type AggregateMultipleChoiceQuestion = {
+    _count: MultipleChoiceQuestionCountAggregateOutputType | null
+    _min: MultipleChoiceQuestionMinAggregateOutputType | null
+    _max: MultipleChoiceQuestionMaxAggregateOutputType | null
+  }
+
+  export type MultipleChoiceQuestionMinAggregateOutputType = {
+    questionUid: string | null
+  }
+
+  export type MultipleChoiceQuestionMaxAggregateOutputType = {
+    questionUid: string | null
+  }
+
+  export type MultipleChoiceQuestionCountAggregateOutputType = {
+    questionUid: number
+    answerOptions: number
+    correctAnswers: number
+    _all: number
+  }
+
+
+  export type MultipleChoiceQuestionMinAggregateInputType = {
+    questionUid?: true
+  }
+
+  export type MultipleChoiceQuestionMaxAggregateInputType = {
+    questionUid?: true
+  }
+
+  export type MultipleChoiceQuestionCountAggregateInputType = {
+    questionUid?: true
+    answerOptions?: true
+    correctAnswers?: true
+    _all?: true
+  }
+
+  export type MultipleChoiceQuestionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MultipleChoiceQuestion to aggregate.
+     */
+    where?: MultipleChoiceQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MultipleChoiceQuestions to fetch.
+     */
+    orderBy?: MultipleChoiceQuestionOrderByWithRelationInput | MultipleChoiceQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MultipleChoiceQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MultipleChoiceQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MultipleChoiceQuestions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MultipleChoiceQuestions
+    **/
+    _count?: true | MultipleChoiceQuestionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MultipleChoiceQuestionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MultipleChoiceQuestionMaxAggregateInputType
+  }
+
+  export type GetMultipleChoiceQuestionAggregateType<T extends MultipleChoiceQuestionAggregateArgs> = {
+        [P in keyof T & keyof AggregateMultipleChoiceQuestion]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMultipleChoiceQuestion[P]>
+      : GetScalarType<T[P], AggregateMultipleChoiceQuestion[P]>
+  }
+
+
+
+
+  export type MultipleChoiceQuestionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MultipleChoiceQuestionWhereInput
+    orderBy?: MultipleChoiceQuestionOrderByWithAggregationInput | MultipleChoiceQuestionOrderByWithAggregationInput[]
+    by: MultipleChoiceQuestionScalarFieldEnum[] | MultipleChoiceQuestionScalarFieldEnum
+    having?: MultipleChoiceQuestionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MultipleChoiceQuestionCountAggregateInputType | true
+    _min?: MultipleChoiceQuestionMinAggregateInputType
+    _max?: MultipleChoiceQuestionMaxAggregateInputType
+  }
+
+  export type MultipleChoiceQuestionGroupByOutputType = {
+    questionUid: string
+    answerOptions: string[]
+    correctAnswers: boolean[]
+    _count: MultipleChoiceQuestionCountAggregateOutputType | null
+    _min: MultipleChoiceQuestionMinAggregateOutputType | null
+    _max: MultipleChoiceQuestionMaxAggregateOutputType | null
+  }
+
+  type GetMultipleChoiceQuestionGroupByPayload<T extends MultipleChoiceQuestionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MultipleChoiceQuestionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MultipleChoiceQuestionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MultipleChoiceQuestionGroupByOutputType[P]>
+            : GetScalarType<T[P], MultipleChoiceQuestionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MultipleChoiceQuestionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    questionUid?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["multipleChoiceQuestion"]>
+
+  export type MultipleChoiceQuestionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    questionUid?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["multipleChoiceQuestion"]>
+
+  export type MultipleChoiceQuestionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    questionUid?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["multipleChoiceQuestion"]>
+
+  export type MultipleChoiceQuestionSelectScalar = {
+    questionUid?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+  }
+
+  export type MultipleChoiceQuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"questionUid" | "answerOptions" | "correctAnswers", ExtArgs["result"]["multipleChoiceQuestion"]>
+  export type MultipleChoiceQuestionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }
+  export type MultipleChoiceQuestionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }
+  export type MultipleChoiceQuestionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }
+
+  export type $MultipleChoiceQuestionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MultipleChoiceQuestion"
+    objects: {
+      question: Prisma.$QuestionPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      questionUid: string
+      answerOptions: string[]
+      correctAnswers: boolean[]
+    }, ExtArgs["result"]["multipleChoiceQuestion"]>
+    composites: {}
+  }
+
+  type MultipleChoiceQuestionGetPayload<S extends boolean | null | undefined | MultipleChoiceQuestionDefaultArgs> = $Result.GetResult<Prisma.$MultipleChoiceQuestionPayload, S>
+
+  type MultipleChoiceQuestionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MultipleChoiceQuestionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MultipleChoiceQuestionCountAggregateInputType | true
+    }
+
+  export interface MultipleChoiceQuestionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MultipleChoiceQuestion'], meta: { name: 'MultipleChoiceQuestion' } }
+    /**
+     * Find zero or one MultipleChoiceQuestion that matches the filter.
+     * @param {MultipleChoiceQuestionFindUniqueArgs} args - Arguments to find a MultipleChoiceQuestion
+     * @example
+     * // Get one MultipleChoiceQuestion
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MultipleChoiceQuestionFindUniqueArgs>(args: SelectSubset<T, MultipleChoiceQuestionFindUniqueArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MultipleChoiceQuestion that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MultipleChoiceQuestionFindUniqueOrThrowArgs} args - Arguments to find a MultipleChoiceQuestion
+     * @example
+     * // Get one MultipleChoiceQuestion
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MultipleChoiceQuestionFindUniqueOrThrowArgs>(args: SelectSubset<T, MultipleChoiceQuestionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MultipleChoiceQuestion that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MultipleChoiceQuestionFindFirstArgs} args - Arguments to find a MultipleChoiceQuestion
+     * @example
+     * // Get one MultipleChoiceQuestion
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MultipleChoiceQuestionFindFirstArgs>(args?: SelectSubset<T, MultipleChoiceQuestionFindFirstArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MultipleChoiceQuestion that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MultipleChoiceQuestionFindFirstOrThrowArgs} args - Arguments to find a MultipleChoiceQuestion
+     * @example
+     * // Get one MultipleChoiceQuestion
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MultipleChoiceQuestionFindFirstOrThrowArgs>(args?: SelectSubset<T, MultipleChoiceQuestionFindFirstOrThrowArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MultipleChoiceQuestions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MultipleChoiceQuestionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MultipleChoiceQuestions
+     * const multipleChoiceQuestions = await prisma.multipleChoiceQuestion.findMany()
+     * 
+     * // Get first 10 MultipleChoiceQuestions
+     * const multipleChoiceQuestions = await prisma.multipleChoiceQuestion.findMany({ take: 10 })
+     * 
+     * // Only select the `questionUid`
+     * const multipleChoiceQuestionWithQuestionUidOnly = await prisma.multipleChoiceQuestion.findMany({ select: { questionUid: true } })
+     * 
+     */
+    findMany<T extends MultipleChoiceQuestionFindManyArgs>(args?: SelectSubset<T, MultipleChoiceQuestionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MultipleChoiceQuestion.
+     * @param {MultipleChoiceQuestionCreateArgs} args - Arguments to create a MultipleChoiceQuestion.
+     * @example
+     * // Create one MultipleChoiceQuestion
+     * const MultipleChoiceQuestion = await prisma.multipleChoiceQuestion.create({
+     *   data: {
+     *     // ... data to create a MultipleChoiceQuestion
+     *   }
+     * })
+     * 
+     */
+    create<T extends MultipleChoiceQuestionCreateArgs>(args: SelectSubset<T, MultipleChoiceQuestionCreateArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MultipleChoiceQuestions.
+     * @param {MultipleChoiceQuestionCreateManyArgs} args - Arguments to create many MultipleChoiceQuestions.
+     * @example
+     * // Create many MultipleChoiceQuestions
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MultipleChoiceQuestionCreateManyArgs>(args?: SelectSubset<T, MultipleChoiceQuestionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MultipleChoiceQuestions and returns the data saved in the database.
+     * @param {MultipleChoiceQuestionCreateManyAndReturnArgs} args - Arguments to create many MultipleChoiceQuestions.
+     * @example
+     * // Create many MultipleChoiceQuestions
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MultipleChoiceQuestions and only return the `questionUid`
+     * const multipleChoiceQuestionWithQuestionUidOnly = await prisma.multipleChoiceQuestion.createManyAndReturn({
+     *   select: { questionUid: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MultipleChoiceQuestionCreateManyAndReturnArgs>(args?: SelectSubset<T, MultipleChoiceQuestionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MultipleChoiceQuestion.
+     * @param {MultipleChoiceQuestionDeleteArgs} args - Arguments to delete one MultipleChoiceQuestion.
+     * @example
+     * // Delete one MultipleChoiceQuestion
+     * const MultipleChoiceQuestion = await prisma.multipleChoiceQuestion.delete({
+     *   where: {
+     *     // ... filter to delete one MultipleChoiceQuestion
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MultipleChoiceQuestionDeleteArgs>(args: SelectSubset<T, MultipleChoiceQuestionDeleteArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MultipleChoiceQuestion.
+     * @param {MultipleChoiceQuestionUpdateArgs} args - Arguments to update one MultipleChoiceQuestion.
+     * @example
+     * // Update one MultipleChoiceQuestion
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MultipleChoiceQuestionUpdateArgs>(args: SelectSubset<T, MultipleChoiceQuestionUpdateArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MultipleChoiceQuestions.
+     * @param {MultipleChoiceQuestionDeleteManyArgs} args - Arguments to filter MultipleChoiceQuestions to delete.
+     * @example
+     * // Delete a few MultipleChoiceQuestions
+     * const { count } = await prisma.multipleChoiceQuestion.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MultipleChoiceQuestionDeleteManyArgs>(args?: SelectSubset<T, MultipleChoiceQuestionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MultipleChoiceQuestions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MultipleChoiceQuestionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MultipleChoiceQuestions
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MultipleChoiceQuestionUpdateManyArgs>(args: SelectSubset<T, MultipleChoiceQuestionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MultipleChoiceQuestions and returns the data updated in the database.
+     * @param {MultipleChoiceQuestionUpdateManyAndReturnArgs} args - Arguments to update many MultipleChoiceQuestions.
+     * @example
+     * // Update many MultipleChoiceQuestions
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MultipleChoiceQuestions and only return the `questionUid`
+     * const multipleChoiceQuestionWithQuestionUidOnly = await prisma.multipleChoiceQuestion.updateManyAndReturn({
+     *   select: { questionUid: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MultipleChoiceQuestionUpdateManyAndReturnArgs>(args: SelectSubset<T, MultipleChoiceQuestionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MultipleChoiceQuestion.
+     * @param {MultipleChoiceQuestionUpsertArgs} args - Arguments to update or create a MultipleChoiceQuestion.
+     * @example
+     * // Update or create a MultipleChoiceQuestion
+     * const multipleChoiceQuestion = await prisma.multipleChoiceQuestion.upsert({
+     *   create: {
+     *     // ... data to create a MultipleChoiceQuestion
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MultipleChoiceQuestion we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MultipleChoiceQuestionUpsertArgs>(args: SelectSubset<T, MultipleChoiceQuestionUpsertArgs<ExtArgs>>): Prisma__MultipleChoiceQuestionClient<$Result.GetResult<Prisma.$MultipleChoiceQuestionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MultipleChoiceQuestions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MultipleChoiceQuestionCountArgs} args - Arguments to filter MultipleChoiceQuestions to count.
+     * @example
+     * // Count the number of MultipleChoiceQuestions
+     * const count = await prisma.multipleChoiceQuestion.count({
+     *   where: {
+     *     // ... the filter for the MultipleChoiceQuestions we want to count
+     *   }
+     * })
+    **/
+    count<T extends MultipleChoiceQuestionCountArgs>(
+      args?: Subset<T, MultipleChoiceQuestionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MultipleChoiceQuestionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MultipleChoiceQuestion.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MultipleChoiceQuestionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MultipleChoiceQuestionAggregateArgs>(args: Subset<T, MultipleChoiceQuestionAggregateArgs>): Prisma.PrismaPromise<GetMultipleChoiceQuestionAggregateType<T>>
+
+    /**
+     * Group by MultipleChoiceQuestion.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MultipleChoiceQuestionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MultipleChoiceQuestionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MultipleChoiceQuestionGroupByArgs['orderBy'] }
+        : { orderBy?: MultipleChoiceQuestionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MultipleChoiceQuestionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMultipleChoiceQuestionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MultipleChoiceQuestion model
+   */
+  readonly fields: MultipleChoiceQuestionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MultipleChoiceQuestion.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MultipleChoiceQuestionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    question<T extends QuestionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, QuestionDefaultArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MultipleChoiceQuestion model
+   */
+  interface MultipleChoiceQuestionFieldRefs {
+    readonly questionUid: FieldRef<"MultipleChoiceQuestion", 'String'>
+    readonly answerOptions: FieldRef<"MultipleChoiceQuestion", 'String[]'>
+    readonly correctAnswers: FieldRef<"MultipleChoiceQuestion", 'Boolean[]'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MultipleChoiceQuestion findUnique
+   */
+  export type MultipleChoiceQuestionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which MultipleChoiceQuestion to fetch.
+     */
+    where: MultipleChoiceQuestionWhereUniqueInput
+  }
+
+  /**
+   * MultipleChoiceQuestion findUniqueOrThrow
+   */
+  export type MultipleChoiceQuestionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which MultipleChoiceQuestion to fetch.
+     */
+    where: MultipleChoiceQuestionWhereUniqueInput
+  }
+
+  /**
+   * MultipleChoiceQuestion findFirst
+   */
+  export type MultipleChoiceQuestionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which MultipleChoiceQuestion to fetch.
+     */
+    where?: MultipleChoiceQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MultipleChoiceQuestions to fetch.
+     */
+    orderBy?: MultipleChoiceQuestionOrderByWithRelationInput | MultipleChoiceQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MultipleChoiceQuestions.
+     */
+    cursor?: MultipleChoiceQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MultipleChoiceQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MultipleChoiceQuestions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MultipleChoiceQuestions.
+     */
+    distinct?: MultipleChoiceQuestionScalarFieldEnum | MultipleChoiceQuestionScalarFieldEnum[]
+  }
+
+  /**
+   * MultipleChoiceQuestion findFirstOrThrow
+   */
+  export type MultipleChoiceQuestionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which MultipleChoiceQuestion to fetch.
+     */
+    where?: MultipleChoiceQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MultipleChoiceQuestions to fetch.
+     */
+    orderBy?: MultipleChoiceQuestionOrderByWithRelationInput | MultipleChoiceQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MultipleChoiceQuestions.
+     */
+    cursor?: MultipleChoiceQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MultipleChoiceQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MultipleChoiceQuestions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MultipleChoiceQuestions.
+     */
+    distinct?: MultipleChoiceQuestionScalarFieldEnum | MultipleChoiceQuestionScalarFieldEnum[]
+  }
+
+  /**
+   * MultipleChoiceQuestion findMany
+   */
+  export type MultipleChoiceQuestionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which MultipleChoiceQuestions to fetch.
+     */
+    where?: MultipleChoiceQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MultipleChoiceQuestions to fetch.
+     */
+    orderBy?: MultipleChoiceQuestionOrderByWithRelationInput | MultipleChoiceQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MultipleChoiceQuestions.
+     */
+    cursor?: MultipleChoiceQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MultipleChoiceQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MultipleChoiceQuestions.
+     */
+    skip?: number
+    distinct?: MultipleChoiceQuestionScalarFieldEnum | MultipleChoiceQuestionScalarFieldEnum[]
+  }
+
+  /**
+   * MultipleChoiceQuestion create
+   */
+  export type MultipleChoiceQuestionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MultipleChoiceQuestion.
+     */
+    data: XOR<MultipleChoiceQuestionCreateInput, MultipleChoiceQuestionUncheckedCreateInput>
+  }
+
+  /**
+   * MultipleChoiceQuestion createMany
+   */
+  export type MultipleChoiceQuestionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MultipleChoiceQuestions.
+     */
+    data: MultipleChoiceQuestionCreateManyInput | MultipleChoiceQuestionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MultipleChoiceQuestion createManyAndReturn
+   */
+  export type MultipleChoiceQuestionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * The data used to create many MultipleChoiceQuestions.
+     */
+    data: MultipleChoiceQuestionCreateManyInput | MultipleChoiceQuestionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MultipleChoiceQuestion update
+   */
+  export type MultipleChoiceQuestionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MultipleChoiceQuestion.
+     */
+    data: XOR<MultipleChoiceQuestionUpdateInput, MultipleChoiceQuestionUncheckedUpdateInput>
+    /**
+     * Choose, which MultipleChoiceQuestion to update.
+     */
+    where: MultipleChoiceQuestionWhereUniqueInput
+  }
+
+  /**
+   * MultipleChoiceQuestion updateMany
+   */
+  export type MultipleChoiceQuestionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MultipleChoiceQuestions.
+     */
+    data: XOR<MultipleChoiceQuestionUpdateManyMutationInput, MultipleChoiceQuestionUncheckedUpdateManyInput>
+    /**
+     * Filter which MultipleChoiceQuestions to update
+     */
+    where?: MultipleChoiceQuestionWhereInput
+    /**
+     * Limit how many MultipleChoiceQuestions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MultipleChoiceQuestion updateManyAndReturn
+   */
+  export type MultipleChoiceQuestionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * The data used to update MultipleChoiceQuestions.
+     */
+    data: XOR<MultipleChoiceQuestionUpdateManyMutationInput, MultipleChoiceQuestionUncheckedUpdateManyInput>
+    /**
+     * Filter which MultipleChoiceQuestions to update
+     */
+    where?: MultipleChoiceQuestionWhereInput
+    /**
+     * Limit how many MultipleChoiceQuestions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MultipleChoiceQuestion upsert
+   */
+  export type MultipleChoiceQuestionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MultipleChoiceQuestion to update in case it exists.
+     */
+    where: MultipleChoiceQuestionWhereUniqueInput
+    /**
+     * In case the MultipleChoiceQuestion found by the `where` argument doesn't exist, create a new MultipleChoiceQuestion with this data.
+     */
+    create: XOR<MultipleChoiceQuestionCreateInput, MultipleChoiceQuestionUncheckedCreateInput>
+    /**
+     * In case the MultipleChoiceQuestion was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MultipleChoiceQuestionUpdateInput, MultipleChoiceQuestionUncheckedUpdateInput>
+  }
+
+  /**
+   * MultipleChoiceQuestion delete
+   */
+  export type MultipleChoiceQuestionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+    /**
+     * Filter which MultipleChoiceQuestion to delete.
+     */
+    where: MultipleChoiceQuestionWhereUniqueInput
+  }
+
+  /**
+   * MultipleChoiceQuestion deleteMany
+   */
+  export type MultipleChoiceQuestionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MultipleChoiceQuestions to delete
+     */
+    where?: MultipleChoiceQuestionWhereInput
+    /**
+     * Limit how many MultipleChoiceQuestions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MultipleChoiceQuestion without action
+   */
+  export type MultipleChoiceQuestionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MultipleChoiceQuestion
+     */
+    select?: MultipleChoiceQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MultipleChoiceQuestion
+     */
+    omit?: MultipleChoiceQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MultipleChoiceQuestionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model NumericQuestion
+   */
+
+  export type AggregateNumericQuestion = {
+    _count: NumericQuestionCountAggregateOutputType | null
+    _avg: NumericQuestionAvgAggregateOutputType | null
+    _sum: NumericQuestionSumAggregateOutputType | null
+    _min: NumericQuestionMinAggregateOutputType | null
+    _max: NumericQuestionMaxAggregateOutputType | null
+  }
+
+  export type NumericQuestionAvgAggregateOutputType = {
+    correctAnswer: number | null
+    tolerance: number | null
+  }
+
+  export type NumericQuestionSumAggregateOutputType = {
+    correctAnswer: number | null
+    tolerance: number | null
+  }
+
+  export type NumericQuestionMinAggregateOutputType = {
+    questionUid: string | null
+    correctAnswer: number | null
+    tolerance: number | null
+    unit: string | null
+  }
+
+  export type NumericQuestionMaxAggregateOutputType = {
+    questionUid: string | null
+    correctAnswer: number | null
+    tolerance: number | null
+    unit: string | null
+  }
+
+  export type NumericQuestionCountAggregateOutputType = {
+    questionUid: number
+    correctAnswer: number
+    tolerance: number
+    unit: number
+    _all: number
+  }
+
+
+  export type NumericQuestionAvgAggregateInputType = {
+    correctAnswer?: true
+    tolerance?: true
+  }
+
+  export type NumericQuestionSumAggregateInputType = {
+    correctAnswer?: true
+    tolerance?: true
+  }
+
+  export type NumericQuestionMinAggregateInputType = {
+    questionUid?: true
+    correctAnswer?: true
+    tolerance?: true
+    unit?: true
+  }
+
+  export type NumericQuestionMaxAggregateInputType = {
+    questionUid?: true
+    correctAnswer?: true
+    tolerance?: true
+    unit?: true
+  }
+
+  export type NumericQuestionCountAggregateInputType = {
+    questionUid?: true
+    correctAnswer?: true
+    tolerance?: true
+    unit?: true
+    _all?: true
+  }
+
+  export type NumericQuestionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which NumericQuestion to aggregate.
+     */
+    where?: NumericQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NumericQuestions to fetch.
+     */
+    orderBy?: NumericQuestionOrderByWithRelationInput | NumericQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: NumericQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NumericQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NumericQuestions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned NumericQuestions
+    **/
+    _count?: true | NumericQuestionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: NumericQuestionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: NumericQuestionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: NumericQuestionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: NumericQuestionMaxAggregateInputType
+  }
+
+  export type GetNumericQuestionAggregateType<T extends NumericQuestionAggregateArgs> = {
+        [P in keyof T & keyof AggregateNumericQuestion]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateNumericQuestion[P]>
+      : GetScalarType<T[P], AggregateNumericQuestion[P]>
+  }
+
+
+
+
+  export type NumericQuestionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: NumericQuestionWhereInput
+    orderBy?: NumericQuestionOrderByWithAggregationInput | NumericQuestionOrderByWithAggregationInput[]
+    by: NumericQuestionScalarFieldEnum[] | NumericQuestionScalarFieldEnum
+    having?: NumericQuestionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: NumericQuestionCountAggregateInputType | true
+    _avg?: NumericQuestionAvgAggregateInputType
+    _sum?: NumericQuestionSumAggregateInputType
+    _min?: NumericQuestionMinAggregateInputType
+    _max?: NumericQuestionMaxAggregateInputType
+  }
+
+  export type NumericQuestionGroupByOutputType = {
+    questionUid: string
+    correctAnswer: number
+    tolerance: number | null
+    unit: string | null
+    _count: NumericQuestionCountAggregateOutputType | null
+    _avg: NumericQuestionAvgAggregateOutputType | null
+    _sum: NumericQuestionSumAggregateOutputType | null
+    _min: NumericQuestionMinAggregateOutputType | null
+    _max: NumericQuestionMaxAggregateOutputType | null
+  }
+
+  type GetNumericQuestionGroupByPayload<T extends NumericQuestionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<NumericQuestionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof NumericQuestionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], NumericQuestionGroupByOutputType[P]>
+            : GetScalarType<T[P], NumericQuestionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type NumericQuestionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    questionUid?: boolean
+    correctAnswer?: boolean
+    tolerance?: boolean
+    unit?: boolean
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["numericQuestion"]>
+
+  export type NumericQuestionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    questionUid?: boolean
+    correctAnswer?: boolean
+    tolerance?: boolean
+    unit?: boolean
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["numericQuestion"]>
+
+  export type NumericQuestionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    questionUid?: boolean
+    correctAnswer?: boolean
+    tolerance?: boolean
+    unit?: boolean
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["numericQuestion"]>
+
+  export type NumericQuestionSelectScalar = {
+    questionUid?: boolean
+    correctAnswer?: boolean
+    tolerance?: boolean
+    unit?: boolean
+  }
+
+  export type NumericQuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"questionUid" | "correctAnswer" | "tolerance" | "unit", ExtArgs["result"]["numericQuestion"]>
+  export type NumericQuestionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }
+  export type NumericQuestionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }
+  export type NumericQuestionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    question?: boolean | QuestionDefaultArgs<ExtArgs>
+  }
+
+  export type $NumericQuestionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "NumericQuestion"
+    objects: {
+      question: Prisma.$QuestionPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      questionUid: string
+      correctAnswer: number
+      tolerance: number | null
+      unit: string | null
+    }, ExtArgs["result"]["numericQuestion"]>
+    composites: {}
+  }
+
+  type NumericQuestionGetPayload<S extends boolean | null | undefined | NumericQuestionDefaultArgs> = $Result.GetResult<Prisma.$NumericQuestionPayload, S>
+
+  type NumericQuestionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<NumericQuestionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: NumericQuestionCountAggregateInputType | true
+    }
+
+  export interface NumericQuestionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['NumericQuestion'], meta: { name: 'NumericQuestion' } }
+    /**
+     * Find zero or one NumericQuestion that matches the filter.
+     * @param {NumericQuestionFindUniqueArgs} args - Arguments to find a NumericQuestion
+     * @example
+     * // Get one NumericQuestion
+     * const numericQuestion = await prisma.numericQuestion.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends NumericQuestionFindUniqueArgs>(args: SelectSubset<T, NumericQuestionFindUniqueArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one NumericQuestion that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {NumericQuestionFindUniqueOrThrowArgs} args - Arguments to find a NumericQuestion
+     * @example
+     * // Get one NumericQuestion
+     * const numericQuestion = await prisma.numericQuestion.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends NumericQuestionFindUniqueOrThrowArgs>(args: SelectSubset<T, NumericQuestionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first NumericQuestion that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NumericQuestionFindFirstArgs} args - Arguments to find a NumericQuestion
+     * @example
+     * // Get one NumericQuestion
+     * const numericQuestion = await prisma.numericQuestion.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends NumericQuestionFindFirstArgs>(args?: SelectSubset<T, NumericQuestionFindFirstArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first NumericQuestion that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NumericQuestionFindFirstOrThrowArgs} args - Arguments to find a NumericQuestion
+     * @example
+     * // Get one NumericQuestion
+     * const numericQuestion = await prisma.numericQuestion.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends NumericQuestionFindFirstOrThrowArgs>(args?: SelectSubset<T, NumericQuestionFindFirstOrThrowArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more NumericQuestions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NumericQuestionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all NumericQuestions
+     * const numericQuestions = await prisma.numericQuestion.findMany()
+     * 
+     * // Get first 10 NumericQuestions
+     * const numericQuestions = await prisma.numericQuestion.findMany({ take: 10 })
+     * 
+     * // Only select the `questionUid`
+     * const numericQuestionWithQuestionUidOnly = await prisma.numericQuestion.findMany({ select: { questionUid: true } })
+     * 
+     */
+    findMany<T extends NumericQuestionFindManyArgs>(args?: SelectSubset<T, NumericQuestionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a NumericQuestion.
+     * @param {NumericQuestionCreateArgs} args - Arguments to create a NumericQuestion.
+     * @example
+     * // Create one NumericQuestion
+     * const NumericQuestion = await prisma.numericQuestion.create({
+     *   data: {
+     *     // ... data to create a NumericQuestion
+     *   }
+     * })
+     * 
+     */
+    create<T extends NumericQuestionCreateArgs>(args: SelectSubset<T, NumericQuestionCreateArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many NumericQuestions.
+     * @param {NumericQuestionCreateManyArgs} args - Arguments to create many NumericQuestions.
+     * @example
+     * // Create many NumericQuestions
+     * const numericQuestion = await prisma.numericQuestion.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends NumericQuestionCreateManyArgs>(args?: SelectSubset<T, NumericQuestionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many NumericQuestions and returns the data saved in the database.
+     * @param {NumericQuestionCreateManyAndReturnArgs} args - Arguments to create many NumericQuestions.
+     * @example
+     * // Create many NumericQuestions
+     * const numericQuestion = await prisma.numericQuestion.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many NumericQuestions and only return the `questionUid`
+     * const numericQuestionWithQuestionUidOnly = await prisma.numericQuestion.createManyAndReturn({
+     *   select: { questionUid: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends NumericQuestionCreateManyAndReturnArgs>(args?: SelectSubset<T, NumericQuestionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a NumericQuestion.
+     * @param {NumericQuestionDeleteArgs} args - Arguments to delete one NumericQuestion.
+     * @example
+     * // Delete one NumericQuestion
+     * const NumericQuestion = await prisma.numericQuestion.delete({
+     *   where: {
+     *     // ... filter to delete one NumericQuestion
+     *   }
+     * })
+     * 
+     */
+    delete<T extends NumericQuestionDeleteArgs>(args: SelectSubset<T, NumericQuestionDeleteArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one NumericQuestion.
+     * @param {NumericQuestionUpdateArgs} args - Arguments to update one NumericQuestion.
+     * @example
+     * // Update one NumericQuestion
+     * const numericQuestion = await prisma.numericQuestion.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends NumericQuestionUpdateArgs>(args: SelectSubset<T, NumericQuestionUpdateArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more NumericQuestions.
+     * @param {NumericQuestionDeleteManyArgs} args - Arguments to filter NumericQuestions to delete.
+     * @example
+     * // Delete a few NumericQuestions
+     * const { count } = await prisma.numericQuestion.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends NumericQuestionDeleteManyArgs>(args?: SelectSubset<T, NumericQuestionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more NumericQuestions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NumericQuestionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many NumericQuestions
+     * const numericQuestion = await prisma.numericQuestion.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends NumericQuestionUpdateManyArgs>(args: SelectSubset<T, NumericQuestionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more NumericQuestions and returns the data updated in the database.
+     * @param {NumericQuestionUpdateManyAndReturnArgs} args - Arguments to update many NumericQuestions.
+     * @example
+     * // Update many NumericQuestions
+     * const numericQuestion = await prisma.numericQuestion.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more NumericQuestions and only return the `questionUid`
+     * const numericQuestionWithQuestionUidOnly = await prisma.numericQuestion.updateManyAndReturn({
+     *   select: { questionUid: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends NumericQuestionUpdateManyAndReturnArgs>(args: SelectSubset<T, NumericQuestionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one NumericQuestion.
+     * @param {NumericQuestionUpsertArgs} args - Arguments to update or create a NumericQuestion.
+     * @example
+     * // Update or create a NumericQuestion
+     * const numericQuestion = await prisma.numericQuestion.upsert({
+     *   create: {
+     *     // ... data to create a NumericQuestion
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the NumericQuestion we want to update
+     *   }
+     * })
+     */
+    upsert<T extends NumericQuestionUpsertArgs>(args: SelectSubset<T, NumericQuestionUpsertArgs<ExtArgs>>): Prisma__NumericQuestionClient<$Result.GetResult<Prisma.$NumericQuestionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of NumericQuestions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NumericQuestionCountArgs} args - Arguments to filter NumericQuestions to count.
+     * @example
+     * // Count the number of NumericQuestions
+     * const count = await prisma.numericQuestion.count({
+     *   where: {
+     *     // ... the filter for the NumericQuestions we want to count
+     *   }
+     * })
+    **/
+    count<T extends NumericQuestionCountArgs>(
+      args?: Subset<T, NumericQuestionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], NumericQuestionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a NumericQuestion.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NumericQuestionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends NumericQuestionAggregateArgs>(args: Subset<T, NumericQuestionAggregateArgs>): Prisma.PrismaPromise<GetNumericQuestionAggregateType<T>>
+
+    /**
+     * Group by NumericQuestion.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NumericQuestionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends NumericQuestionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: NumericQuestionGroupByArgs['orderBy'] }
+        : { orderBy?: NumericQuestionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, NumericQuestionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetNumericQuestionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the NumericQuestion model
+   */
+  readonly fields: NumericQuestionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for NumericQuestion.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__NumericQuestionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    question<T extends QuestionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, QuestionDefaultArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the NumericQuestion model
+   */
+  interface NumericQuestionFieldRefs {
+    readonly questionUid: FieldRef<"NumericQuestion", 'String'>
+    readonly correctAnswer: FieldRef<"NumericQuestion", 'Float'>
+    readonly tolerance: FieldRef<"NumericQuestion", 'Float'>
+    readonly unit: FieldRef<"NumericQuestion", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * NumericQuestion findUnique
+   */
+  export type NumericQuestionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which NumericQuestion to fetch.
+     */
+    where: NumericQuestionWhereUniqueInput
+  }
+
+  /**
+   * NumericQuestion findUniqueOrThrow
+   */
+  export type NumericQuestionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which NumericQuestion to fetch.
+     */
+    where: NumericQuestionWhereUniqueInput
+  }
+
+  /**
+   * NumericQuestion findFirst
+   */
+  export type NumericQuestionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which NumericQuestion to fetch.
+     */
+    where?: NumericQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NumericQuestions to fetch.
+     */
+    orderBy?: NumericQuestionOrderByWithRelationInput | NumericQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for NumericQuestions.
+     */
+    cursor?: NumericQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NumericQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NumericQuestions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NumericQuestions.
+     */
+    distinct?: NumericQuestionScalarFieldEnum | NumericQuestionScalarFieldEnum[]
+  }
+
+  /**
+   * NumericQuestion findFirstOrThrow
+   */
+  export type NumericQuestionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which NumericQuestion to fetch.
+     */
+    where?: NumericQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NumericQuestions to fetch.
+     */
+    orderBy?: NumericQuestionOrderByWithRelationInput | NumericQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for NumericQuestions.
+     */
+    cursor?: NumericQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NumericQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NumericQuestions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of NumericQuestions.
+     */
+    distinct?: NumericQuestionScalarFieldEnum | NumericQuestionScalarFieldEnum[]
+  }
+
+  /**
+   * NumericQuestion findMany
+   */
+  export type NumericQuestionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * Filter, which NumericQuestions to fetch.
+     */
+    where?: NumericQuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of NumericQuestions to fetch.
+     */
+    orderBy?: NumericQuestionOrderByWithRelationInput | NumericQuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing NumericQuestions.
+     */
+    cursor?: NumericQuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` NumericQuestions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` NumericQuestions.
+     */
+    skip?: number
+    distinct?: NumericQuestionScalarFieldEnum | NumericQuestionScalarFieldEnum[]
+  }
+
+  /**
+   * NumericQuestion create
+   */
+  export type NumericQuestionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a NumericQuestion.
+     */
+    data: XOR<NumericQuestionCreateInput, NumericQuestionUncheckedCreateInput>
+  }
+
+  /**
+   * NumericQuestion createMany
+   */
+  export type NumericQuestionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many NumericQuestions.
+     */
+    data: NumericQuestionCreateManyInput | NumericQuestionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * NumericQuestion createManyAndReturn
+   */
+  export type NumericQuestionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * The data used to create many NumericQuestions.
+     */
+    data: NumericQuestionCreateManyInput | NumericQuestionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * NumericQuestion update
+   */
+  export type NumericQuestionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a NumericQuestion.
+     */
+    data: XOR<NumericQuestionUpdateInput, NumericQuestionUncheckedUpdateInput>
+    /**
+     * Choose, which NumericQuestion to update.
+     */
+    where: NumericQuestionWhereUniqueInput
+  }
+
+  /**
+   * NumericQuestion updateMany
+   */
+  export type NumericQuestionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update NumericQuestions.
+     */
+    data: XOR<NumericQuestionUpdateManyMutationInput, NumericQuestionUncheckedUpdateManyInput>
+    /**
+     * Filter which NumericQuestions to update
+     */
+    where?: NumericQuestionWhereInput
+    /**
+     * Limit how many NumericQuestions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * NumericQuestion updateManyAndReturn
+   */
+  export type NumericQuestionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * The data used to update NumericQuestions.
+     */
+    data: XOR<NumericQuestionUpdateManyMutationInput, NumericQuestionUncheckedUpdateManyInput>
+    /**
+     * Filter which NumericQuestions to update
+     */
+    where?: NumericQuestionWhereInput
+    /**
+     * Limit how many NumericQuestions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * NumericQuestion upsert
+   */
+  export type NumericQuestionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the NumericQuestion to update in case it exists.
+     */
+    where: NumericQuestionWhereUniqueInput
+    /**
+     * In case the NumericQuestion found by the `where` argument doesn't exist, create a new NumericQuestion with this data.
+     */
+    create: XOR<NumericQuestionCreateInput, NumericQuestionUncheckedCreateInput>
+    /**
+     * In case the NumericQuestion was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<NumericQuestionUpdateInput, NumericQuestionUncheckedUpdateInput>
+  }
+
+  /**
+   * NumericQuestion delete
+   */
+  export type NumericQuestionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
+    /**
+     * Filter which NumericQuestion to delete.
+     */
+    where: NumericQuestionWhereUniqueInput
+  }
+
+  /**
+   * NumericQuestion deleteMany
+   */
+  export type NumericQuestionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which NumericQuestions to delete
+     */
+    where?: NumericQuestionWhereInput
+    /**
+     * Limit how many NumericQuestions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * NumericQuestion without action
+   */
+  export type NumericQuestionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NumericQuestion
+     */
+    select?: NumericQuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the NumericQuestion
+     */
+    omit?: NumericQuestionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NumericQuestionInclude<ExtArgs> | null
   }
 
 
@@ -10498,8 +12867,8 @@ export namespace Prisma {
     readonly id: FieldRef<"GameParticipant", 'String'>
     readonly gameInstanceId: FieldRef<"GameParticipant", 'String'>
     readonly userId: FieldRef<"GameParticipant", 'String'>
-    readonly liveScore: FieldRef<"GameParticipant", 'Int'>
-    readonly deferredScore: FieldRef<"GameParticipant", 'Int'>
+    readonly liveScore: FieldRef<"GameParticipant", 'Float'>
+    readonly deferredScore: FieldRef<"GameParticipant", 'Float'>
     readonly nbAttempts: FieldRef<"GameParticipant", 'Int'>
     readonly status: FieldRef<"GameParticipant", 'ParticipantStatus'>
     readonly joinedAt: FieldRef<"GameParticipant", 'DateTime'>
@@ -10942,7 +13311,10 @@ export namespace Prisma {
     role: 'role',
     resetToken: 'resetToken',
     resetTokenExpiresAt: 'resetTokenExpiresAt',
-    avatarEmoji: 'avatarEmoji'
+    avatarEmoji: 'avatarEmoji',
+    emailVerificationToken: 'emailVerificationToken',
+    emailVerificationTokenExpiresAt: 'emailVerificationTokenExpiresAt',
+    emailVerified: 'emailVerified'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -10979,12 +13351,30 @@ export namespace Prisma {
     excludedFrom: 'excludedFrom',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
-    answerOptions: 'answerOptions',
-    correctAnswers: 'correctAnswers',
-    feedbackWaitTime: 'feedbackWaitTime'
+    feedbackWaitTime: 'feedbackWaitTime',
+    isHidden: 'isHidden'
   };
 
   export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+  export const MultipleChoiceQuestionScalarFieldEnum: {
+    questionUid: 'questionUid',
+    answerOptions: 'answerOptions',
+    correctAnswers: 'correctAnswers'
+  };
+
+  export type MultipleChoiceQuestionScalarFieldEnum = (typeof MultipleChoiceQuestionScalarFieldEnum)[keyof typeof MultipleChoiceQuestionScalarFieldEnum]
+
+
+  export const NumericQuestionScalarFieldEnum: {
+    questionUid: 'questionUid',
+    correctAnswer: 'correctAnswer',
+    tolerance: 'tolerance',
+    unit: 'unit'
+  };
+
+  export type NumericQuestionScalarFieldEnum = (typeof NumericQuestionScalarFieldEnum)[keyof typeof NumericQuestionScalarFieldEnum]
 
 
   export const GameTemplateScalarFieldEnum: {
@@ -11139,6 +13529,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -11160,9 +13557,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Boolean'
+   * Reference to a field of type 'Float'
    */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -11206,20 +13610,6 @@ export namespace Prisma {
    */
   export type ListEnumParticipantStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParticipantStatus[]'>
     
-
-
-  /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
   /**
    * Deep Input Types
    */
@@ -11238,6 +13628,9 @@ export namespace Prisma {
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
     avatarEmoji?: StringNullableFilter<"User"> | string | null
+    emailVerificationToken?: StringNullableFilter<"User"> | string | null
+    emailVerificationTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    emailVerified?: BoolNullableFilter<"User"> | boolean | null
     studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
     teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
@@ -11255,6 +13648,9 @@ export namespace Prisma {
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiresAt?: SortOrderInput | SortOrder
     avatarEmoji?: SortOrderInput | SortOrder
+    emailVerificationToken?: SortOrderInput | SortOrder
+    emailVerificationTokenExpiresAt?: SortOrderInput | SortOrder
+    emailVerified?: SortOrderInput | SortOrder
     studentProfile?: StudentProfileOrderByWithRelationInput
     teacherProfile?: TeacherProfileOrderByWithRelationInput
     initiatedGameInstances?: GameInstanceOrderByRelationAggregateInput
@@ -11275,6 +13671,9 @@ export namespace Prisma {
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
     avatarEmoji?: StringNullableFilter<"User"> | string | null
+    emailVerificationToken?: StringNullableFilter<"User"> | string | null
+    emailVerificationTokenExpiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    emailVerified?: BoolNullableFilter<"User"> | boolean | null
     studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
     teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
@@ -11292,6 +13691,9 @@ export namespace Prisma {
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiresAt?: SortOrderInput | SortOrder
     avatarEmoji?: SortOrderInput | SortOrder
+    emailVerificationToken?: SortOrderInput | SortOrder
+    emailVerificationTokenExpiresAt?: SortOrderInput | SortOrder
+    emailVerified?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -11310,6 +13712,9 @@ export namespace Prisma {
     resetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     resetTokenExpiresAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     avatarEmoji?: StringNullableWithAggregatesFilter<"User"> | string | null
+    emailVerificationToken?: StringNullableWithAggregatesFilter<"User"> | string | null
+    emailVerificationTokenExpiresAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    emailVerified?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
   }
 
   export type TeacherProfileWhereInput = {
@@ -11406,9 +13811,10 @@ export namespace Prisma {
     excludedFrom?: StringNullableListFilter<"Question">
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
-    answerOptions?: StringNullableListFilter<"Question">
-    correctAnswers?: BoolNullableListFilter<"Question">
     feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
+    isHidden?: BoolNullableFilter<"Question"> | boolean | null
+    multipleChoiceQuestion?: XOR<MultipleChoiceQuestionNullableScalarRelationFilter, MultipleChoiceQuestionWhereInput> | null
+    numericQuestion?: XOR<NumericQuestionNullableScalarRelationFilter, NumericQuestionWhereInput> | null
     gameTemplates?: QuestionsInGameTemplateListRelationFilter
   }
 
@@ -11428,9 +13834,10 @@ export namespace Prisma {
     excludedFrom?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    answerOptions?: SortOrder
-    correctAnswers?: SortOrder
     feedbackWaitTime?: SortOrderInput | SortOrder
+    isHidden?: SortOrderInput | SortOrder
+    multipleChoiceQuestion?: MultipleChoiceQuestionOrderByWithRelationInput
+    numericQuestion?: NumericQuestionOrderByWithRelationInput
     gameTemplates?: QuestionsInGameTemplateOrderByRelationAggregateInput
   }
 
@@ -11453,9 +13860,10 @@ export namespace Prisma {
     excludedFrom?: StringNullableListFilter<"Question">
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
-    answerOptions?: StringNullableListFilter<"Question">
-    correctAnswers?: BoolNullableListFilter<"Question">
     feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
+    isHidden?: BoolNullableFilter<"Question"> | boolean | null
+    multipleChoiceQuestion?: XOR<MultipleChoiceQuestionNullableScalarRelationFilter, MultipleChoiceQuestionWhereInput> | null
+    numericQuestion?: XOR<NumericQuestionNullableScalarRelationFilter, NumericQuestionWhereInput> | null
     gameTemplates?: QuestionsInGameTemplateListRelationFilter
   }, "uid">
 
@@ -11475,9 +13883,8 @@ export namespace Prisma {
     excludedFrom?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    answerOptions?: SortOrder
-    correctAnswers?: SortOrder
     feedbackWaitTime?: SortOrderInput | SortOrder
+    isHidden?: SortOrderInput | SortOrder
     _count?: QuestionCountOrderByAggregateInput
     _avg?: QuestionAvgOrderByAggregateInput
     _max?: QuestionMaxOrderByAggregateInput
@@ -11504,9 +13911,105 @@ export namespace Prisma {
     excludedFrom?: StringNullableListFilter<"Question">
     createdAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
-    answerOptions?: StringNullableListFilter<"Question">
-    correctAnswers?: BoolNullableListFilter<"Question">
     feedbackWaitTime?: IntNullableWithAggregatesFilter<"Question"> | number | null
+    isHidden?: BoolNullableWithAggregatesFilter<"Question"> | boolean | null
+  }
+
+  export type MultipleChoiceQuestionWhereInput = {
+    AND?: MultipleChoiceQuestionWhereInput | MultipleChoiceQuestionWhereInput[]
+    OR?: MultipleChoiceQuestionWhereInput[]
+    NOT?: MultipleChoiceQuestionWhereInput | MultipleChoiceQuestionWhereInput[]
+    questionUid?: StringFilter<"MultipleChoiceQuestion"> | string
+    answerOptions?: StringNullableListFilter<"MultipleChoiceQuestion">
+    correctAnswers?: BoolNullableListFilter<"MultipleChoiceQuestion">
+    question?: XOR<QuestionScalarRelationFilter, QuestionWhereInput>
+  }
+
+  export type MultipleChoiceQuestionOrderByWithRelationInput = {
+    questionUid?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
+    question?: QuestionOrderByWithRelationInput
+  }
+
+  export type MultipleChoiceQuestionWhereUniqueInput = Prisma.AtLeast<{
+    questionUid?: string
+    AND?: MultipleChoiceQuestionWhereInput | MultipleChoiceQuestionWhereInput[]
+    OR?: MultipleChoiceQuestionWhereInput[]
+    NOT?: MultipleChoiceQuestionWhereInput | MultipleChoiceQuestionWhereInput[]
+    answerOptions?: StringNullableListFilter<"MultipleChoiceQuestion">
+    correctAnswers?: BoolNullableListFilter<"MultipleChoiceQuestion">
+    question?: XOR<QuestionScalarRelationFilter, QuestionWhereInput>
+  }, "questionUid">
+
+  export type MultipleChoiceQuestionOrderByWithAggregationInput = {
+    questionUid?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
+    _count?: MultipleChoiceQuestionCountOrderByAggregateInput
+    _max?: MultipleChoiceQuestionMaxOrderByAggregateInput
+    _min?: MultipleChoiceQuestionMinOrderByAggregateInput
+  }
+
+  export type MultipleChoiceQuestionScalarWhereWithAggregatesInput = {
+    AND?: MultipleChoiceQuestionScalarWhereWithAggregatesInput | MultipleChoiceQuestionScalarWhereWithAggregatesInput[]
+    OR?: MultipleChoiceQuestionScalarWhereWithAggregatesInput[]
+    NOT?: MultipleChoiceQuestionScalarWhereWithAggregatesInput | MultipleChoiceQuestionScalarWhereWithAggregatesInput[]
+    questionUid?: StringWithAggregatesFilter<"MultipleChoiceQuestion"> | string
+    answerOptions?: StringNullableListFilter<"MultipleChoiceQuestion">
+    correctAnswers?: BoolNullableListFilter<"MultipleChoiceQuestion">
+  }
+
+  export type NumericQuestionWhereInput = {
+    AND?: NumericQuestionWhereInput | NumericQuestionWhereInput[]
+    OR?: NumericQuestionWhereInput[]
+    NOT?: NumericQuestionWhereInput | NumericQuestionWhereInput[]
+    questionUid?: StringFilter<"NumericQuestion"> | string
+    correctAnswer?: FloatFilter<"NumericQuestion"> | number
+    tolerance?: FloatNullableFilter<"NumericQuestion"> | number | null
+    unit?: StringNullableFilter<"NumericQuestion"> | string | null
+    question?: XOR<QuestionScalarRelationFilter, QuestionWhereInput>
+  }
+
+  export type NumericQuestionOrderByWithRelationInput = {
+    questionUid?: SortOrder
+    correctAnswer?: SortOrder
+    tolerance?: SortOrderInput | SortOrder
+    unit?: SortOrderInput | SortOrder
+    question?: QuestionOrderByWithRelationInput
+  }
+
+  export type NumericQuestionWhereUniqueInput = Prisma.AtLeast<{
+    questionUid?: string
+    AND?: NumericQuestionWhereInput | NumericQuestionWhereInput[]
+    OR?: NumericQuestionWhereInput[]
+    NOT?: NumericQuestionWhereInput | NumericQuestionWhereInput[]
+    correctAnswer?: FloatFilter<"NumericQuestion"> | number
+    tolerance?: FloatNullableFilter<"NumericQuestion"> | number | null
+    unit?: StringNullableFilter<"NumericQuestion"> | string | null
+    question?: XOR<QuestionScalarRelationFilter, QuestionWhereInput>
+  }, "questionUid">
+
+  export type NumericQuestionOrderByWithAggregationInput = {
+    questionUid?: SortOrder
+    correctAnswer?: SortOrder
+    tolerance?: SortOrderInput | SortOrder
+    unit?: SortOrderInput | SortOrder
+    _count?: NumericQuestionCountOrderByAggregateInput
+    _avg?: NumericQuestionAvgOrderByAggregateInput
+    _max?: NumericQuestionMaxOrderByAggregateInput
+    _min?: NumericQuestionMinOrderByAggregateInput
+    _sum?: NumericQuestionSumOrderByAggregateInput
+  }
+
+  export type NumericQuestionScalarWhereWithAggregatesInput = {
+    AND?: NumericQuestionScalarWhereWithAggregatesInput | NumericQuestionScalarWhereWithAggregatesInput[]
+    OR?: NumericQuestionScalarWhereWithAggregatesInput[]
+    NOT?: NumericQuestionScalarWhereWithAggregatesInput | NumericQuestionScalarWhereWithAggregatesInput[]
+    questionUid?: StringWithAggregatesFilter<"NumericQuestion"> | string
+    correctAnswer?: FloatWithAggregatesFilter<"NumericQuestion"> | number
+    tolerance?: FloatNullableWithAggregatesFilter<"NumericQuestion"> | number | null
+    unit?: StringNullableWithAggregatesFilter<"NumericQuestion"> | string | null
   }
 
   export type GameTemplateWhereInput = {
@@ -11772,8 +14275,8 @@ export namespace Prisma {
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    liveScore?: IntFilter<"GameParticipant"> | number
-    deferredScore?: IntFilter<"GameParticipant"> | number
+    liveScore?: FloatFilter<"GameParticipant"> | number
+    deferredScore?: FloatFilter<"GameParticipant"> | number
     nbAttempts?: IntFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
@@ -11806,8 +14309,8 @@ export namespace Prisma {
     NOT?: GameParticipantWhereInput | GameParticipantWhereInput[]
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    liveScore?: IntFilter<"GameParticipant"> | number
-    deferredScore?: IntFilter<"GameParticipant"> | number
+    liveScore?: FloatFilter<"GameParticipant"> | number
+    deferredScore?: FloatFilter<"GameParticipant"> | number
     nbAttempts?: IntFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
@@ -11842,8 +14345,8 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"GameParticipant"> | string
     gameInstanceId?: StringWithAggregatesFilter<"GameParticipant"> | string
     userId?: StringWithAggregatesFilter<"GameParticipant"> | string
-    liveScore?: IntWithAggregatesFilter<"GameParticipant"> | number
-    deferredScore?: IntWithAggregatesFilter<"GameParticipant"> | number
+    liveScore?: FloatWithAggregatesFilter<"GameParticipant"> | number
+    deferredScore?: FloatWithAggregatesFilter<"GameParticipant"> | number
     nbAttempts?: IntWithAggregatesFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusWithAggregatesFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeWithAggregatesFilter<"GameParticipant"> | Date | string
@@ -11861,6 +14364,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -11878,6 +14384,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -11895,6 +14404,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -11912,6 +14424,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -11929,6 +14444,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -11941,6 +14459,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -11953,6 +14474,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type TeacherProfileCreateInput = {
@@ -12033,9 +14557,10 @@ export namespace Prisma {
     excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionCreateNestedOneWithoutQuestionInput
+    numericQuestion?: NumericQuestionCreateNestedOneWithoutQuestionInput
     gameTemplates?: QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput
   }
 
@@ -12055,9 +14580,10 @@ export namespace Prisma {
     excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUncheckedCreateNestedOneWithoutQuestionInput
+    numericQuestion?: NumericQuestionUncheckedCreateNestedOneWithoutQuestionInput
     gameTemplates?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutQuestionInput
   }
 
@@ -12077,9 +14603,10 @@ export namespace Prisma {
     excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUpdateOneWithoutQuestionNestedInput
+    numericQuestion?: NumericQuestionUpdateOneWithoutQuestionNestedInput
     gameTemplates?: QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput
   }
 
@@ -12099,9 +14626,10 @@ export namespace Prisma {
     excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUncheckedUpdateOneWithoutQuestionNestedInput
+    numericQuestion?: NumericQuestionUncheckedUpdateOneWithoutQuestionNestedInput
     gameTemplates?: QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionNestedInput
   }
 
@@ -12121,9 +14649,8 @@ export namespace Prisma {
     excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: number | null
+    isHidden?: boolean | null
   }
 
   export type QuestionUpdateManyMutationInput = {
@@ -12142,9 +14669,8 @@ export namespace Prisma {
     excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type QuestionUncheckedUpdateManyInput = {
@@ -12163,9 +14689,97 @@ export namespace Prisma {
     excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+  }
+
+  export type MultipleChoiceQuestionCreateInput = {
+    answerOptions?: MultipleChoiceQuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionCreatecorrectAnswersInput | boolean[]
+    question: QuestionCreateNestedOneWithoutMultipleChoiceQuestionInput
+  }
+
+  export type MultipleChoiceQuestionUncheckedCreateInput = {
+    questionUid: string
+    answerOptions?: MultipleChoiceQuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionCreatecorrectAnswersInput | boolean[]
+  }
+
+  export type MultipleChoiceQuestionUpdateInput = {
+    answerOptions?: MultipleChoiceQuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionUpdatecorrectAnswersInput | boolean[]
+    question?: QuestionUpdateOneRequiredWithoutMultipleChoiceQuestionNestedInput
+  }
+
+  export type MultipleChoiceQuestionUncheckedUpdateInput = {
+    questionUid?: StringFieldUpdateOperationsInput | string
+    answerOptions?: MultipleChoiceQuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionUpdatecorrectAnswersInput | boolean[]
+  }
+
+  export type MultipleChoiceQuestionCreateManyInput = {
+    questionUid: string
+    answerOptions?: MultipleChoiceQuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionCreatecorrectAnswersInput | boolean[]
+  }
+
+  export type MultipleChoiceQuestionUpdateManyMutationInput = {
+    answerOptions?: MultipleChoiceQuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionUpdatecorrectAnswersInput | boolean[]
+  }
+
+  export type MultipleChoiceQuestionUncheckedUpdateManyInput = {
+    questionUid?: StringFieldUpdateOperationsInput | string
+    answerOptions?: MultipleChoiceQuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionUpdatecorrectAnswersInput | boolean[]
+  }
+
+  export type NumericQuestionCreateInput = {
+    correctAnswer: number
+    tolerance?: number | null
+    unit?: string | null
+    question: QuestionCreateNestedOneWithoutNumericQuestionInput
+  }
+
+  export type NumericQuestionUncheckedCreateInput = {
+    questionUid: string
+    correctAnswer: number
+    tolerance?: number | null
+    unit?: string | null
+  }
+
+  export type NumericQuestionUpdateInput = {
+    correctAnswer?: FloatFieldUpdateOperationsInput | number
+    tolerance?: NullableFloatFieldUpdateOperationsInput | number | null
+    unit?: NullableStringFieldUpdateOperationsInput | string | null
+    question?: QuestionUpdateOneRequiredWithoutNumericQuestionNestedInput
+  }
+
+  export type NumericQuestionUncheckedUpdateInput = {
+    questionUid?: StringFieldUpdateOperationsInput | string
+    correctAnswer?: FloatFieldUpdateOperationsInput | number
+    tolerance?: NullableFloatFieldUpdateOperationsInput | number | null
+    unit?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NumericQuestionCreateManyInput = {
+    questionUid: string
+    correctAnswer: number
+    tolerance?: number | null
+    unit?: string | null
+  }
+
+  export type NumericQuestionUpdateManyMutationInput = {
+    correctAnswer?: FloatFieldUpdateOperationsInput | number
+    tolerance?: NullableFloatFieldUpdateOperationsInput | number | null
+    unit?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NumericQuestionUncheckedUpdateManyInput = {
+    questionUid?: StringFieldUpdateOperationsInput | string
+    correctAnswer?: FloatFieldUpdateOperationsInput | number
+    tolerance?: NullableFloatFieldUpdateOperationsInput | number | null
+    unit?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type GameTemplateCreateInput = {
@@ -12469,8 +15083,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12484,8 +15098,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12508,8 +15122,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12521,8 +15135,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12589,6 +15203,11 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type StudentProfileNullableScalarRelationFilter = {
     is?: StudentProfileWhereInput | null
     isNot?: StudentProfileWhereInput | null
@@ -12644,6 +15263,9 @@ export namespace Prisma {
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
     avatarEmoji?: SortOrder
+    emailVerificationToken?: SortOrder
+    emailVerificationTokenExpiresAt?: SortOrder
+    emailVerified?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -12656,6 +15278,9 @@ export namespace Prisma {
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
     avatarEmoji?: SortOrder
+    emailVerificationToken?: SortOrder
+    emailVerificationTokenExpiresAt?: SortOrder
+    emailVerified?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -12668,6 +15293,9 @@ export namespace Prisma {
     resetToken?: SortOrder
     resetTokenExpiresAt?: SortOrder
     avatarEmoji?: SortOrder
+    emailVerificationToken?: SortOrder
+    emailVerificationTokenExpiresAt?: SortOrder
+    emailVerified?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -12744,6 +15372,14 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
@@ -12806,12 +15442,14 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type BoolNullableListFilter<$PrismaModel = never> = {
-    equals?: boolean[] | ListBooleanFieldRefInput<$PrismaModel> | null
-    has?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    hasEvery?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
-    hasSome?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
+  export type MultipleChoiceQuestionNullableScalarRelationFilter = {
+    is?: MultipleChoiceQuestionWhereInput | null
+    isNot?: MultipleChoiceQuestionWhereInput | null
+  }
+
+  export type NumericQuestionNullableScalarRelationFilter = {
+    is?: NumericQuestionWhereInput | null
+    isNot?: NumericQuestionWhereInput | null
   }
 
   export type QuestionsInGameTemplateListRelationFilter = {
@@ -12840,9 +15478,8 @@ export namespace Prisma {
     excludedFrom?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    answerOptions?: SortOrder
-    correctAnswers?: SortOrder
     feedbackWaitTime?: SortOrder
+    isHidden?: SortOrder
   }
 
   export type QuestionAvgOrderByAggregateInput = {
@@ -12865,6 +15502,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     feedbackWaitTime?: SortOrder
+    isHidden?: SortOrder
   }
 
   export type QuestionMinOrderByAggregateInput = {
@@ -12881,6 +15519,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     feedbackWaitTime?: SortOrder
+    isHidden?: SortOrder
   }
 
   export type QuestionSumOrderByAggregateInput = {
@@ -12919,6 +15558,118 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type BoolNullableListFilter<$PrismaModel = never> = {
+    equals?: boolean[] | ListBooleanFieldRefInput<$PrismaModel> | null
+    has?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    hasEvery?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
+    hasSome?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type QuestionScalarRelationFilter = {
+    is?: QuestionWhereInput
+    isNot?: QuestionWhereInput
+  }
+
+  export type MultipleChoiceQuestionCountOrderByAggregateInput = {
+    questionUid?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
+  }
+
+  export type MultipleChoiceQuestionMaxOrderByAggregateInput = {
+    questionUid?: SortOrder
+  }
+
+  export type MultipleChoiceQuestionMinOrderByAggregateInput = {
+    questionUid?: SortOrder
+  }
+
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NumericQuestionCountOrderByAggregateInput = {
+    questionUid?: SortOrder
+    correctAnswer?: SortOrder
+    tolerance?: SortOrder
+    unit?: SortOrder
+  }
+
+  export type NumericQuestionAvgOrderByAggregateInput = {
+    correctAnswer?: SortOrder
+    tolerance?: SortOrder
+  }
+
+  export type NumericQuestionMaxOrderByAggregateInput = {
+    questionUid?: SortOrder
+    correctAnswer?: SortOrder
+    tolerance?: SortOrder
+    unit?: SortOrder
+  }
+
+  export type NumericQuestionMinOrderByAggregateInput = {
+    questionUid?: SortOrder
+    correctAnswer?: SortOrder
+    tolerance?: SortOrder
+    unit?: SortOrder
+  }
+
+  export type NumericQuestionSumOrderByAggregateInput = {
+    correctAnswer?: SortOrder
+    tolerance?: SortOrder
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type EnumPlayModeNullableFilter<$PrismaModel = never> = {
@@ -12978,11 +15729,6 @@ export namespace Prisma {
   export type GameTemplateScalarRelationFilter = {
     is?: GameTemplateWhereInput
     isNot?: GameTemplateWhereInput
-  }
-
-  export type QuestionScalarRelationFilter = {
-    is?: QuestionWhereInput
-    isNot?: QuestionWhereInput
   }
 
   export type QuestionsInGameTemplateGameTemplateIdQuestionUidCompoundUniqueInput = {
@@ -13317,6 +16063,10 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type StudentProfileUpdateOneWithoutUserNestedInput = {
     create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
     connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
@@ -13481,12 +16231,16 @@ export namespace Prisma {
     set: string[]
   }
 
-  export type QuestionCreateanswerOptionsInput = {
-    set: string[]
+  export type MultipleChoiceQuestionCreateNestedOneWithoutQuestionInput = {
+    create?: XOR<MultipleChoiceQuestionCreateWithoutQuestionInput, MultipleChoiceQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: MultipleChoiceQuestionCreateOrConnectWithoutQuestionInput
+    connect?: MultipleChoiceQuestionWhereUniqueInput
   }
 
-  export type QuestionCreatecorrectAnswersInput = {
-    set: boolean[]
+  export type NumericQuestionCreateNestedOneWithoutQuestionInput = {
+    create?: XOR<NumericQuestionCreateWithoutQuestionInput, NumericQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: NumericQuestionCreateOrConnectWithoutQuestionInput
+    connect?: NumericQuestionWhereUniqueInput
   }
 
   export type QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput = {
@@ -13494,6 +16248,18 @@ export namespace Prisma {
     connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput | QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput[]
     createMany?: QuestionsInGameTemplateCreateManyQuestionInputEnvelope
     connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+  }
+
+  export type MultipleChoiceQuestionUncheckedCreateNestedOneWithoutQuestionInput = {
+    create?: XOR<MultipleChoiceQuestionCreateWithoutQuestionInput, MultipleChoiceQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: MultipleChoiceQuestionCreateOrConnectWithoutQuestionInput
+    connect?: MultipleChoiceQuestionWhereUniqueInput
+  }
+
+  export type NumericQuestionUncheckedCreateNestedOneWithoutQuestionInput = {
+    create?: XOR<NumericQuestionCreateWithoutQuestionInput, NumericQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: NumericQuestionCreateOrConnectWithoutQuestionInput
+    connect?: NumericQuestionWhereUniqueInput
   }
 
   export type QuestionsInGameTemplateUncheckedCreateNestedManyWithoutQuestionInput = {
@@ -13534,14 +16300,24 @@ export namespace Prisma {
     push?: string | string[]
   }
 
-  export type QuestionUpdateanswerOptionsInput = {
-    set?: string[]
-    push?: string | string[]
+  export type MultipleChoiceQuestionUpdateOneWithoutQuestionNestedInput = {
+    create?: XOR<MultipleChoiceQuestionCreateWithoutQuestionInput, MultipleChoiceQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: MultipleChoiceQuestionCreateOrConnectWithoutQuestionInput
+    upsert?: MultipleChoiceQuestionUpsertWithoutQuestionInput
+    disconnect?: MultipleChoiceQuestionWhereInput | boolean
+    delete?: MultipleChoiceQuestionWhereInput | boolean
+    connect?: MultipleChoiceQuestionWhereUniqueInput
+    update?: XOR<XOR<MultipleChoiceQuestionUpdateToOneWithWhereWithoutQuestionInput, MultipleChoiceQuestionUpdateWithoutQuestionInput>, MultipleChoiceQuestionUncheckedUpdateWithoutQuestionInput>
   }
 
-  export type QuestionUpdatecorrectAnswersInput = {
-    set?: boolean[]
-    push?: boolean | boolean[]
+  export type NumericQuestionUpdateOneWithoutQuestionNestedInput = {
+    create?: XOR<NumericQuestionCreateWithoutQuestionInput, NumericQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: NumericQuestionCreateOrConnectWithoutQuestionInput
+    upsert?: NumericQuestionUpsertWithoutQuestionInput
+    disconnect?: NumericQuestionWhereInput | boolean
+    delete?: NumericQuestionWhereInput | boolean
+    connect?: NumericQuestionWhereUniqueInput
+    update?: XOR<XOR<NumericQuestionUpdateToOneWithWhereWithoutQuestionInput, NumericQuestionUpdateWithoutQuestionInput>, NumericQuestionUncheckedUpdateWithoutQuestionInput>
   }
 
   export type QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput = {
@@ -13558,6 +16334,26 @@ export namespace Prisma {
     deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
   }
 
+  export type MultipleChoiceQuestionUncheckedUpdateOneWithoutQuestionNestedInput = {
+    create?: XOR<MultipleChoiceQuestionCreateWithoutQuestionInput, MultipleChoiceQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: MultipleChoiceQuestionCreateOrConnectWithoutQuestionInput
+    upsert?: MultipleChoiceQuestionUpsertWithoutQuestionInput
+    disconnect?: MultipleChoiceQuestionWhereInput | boolean
+    delete?: MultipleChoiceQuestionWhereInput | boolean
+    connect?: MultipleChoiceQuestionWhereUniqueInput
+    update?: XOR<XOR<MultipleChoiceQuestionUpdateToOneWithWhereWithoutQuestionInput, MultipleChoiceQuestionUpdateWithoutQuestionInput>, MultipleChoiceQuestionUncheckedUpdateWithoutQuestionInput>
+  }
+
+  export type NumericQuestionUncheckedUpdateOneWithoutQuestionNestedInput = {
+    create?: XOR<NumericQuestionCreateWithoutQuestionInput, NumericQuestionUncheckedCreateWithoutQuestionInput>
+    connectOrCreate?: NumericQuestionCreateOrConnectWithoutQuestionInput
+    upsert?: NumericQuestionUpsertWithoutQuestionInput
+    disconnect?: NumericQuestionWhereInput | boolean
+    delete?: NumericQuestionWhereInput | boolean
+    connect?: NumericQuestionWhereUniqueInput
+    update?: XOR<XOR<NumericQuestionUpdateToOneWithWhereWithoutQuestionInput, NumericQuestionUpdateWithoutQuestionInput>, NumericQuestionUncheckedUpdateWithoutQuestionInput>
+  }
+
   export type QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionNestedInput = {
     create?: XOR<QuestionsInGameTemplateCreateWithoutQuestionInput, QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInGameTemplateCreateWithoutQuestionInput[] | QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput[]
     connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput | QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput[]
@@ -13570,6 +16366,68 @@ export namespace Prisma {
     update?: QuestionsInGameTemplateUpdateWithWhereUniqueWithoutQuestionInput | QuestionsInGameTemplateUpdateWithWhereUniqueWithoutQuestionInput[]
     updateMany?: QuestionsInGameTemplateUpdateManyWithWhereWithoutQuestionInput | QuestionsInGameTemplateUpdateManyWithWhereWithoutQuestionInput[]
     deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
+  }
+
+  export type MultipleChoiceQuestionCreateanswerOptionsInput = {
+    set: string[]
+  }
+
+  export type MultipleChoiceQuestionCreatecorrectAnswersInput = {
+    set: boolean[]
+  }
+
+  export type QuestionCreateNestedOneWithoutMultipleChoiceQuestionInput = {
+    create?: XOR<QuestionCreateWithoutMultipleChoiceQuestionInput, QuestionUncheckedCreateWithoutMultipleChoiceQuestionInput>
+    connectOrCreate?: QuestionCreateOrConnectWithoutMultipleChoiceQuestionInput
+    connect?: QuestionWhereUniqueInput
+  }
+
+  export type MultipleChoiceQuestionUpdateanswerOptionsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type MultipleChoiceQuestionUpdatecorrectAnswersInput = {
+    set?: boolean[]
+    push?: boolean | boolean[]
+  }
+
+  export type QuestionUpdateOneRequiredWithoutMultipleChoiceQuestionNestedInput = {
+    create?: XOR<QuestionCreateWithoutMultipleChoiceQuestionInput, QuestionUncheckedCreateWithoutMultipleChoiceQuestionInput>
+    connectOrCreate?: QuestionCreateOrConnectWithoutMultipleChoiceQuestionInput
+    upsert?: QuestionUpsertWithoutMultipleChoiceQuestionInput
+    connect?: QuestionWhereUniqueInput
+    update?: XOR<XOR<QuestionUpdateToOneWithWhereWithoutMultipleChoiceQuestionInput, QuestionUpdateWithoutMultipleChoiceQuestionInput>, QuestionUncheckedUpdateWithoutMultipleChoiceQuestionInput>
+  }
+
+  export type QuestionCreateNestedOneWithoutNumericQuestionInput = {
+    create?: XOR<QuestionCreateWithoutNumericQuestionInput, QuestionUncheckedCreateWithoutNumericQuestionInput>
+    connectOrCreate?: QuestionCreateOrConnectWithoutNumericQuestionInput
+    connect?: QuestionWhereUniqueInput
+  }
+
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type QuestionUpdateOneRequiredWithoutNumericQuestionNestedInput = {
+    create?: XOR<QuestionCreateWithoutNumericQuestionInput, QuestionUncheckedCreateWithoutNumericQuestionInput>
+    connectOrCreate?: QuestionCreateOrConnectWithoutNumericQuestionInput
+    upsert?: QuestionUpsertWithoutNumericQuestionInput
+    connect?: QuestionWhereUniqueInput
+    update?: XOR<XOR<QuestionUpdateToOneWithWhereWithoutNumericQuestionInput, QuestionUpdateWithoutNumericQuestionInput>, QuestionUncheckedUpdateWithoutNumericQuestionInput>
   }
 
   export type GameTemplateCreatethemesInput = {
@@ -13876,6 +16734,11 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -13970,6 +16833,14 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -14022,6 +16893,38 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumPlayModeNullableFilter<$PrismaModel = never> = {
@@ -14340,8 +17243,8 @@ export namespace Prisma {
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    liveScore?: IntFilter<"GameParticipant"> | number
-    deferredScore?: IntFilter<"GameParticipant"> | number
+    liveScore?: FloatFilter<"GameParticipant"> | number
+    deferredScore?: FloatFilter<"GameParticipant"> | number
     nbAttempts?: IntFilter<"GameParticipant"> | number
     status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
@@ -14391,6 +17294,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -14407,6 +17313,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -14439,6 +17348,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -14455,6 +17367,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -14471,6 +17386,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -14487,6 +17405,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -14519,6 +17440,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -14535,10 +17459,45 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
     createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+  }
+
+  export type MultipleChoiceQuestionCreateWithoutQuestionInput = {
+    answerOptions?: MultipleChoiceQuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionCreatecorrectAnswersInput | boolean[]
+  }
+
+  export type MultipleChoiceQuestionUncheckedCreateWithoutQuestionInput = {
+    answerOptions?: MultipleChoiceQuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionCreatecorrectAnswersInput | boolean[]
+  }
+
+  export type MultipleChoiceQuestionCreateOrConnectWithoutQuestionInput = {
+    where: MultipleChoiceQuestionWhereUniqueInput
+    create: XOR<MultipleChoiceQuestionCreateWithoutQuestionInput, MultipleChoiceQuestionUncheckedCreateWithoutQuestionInput>
+  }
+
+  export type NumericQuestionCreateWithoutQuestionInput = {
+    correctAnswer: number
+    tolerance?: number | null
+    unit?: string | null
+  }
+
+  export type NumericQuestionUncheckedCreateWithoutQuestionInput = {
+    correctAnswer: number
+    tolerance?: number | null
+    unit?: string | null
+  }
+
+  export type NumericQuestionCreateOrConnectWithoutQuestionInput = {
+    where: NumericQuestionWhereUniqueInput
+    create: XOR<NumericQuestionCreateWithoutQuestionInput, NumericQuestionUncheckedCreateWithoutQuestionInput>
   }
 
   export type QuestionsInGameTemplateCreateWithoutQuestionInput = {
@@ -14561,6 +17520,50 @@ export namespace Prisma {
   export type QuestionsInGameTemplateCreateManyQuestionInputEnvelope = {
     data: QuestionsInGameTemplateCreateManyQuestionInput | QuestionsInGameTemplateCreateManyQuestionInput[]
     skipDuplicates?: boolean
+  }
+
+  export type MultipleChoiceQuestionUpsertWithoutQuestionInput = {
+    update: XOR<MultipleChoiceQuestionUpdateWithoutQuestionInput, MultipleChoiceQuestionUncheckedUpdateWithoutQuestionInput>
+    create: XOR<MultipleChoiceQuestionCreateWithoutQuestionInput, MultipleChoiceQuestionUncheckedCreateWithoutQuestionInput>
+    where?: MultipleChoiceQuestionWhereInput
+  }
+
+  export type MultipleChoiceQuestionUpdateToOneWithWhereWithoutQuestionInput = {
+    where?: MultipleChoiceQuestionWhereInput
+    data: XOR<MultipleChoiceQuestionUpdateWithoutQuestionInput, MultipleChoiceQuestionUncheckedUpdateWithoutQuestionInput>
+  }
+
+  export type MultipleChoiceQuestionUpdateWithoutQuestionInput = {
+    answerOptions?: MultipleChoiceQuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionUpdatecorrectAnswersInput | boolean[]
+  }
+
+  export type MultipleChoiceQuestionUncheckedUpdateWithoutQuestionInput = {
+    answerOptions?: MultipleChoiceQuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: MultipleChoiceQuestionUpdatecorrectAnswersInput | boolean[]
+  }
+
+  export type NumericQuestionUpsertWithoutQuestionInput = {
+    update: XOR<NumericQuestionUpdateWithoutQuestionInput, NumericQuestionUncheckedUpdateWithoutQuestionInput>
+    create: XOR<NumericQuestionCreateWithoutQuestionInput, NumericQuestionUncheckedCreateWithoutQuestionInput>
+    where?: NumericQuestionWhereInput
+  }
+
+  export type NumericQuestionUpdateToOneWithWhereWithoutQuestionInput = {
+    where?: NumericQuestionWhereInput
+    data: XOR<NumericQuestionUpdateWithoutQuestionInput, NumericQuestionUncheckedUpdateWithoutQuestionInput>
+  }
+
+  export type NumericQuestionUpdateWithoutQuestionInput = {
+    correctAnswer?: FloatFieldUpdateOperationsInput | number
+    tolerance?: NullableFloatFieldUpdateOperationsInput | number | null
+    unit?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NumericQuestionUncheckedUpdateWithoutQuestionInput = {
+    correctAnswer?: FloatFieldUpdateOperationsInput | number
+    tolerance?: NullableFloatFieldUpdateOperationsInput | number | null
+    unit?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type QuestionsInGameTemplateUpsertWithWhereUniqueWithoutQuestionInput = {
@@ -14587,6 +17590,214 @@ export namespace Prisma {
     questionUid?: StringFilter<"QuestionsInGameTemplate"> | string
     sequence?: IntFilter<"QuestionsInGameTemplate"> | number
     createdAt?: DateTimeFilter<"QuestionsInGameTemplate"> | Date | string
+  }
+
+  export type QuestionCreateWithoutMultipleChoiceQuestionInput = {
+    uid?: string
+    title?: string | null
+    text: string
+    questionType: string
+    discipline: string
+    themes?: QuestionCreatethemesInput | string[]
+    difficulty?: number | null
+    gradeLevel?: string | null
+    author?: string | null
+    explanation?: string | null
+    tags?: QuestionCreatetagsInput | string[]
+    timeLimit: number
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    numericQuestion?: NumericQuestionCreateNestedOneWithoutQuestionInput
+    gameTemplates?: QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput
+  }
+
+  export type QuestionUncheckedCreateWithoutMultipleChoiceQuestionInput = {
+    uid?: string
+    title?: string | null
+    text: string
+    questionType: string
+    discipline: string
+    themes?: QuestionCreatethemesInput | string[]
+    difficulty?: number | null
+    gradeLevel?: string | null
+    author?: string | null
+    explanation?: string | null
+    tags?: QuestionCreatetagsInput | string[]
+    timeLimit: number
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    numericQuestion?: NumericQuestionUncheckedCreateNestedOneWithoutQuestionInput
+    gameTemplates?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutQuestionInput
+  }
+
+  export type QuestionCreateOrConnectWithoutMultipleChoiceQuestionInput = {
+    where: QuestionWhereUniqueInput
+    create: XOR<QuestionCreateWithoutMultipleChoiceQuestionInput, QuestionUncheckedCreateWithoutMultipleChoiceQuestionInput>
+  }
+
+  export type QuestionUpsertWithoutMultipleChoiceQuestionInput = {
+    update: XOR<QuestionUpdateWithoutMultipleChoiceQuestionInput, QuestionUncheckedUpdateWithoutMultipleChoiceQuestionInput>
+    create: XOR<QuestionCreateWithoutMultipleChoiceQuestionInput, QuestionUncheckedCreateWithoutMultipleChoiceQuestionInput>
+    where?: QuestionWhereInput
+  }
+
+  export type QuestionUpdateToOneWithWhereWithoutMultipleChoiceQuestionInput = {
+    where?: QuestionWhereInput
+    data: XOR<QuestionUpdateWithoutMultipleChoiceQuestionInput, QuestionUncheckedUpdateWithoutMultipleChoiceQuestionInput>
+  }
+
+  export type QuestionUpdateWithoutMultipleChoiceQuestionInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    questionType?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    themes?: QuestionUpdatethemesInput | string[]
+    difficulty?: NullableIntFieldUpdateOperationsInput | number | null
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    author?: NullableStringFieldUpdateOperationsInput | string | null
+    explanation?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    timeLimit?: IntFieldUpdateOperationsInput | number
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    numericQuestion?: NumericQuestionUpdateOneWithoutQuestionNestedInput
+    gameTemplates?: QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput
+  }
+
+  export type QuestionUncheckedUpdateWithoutMultipleChoiceQuestionInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    questionType?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    themes?: QuestionUpdatethemesInput | string[]
+    difficulty?: NullableIntFieldUpdateOperationsInput | number | null
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    author?: NullableStringFieldUpdateOperationsInput | string | null
+    explanation?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    timeLimit?: IntFieldUpdateOperationsInput | number
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    numericQuestion?: NumericQuestionUncheckedUpdateOneWithoutQuestionNestedInput
+    gameTemplates?: QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionNestedInput
+  }
+
+  export type QuestionCreateWithoutNumericQuestionInput = {
+    uid?: string
+    title?: string | null
+    text: string
+    questionType: string
+    discipline: string
+    themes?: QuestionCreatethemesInput | string[]
+    difficulty?: number | null
+    gradeLevel?: string | null
+    author?: string | null
+    explanation?: string | null
+    tags?: QuestionCreatetagsInput | string[]
+    timeLimit: number
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionCreateNestedOneWithoutQuestionInput
+    gameTemplates?: QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput
+  }
+
+  export type QuestionUncheckedCreateWithoutNumericQuestionInput = {
+    uid?: string
+    title?: string | null
+    text: string
+    questionType: string
+    discipline: string
+    themes?: QuestionCreatethemesInput | string[]
+    difficulty?: number | null
+    gradeLevel?: string | null
+    author?: string | null
+    explanation?: string | null
+    tags?: QuestionCreatetagsInput | string[]
+    timeLimit: number
+    excludedFrom?: QuestionCreateexcludedFromInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUncheckedCreateNestedOneWithoutQuestionInput
+    gameTemplates?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutQuestionInput
+  }
+
+  export type QuestionCreateOrConnectWithoutNumericQuestionInput = {
+    where: QuestionWhereUniqueInput
+    create: XOR<QuestionCreateWithoutNumericQuestionInput, QuestionUncheckedCreateWithoutNumericQuestionInput>
+  }
+
+  export type QuestionUpsertWithoutNumericQuestionInput = {
+    update: XOR<QuestionUpdateWithoutNumericQuestionInput, QuestionUncheckedUpdateWithoutNumericQuestionInput>
+    create: XOR<QuestionCreateWithoutNumericQuestionInput, QuestionUncheckedCreateWithoutNumericQuestionInput>
+    where?: QuestionWhereInput
+  }
+
+  export type QuestionUpdateToOneWithWhereWithoutNumericQuestionInput = {
+    where?: QuestionWhereInput
+    data: XOR<QuestionUpdateWithoutNumericQuestionInput, QuestionUncheckedUpdateWithoutNumericQuestionInput>
+  }
+
+  export type QuestionUpdateWithoutNumericQuestionInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    questionType?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    themes?: QuestionUpdatethemesInput | string[]
+    difficulty?: NullableIntFieldUpdateOperationsInput | number | null
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    author?: NullableStringFieldUpdateOperationsInput | string | null
+    explanation?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    timeLimit?: IntFieldUpdateOperationsInput | number
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUpdateOneWithoutQuestionNestedInput
+    gameTemplates?: QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput
+  }
+
+  export type QuestionUncheckedUpdateWithoutNumericQuestionInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    text?: StringFieldUpdateOperationsInput | string
+    questionType?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    themes?: QuestionUpdatethemesInput | string[]
+    difficulty?: NullableIntFieldUpdateOperationsInput | number | null
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    author?: NullableStringFieldUpdateOperationsInput | string | null
+    explanation?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    timeLimit?: IntFieldUpdateOperationsInput | number
+    excludedFrom?: QuestionUpdateexcludedFromInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUncheckedUpdateOneWithoutQuestionNestedInput
+    gameTemplates?: QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionNestedInput
   }
 
   export type GameInstanceCreateWithoutGameTemplateInput = {
@@ -14645,6 +17856,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -14661,6 +17875,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -14731,6 +17948,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -14747,6 +17967,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -14818,9 +18041,10 @@ export namespace Prisma {
     excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionCreateNestedOneWithoutQuestionInput
+    numericQuestion?: NumericQuestionCreateNestedOneWithoutQuestionInput
   }
 
   export type QuestionUncheckedCreateWithoutGameTemplatesInput = {
@@ -14839,9 +18063,10 @@ export namespace Prisma {
     excludedFrom?: QuestionCreateexcludedFromInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: number | null
+    isHidden?: boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUncheckedCreateNestedOneWithoutQuestionInput
+    numericQuestion?: NumericQuestionUncheckedCreateNestedOneWithoutQuestionInput
   }
 
   export type QuestionCreateOrConnectWithoutGameTemplatesInput = {
@@ -14915,9 +18140,10 @@ export namespace Prisma {
     excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUpdateOneWithoutQuestionNestedInput
+    numericQuestion?: NumericQuestionUpdateOneWithoutQuestionNestedInput
   }
 
   export type QuestionUncheckedUpdateWithoutGameTemplatesInput = {
@@ -14936,9 +18162,10 @@ export namespace Prisma {
     excludedFrom?: QuestionUpdateexcludedFromInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
+    isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    multipleChoiceQuestion?: MultipleChoiceQuestionUncheckedUpdateOneWithoutQuestionNestedInput
+    numericQuestion?: NumericQuestionUncheckedUpdateOneWithoutQuestionNestedInput
   }
 
   export type GameTemplateCreateWithoutGameInstancesInput = {
@@ -14984,6 +18211,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
@@ -15000,6 +18230,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
@@ -15105,6 +18338,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
@@ -15121,6 +18357,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
@@ -15194,6 +18433,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
@@ -15210,6 +18452,9 @@ export namespace Prisma {
     resetToken?: string | null
     resetTokenExpiresAt?: Date | string | null
     avatarEmoji?: string | null
+    emailVerificationToken?: string | null
+    emailVerificationTokenExpiresAt?: Date | string | null
+    emailVerified?: boolean | null
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
@@ -15289,6 +18534,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
@@ -15305,6 +18553,9 @@ export namespace Prisma {
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     avatarEmoji?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerificationTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
@@ -15407,8 +18658,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15420,8 +18671,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15432,8 +18683,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15613,8 +18864,8 @@ export namespace Prisma {
 
   export type GameParticipantUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15626,8 +18877,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15638,8 +18889,8 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateManyWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    liveScore?: IntFieldUpdateOperationsInput | number
-    deferredScore?: IntFieldUpdateOperationsInput | number
+    liveScore?: FloatFieldUpdateOperationsInput | number
+    deferredScore?: FloatFieldUpdateOperationsInput | number
     nbAttempts?: IntFieldUpdateOperationsInput | number
     status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -29,6 +29,7 @@ import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { Clock, GripVertical, X, ShoppingCart, Plus } from 'lucide-react';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { Question } from '@shared/types/core/question'; // Use canonical shared type
+import { GameInstance } from '@shared/types/core/game';
 
 // Filter request interface
 interface FilterQuestionRequest {
@@ -58,27 +59,7 @@ interface ActivityMeta {
     };
 }
 
-// Interface for game instance from API
-interface GameInstance {
-    id: string;
-    name: string;
-    accessCode: string;
-    status: string;
-    playMode: 'quiz' | 'tournament' | 'practice';
-    settings: any;
-    gameTemplate: {
-        id: string;
-        name: string;
-        themes: string[];
-        discipline: string;
-        gradeLevel: string;
-        questions: Array<{
-            id: string;
-            sequence: number;
-            question: Question;
-        }>;
-    };
-}
+// Using shared GameInstance type instead
 
 // Sortable cart question component
 function SortableCartQuestion({
@@ -229,27 +210,29 @@ export default function EditActivityPage() {
             setGameData(gameInstance);
 
             // Pre-fill the form with existing data
-            setActivityMeta({
-                discipline: gameInstance.gameTemplate.discipline,
-                gradeLevel: gameInstance.gameTemplate.gradeLevel,
-                themes: gameInstance.gameTemplate.themes,
-                levels: [gameInstance.gameTemplate.gradeLevel], // Convert to array
-                name: gameInstance.name,
-                playMode: gameInstance.playMode,
-                settings: gameInstance.settings || {
-                    timeMultiplier: 1,
-                    showLeaderboard: true
-                }
-            });
+            if (gameInstance.gameTemplate) {
+                setActivityMeta({
+                    discipline: gameInstance.gameTemplate.discipline || '',
+                    gradeLevel: gameInstance.gameTemplate.gradeLevel || '',
+                    themes: gameInstance.gameTemplate.themes,
+                    levels: [gameInstance.gameTemplate.gradeLevel || ''].filter(Boolean), // Convert to array
+                    name: gameInstance.name,
+                    playMode: gameInstance.playMode as 'quiz' | 'tournament' | 'practice', // Type assertion for compatibility
+                    settings: gameInstance.settings || {
+                        timeMultiplier: 1,
+                        showLeaderboard: true
+                    }
+                });
 
-            // Convert existing questions to cart format
-            const existingQuestions: CartQuestion[] = gameInstance.gameTemplate.questions
-                .sort((a: any, b: any) => a.sequence - b.sequence)
-                .map((item: any, index: number) => ({
-                    ...item.question,
-                    cartId: `existing-${index}`
-                }));
-            setSelectedQuestions(existingQuestions);
+                // Convert existing questions to cart format
+                const existingQuestions: CartQuestion[] = (gameInstance.gameTemplate.questions || [])
+                    .sort((a: any, b: any) => a.sequence - b.sequence)
+                    .map((item: any, index: number) => ({
+                        ...item.question,
+                        cartId: `existing-${index}`
+                    }));
+                setSelectedQuestions(existingQuestions);
+            }
 
             // Fetch available filters
             await fetchFilters();
@@ -355,7 +338,10 @@ export default function EditActivityPage() {
             }
 
             // Step 1: Update the game template with new questions and metadata
-            await makeApiRequest(`game-templates/${gameData?.gameTemplate.id}`, {
+            if (!gameData?.gameTemplate?.id) {
+                throw new Error('Game template ID is missing');
+            }
+            await makeApiRequest(`game-templates/${gameData.gameTemplate.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -406,7 +392,7 @@ export default function EditActivityPage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-center justify-center h-64">
                         <InfinitySpin size={48} />
-                        <span className="ml-4 text-lg">Chargement de l'activité...</span>
+                        <span className="ml-4 text-lg">Chargement de l&apos;activité...</span>
                     </div>
                 </div>
             </div>
@@ -565,7 +551,7 @@ export default function EditActivityPage() {
                         {/* Activity metadata form */}
                         <div className="space-y-3 mb-4 p-3 bg-base-100 rounded-lg">
                             <div className="form-control">
-                                <label className="label label-text font-medium">Nom de l'activité</label>
+                                <label className="label label-text font-medium">Nom de l&apos;activité</label>
                                 <input
                                     type="text"
                                     value={activityMeta.name}
@@ -575,7 +561,7 @@ export default function EditActivityPage() {
                                 />
                             </div>
                             <div className="form-control">
-                                <label className="label label-text font-medium">Type d'activité</label>
+                                <label className="label label-text font-medium">Type d&apos;activité</label>
                                 <select
                                     value={activityMeta.playMode}
                                     onChange={(e) => setActivityMeta(prev => ({
@@ -652,10 +638,10 @@ export default function EditActivityPage() {
             <div className="lg:hidden p-4">
                 {/* Activity Form */}
                 <div className="bg-base-200 rounded-lg p-4 mb-4">
-                    <h2 className="text-lg font-semibold mb-3">Informations de l'activité</h2>
+                    <h2 className="text-lg font-semibold mb-3">Informations de l&apos;activité</h2>
                     <div className="space-y-3">
                         <div className="form-control">
-                            <label className="label label-text font-medium">Nom de l'activité</label>
+                            <label className="label label-text font-medium">Nom de l&apos;activité</label>
                             <input
                                 type="text"
                                 value={activityMeta.name}
@@ -665,7 +651,7 @@ export default function EditActivityPage() {
                             />
                         </div>
                         <div className="form-control">
-                            <label className="label label-text font-medium">Type d'activité</label>
+                            <label className="label label-text font-medium">Type d&apos;activité</label>
                             <select
                                 value={activityMeta.playMode}
                                 onChange={(e) => setActivityMeta(prev => ({
@@ -862,12 +848,12 @@ export default function EditActivityPage() {
             {gameData && (
                 <div className="max-w-7xl mx-auto px-4 pb-4">
                     <div className="p-4 bg-info/10 rounded-lg border border-info/20">
-                        <h3 className="font-medium text-info mb-2">Informations sur l'activité</h3>
+                        <h3 className="font-medium text-info mb-2">Informations sur l&apos;activité</h3>
                         <div className="text-sm space-y-1">
-                            <p><span className="font-medium">Code d'accès:</span> {gameData.accessCode}</p>
+                            <p><span className="font-medium">Code d&apos;accès:</span> {gameData.accessCode}</p>
                             <p><span className="font-medium">Statut:</span> {gameData.status}</p>
                             <p className="text-base-content/60 mt-2">
-                                Note: Seules les activités en statut "pending" peuvent être modifiées.
+                                Note: Seules les activités en statut &quot;pending&quot; peuvent être modifiées.
                             </p>
                         </div>
                     </div>

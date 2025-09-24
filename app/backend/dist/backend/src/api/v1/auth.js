@@ -10,6 +10,7 @@ const validation_1 = require("@/middleware/validation");
 const userService_1 = require("@/core/services/userService");
 const client_1 = require("@/db/generated/client");
 const avatarUtils_1 = require("@/utils/avatarUtils");
+const usernameValidator_1 = require("@/utils/usernameValidator");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
@@ -36,9 +37,20 @@ router.post('/logout', (req, res) => {
     });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 });
-// ...existing code...
-// ...existing code...
-// Create a singleton instance or allow injection for testing
+/**
+ * Debug endpoint to check environment
+ * GET /api/v1/auth/debug
+ */
+router.get('/debug', (req, res) => {
+    res.status(200).json({
+        NODE_ENV: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+    });
+});
+/**
+ * Generic auth endpoint that handles multiple actions
+ * POST /api/v1/auth
+ */
 let userServiceInstance = null;
 const getUserService = () => {
     if (!userServiceInstance) {
@@ -55,9 +67,9 @@ exports.__setUserServiceForTesting = __setUserServiceForTesting;
  * Generic auth endpoint that handles multiple actions
  * POST /api/v1/auth
  */
-router.post('/', (0, validation_1.validateRequestBody)(schemas_1.LoginRequestSchema.or(schemas_1.RegisterRequestSchema)), async (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const { action, email, password, username } = req.body;
+        const { action } = req.body;
         switch (action) {
             case 'login':
                 await handleUniversalLogin(req, res);
@@ -167,11 +179,18 @@ async function handleUniversalLogin(req, res) {
     }
     catch (error) {
         logger.error({ error }, 'Error in universal login');
-        // Handle authentication errors
-        if (error instanceof Error && (error.message.includes('Invalid email') ||
-            error.message.includes('Invalid password'))) {
-            res.status(401).json({ error: 'Invalid email or password' });
-            return;
+        // Handle specific error types
+        if (error instanceof Error) {
+            // Email verification required
+            if (error.message.includes('Please verify your email')) {
+                res.status(403).json({ error: error.message });
+                return;
+            }
+            // Authentication errors
+            if (error.message.includes('Invalid email') || error.message.includes('Invalid password')) {
+                res.status(401).json({ error: 'Invalid email or password' });
+                return;
+            }
         }
         res.status(500).json({ error: 'An error occurred during login' });
     }
@@ -241,6 +260,12 @@ async function handleTeacherRegister(req, res) {
         res.status(400).json({ error: 'Username and password are required' });
         return;
     }
+    // Validate username format (must be a valid French firstname + optional character)
+    const usernameValidation = (0, usernameValidator_1.validateUsername)(username);
+    if (!usernameValidation.isValid) {
+        res.status(400).json({ error: usernameValidation.error || 'Invalid username format' });
+        return;
+    }
     if (password.length < 6) {
         res.status(400).json({ error: 'Password must be at least 6 characters long' });
         return;
@@ -279,14 +304,13 @@ async function handleTeacherRegister(req, res) {
             res.status(500).json({ error: 'Registration failed' });
             return;
         }
-        // Set teacher token cookie for middleware
-        res.cookie('teacherToken', result.token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        // For teacher accounts with email - DO NOT set auth cookies until email is verified
+        logger.info('Teacher registered - email verification required', {
+            userId: result.user.id,
+            email: email,
+            emailVerified: result.user.emailVerified || false
         });
-        // Return in the format expected by frontend AuthProvider
+        // Return response without setting cookies or including token
         res.status(201).json({
             success: true,
             user: {
@@ -294,10 +318,12 @@ async function handleTeacherRegister(req, res) {
                 email: result.user.email || email,
                 username: result.user.username,
                 avatar: validatedAvatar,
-                role: 'TEACHER'
+                role: 'TEACHER',
+                emailVerified: false
             },
-            token: result.token,
-            message: 'Registration successful'
+            // Do NOT include token in response for unverified users
+            message: 'Teacher account created successfully. Please verify your email before logging in.',
+            requiresEmailVerification: true
         });
     }
     catch (error) {
@@ -323,6 +349,15 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
             res.status(400).json({
                 success: false,
                 error: 'Username is required'
+            });
+            return;
+        }
+        // Validate username format (must be a valid French firstname + optional character)
+        const usernameValidation = (0, usernameValidator_1.validateUsername)(username);
+        if (!usernameValidation.isValid) {
+            res.status(400).json({
+                success: false,
+                error: usernameValidation.error || 'Invalid username format'
             });
             return;
         }
@@ -412,7 +447,7 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
             password,
             role: role,
             cookieId,
-            avatarEmoji: validatedAvatar
+            avatarEmoji: validatedAvatar,
         });
         if (!result.user || !result.token) {
             res.status(500).json({ error: 'Registration failed' });
@@ -423,8 +458,32 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
             username,
             role,
             hasEmail: !!email,
-            hasCookieId: !!cookieId
+            hasCookieId: !!cookieId,
+            emailVerified: result.user.emailVerified || false
         });
+        // For users with email - DO NOT set auth cookies until email is verified (unless skipped for testing)
+        if (email && !result.user.emailVerified) {
+            logger.info('Email verification required - not setting auth cookies', {
+                userId: result.user.id,
+                email: email
+            });
+            res.status(201).json({
+                success: true,
+                user: {
+                    id: result.user.id,
+                    email: result.user.email,
+                    username: result.user.username,
+                    avatar: result.user.avatarEmoji,
+                    role: result.user.role,
+                    emailVerified: result.user.emailVerified
+                },
+                // Do NOT include token in response for unverified users
+                message: result.user.emailVerified ? 'Account created successfully.' : 'Account created successfully. Please verify your email before logging in.',
+                requiresEmailVerification: !result.user.emailVerified
+            });
+            return;
+        }
+        // For guest users (no email) - set cookies as before
         // Set appropriate cookie based on user role
         if (result.user.role === client_1.UserRole.TEACHER) {
             res.cookie('teacherToken', result.token, {
@@ -537,8 +596,15 @@ router.post('/upgrade', (0, validation_1.validateRequestBody)(schemas_1.UpgradeA
         }
         // For teacher upgrade, validate admin password
         if (targetRole === 'TEACHER') {
-            // TODO: Implement admin password validation
-            logger.info('Teacher upgrade attempt', {
+            const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+            if (!adminPassword || adminPassword !== ADMIN_PASSWORD) {
+                res.status(403).json({
+                    success: false,
+                    error: 'Invalid admin password'
+                });
+                return;
+            }
+            logger.info('Teacher upgrade attempt validated', {
                 userId: existingUser.id,
                 username: existingUser.username,
                 adminPassword: !!adminPassword
@@ -627,23 +693,20 @@ router.post('/reset-password', (0, validation_1.validateRequestBody)(schemas_1.P
             res.status(400).json({ error: 'Email is required' });
             return;
         }
-        // Generate reset token
-        const resetToken = await getUserService().generatePasswordResetToken(email);
-        logger.info('Password reset token generated', { email, tokenLength: resetToken.length });
-        // In a real implementation, you would send an email with reset link
-        // For development/testing, we'll return the token in the response
-        // TODO: Implement email sending service
+        // Request password reset with email sending
+        await getUserService().requestPasswordReset(email);
+        logger.info('Password reset requested', { email });
         res.status(200).json({
             message: 'Password reset email sent if account exists',
-            // Remove this in production - only for development
-            resetToken: resetToken
+            success: true
         });
     }
     catch (error) {
         logger.error({ error }, 'Error in password reset');
         // Return success even if user doesn't exist for security
         res.status(200).json({
-            message: 'Password reset email sent if account exists'
+            message: 'Password reset email sent if account exists',
+            success: true
         });
     }
 });
@@ -682,6 +745,119 @@ router.post('/reset-password/confirm', (0, validation_1.validateRequestBody)(sch
             }
         }
         res.status(500).json({ error: 'An error occurred during password reset' });
+    }
+});
+/**
+ * Send email verification
+ * POST /api/v1/auth/send-email-verification
+ */
+router.post('/send-email-verification', (0, validation_1.validateRequestBody)(schemas_1.SendEmailVerificationRequestSchema), async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            res.status(400).json({ error: 'Email is required' });
+            return;
+        }
+        // Send email verification
+        await getUserService().sendEmailVerification(email);
+        logger.info('Email verification sent', { email });
+        res.status(200).json({
+            message: 'Verification email sent if account exists',
+            success: true
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error sending email verification');
+        // Return success even if user doesn't exist for security
+        res.status(200).json({
+            message: 'Verification email sent if account exists',
+            success: true
+        });
+    }
+});
+/**
+ * Verify email with token
+ * POST /api/v1/auth/verify-email
+ */
+router.post('/verify-email', (0, validation_1.validateRequestBody)(schemas_1.VerifyEmailRequestSchema), async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            res.status(400).json({ error: 'Verification token is required' });
+            return;
+        }
+        // Verify email using token
+        const result = await getUserService().verifyEmail(token);
+        logger.info('Email verification attempted', { token: token.substring(0, 8) + '...', success: result.success });
+        if (result.success) {
+            // Get the verified user to set authentication cookies
+            const user = result.user;
+            if (user && result.token) {
+                // Set appropriate cookie based on user role
+                if (user.role === 'TEACHER') {
+                    res.cookie('teacherToken', result.token, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'lax',
+                        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+                    });
+                }
+                else {
+                    res.cookie('authToken', result.token, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'lax',
+                        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+                    });
+                }
+                logger.info('Authentication cookies set after email verification', {
+                    userId: user.id,
+                    role: user.role
+                });
+            }
+            res.status(200).json({
+                message: result.message,
+                success: true,
+                user: result.user // Include user data in response
+            });
+        }
+        else {
+            res.status(400).json({
+                error: result.message
+            });
+        }
+    }
+    catch (error) {
+        logger.error({ error }, 'Error in email verification');
+        res.status(500).json({ error: 'An error occurred during email verification' });
+    }
+});
+/**
+ * Resend email verification
+ * POST /api/v1/auth/resend-email-verification
+ */
+router.post('/resend-email-verification', (0, validation_1.validateRequestBody)(schemas_1.ResendEmailVerificationRequestSchema), async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            res.status(400).json({ error: 'Email is required' });
+            return;
+        }
+        // Resend email verification (same as send)
+        await getUserService().sendEmailVerification(email);
+        logger.info('Email verification resent', { email });
+        res.status(200).json({
+            message: 'Verification email sent if account exists',
+            success: true
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error resending email verification');
+        // Return success even if user doesn't exist for security
+        res.status(200).json({
+            message: 'Verification email sent if account exists',
+            success: true
+        });
     }
 });
 /**
@@ -729,8 +905,11 @@ router.get('/status', auth_1.optionalAuth, async (req, res) => {
         if (userRole === 'TEACHER') {
             authState = 'teacher';
         }
+        else if (userRole === 'GUEST') {
+            authState = 'guest';
+        }
         else if (userRole === 'STUDENT') {
-            // Check if user has email (actual student) or no email (guest)
+            // Check if user has email (actual student) or no email (legacy guest)
             authState = user?.email ? 'student' : 'guest';
         }
         // Legacy fields for backward compatibility

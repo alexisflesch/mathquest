@@ -7,7 +7,7 @@ export interface AuthUser {
     username: string;
     email?: string;
     avatar: string;
-    role: 'STUDENT' | 'TEACHER' | 'ADMIN';
+    role: 'STUDENT' | 'TEACHER' | 'GUEST' | 'ADMIN';
 }
 export interface AuthState {
     isAuthenticated: boolean;
@@ -25,7 +25,8 @@ export interface RegisterData {
     password: string;
     role?: 'STUDENT' | 'TEACHER';
 }
-export interface UserState {
+export type UserState = 'anonymous' | 'guest' | 'student' | 'teacher';
+export interface UserStateInfo {
     user: AuthUser | null;
     isAuthenticated: boolean;
     loading: boolean;

@@ -1,0 +1,181 @@
+- uid: aflesch-l1-logique-001
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  title: "Contraposée — divisibilité"
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si un nombre est divisible par 6, alors il est divisible par 3 » ?"
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'proposition'
+    - 'connecteurs logiques'
+    - 'implication'
+    - 'contraposée'
+  answerOptions:
+    - "Si un nombre est divisible par 3, alors il est divisible par 6."
+    - "Si un nombre est divisible par 6, alors il n'est pas divisible par 3."
+    - "Si un nombre n'est pas divisible par 3, alors il n'est pas divisible par 6."
+    - "Si un nombre n'est pas divisible par 6, alors il n'est pas divisible par 3."
+  correctAnswers: [false, false, true, false]
+
+- uid: aflesch-l1-logique-002
+  title: "Contraposée — carrés et rectangles"
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si une figure est un carré, alors elle est un rectangle » ?"
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'contraposée'
+    - 'implication'
+  answerOptions:
+    - "Si une figure est un rectangle, alors c'est un carré."
+    - "Si une figure n'est pas un rectangle, alors ce n'est pas un carré."
+    - "Si une figure n'est pas un carré, alors ce n'est pas un rectangle."
+    - "Si une figure est un carré, alors ce n'est pas un rectangle."
+  correctAnswers: [false, true, false, false]
+
+- uid: aflesch-l1-logique-003
+  title: "Contraposée — majorité et vote"
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si une personne est majeure, alors elle peut voter » ?"
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'contraposée'
+    - 'implication'
+    - 'proposition'
+    - 'connecteurs logiques'
+  answerOptions:
+    - "Si une personne peut voter, alors elle est majeure."
+    - "Si une personne n'est pas majeure, alors elle peut voter."
+    - "Si une personne est majeure, alors elle ne peut pas voter."
+    - "Si une personne ne peut pas voter, alors elle n'est pas majeure."
+  correctAnswers: [false, false, false, true]
+
+- uid: aflesch-l1-logique-004
+  title: "Contraposée — chien et mammifère"
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si un animal est un chien, alors c'est un mammifère » ?"
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'contraposée'
+    - 'implication'
+    - 'proposition'
+    - 'connecteurs logiques'
+  answerOptions:
+    - "Si un animal n'est pas un chien, alors ce n'est pas un mammifère."
+    - "Si un animal n'est pas un mammifère, alors ce n'est pas un chien."
+    - "Si un animal est un mammifère, alors c'est un chien."
+    - "Si un animal est un chien, alors ce n'est pas un mammifère."
+  correctAnswers: [false, true, false, false]
+
+- uid: aflesch-l1-logique-005
+  title: "Contraposée — dérivabilité et continuité"
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si une fonction est dérivable, alors elle est continue » ?"
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'contraposée'
+    - 'implication'
+    - 'proposition'
+    - 'connecteurs logiques'
+  answerOptions:
+    - "Si une fonction est continue, alors elle est dérivable."
+    - "Si une fonction n'est pas dérivable, alors elle n'est pas continue."
+    - "Si une fonction n'est pas continue, alors elle n'est pas dérivable."
+    - "Si une fonction est dérivable, alors elle n'est pas continue."
+  correctAnswers: [false, false, true, false]
+
+- uid: aflesch-l1-logique-006
+  title: "Contraposée — pair et carré"
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si un nombre est pair, alors son carré est pair » ?"
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'contraposée'
+    - 'implication'
+    - 'proposition'
+    - 'connecteurs logiques'
+  answerOptions:
+    - "Si un nombre n'est pas pair, alors son carré est pair."
+    - "Si le carré d'un nombre est pair, alors le nombre est impair."
+    - "Si un nombre est pair, alors son carré est impair."
+    - "Si le carré d'un nombre n'est pas pair, alors le nombre n'est pas pair."
+  correctAnswers: [false, false, false, true]
+
+- uid: aflesch-l1-logique-007
+  title: "Contraposée — cours et réussite"
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si un étudiant réussit l'examen final, alors il a assisté aux cours » ?"
+  timeLimit: 30
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'contraposée'
+    - 'implication'
+    - 'proposition'
+    - 'connecteurs logiques'
+  answerOptions:
+    - "Si un étudiant a assisté aux cours, alors il a réussi l'examen final."
+    - "Si un étudiant n'a pas assisté aux cours, alors il n'a pas réussi l'examen final."
+    - "Si un étudiant a réussi l'examen final, alors il n'a pas assisté aux cours."
+    - "Si un étudiant n'a pas réussi l'examen final, alors il a assisté aux cours."
+  correctAnswers: [false, true, false, false]
+
+- uid: aflesch-l1-logique-008
+  title: "Contraposée — polygone régulier"
+  author: 'aflesch'
+  discipline: 'Mathématiques'
+  gradeLevel: 'L1'
+  difficulty: 1
+  questionType: single_choice
+  text: "Quelle assertion est équivalente à : « Si un polygone est régulier, alors tous ses côtés sont de même longueur » ?"
+  themes:
+    - 'Logique et raisonnement'
+  tags:
+    - 'contraposée'
+    - 'implication'
+    - 'proposition'
+    - 'connecteurs logiques'
+  timeLimit: 30
+  answerOptions:
+    - "Si un polygone a tous ses côtés de même longueur, alors il est régulier."
+    - "Si un polygone est régulier, alors tous ses côtés n'ont pas la même longueur."
+    - "Si un polygone n'a pas tous ses côtés de même longueur, alors il n'est pas régulier."
+    - "Si un polygone n'est pas régulier, alors tous ses côtés ont la même longueur."
+  correctAnswers: [false, false, true, false]

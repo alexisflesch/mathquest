@@ -32,18 +32,20 @@ export async function broadcastLeaderboardToProjection(
     }, '🎯 [PROJECTION-BROADCAST] Starting leaderboard broadcast to projection room');
 
     try {
-        // Calculate current leaderboard including join-order bonuses
-        logger.debug({ accessCode }, '🔍 [PROJECTION-BROADCAST] Calculating leaderboard from Redis');
-        const leaderboard = await calculateLeaderboard(accessCode);
+        // 🔒 SECURITY FIX: Projection should use snapshot data to prevent live score leakage
+        // Only teacher trophy click should show live data to projection
+        logger.debug({ accessCode }, '🔍 [PROJECTION-BROADCAST] Getting leaderboard from snapshot');
+        const { getLeaderboardSnapshot } = await import('@/core/services/gameParticipant/leaderboardSnapshotService');
+        const leaderboard = await getLeaderboardSnapshot(accessCode);
 
-        // DEBUG: Add detailed logging of Redis leaderboard data
+        // DEBUG: Add detailed logging of snapshot data
         logger.info({
             accessCode,
             gameId,
             leaderboardCount: leaderboard.length,
             topPlayers: leaderboard.slice(0, 3).map(p => ({ username: p.username, score: p.score })),
-            fullLeaderboard: leaderboard.map(p => ({ username: p.username, score: p.score, userId: p.userId }))
-        }, '📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard calculated from Redis');
+            dataSource: 'snapshot'
+        }, '📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard from snapshot (secure)');
 
         logger.info({
             accessCode,
@@ -144,38 +146,53 @@ export async function broadcastLeaderboardToAllRooms(
             limitToTopN = 20
         } = options;
 
-        // Calculate current leaderboard
-        const fullLeaderboard = await calculateLeaderboard(accessCode);
+        // 🔒 SECURITY FIX: Use snapshot for student emissions, live data for others
+        // Students should only see snapshot data to prevent live score cheating
+        let studentLeaderboard: any[] = [];
+        let projectionLeaderboard: any[] = [];
 
-        if (fullLeaderboard.length === 0) {
-            logger.debug({ accessCode, gameId }, 'No participants yet, skipping leaderboard broadcast');
-            return;
+        if (includeGameRoom) {
+            // For game room (students), use snapshot to prevent live score leakage
+            const { getLeaderboardSnapshot } = await import('@/core/services/gameParticipant/leaderboardSnapshotService');
+
+            // REMOVED: syncSnapshotWithLiveData call to prevent automatic leaderboard updates
+            // Students should only see existing snapshot data, not trigger live sync
+            studentLeaderboard = await getLeaderboardSnapshot(accessCode);
+
+            if (studentLeaderboard.length > 0) {
+                const gameRoom = `game_${accessCode}`;
+                const limitedStudentLeaderboard = studentLeaderboard.slice(0, limitToTopN);
+
+                io.to(gameRoom).emit(SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE, {
+                    leaderboard: limitedStudentLeaderboard
+                });
+
+                logger.debug({
+                    accessCode,
+                    gameRoom,
+                    playerCount: limitedStudentLeaderboard.length,
+                    dataSource: 'snapshot'
+                }, '[SECURITY] Broadcasted leaderboard to game room from snapshot');
+            } else {
+                logger.debug({ accessCode }, 'No snapshot data available, skipping game room broadcast');
+            }
         }
 
-        const limitedLeaderboard = fullLeaderboard.slice(0, limitToTopN);
-
-        // Broadcast to game room (students see leaderboard updates)
-        if (includeGameRoom) {
-            const gameRoom = `game_${accessCode}`;
-            io.to(gameRoom).emit(SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE, {
-                leaderboard: limitedLeaderboard
-            });
-
-            logger.debug({
-                accessCode,
-                gameRoom,
-                playerCount: limitedLeaderboard.length
-            }, 'Broadcasted leaderboard to game room');
+        // For projection/dashboard, calculate fresh data (teachers need current state)
+        if (includeProjectionRoom || includeDashboardRoom) {
+            projectionLeaderboard = await calculateLeaderboard(accessCode);
         }
 
         // Broadcast to projection room (teacher projection display)
-        if (includeProjectionRoom) {
+        if (includeProjectionRoom && projectionLeaderboard.length > 0) {
             await broadcastLeaderboardToProjection(io, accessCode, gameId);
         }
 
         // Broadcast to dashboard room (teacher control panel)
-        if (includeDashboardRoom) {
+        if (includeDashboardRoom && projectionLeaderboard.length > 0) {
             const dashboardRoom = `dashboard_${gameId}`;
+            const limitedLeaderboard = projectionLeaderboard.slice(0, limitToTopN);
+
             io.to(dashboardRoom).emit('leaderboard_update', {
                 leaderboard: limitedLeaderboard,
                 accessCode,
@@ -186,8 +203,9 @@ export async function broadcastLeaderboardToAllRooms(
                 accessCode,
                 gameId,
                 dashboardRoom,
-                playerCount: limitedLeaderboard.length
-            }, 'Broadcasted leaderboard to dashboard room');
+                playerCount: limitedLeaderboard.length,
+                dataSource: 'live'
+            }, 'Broadcasted leaderboard to dashboard room from live data');
         }
 
     } catch (error) {

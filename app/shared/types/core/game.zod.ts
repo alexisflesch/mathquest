@@ -3,7 +3,7 @@
  */
 import { z } from 'zod';
 
-export const PlayModeSchema = z.enum(['quiz', 'tournament', 'practice', 'class']);
+export const PlayModeSchema = z.enum(['quiz', 'tournament', 'practice']);
 
 // Base schemas without circular references
 export const GameTemplateBaseSchema = z.object({
@@ -95,16 +95,6 @@ export const GameInstanceCreationDataSchema = z.object({
     differedAvailableTo: z.coerce.date().optional()
 });
 
-export const GameInstanceUpdateDataSchema = z.object({
-    name: z.string().optional(),
-    status: z.string().optional(),
-    currentQuestionIndex: z.number().nullable().optional(),
-    leaderboard: z.any().optional(),
-    settings: z.any().optional(),
-    startedAt: z.coerce.date().nullable().optional(),
-    endedAt: z.coerce.date().nullable().optional()
-});
-
 export type PlayMode = z.infer<typeof PlayModeSchema>;
 export type GameTemplate = z.infer<typeof GameTemplateSchema>;
 export type GameInstance = z.infer<typeof GameInstanceSchema>;
@@ -112,4 +102,3 @@ export type GameParticipantRecord = z.infer<typeof GameParticipantRecordSchema>;
 export type GameTemplateCreationData = z.infer<typeof GameTemplateCreationDataSchema>;
 export type GameTemplateUpdateData = z.infer<typeof GameTemplateUpdateDataSchema>;
 export type GameInstanceCreationData = z.infer<typeof GameInstanceCreationDataSchema>;
-export type GameInstanceUpdateData = z.infer<typeof GameInstanceUpdateDataSchema>;

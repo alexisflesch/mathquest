@@ -1,0 +1,174 @@
+- uid: "gpt5-cp-espagnol-vocabulaire-004"
+  title: "Répondre oui"
+  text: "Comment dit-on 'oui' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Sí"
+    - "No"
+    - "Por favor"
+    - "Hola"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-005"
+  title: "Répondre non"
+  text: "Comment dit-on 'non' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Sí"
+    - "Gracias"
+    - "No"
+    - "Adiós"
+  correctAnswers: [false, false, true, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-006"
+  title: "Dire merci"
+  text: "Comment dit-on 'merci' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Gracias"
+    - "Adiós"
+    - "Sí"
+    - "Perro"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-007"
+  title: "Dire au revoir"
+  text: "Comment dit-on 'au revoir' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Hola"
+    - "Gato"
+    - "Adiós"
+    - "No"
+  correctAnswers: [false, false, true, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-008"
+  title: "Un animal de compagnie"
+  text: "Comment dit-on 'chien' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  tags: ["animaux"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Perro"
+    - "Gato"
+    - "Pájaro"
+    - "Pez"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-009"
+  title: "Un autre animal"
+  text: "Comment dit-on 'chat' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  tags: ["animaux"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Pájaro"
+    - "Gato"
+    - "Perro"
+    - "Ratón"
+  correctAnswers: [false, true, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-010"
+  title: "Saluer quelqu’un"
+  text: "Comment dit-on 'bonjour' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Adiós"
+    - "Hola"
+    - "Gracias"
+    - "Sí"
+  correctAnswers: [false, true, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-011"
+  title: "La couleur rouge"
+  text: "Comment dit-on 'rouge' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Azul"
+    - "Verde"
+    - "Rojo"
+    - "Amarillo"
+  correctAnswers: [false, false, true, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-012"
+  title: "La couleur verte"
+  text: "Comment dit-on 'vert' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Verde"
+    - "Rojo"
+    - "Negro"
+    - "Blanco"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-espagnol-vocabulaire-013"
+  title: "La couleur bleue"
+  text: "Comment dit-on 'bleu' en espagnol ?"
+  questionType: "single_choice"
+  discipline: "Espagnol"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Amarillo"
+    - "Azul"
+    - "Verde"
+    - "Rosa"
+  correctAnswers: [false, true, false, false]
+  author: "GPT-5"

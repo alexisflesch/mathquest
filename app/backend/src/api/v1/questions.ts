@@ -3,13 +3,18 @@ import { QuestionService, QuestionCreationData, QuestionUpdateData } from '@/cor
 import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
-import { questionSchema, questionCreationSchema } from '../../../../shared/types/quiz/question.zod';
+import { questionSchema, questionCreationSchema, questionUpdateSchema } from '../../../../shared/types/quiz/question.zod';
 import type { Question } from '@shared/types/quiz/question';
+import type {
+    QuestionCreationResponse,
+    QuestionResponse
+} from '@shared/types/api/responses';
+import type { QuestionsResponse } from '@shared/types/api/schemas';
+import type { ErrorResponse } from '@shared/types/api/requests';
 import type {
     QuestionCreationRequest,
     QuestionUpdateRequest,
-    QuestionSearchRequest,
-    ErrorResponse
+    QuestionSearchRequest
 } from '@shared/types/api/requests';
 import {
     CreateQuestionRequestSchema,
@@ -41,7 +46,7 @@ export const __setQuestionServiceForTesting = (mockService: QuestionService): vo
  * POST /api/v1/questions
  * Requires teacher authentication
  */
-router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), async (req: Request<{}, { question: any } | ErrorResponse, QuestionCreationRequest>, res: Response<{ question: any } | ErrorResponse>): Promise<void> => {
+router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), async (req: Request<{}, QuestionCreationResponse | ErrorResponse, QuestionCreationRequest>, res: Response<QuestionCreationResponse | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
@@ -56,13 +61,13 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), 
         }
         // Ensure `themes` defaults to an empty array if undefined
         // Ensure canonical durationMs is present (fallback to 30s if not provided)
-        const questionData: QuestionCreationData = {
+        const questionData = {
             ...parseResult.data,
             themes: parseResult.data.themes || [],
             durationMs: typeof parseResult.data.durationMs === 'number' ? parseResult.data.durationMs : 30000
         };
         // Pass canonical object (with durationMs) to service
-        const question = await getQuestionService().createQuestion(req.user.userId, questionData);
+        const question = await getQuestionService().createQuestion(questionData);
         res.status(201).json({ question });
     } catch (error) {
         logger.error({ error }, 'Error creating question');
@@ -78,7 +83,7 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), 
  */
 router.get('/filters', async (req: Request, res: Response<any>): Promise<void> => {
     try {
-        const { gradeLevel, discipline, theme, author } = req.query;
+        const { gradeLevel, discipline, theme, tag, mode } = req.query;
         const filterCriteria: any = {};
         if (gradeLevel) {
             filterCriteria.gradeLevel = Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel as string];
@@ -89,8 +94,11 @@ router.get('/filters', async (req: Request, res: Response<any>): Promise<void> =
         if (theme) {
             filterCriteria.theme = Array.isArray(theme) ? theme : [theme as string];
         }
-        if (author) {
-            filterCriteria.author = Array.isArray(author) ? author : [author as string];
+        if (tag) {
+            filterCriteria.tag = Array.isArray(tag) ? tag : [tag as string];
+        }
+        if (mode) {
+            filterCriteria.mode = mode as string;
         }
         const compatibleFilters = await getQuestionService().getAvailableFilters(filterCriteria);
         // Return only compatible filters for each field
@@ -98,7 +106,7 @@ router.get('/filters', async (req: Request, res: Response<any>): Promise<void> =
             gradeLevel: (compatibleFilters.gradeLevel || []).filter((v: any) => typeof v === 'string'),
             disciplines: (compatibleFilters.disciplines || []).filter((v: any) => typeof v === 'string'),
             themes: (compatibleFilters.themes || []).filter((v: any) => typeof v === 'string'),
-            authors: (compatibleFilters.authors || []).filter((v: any) => typeof v === 'string'),
+            tags: (compatibleFilters.tags || []).filter((v: any) => typeof v === 'string'),
         });
     } catch (error) {
         logger.error({ error }, 'Error fetching filters');
@@ -114,7 +122,7 @@ router.get('/filters', async (req: Request, res: Response<any>): Promise<void> =
  */
 router.get('/list', async (req: Request, res: Response<string[] | ErrorResponse>): Promise<void> => {
     try {
-        const { gradeLevel, discipline, themes, limit } = req.query;
+        const { gradeLevel, discipline, themes, limit, mode } = req.query;
 
         // Convert to appropriate types for filtering
         const filters: any = {};
@@ -124,6 +132,11 @@ router.get('/list', async (req: Request, res: Response<string[] | ErrorResponse>
             filters.themes = Array.isArray(themes)
                 ? themes as string[]
                 : (themes as string).split(',').map(t => t.trim()).filter(t => t.length > 0);
+        }
+
+        // Add mode parameter for filtering based on excludedFrom
+        if (mode) {
+            filters.mode = mode as string;
         }
 
         // Students can only see non-hidden questions
@@ -150,7 +163,7 @@ router.get('/list', async (req: Request, res: Response<string[] | ErrorResponse>
  * Get a question by ID
  * GET /api/v1/questions/:uid
  */
-router.get('/:uid', optionalAuth, async (req: Request, res: Response<{ question: any } | ErrorResponse>): Promise<void> => {
+router.get('/:uid', optionalAuth, async (req: Request, res: Response<QuestionResponse | ErrorResponse>): Promise<void> => {
     try {
         const { uid } = req.params;
 
@@ -179,24 +192,28 @@ router.get('/:uid', optionalAuth, async (req: Request, res: Response<{ question:
  * GET /api/v1/questions
  * REQUIRES TEACHER AUTHENTICATION - Contains complete question data including answers
  */
-router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any[], total: number, page: number, pageSize: number, totalPages: number } | ErrorResponse>): Promise<void> => {
+router.get('/', teacherAuth, async (req: Request, res: Response<QuestionsResponse | ErrorResponse>): Promise<void> => {
     try {
+        logger.info('Starting questions endpoint request');
         const {
             discipline,
             theme,  // Frontend sends 'theme', not 'themes'
             themes,
             level,  // Frontend sends 'level', not 'gradeLevel'
             gradeLevel,
-            author, // Frontend sends 'author'
+            tag, // Frontend sends 'tag'
             difficulty,
             tags,
             questionType,
             includeHidden, // req.query.includeHidden (string | undefined)
+            mode, // mode parameter for filtering based on excludedFrom
             page = '1',
             pageSize = '20',
             limit, // Frontend uses 'limit' instead of 'pageSize'
             offset // Frontend uses 'offset' for pagination
         } = req.query;
+
+        logger.info('Extracted query parameters', { discipline, theme, themes, level, gradeLevel, tag, difficulty, tags, questionType, includeHidden, mode, page, pageSize, limit, offset });
 
         // Convert to appropriate types
         const filters: any = {};
@@ -233,22 +250,22 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
             }
         }
 
-        if (author) {
-            // Handle both single values and arrays (consistent with filters endpoint)
-            if (Array.isArray(author)) {
-                filters.authors = author as string[];
-            } else {
-                filters.author = author as string;
+        // Handle tags from both 'tag' and 'tags' parameters
+        const tagParam = tag || tags;
+        if (tagParam) {
+            if (Array.isArray(tagParam)) {
+                filters.tags = tagParam as string[];
+            } else if (typeof tagParam === 'string') {
+                filters.tags = tagParam.split(',').map(t => t.trim()).filter(t => t.length > 0);
             }
         }
 
-        if (tags) {
-            filters.tags = Array.isArray(tags)
-                ? tags as string[]
-                : (tags as string).split(',').map(t => t.trim()).filter(t => t.length > 0);
-        }
-
         if (questionType) filters.questionType = questionType as string;
+
+        // Handle mode parameter for excluding questions from specific modes
+        if (mode) {
+            filters.mode = mode as string;
+        }
 
         // Handle includeHidden filter
         // If includeHidden query param is provided (e.g., 'true' or 'false')
@@ -281,9 +298,12 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
             };
         }
 
+        logger.info('About to call getQuestionService().getQuestions', { filters, pagination });
         const result = await getQuestionService().getQuestions(filters, pagination);
 
         // Debug logging
+        logger.info(`Filters used: ${JSON.stringify(filters)}`);
+        logger.info(`Pagination used: ${JSON.stringify(pagination)}`);
         logger.info(`Returning ${result.questions.length} questions for API request`);
         if (result.questions.length > 0) {
             logger.info(`First question sample: ${JSON.stringify(result.questions[0], null, 2)}`);
@@ -291,7 +311,7 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
 
         res.status(200).json(result);
     } catch (error) {
-        logger.error({ error }, 'Error fetching questions');
+        logger.error({ error: error instanceof Error ? { message: error.message, stack: error.stack } : error }, 'Error fetching questions');
         res.status(500).json({ error: 'An error occurred while fetching questions' });
     }
 });
@@ -308,9 +328,9 @@ router.put('/:uid', teacherAuth, validateRequestBody(UpdateQuestionRequestSchema
             return;
         }
 
-        // Zod validation for question update (partial allowed, using questionSchema.partial())
+        // Zod validation for question update (partial allowed, using questionUpdateSchema)
         // It's important that the input to updateQuestion matches QuestionUpdateData
-        const updateParseResult = questionSchema.partial().safeParse(req.body);
+        const updateParseResult = questionUpdateSchema.safeParse(req.body);
         if (!updateParseResult.success) {
             res.status(400).json({ error: 'Validation failed', details: updateParseResult.error.errors });
             return;
@@ -318,9 +338,15 @@ router.put('/:uid', teacherAuth, validateRequestBody(UpdateQuestionRequestSchema
 
         // Construct the updateData object carefully to match QuestionUpdateData
         const { uid: bodyUid, ...restOfBody } = updateParseResult.data;
+
+        // Convert null values to undefined to match TypeScript types
+        const cleanedData = Object.fromEntries(
+            Object.entries(restOfBody).map(([key, value]) => [key, value === null ? undefined : value])
+        );
+
         const updateData: QuestionUpdateData = {
             uid: req.params.uid,
-            ...restOfBody,
+            ...cleanedData,
         };
 
         const updatedQuestion = await getQuestionService().updateQuestion(updateData);

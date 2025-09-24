@@ -43,6 +43,7 @@ exports.startDeferredTournamentSession = startDeferredTournamentSession;
 exports.hasDeferredSession = hasDeferredSession;
 exports.getDeferredSessionAccessCode = getDeferredSessionAccessCode;
 exports.cleanupDeferredSession = cleanupDeferredSession;
+exports.getDeferredAttemptCount = getDeferredAttemptCount;
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const redis_1 = require("@/config/redis");
@@ -52,7 +53,177 @@ const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const prisma_1 = require("@/db/prisma");
 const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const gameTimings_1 = require("@shared/constants/gameTimings");
+const socketEvents_zod_2 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('DeferredTournamentFlow');
+/**
+ * Restore the session state for a reconnecting user in a deferred tournament
+ */
+async function restoreDeferredSessionState(io, socket, accessCode, userId, attemptCount, playerRoom) {
+    try {
+        logger.info({ accessCode, userId, attemptCount }, 'Restoring deferred session state for reconnection');
+        // Join the player room and ensure it's completed
+        await socket.join(playerRoom);
+        logger.info({ accessCode, userId, attemptCount, playerRoom, socketId: socket.id }, 'Socket joined player room for reconnection');
+        // Get the current session state from Redis
+        const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
+        // Get game state (contains questionUids and currentQuestionIndex) from Redis
+        const gameStateRaw = await redis_1.redisClient.get(`mathquest:game:${sessionStateKey}`);
+        let gameState = null;
+        let questionUids = [];
+        if (gameStateRaw) {
+            try {
+                gameState = JSON.parse(gameStateRaw);
+                questionUids = gameState.questionUids || [];
+                logger.info({
+                    accessCode,
+                    userId,
+                    attemptCount,
+                    sessionStateKey,
+                    gameStateFound: true,
+                    currentQuestionIndex: gameState.currentQuestionIndex,
+                    questionUidsCount: questionUids.length
+                }, 'Successfully retrieved game state from Redis');
+            }
+            catch (parseError) {
+                logger.error({ accessCode, userId, attemptCount, parseError }, 'Failed to parse game state from Redis');
+            }
+        }
+        else {
+            logger.warn({ accessCode, userId, attemptCount, sessionStateKey }, 'Game state not found in Redis');
+        }
+        // Get additional session data (score, etc.) stored as hash
+        const sessionData = await redis_1.redisClient.hgetall(sessionStateKey);
+        if (!gameState || questionUids.length === 0) {
+            logger.warn({ accessCode, userId, attemptCount, sessionStateKey, gameState }, 'No valid game state or questionUids found in Redis for reconnection');
+            return;
+        }
+        // Get current question from game state
+        const currentQuestionIndex = gameState.currentQuestionIndex || 0;
+        let currentQuestionUid = null;
+        if (questionUids.length > currentQuestionIndex) {
+            currentQuestionUid = questionUids[currentQuestionIndex];
+            logger.info({
+                accessCode,
+                userId,
+                attemptCount,
+                currentQuestionIndex,
+                derivedUid: currentQuestionUid,
+                totalQuestions: questionUids.length
+            }, 'Successfully derived currentQuestionUid from game state');
+        }
+        else {
+            logger.error({
+                accessCode,
+                userId,
+                attemptCount,
+                currentQuestionIndex,
+                questionUidsLength: questionUids.length
+            }, 'Current question index is out of bounds for questionUids array');
+            return;
+        }
+        if (!currentQuestionUid) {
+            logger.warn({ accessCode, userId, attemptCount, sessionData }, 'No current question found in session state');
+            return;
+        }
+        // Get the question data from the database
+        const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
+            where: { accessCode },
+            include: {
+                gameTemplate: {
+                    include: {
+                        questions: {
+                            include: {
+                                question: {
+                                    include: {
+                                        multipleChoiceQuestion: true,
+                                        numericQuestion: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (!gameInstance?.gameTemplate?.questions) {
+            logger.error({ accessCode, userId }, 'Could not find game questions for reconnection');
+            return;
+        }
+        const questions = gameInstance.gameTemplate.questions;
+        const currentQuestionData = questions.find(q => q.question?.uid === currentQuestionUid);
+        if (!currentQuestionData?.question) {
+            logger.error({ accessCode, userId, currentQuestionUid }, 'Could not find current question data for reconnection');
+            return;
+        }
+        // Filter question for client (remove correct answers)
+        const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@shared/types/quiz/liveQuestion')));
+        const filteredQuestion = filterQuestionForClient(currentQuestionData.question);
+        // Find question index in the questions array
+        const questionIndex = questions.findIndex(q => q.question?.uid === currentQuestionUid);
+        const totalQuestions = questions.length;
+        // Create canonical question payload
+        const canonicalPayload = {
+            uid: filteredQuestion.uid,
+            text: filteredQuestion.text,
+            questionType: filteredQuestion.questionType,
+            timeLimit: filteredQuestion.timeLimit,
+            currentQuestionIndex: questionIndex,
+            totalQuestions: totalQuestions,
+            // Include polymorphic question data
+            ...(filteredQuestion.multipleChoiceQuestion && { multipleChoiceQuestion: filteredQuestion.multipleChoiceQuestion }),
+            ...(filteredQuestion.numericQuestion && { numericQuestion: filteredQuestion.numericQuestion })
+        };
+        // Emit the current question to restore frontend state
+        logger.info({
+            accessCode,
+            userId,
+            attemptCount,
+            playerRoom,
+            questionUid: canonicalPayload.uid,
+            questionIndex: canonicalPayload.currentQuestionIndex
+        }, 'Emitting game_question to restore frontend state');
+        io.to(playerRoom).emit('game_question', canonicalPayload);
+        // Get timer state and emit timer update if exists
+        const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
+        const questionDuration = currentQuestionData.question.timeLimit * 1000;
+        const timer = await canonicalTimerService.getTimer(accessCode, currentQuestionUid, 'tournament', true, userId, attemptCount, questionDuration);
+        if (timer) {
+            io.to(playerRoom).emit('game_timer_updated', {
+                accessCode,
+                questionUid: currentQuestionUid,
+                timer: timer,
+                serverTime: Date.now()
+            });
+        }
+        // Emit current score/leaderboard
+        const currentScore = sessionData.score ? parseFloat(sessionData.score) : 0;
+        const participant = await prisma_1.prisma.gameParticipant.findFirst({
+            where: { gameInstanceId: gameInstance.id, userId },
+            include: { user: true }
+        });
+        if (participant?.user) {
+            const singleUserLeaderboard = [{
+                    userId: participant.userId,
+                    username: participant.user.username || 'Unknown',
+                    score: currentScore,
+                    avatarEmoji: participant.user.avatarEmoji || '🐼',
+                    rank: 1
+                }];
+            io.to(playerRoom).emit('leaderboard_update', { leaderboard: singleUserLeaderboard });
+        }
+        logger.info({
+            accessCode,
+            userId,
+            attemptCount,
+            currentQuestionUid,
+            questionIndex,
+            currentScore
+        }, 'Successfully restored deferred session state for reconnection');
+    }
+    catch (error) {
+        logger.error({ accessCode, userId, error }, 'Error restoring deferred session state');
+    }
+}
 // Track running deferred tournament sessions by userId
 const runningDeferredSessions = new Map(); // userId -> accessCode
 /**
@@ -89,7 +260,7 @@ function cleanupDeferredSessionsForGame(accessCode) {
  * @param userId - Player's user ID
  * @param questions - Array of tournament questions
  */
-async function startDeferredTournamentSession(io, socket, accessCode, userId, questions) {
+async function startDeferredTournamentSession(io, socket, accessCode, userId, questions, currentAttemptNumber) {
     logger.info({
         accessCode,
         userId,
@@ -98,13 +269,34 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         stack: new Error().stack
     }, '🔥 DEFERRED FLOW DEBUG: startDeferredTournamentSession called (with stack trace for call origin)');
     const sessionKey = `${accessCode}_${userId}`;
-    // Prevent duplicate sessions for the same user
-    if (runningDeferredSessions.has(userId)) {
-        logger.warn({ accessCode, userId, stack: new Error().stack }, 'Deferred tournament session already running for this user (with stack trace)');
-        return;
-    }
     // Create unique room for this player's session
     const playerRoom = `deferred_${accessCode}_${userId}`;
+    // Prevent duplicate sessions for the same user, BUT allow reconnection if Redis state is inconsistent
+    if (runningDeferredSessions.has(userId)) {
+        const currentAccessCode = runningDeferredSessions.get(userId);
+        if (currentAccessCode === accessCode) {
+            // Check if session is actually active in Redis
+            const { hasOngoingDeferredSession } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/deferredTimerUtils')));
+            // Use the passed currentAttemptNumber parameter for consistency
+            const attemptCount = currentAttemptNumber || await getDeferredAttemptCount(accessCode, userId);
+            const hasRedisSession = await hasOngoingDeferredSession({ accessCode, userId, attemptCount });
+            if (hasRedisSession) {
+                logger.info({ accessCode, userId, stack: new Error().stack }, 'Deferred tournament session reconnection detected - restoring session state');
+                // This is a reconnection - restore the session state for the frontend
+                await restoreDeferredSessionState(io, socket, accessCode, userId, attemptCount, playerRoom);
+                return;
+            }
+            else {
+                // Session is orphaned in memory but not in Redis - clean up and continue
+                logger.info({ accessCode, userId }, 'Cleaning up orphaned deferred session and restarting');
+                runningDeferredSessions.delete(userId);
+            }
+        }
+        else {
+            logger.warn({ accessCode, userId, currentAccessCode, stack: new Error().stack }, 'User has session for different access code - cleaning up');
+            runningDeferredSessions.delete(userId);
+        }
+    }
     await socket.join(playerRoom);
     logger.info({
         accessCode,
@@ -144,7 +336,7 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
             }
         };
         // Store individual session state with unique key (include attemptCount for full isolation)
-        const attemptCount = await getDeferredAttemptCount(accessCode, userId);
+        const attemptCount = currentAttemptNumber || await getDeferredAttemptCount(accessCode, userId);
         // Store attemptCount on socket for this session
         socket.data.deferredAttemptCount = attemptCount;
         const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
@@ -163,8 +355,13 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         await setDeferredSessionActive({ accessCode, userId, attemptCount });
         // Always ensure participant exists for deferred mode at session start
         const { joinGame } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/joinService')));
-        let username = `guest-${userId.substring(0, 8)}`;
-        let avatarEmoji = undefined;
+        // Get the actual user data instead of hardcoding guest username
+        const user = await prisma_1.prisma.user.findUnique({
+            where: { id: userId },
+            select: { username: true, avatarEmoji: true }
+        });
+        let username = user?.username || `guest-${userId.substring(0, 8)}`;
+        let avatarEmoji = user?.avatarEmoji || undefined;
         logger.info({
             accessCode,
             userId,
@@ -292,14 +489,22 @@ async function runDeferredQuestionSequence(io, socket, session) {
             // Send question to player
             // Modernization: Use canonical, flat payload for game_question
             const { questionDataForStudentSchema } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/socketEvents.zod')));
+            const filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(question);
             let canonicalPayload = {
-                ...(0, liveQuestion_1.filterQuestionForClient)(question),
+                uid: filteredQuestion.uid,
+                text: filteredQuestion.text,
+                questionType: filteredQuestion.questionType,
+                timeLimit: filteredQuestion.timeLimit,
                 currentQuestionIndex: i,
-                totalQuestions: questions.length
+                totalQuestions: questions.length,
+                // Include polymorphic question data
+                ...(filteredQuestion.multipleChoiceQuestion && { multipleChoiceQuestion: filteredQuestion.multipleChoiceQuestion }),
+                ...(filteredQuestion.numericQuestion && { numericQuestion: filteredQuestion.numericQuestion })
             };
-            if (canonicalPayload.timeLimit == null) {
-                const { timeLimit, ...rest } = canonicalPayload;
-                canonicalPayload = rest;
+            // Ensure timeLimit is present and valid (schema requires positive integer)
+            if (canonicalPayload.timeLimit == null || canonicalPayload.timeLimit <= 0) {
+                logger.warn(`Question ${question.uid} has invalid timeLimit: ${canonicalPayload.timeLimit}, using default 30s`);
+                canonicalPayload.timeLimit = 30; // Default to 30 seconds
             }
             const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
             if (!parseResult.success) {
@@ -339,12 +544,51 @@ async function runDeferredQuestionSequence(io, socket, session) {
             }
             // Wait for question duration
             await new Promise(resolve => setTimeout(resolve, durationMs));
-            // Send correct answers
+            // Send correct answers using canonical payload structure
+            // Extract correct answers based on question type (polymorphic structure)
+            let correctAnswers = [];
+            let numericAnswer;
+            if ((question.questionType === 'multipleChoice' || question.questionType === 'singleChoice') && question.multipleChoiceQuestion) {
+                correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
+            }
+            else if (question.questionType === 'numeric' && question.numericQuestion) {
+                // For numeric questions, DON'T include correctAnswers array - only use numericAnswer
+                numericAnswer = {
+                    correctAnswer: question.numericQuestion.correctAnswer,
+                    tolerance: question.numericQuestion.tolerance || 0
+                };
+            }
+            else {
+                // Fallback to legacy structure for backward compatibility
+                correctAnswers = question.correctAnswers || [];
+            }
+            // Create canonical payload with proper schema validation
             const correctAnswersPayload = {
                 questionUid: question.uid,
-                correctAnswers: question.correctAnswers || []
+                ...(correctAnswers.length > 0 && { correctAnswers }),
+                ...(numericAnswer && { numericAnswer })
             };
-            io.to(playerRoom).emit('correct_answers', correctAnswersPayload);
+            // Validate the payload using the canonical schema
+            const correctAnswersParseResult = socketEvents_zod_2.correctAnswersPayloadSchema.safeParse(correctAnswersPayload);
+            if (!correctAnswersParseResult.success) {
+                logger.error({
+                    errors: correctAnswersParseResult.error.errors,
+                    payload: correctAnswersPayload,
+                    questionUid: question.uid
+                }, '[DEFERRED] Invalid correct_answers payload, skipping emission');
+            }
+            else {
+                io.to(playerRoom).emit('correct_answers', correctAnswersParseResult.data);
+                logger.info({
+                    accessCode,
+                    userId,
+                    event: 'correct_answers',
+                    questionUid: question.uid,
+                    questionType: question.questionType,
+                    correctAnswers: correctAnswers.length > 0 ? correctAnswers : undefined,
+                    numericAnswer: numericAnswer
+                }, '[DEFERRED] Emitted canonical correct_answers with validation');
+            }
             // Wait for correct answers display duration before proceeding
             const correctAnswersDisplayTime = (0, gameTimings_1.getCorrectAnswersDisplayTime)('tournament'); // 1.5s for all modes
             await new Promise(resolve => setTimeout(resolve, correctAnswersDisplayTime * 1000));
@@ -581,12 +825,19 @@ function cleanupDeferredSession(userId) {
 }
 // Utility to get current attemptCount for a user in a deferred tournament
 async function getDeferredAttemptCount(accessCode, userId) {
-    const gameInstance = await prisma_1.prisma.gameInstance.findUnique({ where: { accessCode }, select: { id: true } });
-    if (!gameInstance)
-        return 1;
-    const participant = await prisma_1.prisma.gameParticipant.findFirst({
-        where: { gameInstanceId: gameInstance.id, userId },
-        select: { nbAttempts: true }
-    });
-    return participant?.nbAttempts || 1;
+    // Look for existing deferred session state keys to determine the current attempt number
+    const pattern = `deferred_session:${accessCode}:${userId}:*`;
+    const keys = await redis_1.redisClient.keys(pattern);
+    if (keys.length > 0) {
+        // Extract attempt numbers from the keys and find the highest one
+        const attemptNumbers = keys.map(key => {
+            const parts = key.split(':');
+            return parseInt(parts[parts.length - 1], 10);
+        }).filter(num => !isNaN(num));
+        if (attemptNumbers.length > 0) {
+            return Math.max(...attemptNumbers);
+        }
+    }
+    // If no active session, return 1 for the first attempt
+    return 1;
 }

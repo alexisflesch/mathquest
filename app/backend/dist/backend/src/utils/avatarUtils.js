@@ -4,58 +4,21 @@
  * Ensures consistent animal emoji avatars across the platform
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EXTRA_ALLOWED_AVATARS = exports.ALLOWED_ANIMAL_AVATARS = void 0;
+exports.ALL_ALLOWED_AVATARS = exports.EXTRA_ALLOWED_AVATARS = exports.ALLOWED_ANIMAL_AVATARS = void 0;
 exports.isValidAvatar = isValidAvatar;
 exports.validateAvatar = validateAvatar;
 exports.getRandomAvatar = getRandomAvatar;
-// Allowed animal emoji avatars - comprehensive list of animal emojis
-exports.ALLOWED_ANIMAL_AVATARS = [
-    // Mammals - Land
-    '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🦁', '🐯', '🐸', '🐵', '🐰', '🐺', '🦝', '🐷', '🐮', '🐹',
-    '🐭', '🐗', '🦏', '🦛', '🐘', '🦒', '🦌', '🐄', '🐂', '🐃', '🐎', '🦄', '🦓', '🐑', '🐐', '🦙',
-    '🦘', '🐪', '🐫', '🦔', '🦇', '🐿️', '🦫', '🦦', '🦨', '🦡',
-    // Birds
-    '🐔', '🐓', '🐣', '🐤', '🐥', '🦆', '🦅', '🦉', '🦚', '🦜', '🦢', '🐧', '🕊️', '🦃', '🦩',
-    // Marine Animals
-    '🐳', '🐋', '🐬', '🦭', '🐟', '🐠', '🐡', '🦈', '🐙', '🦑', '🦞', '🦀', '🐚', '🦐',
-    // Reptiles & Amphibians
-    '🐢', '🦎', '🐍', '🐲', '🐉', '🦕', '🦖',
-    // Insects & Small Creatures
-    '🐛', '🦋', '🐌', '🐞', '🐜', '🦗', '🕷️', '🦂', '🐝', '🪲', '🪳'
-];
-exports.EXTRA_ALLOWED_AVATARS = [
-    // Personnages / Créatures
-    '🤖', // Robot
-    '👽', // Extra-terrestre
-    '👾', // Monstre pixelisé
-    '🧸', // Nounours
-    // Symboles liés aux animaux
-    '🐾', // Empreintes de pattes
-    // Fruits / Objets ludiques
-    '🍉', // Pastèque
-    '🍎', // Pomme
-    '🍇', // Raisin (fun, coloré)
-    // Icônes visuelles ludiques
-    '⭐', // Étoile
-    '🌟', // Étoile brillante
-    '⚡', // Éclair
-    '🌈', // Arc-en-ciel
-    // Animaux manquants ou particuliers
-    '🐊', // Crocodile
-    '🐇', // Lapin de profil
-    '🪼', // Méduse
-    // Accessoires-personnages
-    '👑', // Couronne
-    '🎩', // Chapeau haut-de-forme
-    '🕶️', // Lunettes de soleil
-];
+const avatars_1 = require("@shared/constants/avatars");
+Object.defineProperty(exports, "ALLOWED_ANIMAL_AVATARS", { enumerable: true, get: function () { return avatars_1.ALLOWED_ANIMAL_AVATARS; } });
+Object.defineProperty(exports, "EXTRA_ALLOWED_AVATARS", { enumerable: true, get: function () { return avatars_1.EXTRA_ALLOWED_AVATARS; } });
+Object.defineProperty(exports, "ALL_ALLOWED_AVATARS", { enumerable: true, get: function () { return avatars_1.ALL_ALLOWED_AVATARS; } });
 /**
  * Validates if the provided avatar is one of the allowed animal emojis
  * @param avatar - The avatar string to validate
  * @returns true if valid, false otherwise
  */
 function isValidAvatar(avatar) {
-    return exports.ALLOWED_ANIMAL_AVATARS.includes(avatar);
+    return avatars_1.ALL_ALLOWED_AVATARS.includes(avatar);
 }
 /**
  * Validates avatar and throws an error if invalid
@@ -67,7 +30,7 @@ function validateAvatar(avatar) {
         throw new Error('Avatar is required');
     }
     if (!isValidAvatar(avatar)) {
-        throw new Error(`Invalid avatar. Must be one of the allowed animal emojis: ${exports.ALLOWED_ANIMAL_AVATARS.join(', ')}`);
+        throw new Error(`Invalid avatar. Must be one of the allowed emojis: ${avatars_1.ALL_ALLOWED_AVATARS.join(', ')}`);
     }
 }
 /**
@@ -75,6 +38,6 @@ function validateAvatar(avatar) {
  * @returns A random animal emoji from the allowed list
  */
 function getRandomAvatar() {
-    const randomIndex = Math.floor(Math.random() * exports.ALLOWED_ANIMAL_AVATARS.length);
-    return exports.ALLOWED_ANIMAL_AVATARS[randomIndex];
+    const randomIndex = Math.floor(Math.random() * avatars_1.ALLOWED_ANIMAL_AVATARS.length);
+    return avatars_1.ALLOWED_ANIMAL_AVATARS[randomIndex];
 }

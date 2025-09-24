@@ -1,0 +1,18 @@
+/* Diagonal ribbon for leaderboard current user */
+.ribbon-diagonal {
+    position: absolute;
+    left: -5px;
+    top: 11px;
+    transform: rotate(-45deg);
+    background: var(--primary);
+    color: white;
+    padding: 2px 18px;
+    font-size: 0.8em;
+    font-weight: 700;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+    z-index: 2;
+}

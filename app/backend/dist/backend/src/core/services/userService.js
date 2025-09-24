@@ -9,7 +9,9 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const emailService_1 = require("./emailService");
 const logger = (0, logger_1.default)('UserService');
+const emailService = new emailService_1.EmailService();
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
 const JWT_EXPIRES_IN = '24h';
@@ -27,9 +29,9 @@ class UserService {
             if (existingUser) {
                 throw new Error('User with this email already exists');
             }
-            // Use provided cookieId for students, or generate one if not provided
+            // Use provided cookieId for students and guests, or generate one if not provided
             let cookieId = undefined;
-            if (role === 'STUDENT') {
+            if (role === 'STUDENT' || role === 'GUEST') {
                 cookieId = providedCookieId || crypto_1.default.randomBytes(32).toString('hex');
             }
             // Prepare user data
@@ -38,6 +40,7 @@ class UserService {
                 email,
                 role,
                 avatarEmoji: avatarEmoji || '🐼', // Default to panda emoji if not provided
+                emailVerified: email && email.endsWith('@test-mathquest.com') ? true : false,
             };
             if (cookieId)
                 userData.studentProfile = { create: { cookieId } };
@@ -56,9 +59,38 @@ class UserService {
                     email: true,
                     role: true,
                     avatarEmoji: true,
+                    emailVerified: true,
                     createdAt: true,
                 },
             });
+            // Send email verification if user has an email
+            // Skip for test email domains
+            if (email && !email.endsWith('@test-mathquest.com')) {
+                try {
+                    logger.info('Attempting to send email verification', {
+                        userId: user.id,
+                        email: email
+                    });
+                    await this.sendEmailVerification(email);
+                    logger.info('Email verification sent successfully', {
+                        userId: user.id,
+                        email: email
+                    });
+                }
+                catch (emailError) {
+                    logger.error('Failed to send verification email during registration', {
+                        userId: user.id,
+                        email: email,
+                        error: emailError
+                    });
+                    // Don't fail registration if email sending fails
+                }
+            }
+            else {
+                logger.info('No email provided, skipping email verification', {
+                    userId: user.id
+                });
+            }
             // Generate JWT token
             const token = jsonwebtoken_1.default.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
             return {
@@ -71,6 +103,7 @@ class UserService {
                     email: user.email || undefined,
                     role: user.role,
                     avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    emailVerified: user.emailVerified || false,
                     createdAt: user.createdAt,
                     updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
                 },
@@ -96,11 +129,17 @@ class UserService {
                     passwordHash: true,
                     role: true,
                     avatarEmoji: true,
-                    createdAt: true
+                    createdAt: true,
+                    emailVerified: true
                 }
             });
             if (!user || !user.passwordHash) {
                 throw new Error('Invalid email or password');
+            }
+            // Check if email is verified (only for users who have emails)
+            // Skip verification for test email domains
+            if (user.email && !user.emailVerified && !user.email.endsWith('@test-mathquest.com')) {
+                throw new Error('Please verify your email address before logging in. Check your inbox for a verification link.');
             }
             const passwordMatch = await bcrypt_1.default.compare(password, user.passwordHash);
             if (!passwordMatch) {
@@ -117,13 +156,18 @@ class UserService {
                     email: user.email || undefined,
                     role: user.role,
                     avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    emailVerified: user.emailVerified || false,
                     createdAt: user.createdAt,
                     updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
                 },
             };
         }
         catch (error) {
-            logger.error({ error }, 'Error logging in user');
+            logger.error({
+                error: error instanceof Error ? error.message : JSON.stringify(error),
+                stack: error instanceof Error ? error.stack : undefined,
+                email: data.email
+            }, 'Error logging in user');
             throw error;
         }
     }
@@ -435,6 +479,173 @@ class UserService {
         }
         catch (error) {
             logger.error({ error, userId }, 'Error upgrading user role');
+            throw error;
+        }
+    }
+    /**
+     * Generate and send email verification token
+     */
+    async sendEmailVerification(email) {
+        try {
+            const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+            if (!user) {
+                // Don't reveal if email exists for security
+                logger.warn({ email }, 'Email verification requested for non-existent email');
+                return;
+            }
+            if (user.emailVerified) {
+                logger.info({ email, userId: user.id }, 'Email verification requested for already verified email');
+                return;
+            }
+            const emailVerificationToken = crypto_1.default.randomBytes(32).toString('hex');
+            const emailVerificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+            await prisma_1.prisma.user.update({
+                where: { email },
+                data: {
+                    emailVerificationToken,
+                    emailVerificationTokenExpiresAt,
+                },
+            });
+            // Send verification email
+            await emailService.sendVerificationEmail(email, emailVerificationToken, user.username);
+            logger.info({ email, userId: user.id }, 'Email verification token generated and sent');
+        }
+        catch (error) {
+            logger.error({ error, email }, 'Error sending email verification');
+            throw error;
+        }
+    }
+    /**
+     * Verify email using verification token
+     */
+    async verifyEmail(token) {
+        try {
+            if (!token) {
+                return { success: false, message: 'Verification token is required' };
+            }
+            const user = await prisma_1.prisma.user.findFirst({
+                where: {
+                    emailVerificationToken: token,
+                    emailVerificationTokenExpiresAt: {
+                        gt: new Date(), // Token must not be expired
+                    },
+                },
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    role: true,
+                    avatarEmoji: true,
+                    emailVerified: true,
+                    createdAt: true
+                }
+            });
+            if (!user) {
+                return { success: false, message: 'Invalid or expired verification token' };
+            }
+            if (user.emailVerified) {
+                // Generate JWT token for already verified user
+                const jwtToken = jsonwebtoken_1.default.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+                return {
+                    success: true,
+                    message: 'Email already verified',
+                    user: {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        avatarEmoji: user.avatarEmoji,
+                        createdAt: user.createdAt
+                    },
+                    token: jwtToken
+                };
+            }
+            await prisma_1.prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    emailVerified: true,
+                    emailVerificationToken: null,
+                    emailVerificationTokenExpiresAt: null,
+                },
+            });
+            // Generate JWT token for newly verified user
+            const jwtToken = jsonwebtoken_1.default.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+            // Send welcome email
+            if (user.email) {
+                await emailService.sendWelcomeEmail(user.email, user.username);
+            }
+            logger.info({ userId: user.id, email: user.email }, 'Email verification successful');
+            return {
+                success: true,
+                message: 'Email verified successfully',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                    avatarEmoji: user.avatarEmoji,
+                    createdAt: user.createdAt
+                },
+                token: jwtToken
+            };
+        }
+        catch (error) {
+            logger.error({ error, token }, 'Error verifying email');
+            throw error;
+        }
+    }
+    /**
+     * Generate email verification token without sending email (for testing)
+     */
+    async generateEmailVerificationToken(email) {
+        try {
+            const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+            if (!user) {
+                throw new Error('User not found');
+            }
+            const emailVerificationToken = crypto_1.default.randomBytes(32).toString('hex');
+            const emailVerificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+            await prisma_1.prisma.user.update({
+                where: { email },
+                data: {
+                    emailVerificationToken,
+                    emailVerificationTokenExpiresAt,
+                },
+            });
+            logger.info({ email, userId: user.id }, 'Email verification token generated');
+            return emailVerificationToken;
+        }
+        catch (error) {
+            logger.error({ error, email }, 'Error generating email verification token');
+            throw error;
+        }
+    }
+    /**
+     * Enhanced password reset that also sends email
+     */
+    async requestPasswordReset(email) {
+        try {
+            const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+            if (!user || user.role !== 'TEACHER') {
+                // Don't reveal if email exists for security
+                logger.warn({ email }, 'Password reset requested for non-existent or non-teacher email');
+                return;
+            }
+            const resetToken = crypto_1.default.randomBytes(32).toString('hex');
+            const resetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+            await prisma_1.prisma.user.update({
+                where: { email },
+                data: {
+                    resetToken,
+                    resetTokenExpiresAt,
+                },
+            });
+            // Send password reset email
+            await emailService.sendPasswordResetEmail(email, resetToken, user.username);
+            logger.info({ email, userId: user.id }, 'Password reset token generated and sent');
+        }
+        catch (error) {
+            logger.error({ error, email }, 'Error requesting password reset');
             throw error;
         }
     }

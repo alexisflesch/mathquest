@@ -1,0 +1,29 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "src/**/*",
+        "tests/**/*",
+        "src/tests/**/*",
+        "types/**/*",
+        "../shared/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "../shared/types/examples"
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ],
+            "@shared/*": [
+                "../shared/*"
+            ]
+        },
+        "types": [
+            "jest",
+            "node"
+        ]
+    }
+}

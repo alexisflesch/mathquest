@@ -60,9 +60,7 @@ export function registerTeacherControlHandlers(io: SocketIOServer, socket: Socke
     logger.info({ event: TEACHER_EVENTS.REVEAL_LEADERBOARD }, 'Registering reveal_leaderboard handler');
     socket.on(TEACHER_EVENTS.REVEAL_LEADERBOARD, revealLeaderboardHandler(io, socket));
 
-    // Handle disconnect
-    logger.info('Registering disconnect handler');
-    socket.on('disconnect', disconnectHandler(io, socket));
+    // Note: Teacher disconnect handler is now called from connectionHandlers.ts to avoid conflicts
 }
 
 export default registerTeacherControlHandlers;

@@ -7,7 +7,7 @@ import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
 import { calculateLeaderboard } from '../sharedLeaderboard';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-import { emitLeaderboardFromSnapshot } from '@/core/services/gameParticipant/leaderboardSnapshotService';
+import { emitLeaderboardFromSnapshot, getLeaderboardSnapshot, syncSnapshotWithLiveData } from '@/core/services/gameParticipant/leaderboardSnapshotService';
 // Import shared types
 import {
     ClientToServerEvents,
@@ -63,6 +63,17 @@ export function joinGameHandler(
             return;
         }
         const { accessCode, userId, username, avatarEmoji } = parseResult.data;
+
+        // 🐛 DEBUG: Log username/cookieId to track leaderboard bug
+        logger.info({
+            accessCode,
+            userId,
+            username,
+            avatarEmoji,
+            socketId: socket.id,
+            userAgent: socket.request.headers['user-agent'],
+            marker: '[USERNAME_DEBUG]'
+        }, '🐛 [USERNAME_DEBUG] Received join_game payload - tracking username vs cookieId issue');
 
         // Special handling for practice mode
         if (accessCode === 'PRACTICE') {
@@ -232,6 +243,16 @@ export function joinGameHandler(
                 socketId: socket.id // Track current socket ID
             };
 
+            // 🐛 DEBUG: Log participant data being stored in Redis to track leaderboard bug
+            logger.info({
+                accessCode,
+                userId,
+                usernameFromPayload: username,
+                usernameInParticipantData: participantDataForRedis.username,
+                participantDataForRedis,
+                marker: '[PARTICIPANT_REDIS_DEBUG]'
+            }, '🐛 [PARTICIPANT_REDIS_DEBUG] About to store participant data in Redis - tracking username vs cookieId issue');
+
             // For live games (not deferred), assign join-order bonus for better projection UX
             if (!isDeferred && (gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament')) {
                 const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
@@ -333,21 +354,44 @@ export function joinGameHandler(
                             trigger: 'join_game_deferred_empty_leaderboard'
                         }, '[JOIN-LEADERBOARD] Sent empty leaderboard for deferred session - avoiding stale data');
                     } else {
-                        // Use snapshot-based emission for live sessions
+                        // Use snapshot-based emission for live sessions - broadcast to all when game is active
+                        const targetRooms = gameInstance.status === 'active' ?
+                            [`game_${accessCode}`, `lobby_${accessCode}`] : // Broadcast to game and lobby rooms when active
+                            [socket.id]; // Only to the specific socket when pending
+
+                        // CRITICAL FIX: Only sync snapshot for initial load, NOT for active games
+                        // Late joiners should NOT trigger automatic leaderboard updates in quiz mode
+                        if (gameInstance.status !== 'active') {
+                            await syncSnapshotWithLiveData(accessCode);
+                            logger.info({
+                                accessCode,
+                                userId,
+                                trigger: 'initial_load_sync_snapshot'
+                            }, '[JOIN-LEADERBOARD] Synced snapshot with live data for initial load');
+                        } else {
+                            logger.info({
+                                accessCode,
+                                userId,
+                                trigger: 'late_joiner_skip_sync'
+                            }, '[JOIN-LEADERBOARD] Skipping snapshot sync for late joiner in active game');
+                        }
+
                         await emitLeaderboardFromSnapshot(
                             io,
                             accessCode,
-                            [socket.id], // Emit only to this specific socket
-                            'join_game_initial_load'
+                            targetRooms,
+                            gameInstance.status === 'active' ? 'late_joiner_broadcast' : 'join_game_initial_load'
                         );
 
                         logger.info({
                             accessCode,
                             userId,
                             gameStatus: gameInstance.status,
-                            trigger: 'join_game_initial_load',
+                            targetRooms,
+                            broadcastToAll: gameInstance.status === 'active',
+                            trigger: gameInstance.status === 'active' ? 'late_joiner_broadcast' : 'join_game_initial_load',
                             dataSource: 'leaderboard_snapshot'
-                        }, '[JOIN-LEADERBOARD] Emitted initial leaderboard state to new joiner from snapshot');
+                        }, '[JOIN-LEADERBOARD] Emitted leaderboard snapshot - late joiners will appear with join bonus');
                     }
                 } else {
                     logger.debug({
@@ -388,7 +432,14 @@ export function joinGameHandler(
                                     gameTemplate: {
                                         include: {
                                             questions: {
-                                                include: { question: true },
+                                                include: {
+                                                    question: {
+                                                        include: {
+                                                            multipleChoiceQuestion: true,
+                                                            numericQuestion: true,
+                                                        }
+                                                    }
+                                                },
                                                 orderBy: { sequence: 'asc' }
                                             }
                                         }
@@ -401,10 +452,11 @@ export function joinGameHandler(
                                 if (currentQuestion) {
                                     const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
                                     let filteredQuestion = filterQuestionForClient(currentQuestion);
-                                    if (filteredQuestion.timeLimit == null) {
-                                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                        const { timeLimit, ...rest } = filteredQuestion;
-                                        filteredQuestion = rest;
+
+                                    // Ensure timeLimit is present and valid (schema requires positive integer)
+                                    if (filteredQuestion.timeLimit == null || filteredQuestion.timeLimit <= 0) {
+                                        logger.warn(`Question ${currentQuestion.uid} has invalid timeLimit: ${filteredQuestion.timeLimit}, using default 30s`);
+                                        filteredQuestion.timeLimit = 30; // Default to 30 seconds
                                     }
                                     const questionPayload = {
                                         ...filteredQuestion,
@@ -485,6 +537,19 @@ export function joinGameHandler(
             if (gameInstance.status === 'completed' && gameInstance.playMode === 'tournament') {
                 logger.info({ accessCode, userId }, 'Starting deferred tournament game flow for individual player');
 
+                // GUARD: Check if a deferred session is already active for this user and game
+                const existingDeferredRoom = `deferred_${accessCode}_${userId}`;
+                const existingRooms = Array.from(socket.rooms);
+                if (existingRooms.includes(existingDeferredRoom)) {
+                    logger.info({
+                        accessCode,
+                        userId,
+                        existingDeferredRoom,
+                        existingRooms
+                    }, '[GUARD] User already in deferred room, skipping duplicate session creation');
+                    return;
+                }
+
                 // Get questions for this tournament
                 const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
                     where: { id: gameInstance.id },
@@ -492,7 +557,14 @@ export function joinGameHandler(
                         gameTemplate: {
                             include: {
                                 questions: {
-                                    include: { question: true },
+                                    include: {
+                                        question: {
+                                            include: {
+                                                multipleChoiceQuestion: true,
+                                                numericQuestion: true,
+                                            }
+                                        }
+                                    },
                                     orderBy: { sequence: 'asc' }
                                 }
                             }
@@ -510,8 +582,20 @@ export function joinGameHandler(
                         try {
                             const { startDeferredTournamentSession } = await import('../deferredTournamentFlow');
                             logger.info({ accessCode, userId }, '[DEBUG] Successfully imported startDeferredTournamentSession');
-                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
-                            logger.info({ accessCode, userId }, '[DEBUG] startDeferredTournamentSession completed');
+
+                            // Get the current attempt number from the participant
+                            // For new sessions, this will be set by joinService as currentDeferredAttemptNumber
+                            // For reconnections, we need to determine it from the existing session
+                            let currentAttemptNumber = (joinResult.participant as any).currentDeferredAttemptNumber;
+
+                            if (!currentAttemptNumber) {
+                                // This is likely a reconnection - determine attempt count from session state
+                                // We'll let startDeferredTournamentSession figure it out via getDeferredAttemptCount
+                                currentAttemptNumber = undefined;
+                            }
+
+                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions, currentAttemptNumber);
+                            logger.info({ accessCode, userId, currentAttemptNumber }, '[DEBUG] startDeferredTournamentSession completed');
                         } catch (err) {
                             logger.error({ accessCode, userId, err }, '[ERROR] Failed to start deferred tournament session');
                         }

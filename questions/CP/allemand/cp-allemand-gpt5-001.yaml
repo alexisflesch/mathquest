@@ -1,0 +1,174 @@
+- uid: "gpt5-cp-allemand-vocabulaire-004"
+  title: "Répondre oui"
+  text: "Comment dit-on 'oui' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Ja"
+    - "Nein"
+    - "Bitte"
+    - "Hallo"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-005"
+  title: "Répondre non"
+  text: "Comment dit-on 'non' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Ja"
+    - "Danke"
+    - "Nein"
+    - "Auf Wiedersehen"
+  correctAnswers: [false, false, true, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-006"
+  title: "Dire merci"
+  text: "Comment dit-on 'merci' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Danke"
+    - "Auf Wiedersehen"
+    - "Ja"
+    - "Hund"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-007"
+  title: "Dire au revoir"
+  text: "Comment dit-on 'au revoir' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Hallo"
+    - "Katze"
+    - "Auf Wiedersehen"
+    - "Nein"
+  correctAnswers: [false, false, true, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-008"
+  title: "Un animal de compagnie"
+  text: "Comment dit-on 'chien' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  tags: ["animaux"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Hund"
+    - "Katze"
+    - "Vogel"
+    - "Fisch"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-009"
+  title: "Un autre animal"
+  text: "Comment dit-on 'chat' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  tags: ["animaux"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Vogel"
+    - "Katze"
+    - "Hund"
+    - "Maus"
+  correctAnswers: [false, true, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-010"
+  title: "Saluer quelqu’un"
+  text: "Comment dit-on 'bonjour' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Auf Wiedersehen"
+    - "Hallo"
+    - "Danke"
+    - "Ja"
+  correctAnswers: [false, true, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-011"
+  title: "La couleur rouge"
+  text: "Comment dit-on 'rouge' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Blau"
+    - "Grün"
+    - "Rot"
+    - "Gelb"
+  correctAnswers: [false, false, true, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-012"
+  title: "La couleur verte"
+  text: "Comment dit-on 'vert' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Grün"
+    - "Rot"
+    - "Schwarz"
+    - "Weiß"
+  correctAnswers: [true, false, false, false]
+  author: "GPT-5"
+
+- uid: "gpt5-cp-allemand-vocabulaire-013"
+  title: "La couleur bleue"
+  text: "Comment dit-on 'bleu' en allemand ?"
+  questionType: "single_choice"
+  discipline: "Allemand"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Gelb"
+    - "Blau"
+    - "Grün"
+    - "Rosa"
+  correctAnswers: [false, true, false, false]
+  author: "GPT-5"

@@ -7,54 +7,62 @@ disciplines:
           - "lire et écrire les nombres jusqu'à 100"
           - "ordonner des nombres"
           - "comparer des quantités"
+          - "utiliser la ligne numérique"
+          - "groupements par dizaines"
       - nom: "Calcul"
         tags:
-          - "additions posées"
-          - "soustractions posées"
-          - "tables de multiplication"
+          - "problèmes"
+          - "additions"
+          - "soustractions"
+          - "multiplications"
           - "calcul mental"
           - "problèmes"
       - nom: "Géométrie"
         tags:
           - "reconnaître et nommer les figures simples"
-          - "repérage dans l'espace"
+          - "repérage dans l'espace (droite/gauche, haut/bas)"
           - "symétrie axiale"
       - nom: "Grandeurs et mesures"
         tags:
           - "mesure de longueurs"
+          - "utilisation d'instruments"
           - "unités de temps"
-          - "utilisation d'instruments (règle, horloge)"
       - nom: "Organisation et gestion de données"
         tags:
           - "lire un tableau"
-          - "interpréter un graphique simple"
+          - "lire un graphique"
+          - "lire un diagramme"
+          - "lire un pictogramme"
   - nom: "Français"
     themes:
       - nom: "Lecture"
         tags:
+          - "lire avec fluidité et à voix intérieure"
           - "comprendre un texte court"
-          - "identifier les personnages"
-          - "repérer les informations explicites"
+          - "repérer des informations explicites"
+          - "identifier les personnages, lieux, événements"
       - nom: "Écriture"
         tags:
           - "copier sans erreur"
           - "produire une phrase correcte"
-          - "écrire un court paragraphe"
       - nom: "Orthographe"
         tags:
-          - "accords simples"
+          - "accords simples (genre et nombre)"
           - "mots invariables fréquents"
-          - "dictée de phrases"
+          - "dictée de phrases courtes"
       - nom: "Grammaire"
         tags:
           - "nature des mots (nom, verbe, adjectif)"
           - "genre et nombre"
           - "phrase affirmative et négative"
+          - "types de phrases (interrogative, exclamative)"
       - nom: "Conjugaison"
         tags:
           - "présent de l'indicatif"
-          - "verbes du 1er groupe"
+          - "verbes du 1er groupe au présent"
           - "être et avoir au présent"
+          - "futur proche des verbes fréquents"
+          - "imparfait de être et avoir"
       - nom: "Vocabulaire"
         tags:
           - "mots étiquettes"
@@ -68,30 +76,30 @@ disciplines:
           - "différences entre espèces"
       - nom: "La matière et les objets"
         tags:
-          - "états de la matière"
-          - "objets techniques"
+          - "états de la matière (solide, liquide, gaz)"
+          - "objets techniques et usages"
       - nom: "Le temps"
         tags:
-          - "repères chronologiques"
-          - "vie quotidienne passée et présente"
+          - "repères chronologiques (avant, après)"
+          - "jours, semaines, mois"
       - nom: "L'espace"
         tags:
           - "cartes et plans simples"
           - "organisation de l'espace familier"
+          - "vocabulaire spatial (devant, derrière, gauche, droite)"
       - nom: "Les objets techniques"
         tags:
           - "fonctionnement d'objets courants"
-          - "schéma d'un objet"
+          - "schéma simple d'un objet"
   - nom: "Éducation artistique"
     themes:
       - nom: "Arts plastiques"
         tags:
-          - "pratiques artistiques diverses"
+          - "identifier des techniques artistiques simples"
           - "observation d'œuvres d'art"
       - nom: "Éducation musicale"
         tags:
-          - "reconnaître des sons"
-          - "utiliser sa voix"
+          - "reconnaître des sons (instruments, bruits)"
           - "écouter une œuvre"
   - nom: "Enseignement moral et civique"
     themes:
@@ -102,21 +110,24 @@ disciplines:
           - "égalité et respect"
   - nom: "Anglais"
     themes:
-      - nom: "Compréhension orale"
+      - nom: "Compréhension"
         tags:
-          - "consignes simples"
-          - "phrases du quotidien"
+          - "comprendre des consignes simples"
+          - "reconnaître des phrases du quotidien"
+          - "se présenter (nom, âge)"
       - nom: "Vocabulaire"
         tags:
           - "jours de la semaine"
           - "corps humain"
           - "objets scolaires"
+          - "animaux courants"
   - nom: "Allemand"
     themes:
-      - nom: "Compréhension orale"
+      - nom: "Compréhension"
         tags:
           - "questions simples"
           - "réponses brèves"
+          - "formules de politesse"
       - nom: "Vocabulaire"
         tags:
           - "animaux"
@@ -124,10 +135,11 @@ disciplines:
           - "objets de la classe"
   - nom: "Espagnol"
     themes:
-      - nom: "Compréhension orale"
+      - nom: "Compréhension"
         tags:
           - "salutations"
           - "consignes de classe"
+          - "questions simples"
       - nom: "Vocabulaire"
         tags:
           - "famille"
@@ -135,10 +147,11 @@ disciplines:
           - "aliments"
   - nom: "Italien"
     themes:
-      - nom: "Compréhension orale"
+      - nom: "Compréhension"
         tags:
           - "formules de politesse"
           - "questions simples"
+          - "consignes simples"
       - nom: "Vocabulaire"
         tags:
           - "nombres"

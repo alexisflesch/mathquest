@@ -1,6 +1,6 @@
 # 🎯 MathQuest - Real-Time Educational Quiz Platform
 
-> **A modern, type-safe, real-time quiz platform built with Next.js, Node.js, and WebSockets**  
+> **A modern, type-safe, real-time quiz platform built with Next.js, Node.js, and WebSockets**
 > **✨ Featuring complete type safety, runtime validation, and zero legacy patterns**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](#)
@@ -22,8 +22,8 @@ npm install
 npm run dev
 ```
 
-🌐 **Access**: Frontend (http://localhost:3000) | Backend (http://localhost:5000)  
-📚 **Documentation**: [Complete Documentation Hub](#-documentation-hub) | [Instructions](instructions.md)
+🌐 **Access**: Frontend (http://localhost:3008) | Backend (http://localhost:3007) |
+📚 **Documentation**: [Complete Documentation](https://alexisflesch.github.io/mathquest/)
 
 ---
 
@@ -35,13 +35,13 @@ npm run dev
 
 ### **🏆 Major Achievements**
 - **✅ 100% Type Safety**: Zero TypeScript compilation errors across all modules
-- **✅ Runtime Validation**: All API endpoints and socket handlers use Zod validation  
+- **✅ Runtime Validation**: All API endpoints and socket handlers use Zod validation
 - **✅ Canonical Field Names**: All legacy names converted (`nom`→`name`, `niveau`→`gradeLevel`, etc.)
 - **✅ Shared Type System**: Single source of truth for all data structures
 - **✅ Socket Modernization**: All 17 socket handlers modernized with strict validation
 - **✅ Contract Enforcement**: Zero type mismatches between frontend/backend
 
-### **🚀 Technical Excellence**
+### **� Technical Excellence**
 - **Backend API**: 11/11 endpoints use shared types with runtime validation
 - **Socket Events**: 17/17 handlers use Zod validation and standardized error handling
 - **Database**: 100% canonical field naming alignment
@@ -54,23 +54,28 @@ npm run dev
 
 **🎯 Result**: Production-ready codebase with strict type safety, comprehensive runtime validation, and zero technical debt.
 
-📋 **Documentation**: [Complete Modernization Report](MODERNIZATION_COMPLETE.md) | [Technical Details](plan.md) | [Implementation Log](log.md)
-
 ---
-
 
 ## 🏗️ **Project Architecture**
 
 ```
 app/
-├── frontend/          # Next.js 14 + React + TypeScript
-├── backend/           # Node.js + Express + Socket.IO + Prisma  
+├── frontend/          # Next.js 15 + React 19 + TypeScript
+├── backend/           # Node.js + Express + Socket.IO + Prisma
 ├── shared/            # Shared TypeScript types & constants
 ├── tests/             # E2E tests with Playwright
-└── docs/              # Comprehensive documentation
+└── scripts/           # Utility scripts and tools
 ```
 
 **Key Features**: Real-time multiplayer quizzes • Tournament mode • Teacher dashboard • Student interface • Practice mode
+
+## 📊 **Test Coverage**
+
+- **🧪 Backend Tests**: 173 unit/integration tests
+- **🖥️ Frontend Tests**: 359 component and utility tests
+- **🔄 E2E Tests**: 27 automated end-to-end tests
+- **📈 Total Tests**: 559 comprehensive test cases
+- **✅ Quality Assurance**: All tests passing with strict TypeScript validation
 
 ## 📂 **Project Configuration Files**
 
@@ -87,7 +92,6 @@ app/
 - `backend/eslint.config.mjs` - Backend-specific ESLint rules
 - `backend/jest.config.js` - Backend testing configuration
 - `backend/nodemon.json` - Development server configuration
-- `backend/.prettierrc.json` - Code formatting rules
 
 ### **Frontend Configuration**
 - `frontend/package.json` - Frontend dependencies and scripts
@@ -95,35 +99,33 @@ app/
 - `frontend/.env` / `.env.example` - Environment variables (not in git)
 - `frontend/next.config.ts` - Next.js configuration
 - `frontend/tailwind.config.mjs` - Tailwind CSS configuration
-- `frontend/postcss.config.mjs` - PostCSS configuration
+- `postcss.config.mjs` - PostCSS configuration
 - `frontend/jest.config.js` - Frontend testing configuration
-- `frontend/eslint.config.mjs` / `.eslintrc.*` - ESLint configurations
+- `frontend/eslint.config.mjs` - ESLint configurations
 
 ---
 
-## 📚 **Documentation Hub**
+## 🛠️ **Development Commands**
 
-### **🚀 Essential Guides**
-- [⚡ Quick Start Guide](docs/QUICK_START.md) - Get running in 5 minutes  
-- [👨‍💻 Developer Onboarding](docs/guides/developer-onboarding.md) - Complete new developer setup
-- [📋 Project Instructions](instructions.md) - AI agent guidelines & modernization rules
+```bash
+# Development
+npm run dev                 # Start both frontend & backend
+npm run dev:frontend        # Start frontend only (port 3008)
+npm run dev:backend         # Start backend only (port 3007)
 
-### **🏛️ Architecture & API**
-- [🏗️ System Architecture](docs/architecture/overview.md) - High-level system design
-- [🔌 WebSocket Events](docs/api/socket-events.md) - Real-time events catalog
-- [📋 Data Contracts](docs/api/data-contracts.md) - TypeScript interfaces & validation
+# Building & Type Checking
+npm run build              # Build both frontend & backend
+npm run type-check         # Check types in all modules
+npm run type-check:all     # Comprehensive type checking
 
-### **💻 Development Guides**  
-- [⚛️ Frontend Guide](docs/frontend/) - React components, state management, testing
-- [⚙️ Backend Guide](docs/backend/) - Services, handlers, database integration
-- [🔗 Shared Types](docs/shared/) - Type system, constants, validation schemas
-
-### **🚀 Operations**
-- [🧪 Testing Strategy](docs/testing/) - Unit, integration, E2E testing
-- [🚀 Deployment Guide](docs/deployment/) - Production setup & monitoring
-- [📖 Reference](docs/reference/) - Coding standards, troubleshooting, glossary
+# Testing & Quality
+npm run test:e2e           # Run end-to-end tests
+npm run test:e2e:ui        # Run e2e tests with UI
+npm run lint               # Lint all code
+```
 
 ---
+
 ## 🤖 **AI Agent Guidelines**
 
 This project uses AI coding agents to assist development. **Critical guidelines**:
@@ -134,65 +136,38 @@ This project uses AI coding agents to assist development. **Critical guidelines*
 - Keep API contracts strict and centralized.
 - Don't go through the codebase to figure out how things work. Use the documentation first, then the code if needed.
 
+## 🛠️ **Development Principles**
 
-## 🛠️ **Development Commands**
-
-```bash
-# Development
-npm run dev                 # Start both frontend & backend
-npm run dev:frontend        # Start frontend only (port 3000)  
-npm run dev:backend         # Start backend only (port 5000)
-
-# Building & Type Checking
-npm run build              # Build both frontend & backend
-npm run type-check         # Check types in all modules
-npm run type-check:all     # Comprehensive type checking
-
-# Testing & Quality
-npm run test               # Run all tests
-npm run lint               # Lint all code
-./test-auth-flow.sh        # Test authentication flow
-```
-
----
-
-## Documentation
-- All documentation is located in the `docs/` folder.
-- The main documentation entry point is [`docs/README.md`](docs/README.md).
-- When you need to figure something out, **always check the docs first**.
-- If the answer is not in the docs, investigate the codebase, find the answer, and **add your findings to the docs**. Documentation should always be up to date.
-
-## Coding Principles
 - **Keep code DRY** (Don't Repeat Yourself). Reuse logic and avoid duplication.
 - **Ask before making major changes** to the frontend or backend. Don't make disruptive changes without confirmation.
 - **Write tests** for new features or bug fixes when necessary.
 - **Don't patch over bugs**. Investigate, find the root cause, and fix it properly.
 - **No backward compatibility**. The codebase should **not** support legacy versions or deprecated features. Always use the latest APIs and patterns.
 
-## 🚨 Critical Development Rules
+## 🚨 **Critical Development Rules**
 
-### Authentication & Cookies
+### **Authentication & Cookies**
 - **NEVER use hardcoded cookie names** - always use constants from `src/constants/auth.ts`
 - **ALWAYS update both client and server** when changing cookie names or auth flow
 - **TEST the complete auth flow** after any auth-related changes:
   ```bash
-  ./test-auth-flow.sh  # Run this script after auth changes
+  npm run test:e2e  # Run end-to-end tests to verify auth flow
   ```
 - **Check AuthProvider compatibility** when updating auth API endpoints
 
-### API Contracts
+### **API Contracts**
 - **ALWAYS use Zod schemas** for API request/response validation
 - **NEVER change API response format** without updating all consumers
 - **CREATE shared types** in `shared/types/` for API contracts
 - **UPDATE documentation** when adding/changing API endpoints
 
-### Testing Requirements
+### **Testing Requirements**
 - **RUN integration tests** before committing auth/API changes
 - **TEST in browser** after running automated tests
 - **VERIFY complete user journeys** (login → dashboard → logout)
 - **CHECK both authenticated and unauthenticated flows**
 
-### Code Changes
+### **Code Changes**
 - **SEARCH codebase** for all usages before renaming variables/constants
 - **USE TypeScript strict mode** - no `any` types in new code
 - **GREP for string literals** when changing identifiers:
@@ -200,22 +175,22 @@ npm run lint               # Lint all code
   grep -r "oldCookieName" --include="*.ts" --include="*.tsx" .
   ```
 
-### Architecture Rules
+### **Architecture Rules**
 - **CENTRALIZE configuration** - no scattered constants
 - **SINGLE source of truth** for auth state, cookie names, API endpoints
 - **CONSISTENT naming** across frontend/backend/database
 - **VALIDATE at boundaries** - all external data must be validated
 
-## Workflow
+## **Workflow**
 - Use the documentation as your primary source of truth.
 - Keep the codebase clean, maintainable, and well-documented.
 - Communicate and confirm before making significant changes.
-- **Run `./test-auth-flow.sh` after any authentication changes.**
+- **Run `npm run test:e2e` after any authentication changes.**
 
-## Debug Commands
+## **Debug Commands**
 ```bash
 # Test authentication flow
-./test-auth-flow.sh
+npm run test:e2e
 
 # Search for potential issues
 grep -r "mathquest_teacher" --include="*.ts" --include="*.tsx" .

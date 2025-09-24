@@ -31,6 +31,9 @@ export type {
     PasswordResetConfirmRequest,
     ProfileUpdateRequest,
     TeacherUpgradeRequest,
+    SendEmailVerificationRequest,
+    VerifyEmailRequest,
+    ResendEmailVerificationRequest,
     SetQuestionRequest
 } from './schemas';
 
@@ -55,6 +58,9 @@ export {
     PasswordResetConfirmRequestSchema,
     ProfileUpdateRequestSchema,
     TeacherUpgradeRequestSchema,
+    SendEmailVerificationRequestSchema,
+    VerifyEmailRequestSchema,
+    ResendEmailVerificationRequestSchema,
     SetQuestionRequestSchema
 } from './schemas';
 

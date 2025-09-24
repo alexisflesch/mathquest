@@ -4,20 +4,56 @@ import { formatTime } from "@/utils"; // Assure-toi que ce chemin est correct
 import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce chemin est correct
 import { createLogger } from '@/clientLogger';
 import { TimerField } from './TimerDisplayAndEdit';
+import StatisticsChart from '@/components/StatisticsChart';
 
 // Create a logger for this component
 const logger = createLogger('QuestionDisplay');
 
 // Helper function to convert modern question format to display format
-function getAnswersForDisplay(question: QuestionDisplayProps['question']) {
-    if (!question.answerOptions || !question.correctAnswers) {
+function getAnswersForDisplay(question: any): any[] {
+    console.log('[getAnswersForDisplay] Input question:', question);
+    console.log('[getAnswersForDisplay] question.numericQuestion:', question.numericQuestion);
+    console.log('[getAnswersForDisplay] question.numericQuestion type:', typeof question.numericQuestion);
+    console.log('[getAnswersForDisplay] question.numericQuestion truthiness:', !!question.numericQuestion);
+
+    // Handle polymorphic questions
+    if (question.numericQuestion) {
+        console.log('[getAnswersForDisplay] Processing numeric question:', question.numericQuestion);
+        const correctAnswer = question.numericQuestion.correctAnswer;
+        const unit = question.numericQuestion.unit;
+        const answerText = unit ? `${correctAnswer} ${unit}` : String(correctAnswer);
+        return [{ text: answerText, correct: true }];
+    } else if (question.multipleChoiceQuestion) {
+        console.log('[getAnswersForDisplay] Processing multiple choice question:', question.multipleChoiceQuestion);
+        const answerOptions = question.multipleChoiceQuestion.answerOptions || [];
+        const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
+        return answerOptions.map((option: string, index: number) => ({
+            text: option,
+            correct: correctAnswers[index] === true
+        }));
+    } else {
+        console.log('[getAnswersForDisplay] No polymorphic question data found');
         return [];
     }
+}// Helper function to get answer options from polymorphic question
+function getAnswerOptions(question: QuestionDisplayProps['question']): string[] {
+    if (question.multipleChoiceQuestion) {
+        return question.multipleChoiceQuestion.answerOptions;
+    }
+    return [];
+}
 
-    return question.answerOptions.map((text, index) => ({
-        text,
-        correct: question.correctAnswers?.[index] || false
-    }));
+// Helper function to get correct answers from polymorphic question
+function getCorrectAnswers(question: QuestionDisplayProps['question']): boolean[] {
+    if (question.multipleChoiceQuestion) {
+        return question.multipleChoiceQuestion.correctAnswers;
+    }
+    return [];
+}
+
+// Helper function to check if question has multiple choice data
+function hasMultipleChoiceData(question: QuestionDisplayProps['question']): boolean {
+    return !!(question.multipleChoiceQuestion);
 }
 
 import type { Question } from '@shared/types/core/question';
@@ -49,11 +85,14 @@ export interface QuestionDisplayProps {
     showResultsDisabled?: boolean; // Désactive le bouton Trophy
     correctAnswers?: number[]; // NEW: indices des réponses correctes à afficher (ex: [1,2])
     onStatsToggle?: (isDisplayed: boolean) => void; // NEW: callback for stats toggle
-    stats?: number[]; // NEW: answer stats (count per answer)
+    stats?: { type: 'multipleChoice'; data: number[] } | { type: 'numeric'; data: number[] }; // NEW: answer stats with type discrimination
     // Checkbox props for selection
     showCheckbox?: boolean; // Show checkbox for selection
     checked?: boolean; // Checkbox state
     onCheckboxChange?: (checked: boolean) => void; // Checkbox change handler
+    // NEW: Control behavior props
+    hideExplanation?: boolean; // Hide explanation/justification section
+    keepTitleWhenExpanded?: boolean; // Keep title visible when expanded (only hide fake titles)
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -82,14 +121,26 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     checked = false, // NEW: destructure checked
     onCheckboxChange, // NEW: destructure onCheckboxChange
     onRevealLeaderboard, // Canonical leaderboard reveal
+    hideExplanation = false, // NEW: destructure hideExplanation
+    keepTitleWhenExpanded = false, // NEW: destructure keepTitleWhenExpanded
 }) => {
-    // // Debug: Log the question data received
-    // logger.info('[DEBUG QuestionDisplay] Received question:', question);
-    // const answersForDisplay = getAnswersForDisplay(question);
-    // logger.info('[DEBUG QuestionDisplay] Question answerOptions:', question.answerOptions);
-    // logger.info('[DEBUG QuestionDisplay] Question correctAnswers:', question.correctAnswers);
-    // logger.info('[DEBUG QuestionDisplay] Computed answers for display:', answersForDisplay);
-    // logger.info('[DEBUG QuestionDisplay] Question text:', question.text);
+    // Determine what content to show in collapsed vs expanded states to avoid redundancy
+    const collapsedContent = question.title || question.text;
+    const shouldShowTextInExpanded = !question.title || question.title !== question.text;
+
+    // Get answers for display
+    const answersForDisplay = getAnswersForDisplay(question);
+
+    // Debug logging for numeric questions
+    if (question.questionType === 'numeric') {
+        console.log('[QuestionDisplay] Numeric question detected:', {
+            uid: question.uid,
+            questionType: question.questionType,
+            numericQuestion: question.numericQuestion,
+            answersForDisplay: answersForDisplay,
+            answersLength: answersForDisplay.length
+        });
+    }
 
     // Détermine l'état effectif des boutons play/pause
     const effectiveIsRunning = timerStatus === 'run';
@@ -171,10 +222,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const [isStatsDisplayed, setIsStatsDisplayed] = useState(false);
 
     // Compute stats bar widths
-    // The server already sends stats as percentages (0-100)
+    // The server already sends stats as percentages (0-100) for multiple choice
     const getBarWidth = (idx: number) => {
-        if (!stats || typeof stats[idx] !== 'number') return 0;
-        return stats[idx]; // Already a percentage
+        if (!stats || stats.type !== 'multipleChoice' || typeof stats.data[idx] !== 'number') return 0;
+        return stats.data[idx]; // Already a percentage
     };
 
     // // Handler for ChartBarBig click
@@ -233,11 +284,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         top: 0,
                                         zIndex: 2,
                                         transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
-                                        transform: isOpen ? 'translateY(120px)' : 'translateY(0)',
+                                        // Only hide title when expanded if it's a fake title (no real title) and keepTitleWhenExpanded is false
+                                        transform: (isOpen && !question.title && !keepTitleWhenExpanded) ? 'translateY(120px)' : 'translateY(0)',
                                         fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
                                     }}
                                 >
-                                    <MathJaxWrapper>{question.title ? question.title : question.text}</MathJaxWrapper>
+                                    <MathJaxWrapper>{collapsedContent}</MathJaxWrapper>
                                 </span>
                             </div>
                         </div>
@@ -324,35 +376,39 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                             {question.title ? ( // Modifié: question.titre -> question.title
                                 <ul
                                     className={[
-                                        "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
+                                        "ml-0 mt-0 flex flex-col",
+                                        stats && stats.type === 'numeric' ? "gap-1" : "gap-2",
+                                        "answers-list p-3 rounded-b-xl rounded-t-none",
                                         isOpen ? "no-top-border" : ""
                                     ].join(" ")}
                                 >
-                                    <li
-                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 question-text-in-dashboards"
-                                        style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
-                                    >
-                                        <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
-                                    </li>
-                                    {Array.isArray(question.answerOptions) && question.answerOptions.length > 0
-                                        ? question.answerOptions.map((answerText, idx) => (
+                                    {shouldShowTextInExpanded && (
+                                        <li
+                                            className="mb-2 font-medium text-base text-couleur-global-neutral-700 question-text-in-dashboards"
+                                            style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                        >
+                                            <MathJaxWrapper>{question.text}</MathJaxWrapper>
+                                        </li>
+                                    )}
+                                    {answersForDisplay.length > 0
+                                        ? answersForDisplay.map(({ text: answerText, correct }, idx) => (
                                             <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                 <div className="flex gap-2 items-center relative z-10 w-full">
                                                     {/* Percentage before icon, rounded to nearest integer */}
-                                                    {typeof stats !== 'undefined' && (
+                                                    {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                         <span className="font-semibold text-xs text-couleur-global-neutral-700" style={{ minWidth: 32, textAlign: 'right' }}>
                                                             {Math.round(getBarWidth(idx))}%
                                                         </span>
                                                     )}
                                                     <span className="answer-icon flex items-center">
-                                                        {question.correctAnswers && question.correctAnswers[idx] ? (
+                                                        {correct ? (
                                                             <Check size={18} strokeWidth={3} className="text-primary" />
                                                         ) : (
                                                             <X size={18} strokeWidth={3} className="text-secondary" />
                                                         )}
                                                     </span>
                                                     {/* Histogram bar as background, but starting after the icon */}
-                                                    {typeof stats !== 'undefined' && (
+                                                    {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                         <div
                                                             className="absolute left-0 top-1/2 -translate-y-1/2 rounded z-0"
                                                             style={{
@@ -374,49 +430,76 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                 </div>
                                             </li>
                                         ))
-                                        : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                                    {question.explanation && ( // Modifié: question.justification -> question.explanation
+                                        : (
+                                            // Show StatisticsChart for numeric questions, otherwise show no answers message
+                                            stats && stats.type === 'numeric' ? (
+                                                <li className="flex justify-center">
+                                                    <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                        <StatisticsChart
+                                                            data={stats.data}
+                                                            layout="left"
+                                                        />
+                                                    </div>
+                                                </li>
+                                            ) : (
+                                                <li className="italic text-muted-foreground">Aucune réponse définie</li>
+                                            )
+                                        )}
+                                    {/* Show StatisticsChart for numeric questions after answers */}
+                                    {stats && stats.type === 'numeric' && answersForDisplay.length > 0 && (
+                                        <li className="flex justify-center">
+                                            <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                <StatisticsChart
+                                                    data={stats.data}
+                                                    layout="left"
+                                                />
+                                            </div>
+                                        </li>
+                                    )}
+                                    {!hideExplanation && question.explanation && ( // Conditionally show explanation
                                         <div
                                             className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                             style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
                                         >
-                                            <span className="font-semibold">Justification :</span> {question.explanation}
+                                            <span className="font-semibold">Justification :</span> <MathJaxWrapper>{question.explanation}</MathJaxWrapper>
                                         </div>
                                     )}
                                 </ul>
                             ) : (
                                 <>
-                                    <div
-                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2 question-text-in-dashboards"
-                                        style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
-                                    >
-                                        <MathJaxWrapper>{question.text}</MathJaxWrapper>
-                                    </div>
+                                    {shouldShowTextInExpanded && (
+                                        <div
+                                            className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2 question-text-in-dashboards"
+                                            style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                        >
+                                            <MathJaxWrapper>{question.text}</MathJaxWrapper>
+                                        </div>
+                                    )}
                                     <ul
                                         className={[
                                             "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
                                             isOpen ? "no-top-border" : ""
                                         ].join(" ")}
                                     >
-                                        {Array.isArray(question.answerOptions) && question.answerOptions.length > 0
-                                            ? question.answerOptions.map((answerText, idx) => (
+                                        {answersForDisplay.length > 0
+                                            ? answersForDisplay.map(({ text: answerText, correct }, idx) => (
                                                 <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                     <div className="flex gap-2 items-center relative z-10 w-full">
                                                         {/* Percentage before icon, rounded to nearest integer */}
-                                                        {typeof stats !== 'undefined' && (
+                                                        {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                             <span className="font-semibold text-xs text-couleur-global-neutral-700" style={{ minWidth: 32, textAlign: 'right' }}>
                                                                 {Math.round(getBarWidth(idx))}%
                                                             </span>
                                                         )}
                                                         <span className="answer-icon flex items-center">
-                                                            {question.correctAnswers && question.correctAnswers[idx] ? (
+                                                            {correct ? (
                                                                 <Check size={18} strokeWidth={3} className="text-primary" />
                                                             ) : (
                                                                 <X size={18} strokeWidth={3} className="text-secondary" />
                                                             )}
                                                         </span>
                                                         {/* Histogram bar as background, but starting after the icon */}
-                                                        {typeof stats !== 'undefined' && (
+                                                        {typeof stats !== 'undefined' && stats.type === 'multipleChoice' && (
                                                             <div
                                                                 className="absolute left-0 top-1/2 -translate-y-1/2 rounded z-0"
                                                                 style={{
@@ -438,13 +521,38 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                     </div>
                                                 </li>
                                             ))
-                                            : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                                        {question.explanation && ( // Modifié: question.justification -> question.explanation
+                                            : (
+                                                // Show StatisticsChart for numeric questions, otherwise show no answers message
+                                                stats && stats.type === 'numeric' ? (
+                                                    <li className="flex justify-center">
+                                                        <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                            <StatisticsChart
+                                                                data={stats.data}
+                                                                layout="left"
+                                                            />
+                                                        </div>
+                                                    </li>
+                                                ) : (
+                                                    <li className="italic text-muted-foreground">Aucune réponse définie</li>
+                                                )
+                                            )}
+                                        {/* Show StatisticsChart for numeric questions after answers */}
+                                        {stats && stats.type === 'numeric' && answersForDisplay.length > 0 && (
+                                            <li className="flex justify-center mt-4">
+                                                <div style={{ width: '500px', height: '300px', maxWidth: '100%', maxHeight: '100%' }} onClick={(e) => e.stopPropagation()}>
+                                                    <StatisticsChart
+                                                        data={stats.data}
+                                                        layout="left"
+                                                    />
+                                                </div>
+                                            </li>
+                                        )}
+                                        {!hideExplanation && question.explanation && ( // Conditionally show explanation
                                             <div
                                                 className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                                 style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
                                             >
-                                                <span className="font-semibold">Justification :</span> {question.explanation}
+                                                <span className="font-semibold">Justification :</span> <MathJaxWrapper>{question.explanation}</MathJaxWrapper>
                                             </div>
                                         )}
                                     </ul>
@@ -476,14 +584,18 @@ export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
     if (prevProps.question.text !== nextProps.question.text) return false;
     if (prevProps.question.durationMs !== nextProps.question.durationMs) return false;
 
-    // Compare answers array length and content
-    if (prevProps.question.answerOptions?.length !== nextProps.question.answerOptions?.length) return false;
+    // Compare answers array length and content for polymorphic questions
+    const prevAnswerOptions = getAnswerOptions(prevProps.question);
+    const nextAnswerOptions = getAnswerOptions(nextProps.question);
+    if (prevAnswerOptions.length !== nextAnswerOptions.length) return false;
 
     // Compare stats array for meaningful changes
-    if (prevProps.stats?.length !== nextProps.stats?.length) return false;
+    if (prevProps.stats?.type !== nextProps.stats?.type) return false;
+
     if (prevProps.stats && nextProps.stats) {
-        for (let i = 0; i < prevProps.stats.length; i++) {
-            if (prevProps.stats[i] !== nextProps.stats[i]) return false;
+        if (prevProps.stats.data.length !== nextProps.stats.data.length) return false;
+        for (let i = 0; i < prevProps.stats.data.length; i++) {
+            if (prevProps.stats.data[i] !== nextProps.stats.data[i]) return false;
         }
     }
 

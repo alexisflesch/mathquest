@@ -28,6 +28,7 @@ interface EnhancedSingleSelectDropdownProps {
     label?: string;
     disabled?: boolean;
     className?: string;
+    'data-testid'?: string;
 }
 
 export default function EnhancedSingleSelectDropdown({
@@ -37,7 +38,8 @@ export default function EnhancedSingleSelectDropdown({
     placeholder = "Sélectionner...",
     label,
     disabled = false,
-    className = ""
+    className = "",
+    'data-testid': dataTestId
 }: EnhancedSingleSelectDropdownProps) {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -59,7 +61,7 @@ export default function EnhancedSingleSelectDropdown({
     }, [open]);
 
     return (
-        <div className={`w-full flex flex-col gap-2 ${className}`}>
+        <div className={`w-full flex flex-col gap-2 ${className}`} data-testid={dataTestId}>
             {label && <label className="font-bold text-lg mb-1 text-dropdown-foreground">{label}</label>}
             <div className="relative w-full" ref={dropdownRef}>
                 <button
@@ -84,14 +86,17 @@ export default function EnhancedSingleSelectDropdown({
                 </button>
 
                 <div
-                    className="absolute z-10 bg-dropdown text-dropdown-foreground border border-dropdown-border shadow-lg mt-1 max-h-60 overflow-y-auto"
+                    className="absolute z-50 bg-dropdown text-dropdown-foreground border border-dropdown-border shadow-lg mt-1 max-h-60 overflow-y-auto"
                     style={{
                         display: open ? 'block' : 'none',
                         left: '0',
+                        top: '100%',
                         minWidth: '100%',
                         width: 'max-content',
                         maxWidth: '300px',
                         borderRadius: 'var(--radius)',
+                        visibility: 'visible',
+                        opacity: 1,
                     }}
                 >
                     {options.map((opt) => {

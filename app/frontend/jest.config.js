@@ -35,10 +35,12 @@ module.exports = {
     "^next/link$": "<rootDir>/next-link-mock.js",
     "^next/image$": "<rootDir>/next-image-mock.js",
 
+    // Plotly.js mock for testing
+    "^react-plotly\\.js$": "<rootDir>/__mocks__/react-plotly.js",
+
     // Path aliases (matching Next.js webpack config)
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@shared/(.*)$": "<rootDir>/../shared/$1",
-    "^@logger$": "<rootDir>/../shared/logger.ts",
     "^@components/(.*)$": "<rootDir>/src/components/$1",
     "^@/app/utils/usernameFilter$": "<rootDir>/src/app/utils/usernameFilter.ts",
   },

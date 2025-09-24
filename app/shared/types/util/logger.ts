@@ -14,12 +14,3 @@ export interface Logger {
     warn: (message: string, context?: unknown) => void;
     error: (message: string, context?: unknown) => void;
 }
-
-/**
- * Score calculation result interface
- */
-export interface ScoreCalculationResult {
-    baseScore: number;
-    timePenalty: number;
-    totalScore: number;
-}

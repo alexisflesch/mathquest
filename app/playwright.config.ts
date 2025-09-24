@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -8,7 +10,7 @@ export default defineConfig({
     /* Run tests in files in parallel */
     fullyParallel: false, // Disable parallel for real-time testing
     /* Fail the build on CI if you accidentally left test.only in the source code. */
-    forbidOnly: !!process.env.CI,
+    forbidOnly: true,
     /* Retry on CI only */
     retries: process.env.CI ? 2 : 0,
     /* Opt out of parallel tests on CI. */
@@ -17,7 +19,7 @@ export default defineConfig({
     reporter: [
         ['html', { open: 'never' }], // Don't auto-open browser at end
         ['line'],
-        ['json', { outputFile: 'test-results/results.json' }]
+        ['json', { outputFile: 'test-results/e2e-results.json' }]
     ],
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
@@ -29,6 +31,10 @@ export default defineConfig({
         screenshot: 'only-on-failure',
         /* Video on failure */
         video: 'retain-on-failure',
+        /* Environment variables for tests */
+        // extraHTTPHeaders: {
+        //     'X-Test-Environment': 'true'
+        // }
     },
 
     /* Global timeout settings - optimized for local development */
@@ -41,7 +47,10 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome']
+            },
+            outputDir: 'test-results/e2e',
         },
 
         // Uncomment for cross-browser testing later

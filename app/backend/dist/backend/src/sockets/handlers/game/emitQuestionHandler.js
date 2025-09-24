@@ -73,11 +73,18 @@ function emitQuestionHandler(io, socket) {
             socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
             return;
         }
-        // 3. Get all questions
+        // 3. Get all questions with polymorphic relations
         const allQuestions = await prisma_1.prisma.questionsInGameTemplate.findMany({
             where: { gameTemplateId: gameInstance.gameTemplateId },
             orderBy: { sequence: 'asc' },
-            include: { question: true }
+            include: {
+                question: {
+                    include: {
+                        multipleChoiceQuestion: true,
+                        numericQuestion: true
+                    }
+                }
+            }
         });
         let targetQuestion = null;
         if (questionUid) {
@@ -160,11 +167,10 @@ function emitQuestionHandler(io, socket) {
         const questionIndex = allQuestions.findIndex(q => q.questionUid === targetQuestion.uid);
         const totalQuestions = allQuestions.length;
         let filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(targetQuestion);
-        // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-        if (filteredQuestion.timeLimit == null) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { timeLimit, ...rest } = filteredQuestion;
-            filteredQuestion = rest;
+        // Ensure timeLimit is present and valid (schema requires positive integer)
+        if (filteredQuestion.timeLimit == null || filteredQuestion.timeLimit <= 0) {
+            logger.warn(`Question ${targetQuestion.uid} has invalid timeLimit: ${filteredQuestion.timeLimit}, using default 30s`);
+            filteredQuestion.timeLimit = 30; // Default to 30 seconds
         }
         const canonicalPayload = {
             ...filteredQuestion,

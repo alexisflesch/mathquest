@@ -24,6 +24,16 @@ export interface CanonicalTimerState {
      * End date in ms (only set for run, 0 for pause/stop, for canonical emission)
      */
     timerEndDateMs?: number;
+    /**
+     * Original presentation time - when question was first shown to students
+     * This should NEVER be reset on timer restart to ensure fair time penalties
+     */
+    questionPresentedAt?: number;
+    /**
+     * Number of times this question has been restarted
+     * Used to determine penalty caps: 0=30%, 1=50%, 2+=50%
+     */
+    restartCount?: number;
 }
 
 /**
@@ -162,15 +172,21 @@ export class CanonicalTimerService {
                 delete timer.timerEndDateMs;
                 logger.info({ accessCode, questionUid, prev, timer, now }, '[TIMER_DEBUG][startTimer] Resuming from paused state');
             } else {
+                // FIX: Preserve questionPresentedAt when restarting timer
+                // This ensures time penalties are calculated from original presentation time
+                const questionPresentedAt = prev.questionPresentedAt || prev.startedAt || now;
+                const currentRestartCount = (prev.restartCount || 0) + 1;
                 timer = {
                     questionUid,
                     status: 'play',
-                    startedAt: now,
-                    totalPlayTimeMs: 0,
+                    startedAt: now,           // Reset timer start time
+                    totalPlayTimeMs: 0,       // Reset play time for this session
                     lastStateChange: now,
-                    durationMs
+                    durationMs,
+                    questionPresentedAt,      // Preserve original presentation time
+                    restartCount: currentRestartCount // Increment restart count
                 };
-                logger.info({ accessCode, questionUid, timer, now }, '[TIMER_DEBUG][startTimer] Not paused, starting fresh');
+                logger.info({ accessCode, questionUid, timer, now, questionPresentedAt, currentRestartCount }, '[TIMER_DEBUG][startTimer] Restarting timer with preserved presentation time and incremented restart count');
             }
         } else {
             timer = {
@@ -179,7 +195,9 @@ export class CanonicalTimerService {
                 startedAt: now,
                 totalPlayTimeMs: 0,
                 lastStateChange: now,
-                durationMs
+                durationMs,
+                questionPresentedAt: now,    // First time question is presented
+                restartCount: 0              // Initialize restart count for first session
             };
             logger.info({ accessCode, questionUid, timer, now }, '[TIMER_DEBUG][startTimer] No previous timer, starting fresh');
         }
@@ -279,7 +297,8 @@ export class CanonicalTimerService {
                 questionUid,
                 timestamp: now,
                 timerEndDateMs: 0,
-                localTimeLeftMs: durationMs
+                localTimeLeftMs: durationMs,
+                restartCount: 0  // Default restart count for new timers
             };
         }
         const timer = JSON.parse(raw) as CanonicalTimerState;
@@ -336,7 +355,7 @@ export class CanonicalTimerService {
         if (status === 'run' && (timeLeftMs <= 0 || canonicalDurationMs <= 0)) {
             logger.warn({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, canonicalDurationMs, now, timer, elapsed, timeLeftMs }, '[CANONICAL_TIMER][getTimer] Forcing STOP state due to timeLeftMs <= 0 or durationMs <= 0');
             status = 'stop';
-            timeLeftMs = canonicalDurationMs;
+            timeLeftMs = 0; // Timer expired, no time left
             timerEndDateMs = 0;
         }
         logger.info({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, canonicalDurationMs, now, timer, status, elapsed, timeLeftMs, timerEndDateMs }, '[CANONICAL_TIMER][getTimer] Returning canonical timer state');
@@ -402,6 +421,34 @@ export class CanonicalTimerService {
             timerState: timer
         }, '[TIMER_DEBUG][getElapsedTimeMs] Final elapsed calculation');
         return elapsed;
+    }
+
+    /**
+     * Get the total time elapsed since question was first presented to students
+     * This is used for fair time penalty calculation, ensuring restarts don't reset penalties
+     */
+    async getTotalPresentationTimeMs(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number): Promise<number> {
+        if (playMode === 'practice') return 0;
+
+        // Get duration from question for getTimer call
+        let durationMs = 30000; // fallback
+        try {
+            const question = await prisma.question.findUnique({ where: { uid: questionUid } });
+            if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+                durationMs = question.timeLimit * 1000;
+            }
+        } catch (err) {
+            logger.error({ questionUid, err }, '[CANONICAL_TIMER_SERVICE] Failed to fetch duration for getTotalPresentationTimeMs');
+        }
+
+        const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount, durationMs);
+        if (!timer) return 0;
+
+        // Use questionPresentedAt if available, otherwise fall back to startedAt
+        const presentationStart = timer.questionPresentedAt || timer.startedAt || Date.now();
+        const now = Date.now();
+
+        return Math.max(0, now - presentationStart);
     }
 
     /**

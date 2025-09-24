@@ -152,13 +152,12 @@ function registerPracticeSessionHandlers(io, socket) {
                 socketId: socket.id
             }, 'Submitting practice answer');
             // Submit answer to practice session service and get result with correct answers
-            const result = await practiceSessionService_1.practiceSessionService.submitAnswer(payload.sessionId, {
-                questionUid: payload.questionUid,
-                selectedAnswers: payload.selectedAnswers,
-                timeSpentMs: payload.timeSpentMs
-            });
+            const result = await practiceSessionService_1.practiceSessionService.submitAnswer(payload.sessionId, payload // Pass the full payload which includes sessionId
+            );
+            // Get updated session data for feedback logic
+            const updatedSession = await practiceSessionService_1.practiceSessionService.getSession(payload.sessionId);
             // If immediate feedback is enabled, send separate payloads like live tournaments
-            if (result.updatedSession.settings.showImmediateFeedback) {
+            if (updatedSession && updatedSession.settings.showImmediateFeedback) {
                 // 1. Send answer confirmation first
                 const submittedResponse = {
                     sessionId: payload.sessionId,
@@ -202,12 +201,13 @@ function registerPracticeSessionHandlers(io, socket) {
                     questionUid: payload.questionUid,
                     isCorrect: result.isCorrect,
                     correctAnswers: questionDetails?.correctAnswers || [],
+                    numericCorrectAnswer: result.numericCorrectAnswer,
                     explanation: questionDetails?.explanation,
-                    canRetry: result.updatedSession.settings.allowRetry,
+                    canRetry: updatedSession.settings.allowRetry,
                     statistics: {
-                        questionsAnswered: result.updatedSession.statistics.questionsAttempted,
-                        correctCount: result.updatedSession.statistics.correctAnswers,
-                        accuracyPercentage: result.updatedSession.statistics.accuracyPercentage
+                        questionsAnswered: updatedSession.statistics.questionsAttempted,
+                        correctCount: updatedSession.statistics.correctAnswers,
+                        accuracyPercentage: updatedSession.statistics.accuracyPercentage
                     }
                 };
                 socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_ANSWER_FEEDBACK, statisticsResponse);

@@ -2,6 +2,12 @@
 # Démarre le backend (pm2) et le frontend Next.js (serveur) pour MathQuest
 # Backend: port 3007, Frontend: port 3008
 # Usage: bash start-all.sh
+#
+# Configuration:
+# - Frontend: Minimal logging with memory limits (256MB)
+# - Backend: Memory-optimized with monitoring (512MB)
+# - Logs: Stored in ./logs/ directory
+# - Memory restart limits: 1GB (backend), 1GB (frontend)
 
 set -e
 

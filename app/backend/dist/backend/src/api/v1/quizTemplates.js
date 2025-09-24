@@ -16,10 +16,10 @@ const router = express_1.default.Router();
 // Create a singleton instance or allow injection for testing
 let gameTemplateServiceInstance = null;
 const getGameTemplateService = () => {
-    if (!gameTemplateServiceInstance) {
-        gameTemplateServiceInstance = new gameTemplateService_1.GameTemplateService();
+    if (gameTemplateServiceInstance) {
+        return gameTemplateServiceInstance;
     }
-    return gameTemplateServiceInstance;
+    return new gameTemplateService_1.GameTemplateService();
 };
 // For testing purposes only - allows tests to inject a mock service
 const __setGameTemplateServiceForTesting = (mockService) => {
@@ -37,12 +37,12 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
             res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
-        const { name, gradeLevel, themes, discipline, description, defaultMode, questions } = req.body;
+        const { name, gradeLevel, themes, discipline, description, defaultMode, questionUids } = req.body;
         // Basic validation
-        if (!name || !themes) {
+        if (!name || !themes || !questionUids) {
             res.status(400).type('application/json').json({
                 error: 'Required fields missing',
-                required: ['name', 'themes']
+                required: ['name', 'themes', 'questionUids']
             });
             return;
         }
@@ -53,7 +53,7 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
             discipline: discipline || '',
             description,
             defaultMode,
-            questions
+            questionUids
         });
         res.status(201).type('application/json').json({ gameTemplate });
     }
@@ -120,7 +120,17 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
             take: Number(pageSize)
         };
         const result = await getGameTemplateService().getgameTemplates(req.user.userId, filters, pagination);
-        res.status(200).type('application/json').json(result);
+        // Transform to match GameTemplatesResponse structure
+        const response = {
+            gameTemplates: result.gameTemplates,
+            meta: {
+                total: result.total,
+                page: Number(page),
+                pageSize: Number(pageSize),
+                totalPages: result.totalPages
+            }
+        };
+        res.status(200).type('application/json').json(response);
     }
     catch (error) {
         logger.error({ error }, 'Error fetching quiz templates');
@@ -133,7 +143,34 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
  * Requires teacher authentication
  */
 router.put('/:id', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schemas_1.UpdateQuizTemplateRequestSchema), async (req, res) => {
-    // ...existing code...
+    try {
+        if (!req.user?.userId || req.user.role !== 'TEACHER') {
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
+            return;
+        }
+        const { id } = req.params;
+        const updateData = {
+            id,
+            ...req.body
+        };
+        const updatedgameTemplate = await getGameTemplateService().updategameTemplate(req.user.userId, updateData);
+        res.status(200).type('application/json').json({
+            message: 'Quiz template updated successfully',
+            gameTemplate: updatedgameTemplate
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error updating quiz template');
+        if (error instanceof Error && error.message.includes('not found')) {
+            res.status(404).type('application/json').json({ error: error.message });
+            return;
+        }
+        if (error instanceof Error && error.message.includes('permission')) {
+            res.status(403).type('application/json').json({ error: error.message });
+            return;
+        }
+        res.status(500).type('application/json').json({ error: 'An error occurred while updating the quiz template' });
+    }
 });
 /**
  * Delete a quiz template

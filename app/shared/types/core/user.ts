@@ -3,13 +3,14 @@
  */
 
 // User roles - should match Prisma schema enum
-export type UserRole = 'STUDENT' | 'TEACHER'; // Use union type instead of enum for Prisma compatibility
+export type UserRole = 'STUDENT' | 'TEACHER' | 'GUEST'; // Use union type instead of enum for Prisma compatibility
 
 // Base user interface
 export interface User {
     id: string;
     username: string;
     email?: string;
+    emailVerified?: boolean;
     avatarEmoji: string; // Mandatory - defaults to 🐼 panda emoji
     role: UserRole;
     cookieId?: string;
@@ -23,6 +24,7 @@ export interface PublicUser {
     id: string;
     username: string;
     email?: string;
+    emailVerified?: boolean;
     avatarEmoji: string; // Mandatory - consistent with User interface
     role: UserRole;
     createdAt: string;
@@ -43,13 +45,6 @@ export interface UserRegistrationData {
 export interface UserLoginData {
     email: string;
     password: string;
-}
-
-// User profile update interface
-export interface UserProfileUpdate {
-    username?: string;
-    avatarEmoji?: string;
-    email?: string;
 }
 
 // User upgrade data interface

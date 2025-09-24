@@ -82,6 +82,10 @@ export interface PracticeSessionState {
     lastFeedback: {
         isCorrect: boolean;
         correctAnswers: boolean[];
+        numericCorrectAnswer?: {
+            correctAnswer: number;
+            tolerance?: number;
+        };
         explanation?: string;
         canRetry: boolean;
         statistics: {
@@ -153,10 +157,85 @@ export function usePracticeSession({
         completionSummary: null
     });
 
+    // Ref to track current session state for event handlers
+    const sessionRef = useRef<PracticeSession | null>(null);
+
     // Update state helper
     const updateState = useCallback((updates: Partial<PracticeSessionState>) => {
-        setState(prev => ({ ...prev, ...updates }));
+        setState(prev => {
+            const newState = { ...prev, ...updates };
+            sessionRef.current = newState.session;
+            return newState;
+        });
     }, []);
+
+    // Session recovery helpers
+    const SESSION_STORAGE_KEY = `practice_session_${userId}`;
+
+    const storeSessionId = useCallback((sessionId: string) => {
+        try {
+            localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+            logger.debug('Session ID stored in localStorage', { sessionId });
+        } catch (error) {
+            logger.warn('Failed to store session ID in localStorage', error);
+        }
+    }, [SESSION_STORAGE_KEY]);
+
+    const getStoredSessionId = useCallback((): string | null => {
+        try {
+            return localStorage.getItem(SESSION_STORAGE_KEY);
+        } catch (error) {
+            logger.warn('Failed to retrieve session ID from localStorage', error);
+            return null;
+        }
+    }, [SESSION_STORAGE_KEY]);
+
+    const clearStoredSessionId = useCallback(() => {
+        try {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            logger.debug('Session ID cleared from localStorage');
+        } catch (error) {
+            logger.warn('Failed to clear session ID from localStorage', error);
+        }
+    }, [SESSION_STORAGE_KEY]);
+
+    // Session recovery function
+    const recoverSession = useCallback(async (sessionId: string) => {
+        if (!socketRef.current?.connected) {
+            logger.warn('Cannot recover session: socket not connected');
+            return;
+        }
+
+        try {
+            logger.info('Attempting to recover practice session', { sessionId });
+
+            // Request session state from backend using existing GET_PRACTICE_SESSION_STATE event
+            const payload: GetPracticeSessionStatePayload = {
+                sessionId
+            };
+
+            socketRef.current.emit('GET_PRACTICE_SESSION_STATE', payload);
+
+            // Set a timeout for recovery response
+            const recoveryTimeout = setTimeout(() => {
+                logger.warn('Session recovery timed out', { sessionId });
+                clearStoredSessionId(); // Clear invalid session ID
+            }, 5000);
+
+            // Listen for session state response (handled by existing PRACTICE_SESSION_STATE event)
+            const handleRecoveryResponse = () => {
+                clearTimeout(recoveryTimeout);
+                logger.info('Session recovery successful', { sessionId });
+            };
+
+            // Set up one-time listener for recovery response
+            socketRef.current.once(PRACTICE_EVENTS.PRACTICE_SESSION_STATE, handleRecoveryResponse);
+
+        } catch (error) {
+            logger.error('Failed to recover session', { sessionId, error });
+            clearStoredSessionId();
+        }
+    }, [clearStoredSessionId]);
 
     // Clear error
     const clearError = useCallback(() => {
@@ -166,6 +245,11 @@ export function usePracticeSession({
     // Socket event handlers
     const handleSessionCreated = useCallback((payload: PracticeSessionCreatedPayload) => {
         logger.info('Practice session created', payload);
+
+        // Store session ID in localStorage for recovery
+        if (payload.session?.sessionId) {
+            storeSessionId(payload.session.sessionId);
+        }
 
         updateState({
             session: payload.session,
@@ -178,7 +262,7 @@ export function usePracticeSession({
             } : null,
             error: null
         });
-    }, [updateState]);
+    }, [updateState, storeSessionId]);
 
     const handleQuestionReady = useCallback((payload: PracticeQuestionReadyPayload) => {
         logger.info('Practice question ready', payload);
@@ -205,26 +289,34 @@ export function usePracticeSession({
             retriedQuestions: [] // Not provided in feedback
         };
 
-        // Update state and merge statistics into session
-        setState(prevState => ({
-            ...prevState,
+        // Update state using updateState for consistency
+        updateState({
             hasAnswered: true,
             lastFeedback: {
                 isCorrect: payload.isCorrect,
                 correctAnswers: payload.correctAnswers,
+                numericCorrectAnswer: payload.numericCorrectAnswer,
                 explanation: payload.explanation,
                 canRetry: payload.canRetry,
                 statistics: payload.statistics
-            },
+            }
+        });
+
+        // Update session statistics separately
+        setState(prevState => ({
+            ...prevState,
             session: prevState.session ? {
                 ...prevState.session,
                 statistics: updatedStatistics
             } : null
         }));
-    }, []);
+    }, [updateState]);
 
     const handleSessionCompleted = useCallback((payload: PracticeSessionCompletedPayload) => {
         logger.info('Practice session completed', payload);
+
+        // Clear stored session ID when session is completed
+        clearStoredSessionId();
 
         updateState({
             session: payload.session,
@@ -233,27 +325,52 @@ export function usePracticeSession({
             currentQuestion: null,
             questionProgress: null
         });
-    }, [updateState]);
+    }, [updateState, clearStoredSessionId]);
 
     const handleSessionError = useCallback((payload: PracticeSessionErrorPayload) => {
         logger.error('Practice session error', payload);
+
+        // Clear stored session ID if session was not found (allows starting new session)
+        if (payload.errorType === 'session_not_found') {
+            clearStoredSessionId();
+            logger.info('Cleared stored session ID due to session_not_found error');
+        }
 
         updateState({
             error: payload.message,
             connecting: false
         });
-    }, [updateState]);
+    }, [updateState, clearStoredSessionId]);
 
     const handleSessionState = useCallback((payload: PracticeSessionStatePayload) => {
-        logger.info('Practice session state', payload);
+        logger.info('Practice session state recovered', payload);
+
+        const session = payload.session;
+
+        // Calculate current question and progress
+        const currentQuestionIndex = session.currentQuestionIndex || 0;
+        const totalQuestions = session.questionPool?.length || 0;
+        const questionsRemaining = Math.max(0, totalQuestions - currentQuestionIndex - 1);
+
+        // Determine if user has answered the current question
+        const hasAnsweredCurrent = session.answers && session.answers.length > currentQuestionIndex;
 
         updateState({
-            session: payload.session,
-            sessionId: payload.sessionId
+            session: session,
+            sessionId: payload.sessionId,
+            currentQuestion: session.currentQuestion || null,
+            questionProgress: totalQuestions > 0 ? {
+                currentQuestionNumber: currentQuestionIndex + 1,
+                totalQuestions: totalQuestions,
+                questionsRemaining: questionsRemaining
+            } : null,
+            hasAnswered: hasAnsweredCurrent,
+            error: null,
+            connecting: false
         });
     }, [updateState]);
 
-    // Socket connection
+    // Socket connection - made stable by removing dependencies
     const connectSocket = useCallback(() => {
         if (socketRef.current?.connected) {
             return;
@@ -275,18 +392,25 @@ export function usePracticeSession({
 
             const socket = socketRef.current;
 
-            // Connection events
-            socket.on('connect', () => {
+            // Define event handlers inline to avoid dependency issues
+            const handleConnect = () => {
                 logger.info('Practice session socket connected');
                 updateState({ connected: true, connecting: false });
-            });
 
-            socket.on('disconnect', (reason: string) => {
+                // Attempt to recover existing session after connection
+                const storedSessionId = getStoredSessionId();
+                if (storedSessionId && !sessionRef.current) {
+                    logger.info('Found stored session ID, attempting recovery', { storedSessionId });
+                    recoverSession(storedSessionId);
+                }
+            };
+
+            const handleDisconnect = (reason: string) => {
                 logger.info('Practice session socket disconnected', { reason });
                 updateState({ connected: false });
-            });
+            };
 
-            socket.on('connect_error', (error: Error) => {
+            const handleConnectError = (error: Error) => {
                 logger.error('Practice session socket connection error', error);
 
                 // Provide user-friendly error messages based on error type
@@ -304,9 +428,14 @@ export function usePracticeSession({
                     connecting: false,
                     error: errorMessage
                 });
-            });
+            };
 
-            // Practice session events - use constants and add validation
+            // Connection events
+            socket.on('connect', handleConnect);
+            socket.on('disconnect', handleDisconnect);
+            socket.on('connect_error', handleConnectError);
+
+            // Practice session events - define handlers inline
             socket.on(PRACTICE_EVENTS.PRACTICE_SESSION_CREATED, (payload: any) => {
                 try {
                     handleSessionCreated(payload);
@@ -361,6 +490,7 @@ export function usePracticeSession({
                         const correctAnswers = validatedPayload.correctAnswers;
                         setState(prevState => ({
                             ...prevState,
+                            hasAnswered: true, // Set hasAnswered when correct answers are received
                             lastFeedback: prevState.lastFeedback ? {
                                 ...prevState.lastFeedback,
                                 correctAnswers: correctAnswers
@@ -410,8 +540,7 @@ export function usePracticeSession({
                 error: error instanceof Error ? error.message : 'Connection failed'
             });
         }
-    }, [updateState, handleSessionCreated, handleQuestionReady, handleAnswerFeedback,
-        handleSessionCompleted, handleSessionError, handleSessionState]);
+    }, []); // Empty dependency array to make it stable
 
     // Actions
     const startSession = useCallback(async () => {
@@ -564,6 +693,10 @@ export function usePracticeSession({
             socketRef.current.disconnect();
             socketRef.current = null;
         }
+
+        // Clear stored session ID on disconnect
+        clearStoredSessionId();
+
         updateState({
             connected: false,
             connecting: false,
@@ -576,7 +709,7 @@ export function usePracticeSession({
             isCompleted: false,
             completionSummary: null
         });
-    }, [updateState]);
+    }, [updateState, clearStoredSessionId]);
 
     const reconnect = useCallback(() => {
         disconnect();
@@ -592,7 +725,7 @@ export function usePracticeSession({
                 socketRef.current.disconnect();
             }
         };
-    }, [connectSocket]);
+    }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
         if (autoStart && state.connected && !state.session) {

@@ -41,7 +41,8 @@ class PracticeSessionService {
                 questionPool = await this.generateQuestionPool(settings);
                 logger.info({
                     sessionId,
-                    questionCount: questionPool.length
+                    questionCount: questionPool.length,
+                    reason: 'No gameTemplateId provided in settings.'
                 }, 'Generated new question pool for practice session');
             }
             if (questionPool.length === 0) {
@@ -145,6 +146,7 @@ class PracticeSessionService {
             // Validate answer and get correct answers for feedback
             const isCorrect = await this.validateAnswer(session.currentQuestion.uid, answerData.selectedAnswers);
             const correctAnswers = await this.getCorrectAnswers(session.currentQuestion.uid);
+            const numericCorrectAnswer = await this.getNumericCorrectAnswer(session.currentQuestion.uid);
             // Create answer record
             const answer = {
                 questionUid: session.currentQuestion.uid,
@@ -191,11 +193,18 @@ class PracticeSessionService {
             }, 'Practice answer submitted');
             // Return structured feedback result
             const result = {
+                sessionId,
+                questionUid: answerData.questionUid,
                 isCorrect,
-                correctAnswers,
+                correctAnswers: correctAnswers.map(ans => ans === 1), // Convert number[] to boolean[]
+                numericCorrectAnswer: numericCorrectAnswer || undefined,
                 explanation: undefined, // Can be added later from question data
-                pointsEarned: isCorrect ? 10 : 0, // Simple scoring system
-                updatedSession: session
+                canRetry: !isCorrect, // Allow retry if incorrect
+                statistics: {
+                    questionsAnswered: session.statistics.questionsAttempted,
+                    correctCount: session.statistics.correctAnswers,
+                    accuracyPercentage: session.statistics.accuracyPercentage
+                }
             };
             return result;
         }
@@ -218,6 +227,52 @@ class PracticeSessionService {
                 session.status = 'completed';
                 session.completedAt = new Date();
                 session.currentQuestion = undefined;
+                // Create gameInstance record for completed practice session
+                try {
+                    // Generate a unique access code for the practice session
+                    const accessCode = `PRACTICE-${Date.now()}-${sessionId.slice(-4).toUpperCase()}`;
+                    // Create gameInstance record
+                    const gameInstance = await prisma_1.prisma.gameInstance.create({
+                        data: {
+                            accessCode,
+                            name: `Session d'entraînement - ${session.settings.discipline || 'Général'}`,
+                            status: 'completed',
+                            playMode: 'practice',
+                            initiatorUserId: session.userId,
+                            startedAt: session.startedAt,
+                            endedAt: session.completedAt,
+                            gameTemplateId: session.settings.gameTemplateId || '06a46ed3-63ad-4a3a-91d2-ae4292590206', // All Modes Test Template from test DB
+                            settings: JSON.parse(JSON.stringify({
+                                practiceSettings: session.settings,
+                                statistics: session.statistics
+                            }))
+                        }
+                    });
+                    // Create gameParticipant record using the gameInstance.id
+                    await prisma_1.prisma.gameParticipant.create({
+                        data: {
+                            gameInstanceId: gameInstance.id,
+                            userId: session.userId,
+                            status: 'COMPLETED',
+                            joinedAt: session.startedAt,
+                            liveScore: session.statistics.correctAnswers * 10, // 10 points per correct answer
+                            deferredScore: session.statistics.correctAnswers * 10
+                        }
+                    });
+                    logger.info({
+                        sessionId,
+                        accessCode,
+                        userId: session.userId
+                    }, 'Created gameInstance record for completed practice session');
+                }
+                catch (dbError) {
+                    logger.error({
+                        sessionId,
+                        userId: session.userId,
+                        error: dbError
+                    }, 'Failed to create gameInstance record for practice session');
+                    // Don't fail the session end if DB creation fails
+                }
                 await this.storeSession(session);
             }
             logger.info({ sessionId, statistics: session.statistics }, 'Practice session ended');
@@ -310,32 +365,39 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: {
-                    uid: true,
-                    title: true,
-                    text: true,
-                    answerOptions: true,
-                    questionType: true,
-                    timeLimit: true,
-                    gradeLevel: true,
-                    discipline: true,
-                    themes: true
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
                 }
             });
             if (!question) {
                 throw new Error(`Question not found: ${questionUid}`);
             }
-            return {
+            // Build the polymorphic structure
+            const result = {
                 uid: question.uid,
                 title: question.title || '',
                 text: question.text,
-                answerOptions: Array.isArray(question.answerOptions) ? question.answerOptions : [],
                 questionType: question.questionType,
                 timeLimit: question.timeLimit || undefined,
                 gradeLevel: question.gradeLevel || '',
                 discipline: question.discipline || '',
                 themes: Array.isArray(question.themes) ? question.themes : []
             };
+            // Add polymorphic question data based on type
+            if (question.multipleChoiceQuestion) {
+                result.multipleChoiceQuestion = {
+                    answerOptions: question.multipleChoiceQuestion.answerOptions
+                };
+                // Legacy fallback for backward compatibility
+                result.answerOptions = question.multipleChoiceQuestion.answerOptions;
+            }
+            if (question.numericQuestion) {
+                result.numericQuestion = {
+                    unit: question.numericQuestion.unit || undefined
+                };
+            }
+            return result;
         }
         catch (error) {
             logger.error({ questionUid, error }, 'Failed to get question data');
@@ -349,29 +411,49 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: { correctAnswers: true }
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
+                }
             });
             if (!question) {
                 throw new Error(`Question not found: ${questionUid}`);
             }
-            const correctAnswers = Array.isArray(question.correctAnswers) ? question.correctAnswers : [];
-            // Check if selected answers match correct answers
-            const correctIndices = correctAnswers
-                .map((isCorrect, index) => isCorrect ? index : -1)
-                .filter((index) => index !== -1);
-            // Compare arrays (order doesn't matter for multiple choice)
-            const selectedSet = new Set(selectedAnswers);
-            const correctSet = new Set(correctIndices);
-            if (selectedSet.size !== correctSet.size) {
-                return false;
+            // Handle numeric questions
+            if (question.numericQuestion && question.questionType === 'numeric') {
+                if (selectedAnswers.length !== 1) {
+                    return false; // Numeric questions should have exactly one answer
+                }
+                const userAnswer = selectedAnswers[0];
+                const correctAnswer = question.numericQuestion.correctAnswer;
+                const tolerance = question.numericQuestion.tolerance || 0;
+                const difference = Math.abs(userAnswer - correctAnswer);
+                return difference <= tolerance;
             }
-            // Convert Set to Array for iteration
-            for (const correct of Array.from(correctSet)) {
-                if (!selectedSet.has(correct)) {
+            // Handle multiple choice questions
+            if (question.multipleChoiceQuestion) {
+                const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
+                // Check if selected answers match correct answers
+                const correctIndices = correctAnswers
+                    .map((isCorrect, index) => isCorrect ? index : -1)
+                    .filter((index) => index !== -1);
+                // Compare arrays (order doesn't matter for multiple choice)
+                const selectedSet = new Set(selectedAnswers);
+                const correctSet = new Set(correctIndices);
+                if (selectedSet.size !== correctSet.size) {
                     return false;
                 }
+                // Convert Set to Array for iteration
+                for (const correct of Array.from(correctSet)) {
+                    if (!selectedSet.has(correct)) {
+                        return false;
+                    }
+                }
+                return true;
             }
-            return true;
+            // Unknown question type or missing data
+            logger.warn({ questionUid, questionType: question.questionType }, 'Unknown question type or missing validation data');
+            return false;
         }
         catch (error) {
             logger.error({ questionUid, selectedAnswers, error }, 'Failed to validate answer');
@@ -412,12 +494,16 @@ class PracticeSessionService {
         const questionData = await this.getQuestionData(questionUid, session.settings);
         // Set the question index for reference
         questionData.questionIndex = session.currentQuestionIndex;
+        // Update session state to reflect the current question
+        session.currentQuestion = questionData;
+        // Store the updated session
+        await this.storeSession(session);
         logger.debug({
             sessionId,
             questionUid,
             questionIndex: session.currentQuestionIndex,
             totalQuestions: session.questionPool.length
-        }, 'Retrieved next practice question');
+        }, 'Retrieved and set next practice question');
         return questionData;
     }
     /**
@@ -429,15 +515,18 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: { correctAnswers: true }
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
+                }
             });
-            if (!question || !question.correctAnswers) {
+            if (!question || !question.multipleChoiceQuestion?.correctAnswers) {
                 throw new Error(`Question ${questionUid} not found or has no correct answers`);
             }
             // Convert boolean array to indices array
             // correctAnswers is a boolean array where true indicates the correct answer
             const correctIndices = [];
-            question.correctAnswers.forEach((isCorrect, index) => {
+            question.multipleChoiceQuestion.correctAnswers.forEach((isCorrect, index) => {
                 if (isCorrect) {
                     correctIndices.push(index);
                 }
@@ -450,6 +539,30 @@ class PracticeSessionService {
         }
     }
     /**
+     * Get numeric question correct answer data
+     */
+    async getNumericCorrectAnswer(questionUid) {
+        try {
+            const question = await prisma_1.prisma.question.findUnique({
+                where: { uid: questionUid },
+                include: {
+                    numericQuestion: true,
+                }
+            });
+            if (!question || !question.numericQuestion) {
+                return null;
+            }
+            return {
+                correctAnswer: question.numericQuestion.correctAnswer,
+                tolerance: question.numericQuestion.tolerance || undefined
+            };
+        }
+        catch (error) {
+            logger.error({ questionUid, error }, 'Failed to get numeric correct answer');
+            return null;
+        }
+    }
+    /**
      * Get question details including correct answers and explanation
      * @param questionUid Question UID
      * @returns Question details with boolean[] correct answers and explanation
@@ -458,16 +571,16 @@ class PracticeSessionService {
         try {
             const question = await prisma_1.prisma.question.findUnique({
                 where: { uid: questionUid },
-                select: {
-                    correctAnswers: true,
-                    explanation: true
+                include: {
+                    multipleChoiceQuestion: true,
+                    numericQuestion: true,
                 }
             });
             if (!question) {
                 return null;
             }
             return {
-                correctAnswers: Array.isArray(question.correctAnswers) ? question.correctAnswers : [],
+                correctAnswers: question.multipleChoiceQuestion?.correctAnswers || [],
                 explanation: question.explanation || undefined
             };
         }

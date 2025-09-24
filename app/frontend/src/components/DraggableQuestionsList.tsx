@@ -53,7 +53,7 @@ interface DraggableQuestionsListProps {
     onTimerAction?: (info: { status: 'run' | 'pause' | 'stop'; questionUid: string; timeLeftMs: number }) => void;
     onImmediateUpdateActiveTimer?: (newTime: number) => void;
     disabled?: boolean;
-    getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
+    getStatsForQuestion?: (uid: string) => { type: 'multipleChoice'; data: number[] } | { type: 'numeric'; data: number[] } | undefined; // Provide stats for each question
     expandedUids: Set<string>; // NEW: expanded question UIDs
     onToggleExpand: (uid: string) => void; // NEW: toggle handler
     getTimerState?: (questionUid: string) => {
@@ -65,6 +65,9 @@ interface DraggableQuestionsListProps {
     };
     // Modernization: terminatedQuestions from backend (Record<string, boolean>)
     terminatedQuestions?: Record<string, boolean>;
+    // NEW: Control behavior props
+    hideExplanation?: boolean; // Hide explanation/justification section
+    keepTitleWhenExpanded?: boolean; // Keep title visible when expanded (only hide fake titles)
 }
 
 export default React.memo(function DraggableQuestionsList(props: DraggableQuestionsListProps) {
@@ -110,6 +113,8 @@ export default React.memo(function DraggableQuestionsList(props: DraggableQuesti
         onToggleExpand,
         getTimerState,
         terminatedQuestions,
+        hideExplanation,
+        keepTitleWhenExpanded,
     } = props;
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
@@ -277,6 +282,8 @@ export default React.memo(function DraggableQuestionsList(props: DraggableQuesti
                             onPlay(uid, 0);
                         }}
                         className={className}
+                        hideExplanation={hideExplanation}
+                        keepTitleWhenExpanded={keepTitleWhenExpanded}
                     />
                 );
             })}
