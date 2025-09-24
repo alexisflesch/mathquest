@@ -50,10 +50,6 @@ export function middleware(request: NextRequest) {
         pathname === '/site.webmanifest' ||
         pathname === '/robots.txt' ||
         pathname === '/sitemap.xml' ||
-        pathname === '/sw.js' ||
-        pathname === '/sw-v2.js' ||
-        pathname === '/sw-v3.js' ||
-        /^\/workbox-.*\.js$/.test(pathname) ||
         /^\/icon-.*\.png$/.test(pathname) ||
         /^\/screenshot-.*\.png$/.test(pathname) ||
         /\.(png|jpg|jpeg|gif|webp|svg|ico|txt|webmanifest)$/i.test(pathname)

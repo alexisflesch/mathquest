@@ -44,13 +44,8 @@ export function middleware(request: NextRequest) {
         pathname.startsWith('/api') ||
         pathname === '/favicon.ico' ||
         pathname === '/favicon.svg' ||
-        pathname === '/manifest.json' ||
         pathname === '/robots.txt' ||
         pathname === '/sitemap.xml' ||
-        pathname === '/sw.js' ||
-        pathname === '/sw-v2.js' ||
-        pathname === '/sw-v3.js' ||
-        pathname.match(/^\/workbox-.*\.js$/) ||
         pathname.match(/^\/icon-.*\.png$/) ||
         pathname.match(/^\/screenshot-.*\.png$/) ||
         pathname === '/burger.svg' ||

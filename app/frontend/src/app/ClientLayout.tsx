@@ -73,22 +73,9 @@ export default function ClientLayout({
     children: React.ReactNode;
 }) {
     useEffect(() => {
-        // In development, ensure no stale Service Worker controls the app
-        // This prevents workbox "no-response" errors and /sw.js 404 churn during local dev
-        if (process.env.NODE_ENV === 'development' && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations()
-                .then((regs) => Promise.all(regs.map((r) => r.unregister())))
-                .then(() => {
-                    if ('caches' in window) {
-                        caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
-                    }
-                    // Small delay to let the unregister settle before next render cycle
-                    setTimeout(() => {
-                        console.info('[PWA] Dev mode: unregistered all Service Workers and cleared caches');
-                    }, 0);
-                })
-                .catch((e) => console.warn('[PWA] Dev SW cleanup failed:', e));
-        }
+        // Dev-only: previous code attempted to forcibly unregister Service Workers and clear caches.
+        // That behavior has been removed to eliminate any runtime service worker activity during local dev.
+        // If you need to clear SWs manually while debugging, use an incognito window or the ?unregisterSW=1 hook in layout.tsx.
 
         // Example of client-side logging in action
         logger.debug('Layout mounted - Debug level message');

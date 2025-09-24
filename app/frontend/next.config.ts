@@ -59,30 +59,6 @@ const nextConfig: NextConfig = {
     async headers() {
         return [
             {
-                source: '/sw.js',
-                headers: [
-                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
-                    { key: 'Pragma', value: 'no-cache' },
-                    { key: 'Expires', value: '0' },
-                ],
-            },
-            {
-                source: '/sw-v2.js',
-                headers: [
-                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
-                    { key: 'Pragma', value: 'no-cache' },
-                    { key: 'Expires', value: '0' },
-                ],
-            },
-            {
-                source: '/sw-v3.js',
-                headers: [
-                    { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
-                    { key: 'Pragma', value: 'no-cache' },
-                    { key: 'Expires', value: '0' },
-                ],
-            },
-            {
                 source: '/_next/static/:path*/_buildManifest.js',
                 headers: [
                     { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
@@ -105,37 +81,7 @@ const nextConfig: NextConfig = {
 // Conditionally apply PWA plugin only in production
 let finalConfig = nextConfig;
 
-if (process.env.NODE_ENV === 'production') {
-    try {
-        const withPWA = require('@ducanh2912/next-pwa');
-        finalConfig = withPWA({
-            dest: 'public',
-            register: true,
-            sw: 'sw-v3.js',
-            cacheStartUrl: false,
-            workboxOptions: {
-                exclude: [
-                    /_buildManifest\.js$/,
-                    /_ssgManifest\.js$/,
-                    /_middlewareManifest\.js$/,
-                ],
-                runtimeCaching: [
-                    {
-                        urlPattern: '/',
-                        handler: 'StaleWhileRevalidate',
-                        options: {
-                            cacheName: 'start-url'
-                        },
-                    },
-                ],
-                cleanupOutdatedCaches: true,
-                maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
-            },
-        })(nextConfig);
-    } catch (error) {
-        console.warn('PWA plugin not available, skipping PWA configuration:', error);
-    }
-} if (isAnalyze) {
+if (isAnalyze) {
     const withBundleAnalyzer = require('@next/bundle-analyzer');
     finalConfig = withBundleAnalyzer({
         enabled: true,

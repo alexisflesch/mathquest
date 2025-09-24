@@ -12,7 +12,6 @@ export const metadata: Metadata = {
       { url: '/favicon.svg', type: 'image/svg+xml' }
     ]
   },
-  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -40,21 +39,8 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.className} suppressHydrationWarning>
       <body>
-        {/* Dev-only SW cleanup very early to avoid stale SW intercepting navigations */}
-        {process.env.NODE_ENV === 'development' && (
-          <script dangerouslySetInnerHTML={{
-            __html: `
-              (function(){
-                if ('serviceWorker' in navigator) {
-                  navigator.serviceWorker.getRegistrations()
-                    .then(function(regs){ return Promise.all(regs.map(function(r){ return r.unregister(); })); })
-                    .then(function(){ if ('caches' in window) { caches.keys().then(function(keys){ return Promise.all(keys.map(function(k){ return caches.delete(k); })); }); }})
-                    .catch(function(e){ console.warn('[PWA] Early dev SW cleanup failed:', e); });
-                }
-              })();
-            `
-          }} />
-        )}
+        {/* Dev SW cleanup disabled to avoid any runtime serviceWorker activity during local dev.
+            If you need to unregister SWs for testing, use an incognito window or append ?unregisterSW=1 to the URL which activates a one-time unregister hook placed elsewhere in the codebase. */}
         <ClientLayout>
           {children}
         </ClientLayout>

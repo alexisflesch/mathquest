@@ -19,8 +19,7 @@ export default [
       '**/archive/**',
       '**/next-env.d.ts',
       // Ignore PWA generated files
-      '**/public/sw.js',
-      '**/public/workbox-*.js'
+      // legacy: workbox/sw entries removed
     ]
   },
   {

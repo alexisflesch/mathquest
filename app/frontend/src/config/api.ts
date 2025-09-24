@@ -59,49 +59,60 @@ export async function makeApiRequest<T>(
         ? { 'Content-Type': 'application/json', ...options.headers }
         : { ...createAuthHeaders(authToken || undefined), ...options.headers };
 
-    const response = await fetch(url, {
-        ...options,
-        credentials: 'include', // Include cookies for authentication
-        headers,
-    });
+    try {
+        const response = await fetch(url, {
+            ...options,
+            credentials: 'include', // Include cookies for authentication
+            headers,
+        });
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        // Handle structured error responses from backend
-        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            // Handle structured error responses from backend
+            const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
 
-        // Include status code in error for better error detection
-        const enhancedError = new Error(`${response.status}: ${errorMessage}`);
-        (enhancedError as any).statusCode = response.status;
+            // Include status code in error for better error detection
+            const enhancedError = new Error(`${response.status}: ${errorMessage}`);
+            (enhancedError as any).statusCode = response.status;
 
-        throw enhancedError;
+            console.error('[makeApiRequest] response error', { url, status: response.status, message: errorMessage });
+
+            throw enhancedError;
+        }
+
+        // Handle 204 No Content responses (successful deletion with no body)
+        if (response.status === 204) {
+            return {} as T; // Return empty object for 204 responses
+        }
+
+        const data = await response.json();
+
+        // Validate response using Zod schema if provided
+        if (schema) {
+            try {
+                return schema.parse(data);
+            } catch (error) {
+                if (error instanceof z.ZodError) {
+                    console.error('API Response validation failed:', {
+                        endpoint: url,
+                        errors: error.errors,
+                        receivedData: data
+                    });
+                    throw new Error(`API response validation failed for ${url}: ${error.errors.map(e => e.message).join(', ')}`);
+                }
+                throw error;
+            }
+        }
+
+        return data;
+    } catch (err) {
+        // Network-level errors (fetch failed) end up here.
+        console.error('[makeApiRequest] network error', { url, error: err });
+        throw err;
     }
 
     // Handle 204 No Content responses (successful deletion with no body)
-    if (response.status === 204) {
-        return {} as T; // Return empty object for 204 responses
-    }
-
-    const data = await response.json();
-
-    // Validate response using Zod schema if provided
-    if (schema) {
-        try {
-            return schema.parse(data);
-        } catch (error) {
-            if (error instanceof z.ZodError) {
-                console.error('API Response validation failed:', {
-                    endpoint: url,
-                    errors: error.errors,
-                    receivedData: data
-                });
-                throw new Error(`API response validation failed for ${url}: ${error.errors.map(e => e.message).join(', ')}`);
-            }
-            throw error;
-        }
-    }
-
-    return data;
+    // (previous logic moved into try/catch above)
 }
 
 /**
