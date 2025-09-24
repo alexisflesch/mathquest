@@ -7,7 +7,7 @@
 # - Frontend: Minimal logging with memory limits (256MB)
 # - Backend: Memory-optimized with monitoring (512MB)
 # - Logs: Stored in ./logs/ directory
-# - Memory restart limits: 400MB (backend), 300MB (frontend)
+# - Memory restart limits: 1GB (backend), 1GB (frontend)
 
 set -e
 

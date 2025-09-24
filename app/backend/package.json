@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc && npx prisma generate && cp -r src/db/generated dist/backend/src/db/",
     "start": "node --max-old-space-size=1024 --max-semi-space-size=256 -r dotenv/config dist/backend/src/server.js",
-    "start:memory-limited": "node --max-old-space-size=512 --max-semi-space-size=128 -r dotenv/config dist/backend/src/server.js",
+    "start:memory-limited": "node --max-old-space-size=1024 --max-semi-space-size=256 -r dotenv/config dist/backend/src/server.js",
     "start:ultra-limited": "node --max-old-space-size=128 --max-semi-space-size=32 -r dotenv/config dist/backend/src/server.js",
     "dev": "nodemon src/server.ts",
     "lint": "eslint . --ext .ts",

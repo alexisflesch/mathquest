@@ -15,7 +15,7 @@ module.exports = {
             error_file: "./logs/pm2-backend-error.log",
             log_date_format: "YYYY-MM-DD HH:mm:ss Z",
             merge_logs: true,
-            max_memory_restart: "400M"
+            max_memory_restart: "1G"
         },
         {
             name: "mathquest-frontend",
@@ -31,7 +31,7 @@ module.exports = {
             error_file: "./logs/pm2-frontend-error.log",
             log_date_format: "YYYY-MM-DD HH:mm:ss Z",
             merge_logs: true,
-            max_memory_restart: "300M"
+            max_memory_restart: "1G"
         }
     ]
 }
