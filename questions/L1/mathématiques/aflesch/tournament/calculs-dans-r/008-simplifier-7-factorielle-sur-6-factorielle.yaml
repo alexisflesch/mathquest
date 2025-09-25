@@ -1,0 +1,13 @@
+- uid: "aflesch-l1-calculs-dans-r-008"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Simplifier 7! / 6!"
+  tags: ["factorisation"]
+  questionType: "numeric"
+  timeLimit: 20
+  difficulty: 1
+  text: |
+    Simplifier \(\frac{7!}{6!}\).
+  correctAnswer: 7

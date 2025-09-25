@@ -1,0 +1,16 @@
+- uid: "aflesch-l1-calculs-dans-r-001"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Fonction inverse décroissante"
+  tags: ["inéquation rationnelle"]
+  questionType: "single_choice"
+  timeLimit: 15
+  difficulty: 1
+  text: |
+    Vrai ou faux : la fonction inverse \(x \mapsto \frac{1}{x}\) est décroissante sur \(\mathbb{R}^*\).
+  answerOptions:
+    - "Vrai"
+    - "Faux"
+  correctAnswers: [false, true]

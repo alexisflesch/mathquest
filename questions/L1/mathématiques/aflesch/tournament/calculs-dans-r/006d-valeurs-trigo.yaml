@@ -1,0 +1,19 @@
+- uid: "aflesch-l1-calculs-dans-r-006d"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Valeur exacte du cosinus"
+  tags: ["identités trigonométriques"]
+  questionType: "multiple_choice"
+  timeLimit: 20
+  difficulty: 1
+  text: |
+    Donner la valeur exacte de
+    \[\cos\left(\frac{\pi}{3}\right).\]
+  answerOptions:
+    - '\(0\)'
+    - '\(1/2\)'
+    - '\(\sqrt{2}/2\)'
+    - '\(\sqrt{3}/2\)'
+  correctAnswers: [false, true, false, false]

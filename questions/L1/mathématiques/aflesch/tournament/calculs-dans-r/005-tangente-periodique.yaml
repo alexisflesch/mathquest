@@ -1,0 +1,16 @@
+- uid: "aflesch-l1-calculs-dans-r-005"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Périodicité de la tangente"
+  tags: ["identités trigonométriques"]
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Vrai ou faux ? La fonction tangente est \(\pi\)-périodique.
+  answerOptions:
+    - "Vrai"
+    - "Faux"
+  correctAnswers: [true, false]

@@ -1,0 +1,19 @@
+- uid: "aflesch-l1-calculs-dans-r-006c"
+  author: "aflesch"
+  gradeLevel: "L1"
+  discipline: "Mathématiques"
+  themes: ["Pratique calculatoire"]
+  title: "Valeur exacte du sinus"
+  tags: ["identités trigonométriques"]
+  questionType: "multiple_choice"
+  timeLimit: 20
+  difficulty: 1
+  text: |
+    Donner la valeur exacte de
+    \[\sin\left(\frac{\pi}{4}\right).\]
+  answerOptions:
+    - '\(0\)'
+    - '\(1/2\)'
+    - '\(\sqrt{2}/2\)'
+    - '\(\sqrt{3}/2\)'
+  correctAnswers: [false, false, true, false]
