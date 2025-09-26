@@ -70,9 +70,9 @@
   text: |
     Donner la valeur de l’intégrale suivante :
     \[
-    \int_{0}^{1} \ln(x)\,dx
+    \int_{0}^{1} -\ln(x)\,dx
     \]
-  correctAnswer: -1
+  correctAnswer: 1
 
 
 - uid: "aflesch-mt3-integrales-generalisees-006"
@@ -88,7 +88,7 @@
   text: |
     Laquelle des affirmations suivantes est correcte ?
   answerOptions:
-    - "Si une intégrale converge absolument, elle converge forcément."
+    - "Si une intégrale converge absolument, alors elle converge."
     - "Une intégrale peut converger sans être absolument convergente."
     - "Si une intégrale converge, elle converge aussi absolument."
     - "La convergence absolue implique la divergence."

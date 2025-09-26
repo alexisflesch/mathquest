@@ -19,7 +19,7 @@
     - "Non"
   correctAnswers: [true, false]
   explanation: |
-    Pour \(x\to +\infty\), le terme dominant au numérateur est \(x^2\), et au dénominateur c’est \(x^4\). Donc l’intégrande est équivalent \(1/x^2\), ce qui donne une intégrale convergente par théorème d'équivalence (\(1/x^2\) est positif).
+    Lorsque \(x\to +\infty\), l’intégrande est équivalent \(1/x^2\), ce qui donne une intégrale convergente par théorème d'équivalence (\(1/x^2\) est positif).
 
 - uid: "aflesch-mt3-integrales-generalisees-012"
   author: "aflesch"
@@ -65,7 +65,7 @@
     - "Non"
   correctAnswers: [false, true]
   explanation: |
-    Pour \(x\to +\infty\), les termes dominants sont \(x^5\) au numérateur et \(2x^5\) au dénominateur. L’intégrande est donc équivalent à \(1/2\) et l'intégrale diverge.
+    Lorsque \(x\to +\infty\), l’intégrande est équivalent à \(1/2\) et l'intégrale diverge.
 
 - uid: "aflesch-mt3-integrales-generalisees-014"
   author: "aflesch"
