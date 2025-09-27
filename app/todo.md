@@ -1,26 +1,11 @@
-1. Add questions to test database and keep fixing tests under app/tests until all tests pass. If a test looks useless or outdated or redundant, remove it.
+A few things need to be fixed on the UI.
 
+1. When a teacher accesses his dashboard for a quiz that has been completed (which he shouldn't be able to do from the UI, but still can happend after he clicks "Cloturer" button), we should have questions greyed out and not startable. We should stil be able to expand them to see statistics. But we shouldn't be able to click "play", edit timer, etc. Also it should say that the quiz is over, maybe give a link to the leaderboard, grey out "Cloturer" button, etc.
 
-2. Complete e2e tests to cover the full user flow for all main features, that is :
-    - tournament
-    - practice
-    - quiz
+One issue i'm seeing is that the statistics are not available when i go to a completed quiz's dashboard : maybe the info has been lost by backend because it was stored in redis. This needs investigation. If no score are left, then we should maybe think about a new strategy (don't want to store in db, so we'll discuss it together).
 
-For each feature, cover:
-    - starting a game
-    - joining a game
-    - playing through a full game
-    - handling edge cases (disconnects, errors)
-    - verifying correct scoring and results
-For quiz, cover 
-    - teacher changing questions
-    - students joining mid-quiz
-    - multiple students playing simultaneously
-    - teacher stopping timer, showing results, etc...
+2. When a teacher closes a quiz, we should also discuss what behaviour we want.
 
+3. When, on live/[code] page, a student clicks on an answer too late, it still selects his answer (and shows the error message). I think it should go back to previously selected answer (if any) or unselect everything if none was selected before. Currently it selects the too-late answer, which is not very logical.
 
-This work is absolutely critical to ensure the app is stable and reliable. We need to be able to automatically test all main user flows end-to-end to catch regressions and bugs early.
-
-    - re-use existing components wherever possible
-    - no copy-pasting or re-implementing
-    - take inspiration from existing working tests
+4. On live/[code] page, if a student joins after during the phase where the answer is shown, it should give the same view as if he had not answered at all. Right now, the student don't see the correct answer.
