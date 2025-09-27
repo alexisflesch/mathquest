@@ -878,8 +878,8 @@ export default function TeacherGamesPage() {
           isOpen={deleteModal.isOpen}
           title="Supprimer l'activité"
           message={deleteModal.forceDelete
-            ? `Il existe des sessions de jeu liées à &quot;${deleteModal.templateName}&quot;. Voulez-vous supprimer l&apos;activité ET toutes ses sessions ? Cette action est irréversible.`
-            : `Êtes-vous sûr de vouloir supprimer &quot;${deleteModal.templateName}&quot; ? Cette action est irréversible.`
+            ? `Il existe des sessions de jeu liées à "${deleteModal.templateName}". Voulez-vous supprimer l'activité ET toutes ses sessions ? Cette action est irréversible.`
+            : `Êtes-vous sûr de vouloir supprimer "${deleteModal.templateName}" ? Cette action est irréversible.`
           }
           confirmText={deleteModal.forceDelete ? "Supprimer tout" : "Supprimer"}
           cancelText="Annuler"
