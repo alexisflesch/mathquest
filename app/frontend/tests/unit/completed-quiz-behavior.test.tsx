@@ -100,7 +100,7 @@ describe('TeacherDashboardClient - Completed Quiz Behavior', () => {
                         status: 'completed', // Quiz is already completed when page loads
                         currentQuestionUid: null,
                         questions: [],
-                        timer: { 
+                        timer: {
                             status: 'stop',
                             timerEndDateMs: Date.now() + 60000,
                             questionUid: 'test-question'
@@ -123,7 +123,7 @@ describe('TeacherDashboardClient - Completed Quiz Behavior', () => {
 
     it('does not redirect when quiz status changes to completed during session', async () => {
         let emitCallback: any = null;
-        
+
         // Mock socket to emit active quiz state initially, then change to completed
         mockSocket.on.mockImplementation((event, callback) => {
             if (event === 'game_control_state') {
@@ -138,7 +138,7 @@ describe('TeacherDashboardClient - Completed Quiz Behavior', () => {
                         status: 'active', // Initially active
                         currentQuestionUid: null,
                         questions: [],
-                        timer: { 
+                        timer: {
                             status: 'stop',
                             timerEndDateMs: Date.now() + 60000,
                             questionUid: 'test-question'
@@ -168,7 +168,7 @@ describe('TeacherDashboardClient - Completed Quiz Behavior', () => {
                 status: 'completed', // Status changes during session
                 currentQuestionUid: null,
                 questions: [],
-                timer: { 
+                timer: {
                     status: 'stop',
                     timerEndDateMs: Date.now() + 60000,
                     questionUid: 'test-question'
@@ -198,7 +198,7 @@ describe('TeacherDashboardClient - Completed Quiz Behavior', () => {
                         status: 'completed',
                         currentQuestionUid: null,
                         questions: [],
-                        timer: { 
+                        timer: {
                             status: 'stop',
                             timerEndDateMs: Date.now() + 60000,
                             questionUid: 'test-question'
@@ -243,7 +243,7 @@ describe('TeacherDashboardClient - Completed Quiz Behavior', () => {
                         status: 'active',
                         currentQuestionUid: null,
                         questions: [],
-                        timer: { 
+                        timer: {
                             status: 'stop',
                             timerEndDateMs: Date.now() + 60000,
                             questionUid: 'test-question'

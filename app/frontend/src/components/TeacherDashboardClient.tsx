@@ -741,9 +741,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     {quizState?.status === 'completed' && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
                             <p className="text-green-800 text-sm">
-                                ✅ Le quiz est maintenant terminé. 
-                                <a 
-                                    href={`/leaderboard/${code}`} 
+                                ✅ Le quiz est maintenant terminé.
+                                <a
+                                    href={`/leaderboard/${code}`}
                                     className="text-green-600 underline hover:text-green-700 ml-1"
                                 >
                                     Voir le classement final
