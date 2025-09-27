@@ -1,8 +1,10 @@
 A few things need to be fixed on the UI.
 
-1. When a teacher accesses his dashboard for a quiz that has been completed (which he shouldn't be able to do from the UI, but still can happend after he clicks "Cloturer" button), we should have questions greyed out and not startable. We should stil be able to expand them to see statistics. But we shouldn't be able to click "play", edit timer, etc. Also it should say that the quiz is over, maybe give a link to the leaderboard, grey out "Cloturer" button, etc.
+1. COMPLETED: When a teacher accesses his dashboard for a quiz that has been completed (which he shouldn't be able to do from the UI, but still can happend after he clicks "Cloturer" button), we should have questions greyed out and not startable. We should stil be able to expand them to see statistics. But we shouldn't be able to click "play", edit timer, etc. Also it should say that the quiz is over, maybe give a link to the leaderboard, grey out "Cloturer" button, etc.
 
-One issue i'm seeing is that the statistics are not available when i go to a completed quiz's dashboard : maybe the info has been lost by backend because it was stored in redis. This needs investigation. If no score are left, then we should maybe think about a new strategy (don't want to store in db, so we'll discuss it together).
+   NEW APPROACH: Instead of trying to persist statistics (too complex), implement:
+   - On page load for completed quiz: redirect to leaderboard
+   - When teacher closes quiz: grey out controls and show completion message with leaderboard link
 
 2. When a teacher closes a quiz, we should also discuss what behaviour we want.
 

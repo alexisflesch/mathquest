@@ -204,13 +204,19 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             let { controlState, errorDetails } = await getGameControlState(gameInstance.id, effectiveUserId, isTestEnvironment);
 
             if (!controlState) {
-                logger.warn({ gameId, userId: effectiveUserId }, 'Game control state missing, attempting to initialize game state in Redis');
-                // Attempt to initialize game state in Redis
-                const initialized = await gameStateService.initializeGameState(gameInstance.id);
-                if (initialized) {
-                    logger.info({ gameId, userId: effectiveUserId }, 'Game state initialized in Redis, retrying getGameControlState');
-                    // Try again to get control state
-                    ({ controlState, errorDetails } = await getGameControlState(gameInstance.id, effectiveUserId, isTestEnvironment));
+                // Only attempt to initialize game state in Redis if the game is NOT completed
+                // For completed games, we should work with database status directly
+                if (gameInstance.status !== 'completed') {
+                    logger.warn({ gameId, userId: effectiveUserId, dbStatus: gameInstance.status }, 'Game control state missing for active game, attempting to initialize game state in Redis');
+                    // Attempt to initialize game state in Redis
+                    const initialized = await gameStateService.initializeGameState(gameInstance.id);
+                    if (initialized) {
+                        logger.info({ gameId, userId: effectiveUserId }, 'Game state initialized in Redis, retrying getGameControlState');
+                        // Try again to get control state
+                        ({ controlState, errorDetails } = await getGameControlState(gameInstance.id, effectiveUserId, isTestEnvironment));
+                    }
+                } else {
+                    logger.info({ gameId, userId: effectiveUserId, dbStatus: gameInstance.status }, 'Game control state missing for completed game - this is expected, will use database status');
                 }
             }
 

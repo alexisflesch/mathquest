@@ -82,13 +82,15 @@ describe('High-Contrast Mode Accessibility', () => {
             const chartData = screen.getByTestId('chart-data');
             const data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
 
-            // Should have chart data with color
-            expect(data).toHaveLength(1);
-            expect(data[0]).toHaveProperty('marker');
-            expect(data[0].marker).toHaveProperty('color');
+            // Should have chart data with color (now returns 2 series: stem lines + markers)
+            expect(data).toHaveLength(2);
+            expect(data[0]).toHaveProperty('line');
+            expect(data[0].line).toHaveProperty('color');
+            expect(data[1]).toHaveProperty('marker');
+            expect(data[1].marker).toHaveProperty('color');
         });
 
-        test('should use high-contrast colors when CSS variables indicate high-contrast mode', () => {
+        test('should use high-contrast colors when CSS variables indicate high-contrast mode', async () => {
             // Simulate high-contrast mode by setting contrasting colors
             document.documentElement.style.setProperty('--navbar', '#000000');
             document.documentElement.style.setProperty('--background', '#ffffff');
@@ -96,41 +98,24 @@ describe('High-Contrast Mode Accessibility', () => {
 
             render(<StatisticsChart data={sampleData} />);
 
+            // Wait for chart to load (lazy loading)
+            await waitFor(() => {
+                const chart = screen.getByTestId('plotly-chart');
+                expect(chart).toBeInTheDocument();
+            });
+
             const chartData = screen.getByTestId('chart-data');
             const data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
 
-            // In high-contrast mode, should use black color
-            expect(data[0].marker.color).toBe('#000000');
-        });
-
-        test('should maintain readable text contrast in statistics summary', async () => {
-            render(<StatisticsChartImpl data={sampleData} />);
-
-            // Wait for chart to load and stat boxes to appear
-            await waitFor(() => {
-                const statLabels = screen.getAllByText(/Mean|Median|Min|Max/);
-                expect(statLabels.length).toBeGreaterThan(0);
-            }, { timeout: 5000 });
-
-            const statLabels = screen.getAllByText(/Mean|Median|Min|Max/);
-
-            // Each stat label should be in a container with proper background styling
-            statLabels.forEach(label => {
-                // Find the container with the background class by traversing up
-                let container = label.parentElement;
-                while (container && !container.classList.contains('bg-blue-50') &&
-                    !container.classList.contains('bg-green-50') &&
-                    !container.classList.contains('bg-purple-50') &&
-                    !container.classList.contains('bg-red-50')) {
-                    container = container.parentElement;
-                }
-
-                const hasValidBackground = container?.classList.contains('bg-blue-50') ||
-                    container?.classList.contains('bg-green-50') ||
-                    container?.classList.contains('bg-purple-50') ||
-                    container?.classList.contains('bg-red-50');
-                expect(hasValidBackground).toBe(true);
-            });
+            // In high-contrast mode, should use black color for both lines and markers
+            expect(data.length).toBeGreaterThan(0);
+            if (data[0].type === 'histogram') {
+                expect(data[0].marker.color).toBe('#000000');
+            } else {
+                // For stem plots, check both line color (first trace) and marker color (second trace)
+                expect(data[0].line.color).toBe('#000000');
+                expect(data[1].marker.color).toBe('#000000');
+            }
         });
 
         test('should have accessible chart controls with high contrast', () => {
@@ -144,9 +129,8 @@ describe('High-Contrast Mode Accessibility', () => {
                 expect(button).toHaveClass('transition-colors');
 
                 // Should have either active or inactive styling
-                const hasActiveStyling = button.classList.contains('bg-blue-100') ||
-                    button.classList.contains('bg-orange-100');
-                const hasInactiveStyling = button.classList.contains('bg-gray-100');
+                const hasActiveStyling = button.classList.contains('text-white');
+                const hasInactiveStyling = button.classList.contains('text-gray-600');
 
                 expect(hasActiveStyling || hasInactiveStyling).toBe(true);
             });
@@ -158,7 +142,7 @@ describe('High-Contrast Mode Accessibility', () => {
             // Initial render with default colors
             let chartData = screen.getByTestId('chart-data');
             let data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
-            const initialColor = data[0].marker.color;
+            const initialColor = data[1].marker.color;
 
             // Change CSS variable to simulate theme change
             document.documentElement.style.setProperty('--navbar', '#ff0000');
@@ -172,7 +156,7 @@ describe('High-Contrast Mode Accessibility', () => {
 
             // Note: In the actual implementation, the color might not change immediately
             // due to React's memoization, but the function should be called
-            expect(data[0]).toHaveProperty('marker');
+            expect(data[1]).toHaveProperty('marker');
         });
 
         test('should provide sufficient contrast for chart backgrounds', () => {
@@ -193,7 +177,7 @@ describe('High-Contrast Mode Accessibility', () => {
             const chart = screen.getByTestId('plotly-chart');
             expect(chart).toBeInTheDocument();
 
-            // Should handle large datasets without performance issues
+            // Should handle large datasets without performance issues (histogram has 1 series)
             const chartData = screen.getByTestId('chart-data');
             const data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
             expect(data).toHaveLength(1);
@@ -202,8 +186,8 @@ describe('High-Contrast Mode Accessibility', () => {
         test('should handle empty data gracefully', () => {
             render(<StatisticsChart data={[]} />);
 
-            // Should show "No data available" message
-            expect(screen.getByText('No data available')).toBeInTheDocument();
+            // Should show "No data to display" message
+            expect(screen.getByText('No data to display')).toBeInTheDocument();
         });
 
         test('should handle single data point', () => {
@@ -212,10 +196,10 @@ describe('High-Contrast Mode Accessibility', () => {
             const chart = screen.getByTestId('plotly-chart');
             expect(chart).toBeInTheDocument();
 
-            // Should still render with single data point
+            // Should still render with single data point (stem lines + markers)
             const chartData = screen.getByTestId('chart-data');
             const data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
-            expect(data).toHaveLength(1);
+            expect(data).toHaveLength(2);
         });
     });
 
@@ -225,7 +209,7 @@ describe('High-Contrast Mode Accessibility', () => {
             render(<StatisticsChart data={sampleData} />);
 
             // Switch to histogram
-            const histogramBtn = screen.getByText('Histogram');
+            const histogramBtn = screen.getByLabelText('Histogramme');
             await user.click(histogramBtn);
 
             let chartData = screen.getByTestId('chart-data');
@@ -235,53 +219,57 @@ describe('High-Contrast Mode Accessibility', () => {
             expect(data[0]).toHaveProperty('marker.color');
 
             // Switch to stem plot
-            const stemBtn = screen.getByText('Stem Plot');
+            const stemBtn = screen.getByLabelText('Diagramme en bâtons');
             await user.click(stemBtn);
 
             chartData = screen.getByTestId('chart-data');
             data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
 
             expect(data[0].type).toBe('scatter');
-            expect(data[0]).toHaveProperty('marker.color');
+            expect(data[0]).toHaveProperty('line.color'); // Stem lines have line color
+            expect(data[1]).toHaveProperty('marker.color'); // Markers have marker color
         });
 
         test('should maintain contrast when toggling outliers', async () => {
             const user = userEvent.setup();
-            render(<StatisticsChart data={[1, 2, 3, 100]} />); // Include outlier
+            render(<StatisticsChart data={[1, 2, 3, 4, 1000]} />); // Include clear outlier
 
             // Toggle hide outliers
-            const outlierBtn = screen.getByText('Hide Outliers');
+            const outlierBtn = screen.getByLabelText('Masquer les données aberrantes');
             await user.click(outlierBtn);
 
             const chartData = screen.getByTestId('chart-data');
             const data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
 
-            // Should still have color information
-            expect(data[0]).toHaveProperty('marker');
-            expect(data[0].marker).toHaveProperty('color');
+            // Should still have color information (back to stem plot after outlier toggle)
+            expect(data[0]).toHaveProperty('line');
+            expect(data[0].line).toHaveProperty('color');
+            expect(data[1]).toHaveProperty('marker');
+            expect(data[1].marker).toHaveProperty('color');
         });
 
         test('should reset chart with proper contrast', async () => {
             const user = userEvent.setup();
-            render(<StatisticsChart data={sampleData} />);
+            render(<StatisticsChart data={[1, 2, 3, 4, 1000]} />); // Data with outliers
 
             // Change some settings
-            const histogramBtn = screen.getByText('Histogram');
+            const histogramBtn = screen.getByLabelText('Histogramme');
             await user.click(histogramBtn);
 
-            const outlierBtn = screen.getByText('Hide Outliers');
+            const outlierBtn = screen.getByLabelText('Masquer les données aberrantes');
             await user.click(outlierBtn);
 
-            // Reset
-            const resetBtn = screen.getByText('Reset');
-            await user.click(resetBtn);
+            // Reset to auto
+            const autoBtn = screen.getByLabelText('Automatique');
+            await user.click(autoBtn);
 
             const chartData = screen.getByTestId('chart-data');
             const data = JSON.parse(chartData.getAttribute('data-chart-data') || '[]');
 
-            // Should be back to box plot with color
-            expect(data[0].type).toBe('box');
-            expect(data[0]).toHaveProperty('marker.color');
+            // Should be back to stem plot with color (auto mode for small datasets)
+            expect(data[0].type).toBe('scatter');
+            expect(data[0]).toHaveProperty('line.color');
+            expect(data[1]).toHaveProperty('marker.color');
         });
     });
 

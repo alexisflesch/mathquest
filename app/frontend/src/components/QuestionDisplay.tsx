@@ -93,6 +93,7 @@ export interface QuestionDisplayProps {
     // NEW: Control behavior props
     hideExplanation?: boolean; // Hide explanation/justification section
     keepTitleWhenExpanded?: boolean; // Keep title visible when expanded (only hide fake titles)
+    preloadChart?: boolean; // Preload StatisticsChart component for teachers
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -123,6 +124,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onRevealLeaderboard, // Canonical leaderboard reveal
     hideExplanation = false, // NEW: destructure hideExplanation
     keepTitleWhenExpanded = false, // NEW: destructure keepTitleWhenExpanded
+    preloadChart = false, // NEW: destructure preloadChart
 }) => {
     // Determine what content to show in collapsed vs expanded states to avoid redundancy
     const collapsedContent = question.title || question.text;
@@ -438,6 +440,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                         <StatisticsChart
                                                             data={stats.data}
                                                             layout="left"
+                                                            preload={preloadChart}
                                                         />
                                                     </div>
                                                 </li>
@@ -452,6 +455,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                 <StatisticsChart
                                                     data={stats.data}
                                                     layout="left"
+                                                    preload={preloadChart}
                                                 />
                                             </div>
                                         </li>
@@ -529,6 +533,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                             <StatisticsChart
                                                                 data={stats.data}
                                                                 layout="left"
+                                                                preload={preloadChart}
                                                             />
                                                         </div>
                                                     </li>
@@ -543,6 +548,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                     <StatisticsChart
                                                         data={stats.data}
                                                         layout="left"
+                                                        preload={preloadChart}
                                                     />
                                                 </div>
                                             </li>

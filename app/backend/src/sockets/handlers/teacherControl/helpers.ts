@@ -84,12 +84,31 @@ export async function getGameControlState(
 
         // Get the game state from Redis
         const fullState = await gameStateService.getFullGameState(gameInstance.accessCode);
-        if (!fullState || !fullState.gameState) {
-            logger.warn({ gameId, accessCode: gameInstance.accessCode }, 'Game state not found in Redis');
+        let gameState = fullState?.gameState;
+
+        // For completed games, if Redis state is missing (cleaned up), create a minimal game state
+        if (!gameState && gameInstance.status === 'completed') {
+            logger.info({ gameId, accessCode: gameInstance.accessCode, dbStatus: gameInstance.status }, 'Redis state missing for completed game, using database status');
+            // Create a minimal game state for completed games
+            gameState = {
+                gameId: gameInstance.id,
+                accessCode: gameInstance.accessCode,
+                status: 'completed', // Use database status
+                currentQuestionIndex: -1, // No active question
+                questionUids: [], // Will be populated from template
+                answersLocked: true, // Completed games should have answers locked
+                gameMode: gameInstance.playMode,
+                settings: gameInstance.settings as any || { timeMultiplier: 1.0, showLeaderboard: true }
+            };
+        } else if (!gameState) {
+            logger.warn({ gameId, accessCode: gameInstance.accessCode }, 'Game state not found in Redis and game is not completed');
             return { controlState: null, errorDetails: 'Game state not found in Redis' };
         }
 
-        const gameState = fullState.gameState;
+        // At this point, gameState is guaranteed to be defined
+        if (!gameState) {
+            return { controlState: null, errorDetails: 'Game state is undefined' };
+        }
 
         // Transform questions for the dashboard using canonical normalization
         const questions = gameTemplate.questions.map((q: any) => {
@@ -161,12 +180,16 @@ export async function getGameControlState(
             } as GameTimerState;
         }
 
+        // Determine the correct game status - use database status as authoritative source
+        // If database shows completed but Redis shows something else, use completed
+        const gameStatus = gameInstance.status === 'completed' ? 'completed' : gameState.status;
+
         const controlState = {
             gameId: gameInstance.id,
             accessCode: gameInstance.accessCode,
             templateName: gameTemplate.name,
             gameInstanceName: gameInstance.name, // Modernization: include canonical gameInstanceName
-            status: gameState.status,
+            status: gameStatus,
             currentQuestionUid,
             questions,
             timer: canonicalTimer, // Always a valid object

@@ -451,6 +451,21 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         };
     }, [timerStatus, timerQuestionUid, timeLeftMs]);
 
+    // Track if this is the initial quiz state load (for redirect logic)
+    const hasReceivedInitialQuizState = useRef(false);
+
+    // Redirect to leaderboard only if quiz is already completed on initial page load
+    useEffect(() => {
+        if (quizState?.status === 'completed' && code && !hasReceivedInitialQuizState.current) {
+            // Mark that we've received the initial state
+            hasReceivedInitialQuizState.current = true;
+            logger.info('Quiz was already completed on page load, redirecting to leaderboard');
+            window.location.href = `/leaderboard/${code}`;
+        } else if (quizState && !hasReceivedInitialQuizState.current) {
+            // Mark that we've received initial state (but it's not completed)
+            hasReceivedInitialQuizState.current = true;
+        }
+    }, [quizState?.status, code]);
 
     // --- Terminated Questions: from canonical quizState ---
     // Canonical: terminatedQuestions is a Record<string, boolean> in quizState (from backend)
@@ -679,8 +694,8 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
 
     // Memoize frequently changing props to prevent unnecessary re-renders
     const isDisabled = useMemo(() => {
-        return !quizSocket || !quizSocket.connected || quizState?.ended;
-    }, [quizSocket?.connected, quizState?.ended]);
+        return !quizSocket || !quizSocket.connected || quizState?.ended || quizState?.status === 'completed';
+    }, [quizSocket?.connected, quizState?.ended, quizState?.status]);
 
     // Fetch quiz/activity name from API for reliability
     // Remove legacy fetchQuizName effect: all naming now comes from socket payload
@@ -710,7 +725,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             onClick={handleEndQuiz}
                             disabled={isDisabled}
                         >
-                            {quizState?.ended ? 'Quiz Terminé' : 'Clôturer'}
+                            {quizState?.ended || quizState?.status === 'completed' ? 'Quiz Terminé' : 'Clôturer'}
                         </button>
                     </div>
                     {/* Projection page link */}
@@ -722,6 +737,20 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     >
                         Afficher la page de projection
                     </a>
+                    {/* Completion message */}
+                    {quizState?.status === 'completed' && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                            <p className="text-green-800 text-sm">
+                                ✅ Le quiz est maintenant terminé. 
+                                <a 
+                                    href={`/leaderboard/${code}`} 
+                                    className="text-green-600 underline hover:text-green-700 ml-1"
+                                >
+                                    Voir le classement final
+                                </a>
+                            </p>
+                        </div>
+                    )}
                     <p className="text-sm text-muted-foreground flex items-center gap-2">
                         <UsersRound className="w-4 h-4" />
                         {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}

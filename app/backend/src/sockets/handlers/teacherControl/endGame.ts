@@ -9,6 +9,7 @@ import { endGamePayloadSchema } from '@shared/types/socketEvents.zod';
 import { redisClient } from '@/config/redis';
 import { cleanupDeferredSessionsForGame } from '../deferredTournamentFlow';
 import { calculateLeaderboard, persistLeaderboardToGameInstance } from '../sharedLeaderboard';
+import { getGameControlState } from './helpers';
 
 import { EndGamePayload } from './types';
 
@@ -200,6 +201,13 @@ export function endGameHandler(io: SocketIOServer, socket: Socket) {
                 // Continue with cleanup even if persistence fails to avoid hanging state
             }
 
+            // Get the updated game control state BEFORE Redis cleanup (needs Redis data)
+            const controlStateResult = await getGameControlState(gameId, userId, false);
+            if (!controlStateResult.controlState) {
+                logger.error({ gameId, errorDetails: controlStateResult.errorDetails }, 'Failed to get updated game control state after end game');
+                // Continue with cleanup even if control state fails
+            }
+
             // Clean up all Redis data for this game (live and deferred sessions)
             await cleanupRedisGameData(accessCode, gameId, io);
 
@@ -212,6 +220,11 @@ export function endGameHandler(io: SocketIOServer, socket: Socket) {
             const dashboardRoom = `dashboard_${gameId}`;
             const gameRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameId}`;
+
+            // Emit updated game control state to dashboard (CRITICAL: frontend needs this to update status)
+            if (controlStateResult.controlState) {
+                io.to(dashboardRoom).emit(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, controlStateResult.controlState);
+            }
 
             // To dashboard
             io.to(dashboardRoom).emit('dashboard_game_ended', {

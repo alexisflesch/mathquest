@@ -65,19 +65,18 @@ const QuestionDisplay = React.memo(({
     code: string;
     bringToFront: (id: string) => void;
 }) => {
-    // Lazy load StatisticsChart after component mounts
+    // Preload StatisticsChart for teachers (immediate loading)
     const [StatisticsChart, setStatisticsChart] = useState<React.ComponentType<any> | null>(null);
 
     useEffect(() => {
-        // Load StatisticsChart after the page has loaded
+        // Preload StatisticsChart immediately for teachers
         const loadChart = async () => {
             const { default: ChartComponent } = await import('@/components/StatisticsChart');
             setStatisticsChart(() => ChartComponent);
         };
 
-        // Small delay to ensure page is fully loaded
-        const timer = setTimeout(loadChart, 100);
-        return () => clearTimeout(timer);
+        // Load immediately for teachers
+        loadChart();
     }, []);
 
     // Remove debugging logs - issue was memoization blocking React re-renders
@@ -194,7 +193,7 @@ const QuestionDisplay = React.memo(({
                                 }}
                                     onPointerDown={e => e.stopPropagation()} // Prevent drag when interacting with chart
                                 >
-                                    <StatisticsChart data={currentStats.values} />
+                                    <StatisticsChart data={currentStats.values} preload={true} />
                                 </div>
                             )}
                         </div>
