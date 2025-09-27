@@ -86,10 +86,11 @@
   timeLimit: 30
   difficulty: 2
   text: |
-    Laquelle des affirmations suivantes est correcte ?
+    Quelles affirmations sont correctes ?
   answerOptions:
     - "Si une intégrale converge absolument, alors elle converge."
     - "Une intégrale peut converger sans être absolument convergente."
     - "Si une intégrale converge, elle converge aussi absolument."
     - "La convergence absolue implique la divergence."
-  correctAnswers: [true, true, false, false]
+    - "Elles sont toutes fausses."
+  correctAnswers: [true, true, false, false, false]

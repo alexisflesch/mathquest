@@ -86,7 +86,7 @@
   answerOptions:
     - "Oui"
     - "Non"
-  correctAnswers: [true, false]
+  correctAnswers: [false, true]
   explanation: |
     Pour \(x\to +\infty\), l'intégrande est équivalent à \(2x^2/x^3 = 2/x\). D'où le résultat par théorème d'équivalence (tout est positif).
 
