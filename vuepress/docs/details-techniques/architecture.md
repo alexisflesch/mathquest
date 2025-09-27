@@ -155,6 +155,18 @@ Redis est utilisé pour :
 - **Timers** : Gestion des chronomètres côté serveur
 - **Cache des questions** : Amélioration des performances
 
+### Génération PDF des questions (`scripts/yaml2latex.py`)
+
+Le script `scripts/yaml2latex.py` permet de transformer les fichiers YAML des dossiers `questions/` en PDF de relecture. Depuis la refonte 2025-09-27 :
+
+- Chaque exercice affiche un lien cliquable sur son `uid` qui pointe directement vers le fichier YAML d'origine.
+- Les liens utilisent des URI `file://` compatibles Windows. Sous WSL, le chemin est automatiquement converti en `file://wsl.localhost/<distro>/…`, ce qui évite tout recours à des scripts `.bat` intermédiaires.
+- Le numéro de ligne du bloc YAML est indiqué après le titre afin de faciliter la navigation une fois le fichier ouvert.
+- Lors de l'exécution, le script nettoie les anciens dossiers `open-in-vscode/` générés par les versions précédentes pour éviter les résidus.
+- Les PDF ouverts avec un lecteur autorisant les liens de fichiers (SumatraPDF, Edge, etc.) ouvrent ainsi le YAML dans l'éditeur par défaut configuré côté Windows.
+
+⚠️ Selon la politique de sécurité de votre lecteur PDF, vous devrez peut-être autoriser explicitement l'ouverture des liens `file://`.
+
 ## Flux de données typique
 
 ### Création d'un quiz

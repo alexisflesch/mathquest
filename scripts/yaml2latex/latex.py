@@ -4,6 +4,8 @@
 
 from .utils import sanitize_latex, sanitize_latex_smart, sanitize_preserve_emoji, wrap_emojis, get_env_type, find_emoji_font_file
 
+
+
 def latex_header(title, subtitle):
     full_title = subtitle + " - " + title
     # Try to find an installed Noto Color Emoji file and prefer explicit path when available
@@ -31,6 +33,7 @@ def latex_header(title, subtitle):
 """ + "\n" + emoji_font_declaration + "\n" + r"""
 % Use TikZ to draw a reliable forbidden icon (avoids missing emoji fonts)
 \usepackage{tikz}
+\usepackage{hyperref}
 % Environnements personnalisés
 \newenvironment{choix_simple}{\begin{quote}}{\end{quote}}
 \newenvironment{choix_multiple}{\begin{quote}}{\end{quote}}
@@ -73,7 +76,7 @@ def latex_footer():
 def latex_question(q):
 
     env = get_env_type(q)
-    uid = sanitize_latex(q.get('uid', ''))
+    raw_uid = q.get('uid', '')
     title = sanitize_latex_smart(q.get('title', ''))
     auteur = sanitize_latex(q.get('author', ''))
     discipline = sanitize_latex(q.get('discipline', ''))
@@ -105,7 +108,29 @@ def latex_question(q):
     # Ligne 1 : uid et titre en gras, séparés par un tiret, sans parenthèses, avec temps
     time_limit = q.get('timeLimit', q.get('time', None))
     time_str = f" ({time_limit}s)" if time_limit is not None else ""
-    header_line = f"\\textbf{{{uid} - {title}}}{time_str}"
+    
+    uid_display = sanitize_latex(raw_uid)
+    file_uri = q.get('_file_uri')
+    if file_uri:
+        uri_norm = str(file_uri).replace('\\', '/')
+        # Escape characters that hyperref treats specially
+        uri_safe = (
+            uri_norm
+            .replace('%', r'\%')
+            .replace('#', r'\#')
+            .replace('_', r'\_')
+            .replace('&', r'\&')
+        )
+        uid_link = f"\\href{{{uri_safe}}}{{{uid_display}}}"
+    else:
+        uid_link = uid_display
+    
+    line_info = q.get('_line_number')
+    line_suffix = ""
+    if isinstance(line_info, int) and line_info > 0:
+        line_suffix = f" (ligne {sanitize_latex(str(line_info))})"
+
+    header_line = f"\\textbf{{{uid_link} - {title}}}{time_str}{line_suffix}"
 
     # Ligne 2 : auteur, difficulté, etc. sur une seule ligne
     meta_parts = []
