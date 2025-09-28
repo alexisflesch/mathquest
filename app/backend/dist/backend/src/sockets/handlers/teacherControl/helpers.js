@@ -133,7 +133,7 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
             return { controlState: null, errorDetails: 'Game state is undefined' };
         }
         // Transform questions for the dashboard using canonical normalization
-        const questions = gameTemplate.questions.map((q) => {
+        let questions = gameTemplate.questions.map((q) => {
             const question = q.question;
             // Use canonical normalization for all questions
             const normalized = questionServiceInstance_1.questionService["normalizeQuestion"](question);
@@ -144,6 +144,26 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
             }, '[DASHBOARD_NORMALIZE] Dashboard question normalization');
             return normalized;
         });
+        // Apply timer overrides from Redis gameState.questionTimeLimits
+        if (gameState.questionTimeLimits && typeof gameState.questionTimeLimits === 'object') {
+            questions = questions.map(question => {
+                const overrideSeconds = gameState.questionTimeLimits[question.uid];
+                if (typeof overrideSeconds === 'number' && overrideSeconds > 0) {
+                    const overrideMs = Math.round(overrideSeconds * 1000);
+                    logger.info({
+                        uid: question.uid,
+                        originalDurationMs: question.durationMs,
+                        overrideSeconds,
+                        overrideMs
+                    }, '[DASHBOARD_NORMALIZE] Applying timer override from Redis');
+                    return {
+                        ...question,
+                        durationMs: overrideMs
+                    };
+                }
+                return question;
+            });
+        }
         // Get participant count
         const participantCount = await redis_1.redisClient.hlen(`mathquest:game:participants:${gameInstance.accessCode}`);
         // Determine current question UID

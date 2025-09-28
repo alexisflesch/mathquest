@@ -685,7 +685,7 @@ function timerActionHandler(io, socket) {
             // Get the current question UID for timer updates
             // If questionUid is provided in the payload, use it; otherwise use current question
             // For 'edit' actions, we should NOT switch questions - stay on current question
-            let targetQuestionUid = action === 'edit' ? (gameState.questionUids && gameState.currentQuestionIndex >= 0 ? gameState.questionUids[gameState.currentQuestionIndex] : questionUid) : questionUid;
+            let targetQuestionUid = action === 'edit' ? (gameState.questionUids && gameState.currentQuestionIndex >= 0 ? gameState.questionUids[gameState.currentQuestionIndex] : null) : questionUid;
             // ...existing code...
             if (targetQuestionUid) {
                 // Check if this is a different question than currently active

@@ -111,7 +111,7 @@ export async function getGameControlState(
         }
 
         // Transform questions for the dashboard using canonical normalization
-        const questions = gameTemplate.questions.map((q: any) => {
+        let questions = gameTemplate.questions.map((q: any) => {
             const question = q.question;
             // Use canonical normalization for all questions
             const normalized = questionService["normalizeQuestion"](question);
@@ -122,6 +122,27 @@ export async function getGameControlState(
             }, '[DASHBOARD_NORMALIZE] Dashboard question normalization');
             return normalized;
         });
+
+        // Apply timer overrides from Redis gameState.questionTimeLimits
+        if ((gameState as any).questionTimeLimits && typeof (gameState as any).questionTimeLimits === 'object') {
+            questions = questions.map(question => {
+                const overrideSeconds = (gameState as any).questionTimeLimits[question.uid];
+                if (typeof overrideSeconds === 'number' && overrideSeconds > 0) {
+                    const overrideMs = Math.round(overrideSeconds * 1000);
+                    logger.info({
+                        uid: question.uid,
+                        originalDurationMs: question.durationMs,
+                        overrideSeconds,
+                        overrideMs
+                    }, '[DASHBOARD_NORMALIZE] Applying timer override from Redis');
+                    return {
+                        ...question,
+                        durationMs: overrideMs
+                    };
+                }
+                return question;
+            });
+        }
 
         // Get participant count
         const participantCount = await redisClient.hlen(`mathquest:game:participants:${gameInstance.accessCode}`);

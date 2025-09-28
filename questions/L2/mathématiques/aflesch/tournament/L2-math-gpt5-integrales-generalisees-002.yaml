@@ -11,7 +11,6 @@
   feedbackWaitTime: 20
   text: |
     L'intégrale suivante est-elle convergente ?
-    \
     \[
     \int_{0}^{1} \frac{\ln(x)}{\sqrt{x}}\,dx
     \]
