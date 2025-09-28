@@ -42,7 +42,7 @@
     - "Non"
   correctAnswers: [true, false]
   explanation: |
-    Au voisinage de \(+\infty\), l'intégrande est majoré par \( x/x^{3/2}\). On reconnaît alors une intégrale de Riemann convergente et on peut utiliser le théorème d'équivalence, car \(1/x^{1/2}\) est positif.
+    Au voisinage de \(+\infty\), l'intégrande est majoré par \( x^{0.2}/x^{3/2}\). On reconnaît alors une intégrale de Riemann convergente et on peut utiliser le théorème d'équivalence, car tout est positif.
 
 - uid: "aflesch-mt3-integrales-generalisees-013"
   author: "aflesch"
