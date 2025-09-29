@@ -1,42 +1,64 @@
 import { AnimatePresence } from 'framer-motion';
-// Factorized score animation component
+// Factorized score animation component - Enhanced glitch effect
 function ScoreAnimate({ score, zoomFactor, animateScore }: { score: number, zoomFactor?: number, animateScore?: boolean }) {
+    // Use a key that changes when animation should restart
+    const animationKey = animateScore ? `animate-${score}-${Date.now()}` : `static-${score}`;
+
     return (
         <div className="relative">
-            <span
+            <motion.span
+                key={animationKey}
                 className="font-bold text-primary relative z-10"
                 style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }}
+                animate={animateScore ? {
+                    scale: [1, 1.05, 1],
+                    filter: [
+                        "none",
+                        "hue-rotate(90deg) brightness(1.2) contrast(1.1)",
+                        "hue-rotate(180deg) brightness(1.3) contrast(1.2)",
+                        "hue-rotate(270deg) brightness(1.1) contrast(1.1)",
+                        "none"
+                    ],
+                    textShadow: [
+                        "none",
+                        "0 0 2px rgba(59, 130, 246, 0.5)",
+                        "0 0 4px rgba(59, 130, 246, 0.8), 0 0 8px rgba(59, 130, 246, 0.4)",
+                        "0 0 2px rgba(59, 130, 246, 0.5)",
+                        "none"
+                    ]
+                } : {}}
+                transition={{
+                    duration: 0.8, // Increased from 0.4 to 0.8 for better visibility
+                    ease: "easeInOut",
+                    times: [0, 0.2, 0.5, 0.8, 1]
+                }}
             >
                 {Math.round(score)}
-            </span>
-            {/* Glitch layers */}
+            </motion.span>
+
+            {/* Digital glitch overlay */}
             {animateScore && (
-                <>
-                    <motion.span
-                        key={score + '-red'}
-                        className="absolute inset-0 font-bold text-red-500 z-0"
+                <motion.div
+                    key={`overlay-${animationKey}`}
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    initial={{ opacity: 0 }}
+                    animate={{
+                        opacity: [0, 1, 0.8, 0.2, 0],
+                        scale: [1, 1.1, 0.95, 1.05, 1],
+                    }}
+                    transition={{
+                        duration: 0.8,
+                        ease: "easeInOut",
+                        times: [0, 0.2, 0.5, 0.8, 1]
+                    }}
+                >
+                    <span
+                        className="font-bold text-cyan-400 font-mono"
                         style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }}
-                        animate={{
-                            x: [-2, 2, -1, 1, 0],
-                            opacity: [0.8, 0, 0.6, 0, 0]
-                        }}
-                        transition={{ duration: 0.3, times: [0, 0.25, 0.5, 0.75, 1] }}
                     >
                         {Math.round(score)}
-                    </motion.span>
-                    <motion.span
-                        key={score + '-blue'}
-                        className="absolute inset-0 font-bold text-blue-500 z-0"
-                        style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }}
-                        animate={{
-                            x: [2, -2, 1, -1, 0],
-                            opacity: [0.8, 0, 0.6, 0, 0]
-                        }}
-                        transition={{ duration: 0.3, times: [0, 0.25, 0.5, 0.75, 1] }}
-                    >
-                        {Math.round(score)}
-                    </motion.span>
-                </>
+                    </span>
+                </motion.div>
             )}
         </div>
     );
@@ -286,4 +308,5 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
 }
 
 // Export the memoized component to prevent unnecessary re-renders
+export { ScoreAnimate };
 export default React.memo(ClassementPodium, arePropsEqual);
