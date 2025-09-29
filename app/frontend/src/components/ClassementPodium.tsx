@@ -168,11 +168,7 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                 } else if (scoreChangedFlag) {
                     scoreChanged.push(i);
                 }
-                // Simple log for debugging
-                console.log(`[LBDEBUG] i=${i} prevId=${prevId} nextId=${nextId} prevScore=${prevScore} nextScore=${nextScore} rankChanged=${rankChangedFlag} scoreChanged=${scoreChangedFlag}`);
             }
-            console.log('[LBDEBUG] rankChanged:', rankChanged);
-            console.log('[LBDEBUG] scoreChanged:', scoreChanged);
         }
         // Assign delays only to rankChanged, in sequential order; others get 0
         const delays: Record<number, number> = {};
