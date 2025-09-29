@@ -6,8 +6,8 @@ const logger = createLogger('SocketRateLimit');
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const MAX_CONNECTIONS_PER_WINDOW = 10; // Max connections per IP per minute
-const MAX_EVENTS_PER_SECOND = 20; // Max events per socket per second
+const MAX_CONNECTIONS_PER_WINDOW = 2000; // Max connections per IP per minute (further increased for high-density networks)
+const MAX_EVENTS_PER_SECOND = 800; // Max events per socket per second (further increased for intensive gameplay)
 
 // In-memory storage for rate limiting (in production, use Redis)
 interface RateLimitData {
