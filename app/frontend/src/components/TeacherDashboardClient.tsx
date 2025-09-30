@@ -18,6 +18,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { gameControlStatePayloadSchema, type GameControlStatePayload } from '@shared/types/socketEvents.zod.dashboard';
 import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
 import { io, Socket } from 'socket.io-client';
+import '@/app/question-cards.css';
 
 // Answer stats can be legacy format or new format with type discrimination
 type AnswerStats = Record<string, number> | {
@@ -802,7 +803,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             <div className="hidden md:flex items-center gap-3 ml-auto">
                                 {/* Stats Toggle Button */}
                                 <button
-                                    className={`group p-2 rounded transition-colors border-2 focus:outline-none focus-visible:outline-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`group p-2 rounded transition-colors border-2 focus:outline-none focus-visible:outline-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${showStats ? 'stats-pulse' : ''}`}
                                     style={{
                                         backgroundColor: showStats ? (primaryColorRef.current || 'var(--primary)') : 'transparent',
                                         color: showStats ? '#ffffff' : (primaryColorRef.current || 'var(--primary)'),
@@ -1027,7 +1028,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             <div className="md:hidden fixed right-4 z-[150] flex gap-2" style={{ top: 'calc(var(--navbar-height) / 2 - 1.25rem)' }}>
                 {/* Stats FAB */}
                 <button
-                    className="flex items-center justify-center w-10 h-10 bg-card border border-border rounded-lg shadow-lg transition-all duration-200 hover:bg-accent"
+                    className={`flex items-center justify-center w-10 h-10 bg-card border border-border rounded-lg shadow-lg transition-all duration-200 hover:bg-accent ${showStats ? 'stats-pulse' : ''}`}
                     style={{
                         backgroundColor: showStats ? (primaryColorRef.current || 'var(--primary)') : undefined,
                         borderColor: primaryColorRef.current || undefined,
