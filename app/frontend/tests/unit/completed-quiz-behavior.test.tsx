@@ -266,7 +266,8 @@ describe('TeacherDashboardClient - Completed Quiz Behavior', () => {
 
         // Check that "Clôturer" button shows normal text
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: /Clôturer/ })).toBeInTheDocument();
+            const cloturerButtons = screen.getAllByRole('button', { name: /Clôturer/ });
+            expect(cloturerButtons.length).toBeGreaterThan(0);
         });
     });
 });

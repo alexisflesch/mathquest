@@ -61,6 +61,7 @@ const PracticeModeProgression = React.memo(({
                         className="btn btn-primary btn-lg"
                         onClick={handleRequestNextQuestion}
                         disabled={!currentQuestion}
+                        data-testid="practice-continue"
                     >
                         Question suivante →
                     </button>

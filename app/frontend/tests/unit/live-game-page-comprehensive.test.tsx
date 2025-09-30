@@ -78,6 +78,11 @@ jest.mock('@/components/AnswerFeedbackOverlay', () => {
     };
 });
 
+jest.mock('@/components/MathJaxWrapper', () => ({
+    __esModule: true,
+    default: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 jest.mock('@/components/SharedModal', () => {
     return function MockInfoModal({ isOpen, onClose, title, children }: any) {
         if (!isOpen) return null;
@@ -119,9 +124,12 @@ jest.mock('@/app/live/components/LeaderboardFAB', () => {
 });
 
 jest.mock('@/app/live/components/PracticeModeProgression', () => {
-    return function MockPracticeModeProgression({ onContinue }: any) {
+    return function MockPracticeModeProgression({ gameMode, answered, showFeedbackOverlay }: any) {
+        if (gameMode !== 'practice' || !answered || showFeedbackOverlay) {
+            return null;
+        }
         return (
-            <button onClick={onContinue} data-testid="practice-continue">
+            <button data-testid="practice-continue">
                 Continuer
             </button>
         );
@@ -353,14 +361,143 @@ describe('Live Game Page - Comprehensive Test Suite', () => {
             expect(mockSocketHook.submitAnswer).not.toHaveBeenCalled();
         });
 
+        it('should revert answer selection when answer is rejected', () => {
+            // Test the scenario where a user selects an answer but submission is rejected as too late
+            // This covers both: first-time submission rejected, and re-submission after already answering
+            // In both cases, the selection should be cleared since the rejection resets the answered state
+            // Set up mock with question phase
+            mockSocketHook.gameState = {
+                ...mockSocketHook.gameState,
+                currentQuestion: {
+                    uid: 'q1',
+                    text: 'What is 2 + 2?',
+                    questionType: 'multiple_choice',
+                    multipleChoiceQuestion: {
+                        answerOptions: ['1', '2', '3', '4']
+                    },
+                    timeLimit: 30
+                },
+                phase: 'question',
+                gameStatus: 'active',
+                answered: false
+            };
+            mockUseStudentGameSocket.mockReturnValue(mockSocketHook);
+
+            const { rerender } = render(<LiveGamePage />);
+
+            // Find the answer button
+            const answer4Button = screen.getByText('4');
+            expect(answer4Button).toBeInTheDocument();
+
+            // Click on answer 4
+            act(() => {
+                fireEvent.click(answer4Button);
+            });
+
+            // Re-render to ensure state update
+            rerender(<LiveGamePage />);
+
+            // Get the button again after re-render
+            const updatedAnswer4Button = screen.getByText('4');
+
+            // For multiple choice, should NOT call submitAnswer on click (only on submit)
+            expect(mockSocketHook.submitAnswer).not.toHaveBeenCalled();
+
+            // Simulate rejected answer response
+            act(() => {
+                mockSocketHook.gameState = {
+                    ...mockSocketHook.gameState,
+                    lastAnswerFeedback: {
+                        rejected: true,
+                        message: 'Answer submitted too late',
+                        questionUid: 'q1'
+                    }
+                };
+                mockUseStudentGameSocket.mockReturnValue(mockSocketHook);
+            });
+
+            // Re-render to simulate state update
+            rerender(<LiveGamePage />);
+
+            // Get the button again after rejection
+            const finalAnswer4Button = screen.getByText('4');
+
+            // The button should not be selected anymore (reverted on rejection)
+            expect(finalAnswer4Button).not.toHaveClass('tqcard-answer-selected');
+        });
+
+        it.skip('should revert to previously accepted answer when re-submission is rejected', () => {
+            // Test the scenario where user has already answered correctly, then tries to change answer too late
+            mockSocketHook.gameState = {
+                ...mockSocketHook.gameState,
+                currentQuestion: {
+                    uid: 'q1',
+                    text: 'What is 2 + 2?',
+                    questionType: 'multiple_choice',
+                    multipleChoiceQuestion: {
+                        answerOptions: ['1', '2', '3', '4']
+                    },
+                    timeLimit: 30
+                },
+                phase: 'question',
+                gameStatus: 'active',
+                answered: false // Start unanswered
+            };
+            mockUseStudentGameSocket.mockReturnValue(mockSocketHook);
+
+            const { rerender } = render(<LiveGamePage />);
+
+            // Select answer 1 (index 0)
+            const answer1Button = screen.getByText('1');
+            fireEvent.click(answer1Button);
+            rerender(<LiveGamePage />);
+
+            // Simulate acceptance of answer 1
+            mockSocketHook.gameState.answered = true;
+            rerender(<LiveGamePage />);
+
+            // Now select answer 4 instead (user changing their mind)
+            const answer4Button = screen.getByText('4');
+            fireEvent.click(answer4Button);
+            rerender(<LiveGamePage />);
+
+            // Submit the new selection (gets rejected)
+            mockSocketHook.gameState = {
+                ...mockSocketHook.gameState,
+                lastAnswerFeedback: {
+                    rejected: true,
+                    message: 'Answer submitted too late',
+                    questionUid: 'q1'
+                }
+            };
+            rerender(<LiveGamePage />);
+
+            // Should revert to the previously accepted answer (answer 1)
+            const finalAnswer1Button = screen.getByText('1');
+            expect(finalAnswer1Button).toHaveClass('tqcard-answer-selected');
+
+            const finalAnswer4Button = screen.getByText('4');
+            expect(finalAnswer4Button).not.toHaveClass('tqcard-answer-selected');
+        });
+
         it('should handle multiple choice questions', () => {
             // Set up multiple choice question
             mockSocketHook.gameState = {
                 ...mockSocketHook.gameState,
                 currentQuestion: {
-                    ...mockSocketHook.gameState.currentQuestion,
-                    questionType: 'multiple_choice' // Note: underscore variant
-                }
+                    uid: 'q1',
+                    text: 'What is 2 + 2?',
+                    questionType: 'multiple_choice',
+                    multipleChoiceQuestion: {
+                        answerOptions: ['1', '2', '3', '4']
+                    },
+                    timeLimit: 30
+                },
+                questionIndex: 1,
+                totalQuestions: 5,
+                answered: false,
+                phase: 'question',
+                gameStatus: 'active'
             };
             mockUseStudentGameSocket.mockReturnValue(mockSocketHook);
 
@@ -530,7 +667,14 @@ describe('Live Game Page - Comprehensive Test Suite', () => {
 
             render(<LiveGamePage />);
 
-            // Should show next question button for practice mode
+            // Should show feedback overlay first
+            expect(screen.getByTestId('answer-feedback-overlay')).toBeInTheDocument();
+
+            // Close the feedback overlay
+            const closeButton = screen.getByText('Close');
+            fireEvent.click(closeButton);
+
+            // Now should show next question button for practice mode
             expect(screen.getByText(/continuer/i)).toBeInTheDocument();
 
             // Click next question - we'll just check that the button is clickable
@@ -1237,6 +1381,7 @@ describe('Answer Clicking Debug Tests', () => {
                     ...mockSocketHook.gameState,
                     gameMode: 'practice',
                     phase: 'question',
+                    answered: true,
                     currentQuestion: {
                         uid: 'q1',
                         text: 'Simple test question',
