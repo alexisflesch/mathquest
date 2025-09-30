@@ -283,8 +283,16 @@ export class LoginHelper {
         console.log(`🔍 Current URL: ${this.page.url()}`);
         console.log(`🔍 Page title: ${await this.page.title()}`);
 
-        // Check if already logged in
-        const logoutButton = this.page.locator('button:has-text("Déconnexion")');
+        // Wait for the page to fully load - increase timeout
+        await this.page.waitForTimeout(3000);
+
+        // Debug: Check page content
+        const pageContent = await this.page.content();
+        console.log(`🔍 Page content length: ${pageContent.length}`);
+        console.log(`🔍 First 500 chars of page content: ${pageContent.substring(0, 500)}`);
+
+        // Check if already logged in - be more specific
+        const logoutButton = this.page.locator('button:has-text("Déconnexion"), [data-testid="logout-button"]');
         const isLoggedIn = await logoutButton.isVisible().catch(() => false);
         if (isLoggedIn) {
             console.log('✅ User is already logged in, skipping login process');
@@ -308,11 +316,11 @@ export class LoginHelper {
         let compteButton;
         try {
             compteButton = this.page.locator('button').filter({ hasText: 'Compte enseignant' });
-            await compteButton.waitFor({ timeout: 1000 });
+            await compteButton.waitFor({ timeout: 5000 });
         } catch {
-            // Fallback: look for button with teacher icon and Compte enseignant text
-            compteButton = this.page.locator('button:has-text("Compte enseignant")');
-            await compteButton.waitFor({ timeout: 1000 });
+            // Fallback: look for button with account text
+            compteButton = this.page.locator('button:has-text("enseignant")');
+            await compteButton.waitFor({ timeout: 5000 });
         }
         console.log('✅ Found Compte enseignant button, clicking...');
         await compteButton.click();
