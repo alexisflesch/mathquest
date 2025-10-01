@@ -1,11 +1,11 @@
 /**
- * MathQuest Landing Page
+ * Kutsum Landing Page
  * 
  * This component serves as the main entry point for the application, providing:
- * - A welcome introduction to the MathQuest platform
+ * - A welcome introduction to the Kutsum platform
  * - Role selection between Student and Teacher modes
  * - Smart navigation that remembers previous user roles
- * - Visual branding with the MathQuest logo
+ * - Visual branding with the Kutsum logo
  * 
  * The page intelligently directs returning users to the appropriate dashboard
  * based on their authentication status, while new users are guided through
@@ -71,14 +71,14 @@ export default function Home() {
         <div className="card-body items-center gap-8">
           {/* Header with logo */}
           <div className="flex items-center justify-center gap-4 mb-4">
-            <Image src="/favicon.svg" alt="MathQuest logo" width={64} height={64} priority />
-            <h1 className="text-3xl text-center font-bold text-base-content">Mathquest</h1>
+            <Image src="/favicon.svg" alt="Kutsum logo" width={64} height={64} priority />
+            <h1 className="text-3xl text-center font-bold text-base-content">Kutsum</h1>
           </div>
 
           {/* Description */}
           <div className="text-center mb-8">
             <p className="text-lg text-muted-foreground mb-4">
-              🧠 Une alternative libre à Kahoot avec une base de questions partagée.
+              🧠 L&apos;appli de révisions qui n&apos;en fait qu&apos;à sa tête.
             </p>
             {/* <p className="text-success font-medium mb-6">
               🔓 Pas besoin de compte pour jouer !

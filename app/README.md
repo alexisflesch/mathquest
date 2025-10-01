@@ -1,7 +1,10 @@
-# 🎯 MathQuest - Real-Time Educational Quiz Platform
+# 🎯 Kutsum (formerly MathQuest) - Real-Time Educational Quiz Platform
 
 > **A modern, type-safe, real-time quiz platform built with Next.js, Node.js, and WebSockets**
 > **✨ Featuring complete type safety, runtime validation, and zero legacy patterns**
+> **🧠 Tagline** — *“L'appli de révisions qui n'en fait qu'à sa tête”*
+
+> ℹ️ **Internal naming** — Technical identifiers (package names, env vars, database) still use the `mathquest` prefix during the transition phase.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](#)
 [![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](#)
@@ -23,7 +26,8 @@ npm run dev
 ```
 
 🌐 **Access**: Frontend (http://localhost:3008) | Backend (http://localhost:3007) |
-📚 **Documentation**: [Complete Documentation](https://alexisflesch.github.io/mathquest/)
+📚 **Documentation**: [Complete Documentation](https://alexisflesch.github.io/mathquest/) *(documentation URL migration to docs.kutsum.org planned)*
+🌍 **Production URL**: https://app.kutsum.org
 
 ---
 

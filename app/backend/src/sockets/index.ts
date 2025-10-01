@@ -32,7 +32,7 @@ export function initializeSocketIO(server: http.Server): SocketIOServer<ClientTo
         cors: {
             // Allow connections from frontend in dev and prod
             origin: process.env.NODE_ENV === 'production'
-                ? process.env.FRONTEND_URL || 'https://mathquest.example.com'
+                ? process.env.FRONTEND_URL || 'https://app.kutsum.org'
                 : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3008'],
             methods: ['GET', 'POST'],
             credentials: true

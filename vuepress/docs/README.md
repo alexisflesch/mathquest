@@ -1,26 +1,35 @@
 ---
 home: true
 heroImage: false
-heroText: MathQuest
-tagline: Libre. Ludique. Pour tous les niveaux.
-footer: Documentation MathQuest | © 2025
+heroText: Kutsum
+tagline: L'appli de révisions qui n'en fait qu'à sa tête
+footer: Documentation Kutsum (anciennement MathQuest) | GPL-3.0 2025
 ---
 
 
-MathQuest est une **alternative libre et open source à Kahoot**, pensée pour les enseignants et leurs élèves. Utilisable du CP jusqu'au post-bac, elle permet d'interroger la classe de manière interactive et ludique, de proposer des entraînements en autonomie, ou encore d'organiser des tournois pour défier ses camarades.
+
+Kutsum (anciennement MathQuest) est une **application libre, participative et sans publicité** conçue pour les enseignants et leurs élèves, du CP au post-bac. Bien plus qu'une alternative à Kahoot, elle propose :
+
+- **Une base de questions partagée** et collaborative, enrichie par la communauté
+- **Un mode enseignant** pour animer des quiz interactifs en classe (type Kahoot) et préparer des templates d'exercices pour l'entraînement autonome des élèves
+- **Un mode élève** pour s'entraîner en autonomie, interroger la base et progresser à son rythme
+- **Aucune publicité, aucune collecte de données personnelles**
+- **Gratuite, open source, sous licence GPL : chacun peut contribuer, installer, adapter**
+
+---
 
 <div class="screenshots-grid">
   <div class="screenshot-container">
     <h3>🖥️ Projection en classe</h3>
-    <img src="/screenshots/desktop-projection-light.png" alt="Projection MathQuest - thème clair" class="theme-screenshot screenshot-light projection-screenshot">
-    <img src="/screenshots/desktop-projection-dark.png" alt="Projection MathQuest - thème sombre" class="theme-screenshot screenshot-dark projection-screenshot">
+    <img src="/screenshots/desktop-projection-light.png" alt="Projection Kutsum - thème clair" class="theme-screenshot screenshot-light projection-screenshot">
+    <img src="/screenshots/desktop-projection-dark.png" alt="Projection Kutsum - thème sombre" class="theme-screenshot screenshot-dark projection-screenshot">
     <p>Tableau de bord de projection pour animer vos séances</p>
   </div>
   
   <div class="screenshot-container">
     <h3>📱 Interface mobile élève</h3>
-    <img src="/screenshots/live-phone-light.png" alt="Interface mobile MathQuest - thème clair" class="theme-screenshot screenshot-light mobile-screenshot">
-    <img src="/screenshots/live-phone-dark.png" alt="Interface mobile MathQuest - thème sombre" class="theme-screenshot screenshot-dark mobile-screenshot">
+    <img src="/screenshots/live-phone-light.png" alt="Interface mobile Kutsum - thème clair" class="theme-screenshot screenshot-light mobile-screenshot">
+    <img src="/screenshots/live-phone-dark.png" alt="Interface mobile Kutsum - thème sombre" class="theme-screenshot screenshot-dark mobile-screenshot">
     <p>Interface intuitive et réactive pour tous les appareils</p>
   </div>
 </div>
@@ -40,7 +49,7 @@ MathQuest est une **alternative libre et open source à Kahoot**, pensée pour l
 - <RouterLink to="/utilisation/">📖 Utilisation de l'application</RouterLink>
 - <RouterLink to="/questions-yaml/">✏️ Écriture de questions (YAML)</RouterLink>
 - <RouterLink to="/installation/">⚙️ Installation</RouterLink>
-- [🌐 Essayer l'application](https://mathquest.alexisfles.ch)
+- [🌐 Essayer l'application](https://app.kutsum.org)
 
 ---
 

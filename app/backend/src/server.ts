@@ -54,7 +54,7 @@ const port = process.env.PORT || 3007; // Default to 3007 if PORT not in .env
 // Configure CORS for API requests
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? process.env.FRONTEND_URL || 'https://mathquest.example.com'
+    ? process.env.FRONTEND_URL || 'https://app.kutsum.org'
         : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3008'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,

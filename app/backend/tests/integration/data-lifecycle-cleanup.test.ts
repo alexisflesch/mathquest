@@ -291,7 +291,7 @@ describe('Data Lifecycle and Cleanup', () => {
             await prisma.gameParticipant.deleteMany({
                 where: {
                     gameInstanceId: {
-                        notIn: (await prisma.gameInstance.findMany({ select: { id: true } })).map(g => g.id)
+                        notIn: (await prisma.gameInstance.findMany({ select: { id: true } })).map((g: { id: string }) => g.id)
                     }
                 }
             });

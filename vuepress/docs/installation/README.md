@@ -2,9 +2,9 @@
 title: 🛠️ Installation
 ---
 
-# 🛠️ Installation complète de MathQuest
+# 🛠️ Installation complète de Kutsum
 
-> **Note** : Ce guide est destiné aux utilisateurs souhaitant héberger MathQuest eux-mêmes. Si vous voulez simplement l'utiliser, [rendez-vous ici](https://mathquest.alexisfles.ch).
+> **Note** : Ce guide est destiné aux utilisateurs souhaitant héberger Kutsum eux-mêmes. Si vous voulez simplement l'utiliser, [rendez-vous ici](https://app.kutsum.org).
 
 ## 📦 Prérequis
 
@@ -206,14 +206,14 @@ pm2 start node --name mathquest-frontend --cwd ./ -- ./node_modules/next/dist/bi
 
 ## 📄 Informations
 
-- **Nom** : MathQuest
+- **Nom** : Kutsum (anciennement MathQuest)
 - **Licence** : [GPL v3](https://www.gnu.org/licenses/gpl-3.0.html)
 - **Auteur** : [Alexis Flesch](https://hire.alexisfles.ch)
 - **Hébergement** : Serveur personnel, sans pub ni traçage
 - **Code source** : [GitHub](https://github.com/alexisflesch/mathquest)
 - **Contributions** : Bienvenues ! Forkez et proposez vos idées/questions
 
-## 🎯 Fonctionnalités clés de MathQuest
+## 🎯 Fonctionnalités clés de Kutsum
 
 - **Base de données mutualisée** de questions, ajoutées et validées par les enseignants
 - **Mode solo ou tournoi** (avec avatars, scores, classement…)

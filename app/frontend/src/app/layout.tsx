@@ -4,8 +4,8 @@ import { Metadata, Viewport } from 'next';
 import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
-  title: 'MathQuest',
-  description: 'MathQuest : révisez les maths ou défiez vos amis dans des tournois ludiques, du CP au post-bac !',
+  title: 'Kutsum',
+  description: "Kutsum · L'appli de révisions qui n'en fait qu'à sa tête",
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'MathQuest',
+    title: 'Kutsum',
   },
-  applicationName: 'MathQuest',
+  applicationName: 'Kutsum',
   formatDetection: {
     telephone: false,
   },

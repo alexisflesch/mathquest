@@ -7,9 +7,26 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { LoginHelper, TestDataHelper } from './helpers/test-helpers';
 
 test.describe('Student Create Game - Cross-Filter Compatibility', () => {
     test.beforeEach(async ({ page }) => {
+        const dataHelper = new TestDataHelper(page);
+        const studentLogin = new LoginHelper(page);
+
+        // Step 1: Create student account and login
+        const studentData = dataHelper.generateTestData('filtering_student');
+        await dataHelper.createStudent({
+            username: studentData.username,
+            email: studentData.email,
+            password: studentData.password
+        });
+
+        await studentLogin.loginAsAuthenticatedStudent({
+            email: studentData.email,
+            password: studentData.password
+        });
+
         // Navigate to student create game page
         await page.goto('/student/create-game');
 
@@ -133,12 +150,12 @@ test.describe('API Integration - Cross-Filter Compatibility', () => {
         expect(data).toHaveProperty('themes');
 
         // Verify disciplines - should have Mathématiques as compatible
-        const mathDiscipline = data.disciplines.find(d => d.value === 'Mathématiques');
+        const mathDiscipline = data.disciplines.find((d: any) => d.value === 'Mathématiques');
         expect(mathDiscipline).toBeDefined();
         expect(mathDiscipline.isCompatible).toBe(true);
 
         // Verify incompatible disciplines
-        const anglaisDiscipline = data.disciplines.find(d => d.value === 'Anglais');
+        const anglaisDiscipline = data.disciplines.find((d: any) => d.value === 'Anglais');
         expect(anglaisDiscipline).toBeDefined();
         expect(anglaisDiscipline.isCompatible).toBe(false);
 

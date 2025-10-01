@@ -1,11 +1,11 @@
-# MathQuest PWA (Progressive Web App)
+# Kutsum PWA (Progressive Web App)
 
-MathQuest is now a fully functional Progressive Web App! This means users can install it on their devices and use it offline.
+Kutsum (formerly MathQuest) is now a fully functional Progressive Web App! This means users can install it on their devices and use it offline.
 
 ## Features
 
 ### ✅ Installable
-- Users can install MathQuest on their desktop, mobile, or tablet
+- Users can install Kutsum on their desktop, mobile, or tablet
 - Works like a native app with its own icon and window
 - No need to go through app stores
 
@@ -29,22 +29,22 @@ MathQuest is now a fully functional Progressive Web App! This means users can in
 ### For Users
 
 #### Desktop (Chrome/Edge)
-1. Visit MathQuest in Chrome or Edge
+1. Visit Kutsum in Chrome or Edge
 2. Look for the install button (⊕) in the address bar
 3. Click "Install" in the prompt
-4. MathQuest will open in its own window
+4. Kutsum will open in its own window
 
 #### Mobile (Android)
-1. Open MathQuest in Chrome
+1. Open Kutsum in Chrome
 2. Tap the menu (⋮) and select "Add to Home screen" or "Install app"
 3. Confirm installation
 4. Launch from your home screen
 
 #### iOS (iPhone/iPad)
-1. Open MathQuest in Safari
+1. Open Kutsum in Safari
 2. Tap the Share button
 3. Scroll down and tap "Add to Home Screen"
-4. Name it "MathQuest" and tap "Add"
+4. Name it "Kutsum" and tap "Add"
 5. Launch from your home screen
 
 ## Technical Implementation
@@ -56,9 +56,9 @@ Web app manifest defining app metadata, icons, and display settings.
 
 ```json
 {
-  "name": "MathQuest",
-  "short_name": "MathQuest",
-  "description": "Application de quiz mathématiques interactifs",
+  "name": "Kutsum",
+  "short_name": "Kutsum",
+  "description": "L'appli de révisions qui n'en fait qu'à sa tête",
   "display": "standalone",
   "theme_color": "#3b82f6",
   ...
@@ -91,7 +91,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: 'MathQuest',
+    title: 'Kutsum',
   },
 };
 ```

@@ -35,10 +35,10 @@ describe('EmailService', () => {
         process.env = {
             ...originalEnv,
             BREVO_API_KEY: 'test-api-key',
-            BREVO_SENDER_EMAIL: 'test@mathquest.com',
-            BREVO_SENDER_NAME: 'MathQuest Test',
+            BREVO_SENDER_EMAIL: 'test@kutsum.org',
+            BREVO_SENDER_NAME: 'Kutsum Test',
             FRONTEND_URL: 'http://localhost:3008',
-            APP_NAME: 'MathQuest Test'
+            APP_NAME: 'Kutsum Test'
         };
 
         emailService = new EmailService();

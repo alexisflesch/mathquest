@@ -23,7 +23,7 @@ export default function LoadingScreen({
 
                 {/* App logo/title */}
                 <h2 className="text-3xl font-bold mb-2 text-[color:var(--foreground)]">
-                    🧮 MathQuest
+                    🧮 Kutsum
                 </h2>
 
                 {/* Loading text */}

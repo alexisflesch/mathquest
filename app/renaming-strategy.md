@@ -118,7 +118,6 @@ NEXT_PUBLIC_BACKEND_BASE_URL=https://mathmaster.alexisfles.ch
 
 ### Phase 1: Preparation (30 min)
 1. Choose new app name (e.g., "MathMaster", "QuizPro", etc.)
-2. Create backup branch: `git checkout -b rename-to-[newname]`
 3. Document new name in this file
 
 ### Phase 2: Environment Variables (30 min)

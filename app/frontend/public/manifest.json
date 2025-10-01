@@ -1,7 +1,7 @@
 {
-  "name": "MathQuest",
-  "short_name": "MathQuest",
-  "description": "Application de quiz mathématiques interactifs pour élèves et enseignants",
+  "name": "Kutsum",
+  "short_name": "Kutsum",
+  "description": "L'appli de révisions qui n'en fait qu'à sa tête",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
