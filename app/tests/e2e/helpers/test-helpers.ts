@@ -299,8 +299,11 @@ export class LoginHelper {
             return;
         }
 
-        // Switch to account login mode
+        // Switch to account login mode (layout recently changed to guest/account toggle)
         console.log('🔄 Switching to account login mode...');
+
+        // Ensure buttons have rendered before scanning
+        await this.page.waitForSelector('button', { timeout: 10000 }).catch(() => undefined);
 
         // Debug: Check what buttons are available on the page
         const allButtons = await this.page.locator('button').all();
@@ -312,19 +315,37 @@ export class LoginHelper {
             console.log(`  Button ${i}: "${text}" (class: ${className})`);
         }
 
-        // Try multiple ways to find the teacher account button
-        let compteButton;
-        try {
-            compteButton = this.page.locator('button').filter({ hasText: 'Compte enseignant' });
-            await compteButton.waitFor({ timeout: 5000 });
-        } catch {
-            // Fallback: look for button with account text
-            compteButton = this.page.locator('button:has-text("enseignant")');
-            await compteButton.waitFor({ timeout: 5000 });
+        const accountToggleSelectors = [
+            'button:has-text("Compte enseignant")',
+            'button:has-text("Compte")',
+            'button:has-text("Account")',
+            '[data-testid="auth-toggle-account"]'
+        ];
+
+        let accountToggle = null;
+        for (const selector of accountToggleSelectors) {
+            const candidate = this.page.locator(selector).first();
+            const visible = await candidate.isVisible().catch(() => false);
+            if (visible) {
+                accountToggle = candidate;
+                break;
+            }
+            try {
+                await candidate.waitFor({ timeout: 2000, state: 'visible' });
+                accountToggle = candidate;
+                break;
+            } catch {
+                continue;
+            }
         }
-        console.log('✅ Found Compte enseignant button, clicking...');
-        await compteButton.click();
-        console.log('✅ Clicked Compte enseignant button');
+
+        if (!accountToggle) {
+            throw new Error('Account/teacher login toggle not found on login page');
+        }
+
+        console.log(`✅ Found account toggle (${await accountToggle.textContent().catch(() => 'unknown')}), clicking...`);
+        await accountToggle.click();
+        console.log('✅ Account toggle clicked');
 
         // Wait for the account form to appear and ensure we're in login mode
         console.log('⏳ Waiting for account form to load...');

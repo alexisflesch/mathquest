@@ -14,7 +14,7 @@ import InfoModal from '@/components/SharedModal';
 import type { QuestionData } from '@shared/types/socketEvents';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
-import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
+import { useStudentGameSocket, type AnswerReceived } from '@/hooks/useStudentGameSocket';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import type { z } from 'zod';
 import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
@@ -44,6 +44,28 @@ interface LobbyUIState {
     creator: GameParticipant | null;
     countdown: number | null;
 }
+
+type StoredSingleAnswer = {
+    type: 'single';
+    value: number | null;
+};
+
+type StoredMultipleAnswer = {
+    type: 'multiple';
+    value: number[];
+};
+
+type StoredNumericAnswer = {
+    type: 'numeric';
+    value: string;
+};
+
+type StoredAnswer = StoredSingleAnswer | StoredMultipleAnswer | StoredNumericAnswer;
+
+type PendingAnswer = {
+    questionUid: string;
+    state: StoredAnswer;
+};
 
 export default function LiveGamePage() {
     // Debug render count
@@ -75,6 +97,7 @@ export default function LiveGamePage() {
         gameState,
         connected,
         error: socketError,
+        errorVersion: socketErrorVersion,
         joinGame,
         submitAnswer,
         requestNextQuestion
@@ -129,6 +152,10 @@ export default function LiveGamePage() {
     const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
     const [hasEncounteredFirstQuestion, setHasEncounteredFirstQuestion] = useState(false);
     const [firstQuestionIndex, setFirstQuestionIndex] = useState<number | null>(null);
+    const [acceptedAnswers, setAcceptedAnswers] = useState<Record<string, StoredAnswer>>({});
+    const [pendingAnswer, setPendingAnswer] = useState<PendingAnswer | null>(null);
+    const lastProcessedFeedbackRef = useRef<AnswerReceived | null>(null);
+    const lastProcessedErrorVersionRef = useRef<number | null>(null);
 
     // Stable leaderboard
     const stableLeaderboard = useMemo(() => {
@@ -260,6 +287,9 @@ export default function LiveGamePage() {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
         setNumericAnswer('');
+        setPendingAnswer(null);
+        lastProcessedFeedbackRef.current = null;
+        lastProcessedErrorVersionRef.current = null;
     }, [gameState.currentQuestion?.uid]);
 
     // Reset feedback overlay when appropriate (separate from answer reset)
@@ -312,7 +342,8 @@ export default function LiveGamePage() {
             return;
         }
 
-        setSelectedAnswer(idx === selectedAnswer ? null : idx);
+        const nextSelection = idx === selectedAnswer ? null : idx;
+        setSelectedAnswer(nextSelection);
         console.log('✅ [FRONTEND-ANSWER-CLICK] About to submit answer:', {
             questionUid: gameState.currentQuestion.uid,
             answer: idx,
@@ -326,10 +357,13 @@ export default function LiveGamePage() {
 
         submitAnswer(gameState.currentQuestion.uid, idx, Date.now());
 
-        // Track that this question has been answered
-        if (gameState.currentQuestion) {
-            setAnsweredQuestions(prev => new Set(prev).add(gameState.currentQuestion!.uid));
-        }
+        setPendingAnswer({
+            questionUid: gameState.currentQuestion.uid,
+            state: {
+                type: 'single',
+                value: nextSelection
+            }
+        });
     }, [gameState, selectedAnswer, submitAnswer, socket]);
 
     const handleSubmitMultiple = useCallback(() => {
@@ -348,8 +382,13 @@ export default function LiveGamePage() {
 
         submitAnswer(gameState.currentQuestion.uid, selectedAnswers, Date.now());
 
-        // Track that this question has been answered
-        setAnsweredQuestions(prev => new Set(prev).add(gameState.currentQuestion!.uid));
+        setPendingAnswer({
+            questionUid: gameState.currentQuestion.uid,
+            state: {
+                type: 'multiple',
+                value: [...selectedAnswers]
+            }
+        });
     }, [gameState, selectedAnswers, submitAnswer]);
 
     const handleNumericSubmit = useCallback(() => {
@@ -369,9 +408,158 @@ export default function LiveGamePage() {
 
         submitAnswer(gameState.currentQuestion.uid, val, Date.now());
 
-        // Track that this question has been answered
-        setAnsweredQuestions(prev => new Set(prev).add(gameState.currentQuestion!.uid));
+        setPendingAnswer({
+            questionUid: gameState.currentQuestion.uid,
+            state: {
+                type: 'numeric',
+                value: numericAnswer
+            }
+        });
     }, [gameState, numericAnswer, submitAnswer]);
+
+    useEffect(() => {
+        const feedback = gameState.lastAnswerFeedback;
+        if (!feedback) {
+            return;
+        }
+
+        if (feedback === lastProcessedFeedbackRef.current) {
+            return;
+        }
+
+        lastProcessedFeedbackRef.current = feedback;
+
+        if (!pendingAnswer || feedback.questionUid !== pendingAnswer.questionUid) {
+            return;
+        }
+
+        logger.info('[LIVE-ANSWER] Processing answer feedback', {
+            questionUid: feedback.questionUid,
+            pendingType: pendingAnswer.state.type,
+            feedbackKeys: Object.keys(feedback || {}),
+            acceptedAnswersBefore: acceptedAnswers[pendingAnswer.questionUid]
+        });
+        console.log('NUMERIC::feedback', {
+            questionUid: feedback.questionUid,
+            pendingType: pendingAnswer.state.type,
+            hasPending: !!pendingAnswer,
+            feedbackKeys: Object.keys(feedback || {}),
+            feedbackJson: JSON.stringify(feedback),
+            pendingValue: pendingAnswer.state.value
+        });
+
+        const questionUid = feedback.questionUid;
+
+        const nextAccepted: StoredAnswer = pendingAnswer.state.type === 'multiple'
+            ? { type: 'multiple', value: [...pendingAnswer.state.value] }
+            : pendingAnswer.state.type === 'single'
+                ? { type: 'single', value: pendingAnswer.state.value }
+                : { type: 'numeric', value: pendingAnswer.state.value };
+
+        setAcceptedAnswers(prev => ({
+            ...prev,
+            [questionUid]: nextAccepted
+        }));
+
+        logger.info('[LIVE-ANSWER] Stored accepted answer', {
+            questionUid,
+            acceptedType: nextAccepted.type,
+            acceptedValue: nextAccepted.value
+        });
+        console.log('NUMERIC::stored', {
+            questionUid,
+            acceptedType: nextAccepted.type,
+            acceptedValue: nextAccepted.value
+        });
+
+        // Note: We do NOT update the UI state here (setSelectedAnswer, setNumericAnswer, etc.)
+        // because the UI already shows the submitted value. Only update acceptedAnswers for reversion logic.
+
+        setAnsweredQuestions(prev => {
+            const next = new Set(prev);
+            next.add(questionUid);
+            return next;
+        });
+
+        setPendingAnswer(null);
+    }, [gameState.lastAnswerFeedback, pendingAnswer, setSelectedAnswer, setSelectedAnswers, setNumericAnswer]);
+
+    useEffect(() => {
+        if (!pendingAnswer || !socketError) {
+            return;
+        }
+
+        if (socketErrorVersion === null) {
+            return;
+        }
+
+        if (lastProcessedErrorVersionRef.current === socketErrorVersion) {
+            return;
+        }
+
+        lastProcessedErrorVersionRef.current = socketErrorVersion;
+
+        const accepted = acceptedAnswers[pendingAnswer.questionUid];
+
+        const baseMessage = socketError.includes('|') ? socketError.split('|')[0] : socketError;
+        const normalized = baseMessage.toLowerCase();
+        const isKnownLateRejection = normalized.includes('trop tard')
+            || normalized.includes('time is up')
+            || normalized.includes('timer_stopped')
+            || normalized.includes('answers are locked')
+            || normalized.includes('déjà')
+            || normalized.includes('already submitted');
+
+        logger.info('[LIVE-ANSWER] Evaluating socket error for answer revert', {
+            socketError: baseMessage,
+            isKnownLateRejection,
+            hasAcceptedState: !!accepted,
+            pendingType: pendingAnswer.state.type,
+            acceptedType: accepted?.type,
+            errorVersion: socketErrorVersion
+        });
+        console.log('NUMERIC::error', {
+            socketError: baseMessage,
+            isKnownLateRejection,
+            hasAcceptedState: !!accepted,
+            pendingType: pendingAnswer.state.type,
+            acceptedType: accepted?.type,
+            errorVersion: socketErrorVersion,
+            pendingValue: pendingAnswer.state.value,
+            acceptedValue: accepted?.value
+        });
+
+        if (!isKnownLateRejection && !accepted) {
+            return;
+        }
+
+        if (pendingAnswer.state.type === 'single') {
+            const fallback = accepted && accepted.type === 'single' ? accepted.value : null;
+            setSelectedAnswer(fallback ?? null);
+        } else if (pendingAnswer.state.type === 'multiple') {
+            const fallback = accepted && accepted.type === 'multiple' ? [...accepted.value] : [];
+            setSelectedAnswers(() => fallback);
+        } else {
+            const fallback = accepted && accepted.type === 'numeric' ? accepted.value : '';
+            setNumericAnswer(fallback ?? '');
+        }
+
+        logger.info('[LIVE-ANSWER] Reverted answer after socket error', {
+            questionUid: pendingAnswer.questionUid,
+            appliedFallbackType: accepted?.type ?? 'default',
+            pendingType: pendingAnswer.state.type
+        });
+        console.log('NUMERIC::reverted', {
+            questionUid: pendingAnswer.questionUid,
+            appliedFallbackType: accepted?.type ?? 'default',
+            pendingType: pendingAnswer.state.type,
+            fallbackValue: pendingAnswer.state.type === 'numeric'
+                ? (accepted && accepted.type === 'numeric' ? accepted.value : '')
+                : accepted
+        });
+
+        setPendingAnswer(null);
+    }, [socketError, socketErrorVersion, pendingAnswer, acceptedAnswers, setSelectedAnswer, setSelectedAnswers, setNumericAnswer]);
 
     const handleRequestNextQuestion = useCallback(() => {
         if (gameMode === 'practice' && gameState.currentQuestion) {

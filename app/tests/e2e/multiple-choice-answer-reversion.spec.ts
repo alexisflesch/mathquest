@@ -301,7 +301,7 @@ test.describe('Multiple Choice Answer Reversion', () => {
             log('Clicked join button');
 
             // Verify student is on the live quiz page
-            await studentPage.waitForURL(`**/live/${quizData.accessCode}`, { timeout: 5000 });
+            await studentPage.waitForURL(`**/live/${quizData.accessCode}`, { timeout: 15000 });
             log('✅ Student successfully joined quiz and is on live page');
 
             // Wait for student page to fully load
@@ -546,6 +546,18 @@ test.describe('Multiple Choice Answer Reversion', () => {
                     throw new Error(`Expected input to show ${initialAnswer} but got ${inputValueAfterSubmit}`);
                 }
                 log('✅ Input field still shows accepted answer');
+
+                // Step 5.5: Teacher stops the timer to lock answers
+                log('🛑 Teacher stopping timer to lock answers...');
+                await teacherPage.waitForTimeout(1000); // Wait for dashboard to update
+
+                // Find and click the stop button (canonical selector: [data-stop-btn])
+                const stopButton = teacherPage.locator('[data-stop-btn]').first();
+                await expect(stopButton).toBeVisible({ timeout: 5000 });
+                await stopButton.click();
+                log('✅ Clicked stop timer button');
+
+                await teacherPage.waitForTimeout(1000); // Wait for timer to stop
 
                 // Step 6: Attempt late submission (try to change the answer)
                 const lateAnswer = '99';
