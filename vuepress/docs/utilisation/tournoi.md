@@ -3,7 +3,7 @@ title: 👥 Mode Tournoi
 ---
 
 
-## � Vue d'ensemble
+## 👥 Vue d'ensemble
 
 Le mode Tournoi permet d'organiser ou de rejoindre des compétitions mathématiques, en direct ou en différé, avec classement et feedback détaillé. Que vous soyez élève, enseignant ou invité, vous pouvez participer à un tournoi, suivre votre progression et consulter les résultats à tout moment.
 

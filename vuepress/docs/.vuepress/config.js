@@ -6,7 +6,7 @@ import { viteBundler } from '@vuepress/bundler-vite'
 export default defineUserConfig({
 
   lang: 'fr-FR',
-  title: 'MathQuest',
+  title: 'Kutsum',
   description: 'Alternative libre et open source à Kahoot, pour les enseignants et leurs élèves.',
   base: '/',
 
