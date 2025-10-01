@@ -6,16 +6,24 @@ import ClientLayout from './ClientLayout';
 export const metadata: Metadata = {
   title: 'MathQuest',
   description: 'MathQuest : révisez les maths ou défiez vos amis dans des tournois ludiques, du CP au post-bac !',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/favicon.ico', type: 'image/x-icon' },
       { url: '/favicon.svg', type: 'image/svg+xml' }
-    ]
+    ],
+    apple: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'MathQuest',
+  },
+  applicationName: 'MathQuest',
+  formatDetection: {
+    telephone: false,
   },
 };
 

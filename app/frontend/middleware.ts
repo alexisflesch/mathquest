@@ -39,22 +39,34 @@ export function middleware(request: NextRequest) {
     const userState = getUserState(request);
     const { pathname, origin, search } = request.nextUrl;
 
-    // Allow PWA files, static assets, and Next.js internal files
-    if (pathname.startsWith('/_next') ||
+    // Early allow-list for static assets and PWA files
+    if (
+        pathname === '/sw.js' ||
+        /^\/(workbox|fallback)-.+\.js$/i.test(pathname) ||
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/static') ||
         pathname.startsWith('/api') ||
         pathname === '/favicon.ico' ||
-        pathname === '/favicon.svg' ||
+        pathname.startsWith('/favicon') ||
+        pathname === '/manifest.json' ||
+        pathname === '/site.webmanifest' ||
         pathname === '/robots.txt' ||
         pathname === '/sitemap.xml' ||
-        pathname.match(/^\/icon-.*\.png$/) ||
-        pathname.match(/^\/screenshot-.*\.png$/) ||
-        pathname === '/burger.svg' ||
-        pathname === '/clear-auth.html') {
+        /^\/icon-.*\.png$/.test(pathname) ||
+        /^\/screenshot-.*\.png$/.test(pathname) ||
+        /\.(png|jpg|jpeg|gif|webp|svg|ico|txt|webmanifest)$/i.test(pathname)
+    ) {
         return NextResponse.next();
     }
 
-    // Allow home, login, email verification, and password reset for everyone
-    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/reset-password')) {
+    // Allow home, login, email verification, password reset, and join page for everyone
+    if (
+        pathname === '/' ||
+        pathname === '/login' ||
+        pathname.startsWith('/verify-email') ||
+        pathname.startsWith('/reset-password') ||
+        pathname === '/student/join'
+    ) {
         return NextResponse.next();
     }
 
@@ -80,7 +92,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Match all routes except Next.js internal routes
-        '/((?!_next).*)',
+        // Keep matcher simple and handle precise exclusions in code above
+        '/((?!_next|api|static|sw\\.js|workbox-|fallback-).*)',
     ],
 };

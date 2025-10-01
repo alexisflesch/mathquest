@@ -305,6 +305,13 @@ cd frontend && npm run build
 
 **Note:** A postbuild script automatically removes any broken registerRoute from the generated service worker. This ensures the fix is applied consistently after each build. The bug can be reproduced using `node scripts/test-ref-bug.js` on an unfixed service worker.
 
+### Update 2025-10-01: Middleware allowlist for service worker assets
+
+- **Motivation:** Anonymous users attempting to load `/sw.js` were intercepted by the authentication middleware and redirected to `/login`, preventing the PWA from registering.
+- **Fix:** Updated `src/middleware.ts` to explicitly allow service worker bundles (`/sw.js`, `workbox-*`, `fallback-*`) and refined the middleware matcher to exclude these assets from execution.
+- **Regression tests:** Added `should allow service worker requests without redirect` scenario in `tests/unit/middleware-auth-redirects.test.ts` to guard the new allowlist.
+- **Validation:** `npm run test -- middleware-auth-redirects` and `npm run type-check` both pass after the change.
+
 ## Performance Issues
 
 ### Symptom: Application is slow or unresponsive

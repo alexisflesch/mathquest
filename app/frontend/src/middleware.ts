@@ -41,6 +41,8 @@ export function middleware(request: NextRequest) {
 
     // Early allow-list for static assets and PWA files
     if (
+        pathname === '/sw.js' ||
+        /^\/(workbox|fallback)-.+\.js$/i.test(pathname) ||
         pathname.startsWith('/_next') ||
         pathname.startsWith('/static') ||
         pathname.startsWith('/api') ||
@@ -85,6 +87,6 @@ export function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         // Keep matcher simple and handle precise exclusions in code above
-        '/((?!_next|api|static).*)',
+        '/((?!_next|api|static|sw\\.js|workbox-|fallback-).*)',
     ],
 };
