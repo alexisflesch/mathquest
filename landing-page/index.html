@@ -1,71 +1,275 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="auto">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kutsum – Plateforme d'exercices et tournois de maths</title>
+    <title>Kutsum – Alternative libre à Kahoot pour l'éducation</title>
     <meta name="description"
-        content="Kutsum est une plateforme moderne pour s'entraîner et organiser des tournois de mathématiques. Accédez à l'app, la documentation, et le code source.">
+        content="Kutsum est une plateforme libre, gratuite et sans publicité pour créer des quiz interactifs, organiser des tournois et suivre la progression de vos élèves. L'alternative open source à Kahoot pour l'éducation.">
+    <meta name="keywords"
+        content="quiz éducatif, kahoot alternative, plateforme quiz gratuite, quiz interactif classe, tournoi éducatif, mathématiques, open source éducation">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.kutsum.org/">
+    <meta property="og:title" content="Kutsum – Alternative libre à Kahoot pour l'éducation">
+    <meta property="og:description"
+        content="Plateforme libre, gratuite et sans publicité pour animer vos cours avec des quiz interactifs et des tournois. Du CP au post-bac.">
+    <meta property="og:image" content="https://www.kutsum.org/assets/screenshots/desktop-projection-light.png">
+    <meta property="og:site_name" content="Kutsum">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.kutsum.org/">
+    <meta name="twitter:title" content="Kutsum – Alternative libre à Kahoot">
+    <meta name="twitter:description" content="Plateforme libre, gratuite et sans pub pour animer vos cours">
+    <meta name="twitter:image" content="https://www.kutsum.org/assets/screenshots/desktop-projection-light.png">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f2937">
+
+    <link rel="canonical" href="https://www.kutsum.org/">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Kutsum",
+    "alternateName": "MathQuest",
+    "url": "https://www.kutsum.org",
+    "description": "Plateforme libre et gratuite pour créer des quiz interactifs, organiser des tournois éducatifs et suivre la progression des élèves",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "featureList": "Quiz interactifs, Tournois éducatifs, Mode entraînement, Support LaTeX, Interface responsive, Sans publicité, Open source"
+  }
+  </script>
+
     <script>
-        // Auto dark/light mode + toggle
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
         }
         function getPreferredTheme() {
             const stored = localStorage.getItem('theme');
-            if (stored) return stored;
+            if (stored === 'dark' || stored === 'light') return stored;
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         function applyTheme() {
             const theme = getPreferredTheme();
             setTheme(theme);
-            document.getElementById('theme-toggle-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+            const icon = document.getElementById('theme-toggle-icon');
+            if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
         document.addEventListener('DOMContentLoaded', applyTheme);
     </script>
 </head>
 
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème" aria-label="Changer le thème">
         <span id="theme-toggle-icon">🌙</span>
     </button>
-    <header class="header">
-        <h1>Kutsum</h1>
-        <p>Plateforme moderne d'exercices et de tournois de mathématiques.<br>Entraînez-vous, organisez des
-            compétitions, progressez !</p>
-        <nav class="links">
-            <a class="link-btn" href="https://app.kutsum.org" target="_blank" rel="noopener">Accéder à l'application</a>
-            <a class="link-btn" href="https://docs.kutsum.org" target="_blank" rel="noopener">Documentation</a>
-            <a class="link-btn" href="https://github.com/alexisflesch/mathquest" target="_blank" rel="noopener">Code
-                source</a>
-        </nav>
+
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">L'alternative <span class="highlight">libre</span> à Kahoot</h1>
+                <p class="hero-subtitle">Animez vos cours avec des quiz interactifs, organisez des tournois et suivez la
+                    progression de vos élèves. <strong>100% gratuit, sans publicité, open source.</strong></p>
+                <div class="hero-cta">
+                    <a href="https://app.kutsum.org" class="btn btn-primary btn-lg">Essayer gratuitement</a>
+                    <a href="https://docs.kutsum.org" class="btn btn-secondary btn-lg">Découvrir →</a>
+                </div>
+                <p class="hero-note">✓ Sans inscription pour les élèves &nbsp;·&nbsp; ✓ Du CP au post-bac &nbsp;·&nbsp;
+                    ✓ Support LaTeX</p>
+            </div>
+        </div>
     </header>
-    <main>
-        <section class="screenshots">
-            <!-- Screenshots insérés ici dynamiquement ou manuellement -->
-            <img class="screenshot" src="assets/login-page.png" alt="Page de connexion Kutsum">
-            <img class="screenshot" src="assets/tournament-join-form.png" alt="Formulaire tournoi Kutsum">
-        </section>
-    </main>
-    <footer style="text-align:center; color:var(--muted-foreground); padding:2rem 0 1rem 0; font-size:0.95rem;">
-        © 2025 Kutsum – <a href="https://github.com/alexisflesch/mathquest"
-            style="color:var(--primary);text-decoration:none;">alexisflesch/mathquest</a>
+
+    <section class="value-prop">
+        <div class="container">
+            <h2 class="section-title">Pourquoi Kutsum ?</h2>
+            <div class="values">
+                <div class="value">
+                    <div class="value-icon">🆓</div>
+                    <h3>100% Gratuit</h3>
+                    <p>Aucun abonnement, aucune limite d'utilisation. Accessible à tous, pour toujours.</p>
+                </div>
+                <div class="value">
+                    <div class="value-icon">🔒</div>
+                    <h3>Respecte votre vie privée</h3>
+                    <p>Aucune publicité, aucun tracking, aucune revente de données. Conforme RGPD.</p>
+                </div>
+                <div class="value">
+                    <div class="value-icon">🌍</div>
+                    <h3>Open Source</h3>
+                    <p>Code source ouvert (GPL-3.0). Installez sur votre serveur, adaptez à vos besoins.</p>
+                </div>
+                <div class="value">
+                    <div class="value-icon">🤝</div>
+                    <h3>Base collaborative</h3>
+                    <p>Des milliers de questions partagées par la communauté. Contribuez et enrichissez la base.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Trois modes d'utilisation</h2>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Mode Quiz</h3>
+                        <span class="feature-badge">Enseignant</span>
+                    </div>
+                    <p class="feature-desc">Animez un quiz en temps réel avec vos élèves. Vous contrôlez l'enchaînement
+                        des questions, le timer, et choisissez quand afficher les réponses. Parfait pour dynamiser vos
+                        séances en classe.</p>
+                    <ul class="feature-list">
+                        <li>Projection en classe (plein écran)</li>
+                        <li>Contrôle total du rythme</li>
+                        <li>Feedback oral ou écrit</li>
+                        <li>Interface élève simplifiée</li>
+                    </ul>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">🏆</div>
+                        <h3>Mode Tournoi</h3>
+                        <span class="feature-badge">Élèves</span>
+                    </div>
+                    <p class="feature-desc">Organisez des tournois synchrones ou différés. Les élèves peuvent créer
+                        leurs propres compétitions entre eux. Le système gère automatiquement le timer, la progression
+                        et le classement.</p>
+                    <ul class="feature-list">
+                        <li>Tournois synchrones ou différés</li>
+                        <li>Classement en temps réel</li>
+                        <li>Feedback automatique après chaque question</li>
+                        <li>Création par les élèves</li>
+                    </ul>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">💪</div>
+                        <h3>Mode Entraînement</h3>
+                        <span class="feature-badge">Autonomie</span>
+                    </div>
+                    <p class="feature-desc">Entraînement libre sans timer ni pression. Les élèves avancent à leur
+                        rythme, reçoivent un feedback immédiat après chaque réponse et peuvent recommencer autant de
+                        fois qu'ils le souhaitent.</p>
+                    <ul class="feature-list">
+                        <li>Sans timer ni classement</li>
+                        <li>Feedback immédiat</li>
+                        <li>Parcours personnalisés</li>
+                        <li>Révisions ciblées</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="screenshots">
+        <div class="container">
+            <h2 class="section-title">Interface intuitive et responsive</h2>
+            <p class="section-subtitle">Fonctionne parfaitement sur ordinateur, tablette et mobile</p>
+
+            <div class="screenshot-grid">
+                <div class="screenshot-item">
+                    <img src="assets/screenshots/desktop-projection-light.png" alt="Mode projection en classe"
+                        loading="lazy">
+                    <p class="screenshot-caption">Projection en classe</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="assets/screenshots/dashboard-light.png" alt="Dashboard enseignant" loading="lazy">
+                    <p class="screenshot-caption">Dashboard enseignant</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="assets/screenshots/activites-light.png" alt="Gestion des activités" loading="lazy">
+                    <p class="screenshot-caption">Gestion des activités</p>
+                </div>
+                <div class="screenshot-item screenshot-mobile">
+                    <img src="assets/screenshots/live-phone-light.png" alt="Interface mobile élève" loading="lazy">
+                    <p class="screenshot-caption">Interface mobile élève</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title">Prêt à transformer vos cours ?</h2>
+                <p class="cta-subtitle">Rejoignez les enseignants qui utilisent déjà Kutsum pour dynamiser leurs séances
+                </p>
+                <div class="cta-buttons">
+                    <a href="https://app.kutsum.org" class="btn btn-primary btn-lg">Commencer gratuitement</a>
+                    <a href="https://docs.kutsum.org" class="btn btn-outline btn-lg">Consulter la documentation</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4 class="footer-title">Kutsum</h4>
+                    <p class="footer-desc">Plateforme libre et gratuite pour l'éducation. Anciennement MathQuest.</p>
+                    <p class="footer-license">Licence GPL-3.0 · 2025</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-title">Produit</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://app.kutsum.org">Accéder à l'app</a></li>
+                        <li><a href="https://docs.kutsum.org">Documentation</a></li>
+                        <li><a href="https://docs.kutsum.org/utilisation/">Guide d'utilisation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-title">Ressources</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://docs.kutsum.org/questions-yaml/">Écrire des questions</a></li>
+                        <li><a href="https://docs.kutsum.org/installation/">Installation</a></li>
+                        <li><a href="https://github.com/alexisflesch/mathquest">Code source</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-title">Communauté</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/alexisflesch/mathquest">GitHub</a></li>
+                        <li><a href="https://github.com/alexisflesch/mathquest/issues">Signaler un bug</a></li>
+                        <li><a href="https://github.com/alexisflesch/mathquest/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </footer>
+
     <script>
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
             const next = current === 'dark' ? 'light' : 'dark';
             setTheme(next);
-            document.getElementById('theme-toggle-icon').textContent = next === 'dark' ? '☀️' : '🌙';
+            const icon = document.getElementById('theme-toggle-icon');
+            if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
         }
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
             if (!localStorage.getItem('theme')) {
                 setTheme(e.matches ? 'dark' : 'light');
-                document.getElementById('theme-toggle-icon').textContent = e.matches ? '☀️' : '🌙';
+                const icon = document.getElementById('theme-toggle-icon');
+                if (icon) icon.textContent = e.matches ? '☀️' : '🌙';
             }
         });
     </script>

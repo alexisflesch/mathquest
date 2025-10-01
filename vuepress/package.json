@@ -1,7 +1,7 @@
 {
-  "name": "mathquest-doc",
+  "name": "kutsum-doc",
   "version": "0.0.1",
-  "description": "Documentation de l'appli mathquest",
+  "description": "Documentation de l'appli kutsum",
   "license": "GPL",
   "type": "module",
   "scripts": {
