@@ -4,10 +4,10 @@ import createLogger from '@/utils/logger';
 // Create a middleware-specific logger
 const logger = createLogger('SocketRateLimit');
 
-// Rate limiting configuration
+// Rate limiting configuration - configurable via environment variables
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const MAX_CONNECTIONS_PER_WINDOW = 10; // Max connections per IP per minute
-const MAX_EVENTS_PER_SECOND = 20; // Max events per socket per second
+const MAX_CONNECTIONS_PER_WINDOW = parseInt(process.env.MAX_CONNECTIONS_PER_WINDOW || '2000'); // Configurable max connections per IP per minute
+const MAX_EVENTS_PER_SECOND = parseInt(process.env.MAX_EVENTS_PER_SECOND || '100'); // Configurable max events per socket per second (reasonable for gaming)
 
 // In-memory storage for rate limiting (in production, use Redis)
 interface RateLimitData {

@@ -1,26 +1,15 @@
-1. Add questions to test database and keep fixing tests under app/tests until all tests pass. If a test looks useless or outdated or redundant, remove it.
+A few things need to be fixed on the UI.
 
+3. ✅ **FIXED**: When, on live/[code] page, a student clicks on an answer too late, the UI now correctly reverts to the previously selected answer (if any) or unselects everything if none was selected before. The error message is shown and the UI state properly reflects the accepted answer.
+   - **Implementation**: Added state management with `pendingAnswer` and `acceptedAnswers` tracking
+   - **Error handling**: Socket error triggers reversion logic via `useEffect` on `socketError` + `socketErrorVersion`
+   - **Bug fix (Oct 1, 2025)**: Fixed issue where numeric input was getting cleared after successful submission. Now only stores accepted answer without resetting UI state unnecessarily.
+   - **Tests**: E2E tests validate numeric and multiple-choice answer reversion (`tests/e2e/numeric-answer-reversion.spec.ts`, `tests/e2e/multiple-choice-answer-reversion.spec.ts`)
 
-2. Complete e2e tests to cover the full user flow for all main features, that is :
-    - tournament
-    - practice
-    - quiz
-
-For each feature, cover:
-    - starting a game
-    - joining a game
-    - playing through a full game
-    - handling edge cases (disconnects, errors)
-    - verifying correct scoring and results
-For quiz, cover 
-    - teacher changing questions
-    - students joining mid-quiz
-    - multiple students playing simultaneously
-    - teacher stopping timer, showing results, etc...
-
-
-This work is absolutely critical to ensure the app is stable and reliable. We need to be able to automatically test all main user flows end-to-end to catch regressions and bugs early.
-
-    - re-use existing components wherever possible
-    - no copy-pasting or re-implementing
-    - take inspiration from existing working tests
+4. 🔍 **INVESTIGATED**: On live/[code] page, if a student joins after during the phase where the answer is shown, it should give the same view as if he had not answered at all. Right now, the student don't see the correct answer.
+   - **Status**: Bug reproduced and documented but not yet fixed
+   - **Investigation**: Created test files and reproduction plan (`tests/e2e/late-join-reproduction-plan.md`)
+   - **Root cause**: Late-joining students likely receive incomplete initial state and miss socket events from before they joined
+   - **Expected behavior**: Late-joining student should see question + correct answer highlighted (same as student who was present but didn't answer)
+   - **Current behavior**: Late-joining student doesn't see the correct answer
+   - **Next steps**: Manual verification → targeted fix in live page state initialization

@@ -108,13 +108,32 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
         logger.info({ gameId, templateId: gameTemplate.id, questionCount: gameTemplate.questions.length }, 'Found game template');
         // Get the game state from Redis
         const fullState = await gameStateService_1.default.getFullGameState(gameInstance.accessCode);
-        if (!fullState || !fullState.gameState) {
-            logger.warn({ gameId, accessCode: gameInstance.accessCode }, 'Game state not found in Redis');
+        let gameState = fullState?.gameState;
+        // For completed games, if Redis state is missing (cleaned up), create a minimal game state
+        if (!gameState && gameInstance.status === 'completed') {
+            logger.info({ gameId, accessCode: gameInstance.accessCode, dbStatus: gameInstance.status }, 'Redis state missing for completed game, using database status');
+            // Create a minimal game state for completed games
+            gameState = {
+                gameId: gameInstance.id,
+                accessCode: gameInstance.accessCode,
+                status: 'completed', // Use database status
+                currentQuestionIndex: -1, // No active question
+                questionUids: [], // Will be populated from template
+                answersLocked: true, // Completed games should have answers locked
+                gameMode: gameInstance.playMode,
+                settings: gameInstance.settings || { timeMultiplier: 1.0, showLeaderboard: true }
+            };
+        }
+        else if (!gameState) {
+            logger.warn({ gameId, accessCode: gameInstance.accessCode }, 'Game state not found in Redis and game is not completed');
             return { controlState: null, errorDetails: 'Game state not found in Redis' };
         }
-        const gameState = fullState.gameState;
+        // At this point, gameState is guaranteed to be defined
+        if (!gameState) {
+            return { controlState: null, errorDetails: 'Game state is undefined' };
+        }
         // Transform questions for the dashboard using canonical normalization
-        const questions = gameTemplate.questions.map((q) => {
+        let questions = gameTemplate.questions.map((q) => {
             const question = q.question;
             // Use canonical normalization for all questions
             const normalized = questionServiceInstance_1.questionService["normalizeQuestion"](question);
@@ -125,6 +144,26 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
             }, '[DASHBOARD_NORMALIZE] Dashboard question normalization');
             return normalized;
         });
+        // Apply timer overrides from Redis gameState.questionTimeLimits
+        if (gameState.questionTimeLimits && typeof gameState.questionTimeLimits === 'object') {
+            questions = questions.map(question => {
+                const overrideSeconds = gameState.questionTimeLimits[question.uid];
+                if (typeof overrideSeconds === 'number' && overrideSeconds > 0) {
+                    const overrideMs = Math.round(overrideSeconds * 1000);
+                    logger.info({
+                        uid: question.uid,
+                        originalDurationMs: question.durationMs,
+                        overrideSeconds,
+                        overrideMs
+                    }, '[DASHBOARD_NORMALIZE] Applying timer override from Redis');
+                    return {
+                        ...question,
+                        durationMs: overrideMs
+                    };
+                }
+                return question;
+            });
+        }
         // Get participant count
         const participantCount = await redis_1.redisClient.hlen(`mathquest:game:participants:${gameInstance.accessCode}`);
         // Determine current question UID
@@ -173,12 +212,15 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
                 questionUid: effectiveQuestionUid ?? null
             };
         }
+        // Determine the correct game status - use database status as authoritative source
+        // If database shows completed but Redis shows something else, use completed
+        const gameStatus = gameInstance.status === 'completed' ? 'completed' : gameState.status;
         const controlState = {
             gameId: gameInstance.id,
             accessCode: gameInstance.accessCode,
             templateName: gameTemplate.name,
             gameInstanceName: gameInstance.name, // Modernization: include canonical gameInstanceName
-            status: gameState.status,
+            status: gameStatus,
             currentQuestionUid,
             questions,
             timer: canonicalTimer, // Always a valid object

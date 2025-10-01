@@ -8,10 +8,9 @@
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
-  feedbackWaitTime: 10
+  feedbackWaitTime: 20
   text: |
     L'intégrale suivante est-elle convergente ?
-    \
     \[
     \int_{0}^{1} \frac{\ln(x)}{\sqrt{x}}\,dx
     \]
@@ -20,7 +19,7 @@
     - "Non"
   correctAnswers: [true, false]
   explanation: |
-    Au voisinage de 0, \( |\ln x| = o(x^{-1/4}) \). Ainsi, \( \left|\frac{\ln x}{\sqrt{x}}\right| \le C x^{-3/4} \) pour \(x\) proche de 0. Puisque \(\int_0^1 x^{-3/4} \,dx\) est une intégrale de Riemann convergente (exposant \(3/4 < 1\)), l'intégrale proposée converge absolument par comparaison.
+    Au voisinage de 0, \( |\ln x| = o(x^{-1/4}) \). Ainsi, \( \left|\frac{\ln x}{\sqrt{x}}\right| \le C x^{-3/4} \) pour \(x\) proche de 0. Puisque \(\int_0^1 x^{-3/4} \,dx\) est une intégrale de Riemann convergente, l'intégrale proposée converge absolument par comparaison.
 
 - uid: "aflesch-mt3-integrales-generalisees-008"
   author: "aflesch"
@@ -32,7 +31,7 @@
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
-  feedbackWaitTime: 10
+  feedbackWaitTime: 15
   text: |
     L'intégrale suivante est-elle convergente ?
     \[
@@ -58,7 +57,7 @@
   questionType: "single_choice"
   timeLimit: 30
   difficulty: 1
-  feedbackWaitTime: 10
+  feedbackWaitTime: 7
   text: |
     L'intégrale suivante est-elle convergente ?
     \[
@@ -70,4 +69,3 @@
   correctAnswers: [false, true]
   explanation: |
     Pour \(p = 1/2 \leq 1\), l'intégrale de Riemann \(\int_{1}^{+\infty} 1/x^p\,dx\) diverge. 
-    L’intégrale ne converge donc pas.

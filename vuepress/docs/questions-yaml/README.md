@@ -4,7 +4,7 @@ title: ✍️ Écriture de questions (YAML)
 
 # ✍️ Rédiger des questions au format YAML
 
-> Cette page explique comment créer des questions pour MathQuest en utilisant le format YAML.  
+> Cette page explique comment créer des questions pour Kutsum en utilisant le format YAML.  
 > Les noms de **champs sont en anglais** (par cohérence avec le code), mais les **valeurs et les textes sont en français**.  
 > Les disciplines, thèmes et tags doivent respecter la nomenclature définie dans le dossier `questions` (un fichier de référence par niveau scolaire : `CP`, `CE1`, etc.).
 

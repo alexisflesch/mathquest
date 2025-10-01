@@ -4,6 +4,15 @@ title: Utilisation de l'application
 
 # 📱 Utilisation de l'application
 
+> Découvrez les principales fonctionnalités de Kutsum et comment prendre en main l'application en quelques minutes.
+
+## ✨ Fonctionnalités principales
+
+Kutsum propose trois modes de jeu principaux :Utilisation de l'application
+---
+
+# 📱 Utilisation de l'application
+
 > Découvrez les principales fonctionnalités de MathQuest et comment prendre en main l'application en quelques minutes.
 
 ## ✨ Fonctionnalités principales

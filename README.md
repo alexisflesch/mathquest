@@ -1,10 +1,14 @@
-# 🎓 MathQuest
+# 🎓 Kutsum (anciennement MathQuest)
 
-**MathQuest** est une application de quiz en temps réel **libre et gratuite**, pensée pour faciliter les révisions et dynamiser les cours. Elle s'inspire de Kahoot, mais avec une philosophie de partage des ressources, sans collecte de données ni marketing.
+**Kutsum** est la nouvelle identité de notre application de quiz en temps réel **libre et gratuite**, pensée pour faciliter les révisions et dynamiser les cours. Elle s'inspire de Kahoot, mais avec une philosophie de partage des ressources, sans collecte de données ni marketing.
+
+> ✨ **Tagline** — *« L'appli de révisions qui n'en fait qu'à sa tête »*
 
 👩‍🏫 **Pour les enseignants** : créez des sessions de quiz, affichez les résultats en direct, organisez des compétitions en classe, et profitez d'une base de données partagée que vous pouvez enrichir.
 
 🧑‍🎓 **Pour les élèves** : entraînez-vous seul·e ou défiez vos amis dans des tournois, sans inscription obligatoire.
+
+> ℹ️ Les identifiants techniques, noms de base de données et clés d'environnement conservent encore le préfixe `mathquest` pour garantir une migration progressive et sans risque.
 
 ## ✨ Fonctionnalités principales
 
@@ -55,8 +59,8 @@
 
 ## 🚀 Accès rapide
 
-- 🌐 **[Essayer l'application](https://mathquest.alexisfles.ch)** - Version en ligne (non garantie de stabilité)
-- 📖 **[Documentation utilisateur](https://alexisflesch.github.io/mathquest/)** - Guide complet d'utilisation
+- 🌐 **[Essayer l'application](https://app.kutsum.org)** - Version en ligne (non garantie de stabilité)
+- 📖 **[Documentation utilisateur](https://alexisflesch.github.io/mathquest/)** - Guide complet d'utilisation (URL bientôt migrée)
 - ⚙️ **[Guide d'installation](https://alexisflesch.github.io/mathquest/installation/)** - Hébergement autonome
 - ✏️ **[Écriture de questions](https://alexisflesch.github.io/mathquest/questions-yaml/)** - Format YAML pour les questions
 

@@ -101,7 +101,7 @@ export default function TournamentLeaderboardPage() {
     const handleShareLeaderboard = () => {
         if (navigator.share) {
             navigator.share({
-                title: "Classement du tournoi Mathquest",
+                title: "Classement du tournoi Kutsum",
                 text: `Voici le classement du tournoi : ${code}`,
                 url: window.location.href,
             });
@@ -167,7 +167,7 @@ export default function TournamentLeaderboardPage() {
                                 onClick={() => {
                                     if (navigator.share) {
                                         navigator.share({
-                                            title: 'Classement du tournoi Mathquest',
+                                            title: 'Classement du tournoi Kutsum',
                                             text: `Voici le classement du tournoi : ${code}`,
                                             url: window.location.href
                                         }).catch(() => { });

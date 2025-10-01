@@ -65,7 +65,7 @@ const LobbyDisplay = React.memo(({
         if (navigator.share) {
             navigator.share({
                 title: 'Rejoindre la partie',
-                text: `Rejoignez la partie sur MathQuest avec le code : ${code}`,
+                text: `Rejoignez la partie sur Kutsum avec le code : ${code}`,
                 url: window.location.href
             }).catch(() => { });
         } else {

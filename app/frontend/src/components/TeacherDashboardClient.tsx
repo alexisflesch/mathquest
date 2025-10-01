@@ -8,7 +8,7 @@ import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
-import { UsersRound, Trophy } from "lucide-react";
+import { UsersRound, Trophy, X } from "lucide-react";
 import { motion } from 'framer-motion';
 import type { Question } from '@shared/types/core/question';
 import InfinitySpin from '@/components/InfinitySpin';
@@ -18,6 +18,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { gameControlStatePayloadSchema, type GameControlStatePayload } from '@shared/types/socketEvents.zod.dashboard';
 import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
 import { io, Socket } from 'socket.io-client';
+import '@/app/question-cards.css';
 
 // Answer stats can be legacy format or new format with type discrimination
 type AnswerStats = Record<string, number> | {
@@ -451,6 +452,21 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         };
     }, [timerStatus, timerQuestionUid, timeLeftMs]);
 
+    // Track if this is the initial quiz state load (for redirect logic)
+    const hasReceivedInitialQuizState = useRef(false);
+
+    // Redirect to leaderboard only if quiz is already completed on initial page load
+    useEffect(() => {
+        if (quizState?.status === 'completed' && code && !hasReceivedInitialQuizState.current) {
+            // Mark that we've received the initial state
+            hasReceivedInitialQuizState.current = true;
+            logger.info('Quiz was already completed on page load, redirecting to leaderboard');
+            window.location.href = `/leaderboard/${code}`;
+        } else if (quizState && !hasReceivedInitialQuizState.current) {
+            // Mark that we've received initial state (but it's not completed)
+            hasReceivedInitialQuizState.current = true;
+        }
+    }, [quizState?.status, code]);
 
     // --- Terminated Questions: from canonical quizState ---
     // Canonical: terminatedQuestions is a Record<string, boolean> in quizState (from backend)
@@ -679,8 +695,8 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
 
     // Memoize frequently changing props to prevent unnecessary re-renders
     const isDisabled = useMemo(() => {
-        return !quizSocket || !quizSocket.connected || quizState?.ended;
-    }, [quizSocket?.connected, quizState?.ended]);
+        return !quizSocket || !quizSocket.connected || quizState?.ended || quizState?.status === 'completed';
+    }, [quizSocket?.connected, quizState?.ended, quizState?.status]);
 
     // Fetch quiz/activity name from API for reliability
     // Remove legacy fetchQuizName effect: all naming now comes from socket payload
@@ -695,37 +711,82 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     return (
         <div className="teacher-content overflow-y-auto">
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
                 {/* Header */}
-                <div className="mb-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                            <span className="text-lg sm:text-xl font-semibold text-foreground align-middle">{quizName || '...'}</span>
-                            {gameInstanceName && (
-                                <span className="ml-2 text-base font-normal text-muted-foreground">— <span className="italic">{gameInstanceName}</span></span>
-                            )}
-                        </h1>
-                        <button
-                            className="btn btn-secondary text-sm px-3 py-1.5"
-                            onClick={handleEndQuiz}
-                            disabled={isDisabled}
-                        >
-                            {quizState?.ended ? 'Quiz Terminé' : 'Clôturer'}
-                        </button>
+                <div className="mb-0">
+                    {/* Mobile Header - Compact row */}
+                    <div className="md:hidden flex items-center justify-between mb-0 mt-0 p-0 bg-card rounded-lg border">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <h1 className="text-lg font-semibold text-foreground truncate">
+                                <span className="font-medium">{quizName || '...'}</span>
+                                {gameInstanceName && (
+                                    <span className="ml-1 text-sm font-normal text-muted-foreground">— {gameInstanceName}</span>
+                                )}
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-2 ml-2">
+                            <a
+                                href={projectionUrl}
+                                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Ouvrir la page de projection"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </a>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <UsersRound className="w-4 h-4" />
+                                <span>{connectedCount}</span>
+                            </div>
+                            <button
+                                className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                                onClick={handleEndQuiz}
+                                disabled={isDisabled}
+                                title={quizState?.ended || quizState?.status === 'completed' ? 'Quiz terminé' : 'Clôturer le quiz'}
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
-                    {/* Projection page link */}
-                    <a
-                        href={projectionUrl}
-                        className="text-blue-600 underline text-sm inline-block mb-2"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Afficher la page de projection
-                    </a>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <UsersRound className="w-4 h-4" />
-                        {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}
-                    </p>
+
+                    {/* Desktop Header */}
+                    <div className="hidden md:block">
+                        <div className="flex items-center justify-between mb-2">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                                <span className="text-lg sm:text-xl font-semibold text-foreground align-middle">{quizName || '...'}</span>
+                                {gameInstanceName && (
+                                    <span className="ml-2 text-base font-normal text-muted-foreground">— <span className="italic">{gameInstanceName}</span></span>
+                                )}
+                            </h1>
+                            <button
+                                className="btn btn-secondary text-sm px-3 py-1.5"
+                                onClick={handleEndQuiz}
+                                disabled={isDisabled}
+                            >
+                                {quizState?.ended || quizState?.status === 'completed' ? 'Quiz Terminé' : 'Clôturer'}
+                            </button>
+                        </div>
+                        {/* Completion message */}
+                        {quizState?.status === 'completed' && (
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                                <p className="text-green-800 text-sm">
+                                    ✅ Le quiz est maintenant terminé.
+                                    <a
+                                        href={`/leaderboard/${code}`}
+                                        className="text-green-600 underline hover:text-green-700 ml-1"
+                                    >
+                                        Voir le classement final
+                                    </a>
+                                </p>
+                            </div>
+                        )}
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <UsersRound className="w-4 h-4" />
+                            {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}
+                        </p>
+                    </div>
                 </div>
                 {loading && (
                     <div className="flex flex-col items-center justify-center py-16">
@@ -737,12 +798,12 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 {!loading && (
                     <section>
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold">Questions</h2>
-                            {/* Minimalist Stats + Trophy block */}
-                            <div className="flex items-center gap-3 ml-auto">
+                            <h2 className="text-xl font-semibold hidden md:block">Questions</h2>
+                            {/* Minimalist Stats + Trophy block - Hidden on mobile */}
+                            <div className="hidden md:flex items-center gap-3 ml-auto">
                                 {/* Stats Toggle Button */}
                                 <button
-                                    className={`group p-2 rounded transition-colors border-2 focus:outline-none focus-visible:outline-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`group p-2 rounded transition-colors border-2 focus:outline-none focus-visible:outline-none ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${showStats ? 'stats-pulse' : ''}`}
                                     style={{
                                         backgroundColor: showStats ? (primaryColorRef.current || 'var(--primary)') : 'transparent',
                                         color: showStats ? '#ffffff' : (primaryColorRef.current || 'var(--primary)'),
@@ -962,6 +1023,60 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     onClose={() => setSnackbarMessage(null)}
                 />
             ) : null}
+
+            {/* Mobile FABs - Stats and Trophy */}
+            <div className="md:hidden fixed right-4 z-[150] flex gap-2" style={{ top: 'calc(var(--navbar-height) / 2 - 1.25rem)' }}>
+                {/* Stats FAB */}
+                <button
+                    className={`flex items-center justify-center w-10 h-10 bg-card border border-border rounded-lg shadow-lg transition-all duration-200 hover:bg-accent ${showStats ? 'stats-pulse' : ''}`}
+                    style={{
+                        backgroundColor: showStats ? (primaryColorRef.current || 'var(--primary)') : undefined,
+                        borderColor: primaryColorRef.current || undefined,
+                    }}
+                    onClick={(e) => {
+                        handleStatsToggleGlobal();
+                        const btn = e.currentTarget as HTMLElement;
+                        setTimeout(() => btn.blur(), 0);
+                    }}
+                    disabled={isDisabled}
+                    title="Afficher/Masquer les statistiques globales"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5 transition-all duration-200"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        style={{ stroke: showStats ? '#ffffff' : (primaryColorRef.current || 'var(--primary)') }}
+                    >
+                        <rect x="3" y="10" width="4" height="11" rx="1" />
+                        <rect x="9.5" y="3" width="4" height="18" rx="1" />
+                        <rect x="16" y="14" width="4" height="7" rx="1" />
+                    </svg>
+                </button>
+
+                {/* Trophy FAB */}
+                <button
+                    className="flex items-center justify-center w-10 h-10 bg-card border border-border rounded-lg shadow-lg transition-all duration-200 hover:bg-accent"
+                    style={{
+                        backgroundColor: showTrophy ? (primaryColorRef.current || 'var(--primary)') : undefined,
+                        borderColor: primaryColorRef.current || undefined,
+                    }}
+                    onClick={(e) => {
+                        handleTrophyGlobal();
+                        const btn = e.currentTarget as HTMLElement;
+                        setTimeout(() => btn.blur(), 0);
+                    }}
+                    disabled={isDisabled}
+                    title="Afficher/Masquer le classement final et les bonnes réponses"
+                >
+                    <Trophy
+                        className="w-5 h-5 transition-all duration-200"
+                        strokeWidth={2}
+                        style={{ color: showTrophy ? '#ffffff' : (primaryColorRef.current || 'currentColor') }}
+                    />
+                </button>
+            </div>
         </div>
     );
 }

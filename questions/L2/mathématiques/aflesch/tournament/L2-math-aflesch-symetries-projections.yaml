@@ -11,8 +11,8 @@
   text: |
     Une symétrie vectorielle \(s\) est une symétrie par rapport à \(F\) parallèlement à \(G\) où:
   answerOptions:
-    - '\(F=\mathrm{Ker}(s-\mathrm{Id})\) et \(G=\mathrm{Im}(s-\mathrm{Id})\)'
-    - '\(F=\mathrm{Ker}(s+\mathrm{Id})\) et \(G=\mathrm{Im}(s+\mathrm{Id})\)'
+    - '\(F=\mathrm{Ker}(s+\mathrm{Id})\) et \(G=\mathrm{Ker}(s-\mathrm{Id})\)'
+    - '\(F=\mathrm{Ker}(s-\mathrm{Id})\) et \(G=\mathrm{Ker}(s+\mathrm{Id})\)'
     - '\(F=\mathrm{Ker}(s)\) et \(G=\mathrm{Im}(s)\)'
     - '\(F=\mathrm{Im}(s)\) et \(G=\mathrm{Ker}(s)\)'
     - 'Aucune des réponses ci-dessus'

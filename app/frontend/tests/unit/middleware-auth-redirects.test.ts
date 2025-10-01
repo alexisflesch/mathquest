@@ -98,6 +98,15 @@ describe('Middleware Route Protection', () => {
             expect(NextResponse.redirect).not.toHaveBeenCalled();
         });
 
+        test('should allow service worker requests without redirect', () => {
+            mockRequest.nextUrl!.pathname = '/sw.js';
+
+            middleware(mockRequest as NextRequest);
+
+            expect(NextResponse.next).toHaveBeenCalled();
+            expect(NextResponse.redirect).not.toHaveBeenCalled();
+        });
+
         test('should redirect to login for protected student routes', () => {
             mockRequest.nextUrl!.pathname = '/profile';
 

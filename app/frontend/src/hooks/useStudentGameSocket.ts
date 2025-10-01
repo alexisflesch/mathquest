@@ -148,6 +148,7 @@ export interface StudentGameSocketHook {
     connecting: boolean;
 
     error: string | null;
+    errorVersion: number;
 
     // Actions
     joinGame: () => void;
@@ -290,6 +291,7 @@ export function useStudentGameSocket({
             logger.error("Student socket connection error:", err);
             setConnecting(false);
             setError(`Connection error: ${err.message}`);
+            setErrorCounter(prev => prev + 1);
         });
 
         return () => {
@@ -482,12 +484,14 @@ export function useStudentGameSocket({
                 ? errorMessage
                 : `${errorMessage}|${Date.now()}`;
             setError(uniqueErrorMessage);
+            setErrorCounter(prev => prev + 1);
         }, isErrorPayload, SOCKET_EVENTS.GAME.GAME_ERROR));
         socket.on(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any, createSafeEventHandler<GameAlreadyPlayedPayload>((payload) => {
             logger.info('=== GAME ALREADY PLAYED ===', { accessCode: payload.accessCode });
 
             // Set error message for tests or as fallback
             setError('You have already played this game');
+            setErrorCounter(prev => prev + 1);
 
             // For tournaments, redirect to leaderboard instead of showing error
             // This provides better UX since users get useful information (their rank/score)
@@ -603,6 +607,7 @@ export function useStudentGameSocket({
         if (!socket || !accessCode || !userId) {
             logger.warn("Cannot submit answer: missing socket or parameters");
             setError("Connexion perdue. Tentative de reconnexion...");
+            setErrorCounter(prev => prev + 1);
             return;
         }
 
@@ -617,6 +622,7 @@ export function useStudentGameSocket({
         } catch (error) {
             logger.error('Invalid game_answer payload:', error);
             setError("Erreur lors de l'envoi de la réponse. Veuillez réessayer.");
+            setErrorCounter(prev => prev + 1);
         }
     }, [socket, accessCode, userId]);
 
@@ -654,6 +660,7 @@ export function useStudentGameSocket({
         connected,
         connecting,
         error,
+        errorVersion: errorCounter,
         joinGame,
         submitAnswer,
         requestNextQuestion

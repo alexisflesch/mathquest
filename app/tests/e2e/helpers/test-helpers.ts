@@ -283,16 +283,27 @@ export class LoginHelper {
         console.log(`🔍 Current URL: ${this.page.url()}`);
         console.log(`🔍 Page title: ${await this.page.title()}`);
 
-        // Check if already logged in
-        const logoutButton = this.page.locator('button:has-text("Déconnexion")');
+        // Wait for the page to fully load - increase timeout
+        await this.page.waitForTimeout(3000);
+
+        // Debug: Check page content
+        const pageContent = await this.page.content();
+        console.log(`🔍 Page content length: ${pageContent.length}`);
+        console.log(`🔍 First 500 chars of page content: ${pageContent.substring(0, 500)}`);
+
+        // Check if already logged in - be more specific
+        const logoutButton = this.page.locator('button:has-text("Déconnexion"), [data-testid="logout-button"]');
         const isLoggedIn = await logoutButton.isVisible().catch(() => false);
         if (isLoggedIn) {
             console.log('✅ User is already logged in, skipping login process');
             return;
         }
 
-        // Switch to account login mode
+        // Switch to account login mode (layout recently changed to guest/account toggle)
         console.log('🔄 Switching to account login mode...');
+
+        // Ensure buttons have rendered before scanning
+        await this.page.waitForSelector('button', { timeout: 10000 }).catch(() => undefined);
 
         // Debug: Check what buttons are available on the page
         const allButtons = await this.page.locator('button').all();
@@ -304,19 +315,37 @@ export class LoginHelper {
             console.log(`  Button ${i}: "${text}" (class: ${className})`);
         }
 
-        // Try multiple ways to find the teacher account button
-        let compteButton;
-        try {
-            compteButton = this.page.locator('button').filter({ hasText: 'Compte enseignant' });
-            await compteButton.waitFor({ timeout: 1000 });
-        } catch {
-            // Fallback: look for button with teacher icon and Compte enseignant text
-            compteButton = this.page.locator('button:has-text("Compte enseignant")');
-            await compteButton.waitFor({ timeout: 1000 });
+        const accountToggleSelectors = [
+            'button:has-text("Compte enseignant")',
+            'button:has-text("Compte")',
+            'button:has-text("Account")',
+            '[data-testid="auth-toggle-account"]'
+        ];
+
+        let accountToggle = null;
+        for (const selector of accountToggleSelectors) {
+            const candidate = this.page.locator(selector).first();
+            const visible = await candidate.isVisible().catch(() => false);
+            if (visible) {
+                accountToggle = candidate;
+                break;
+            }
+            try {
+                await candidate.waitFor({ timeout: 2000, state: 'visible' });
+                accountToggle = candidate;
+                break;
+            } catch {
+                continue;
+            }
         }
-        console.log('✅ Found Compte enseignant button, clicking...');
-        await compteButton.click();
-        console.log('✅ Clicked Compte enseignant button');
+
+        if (!accountToggle) {
+            throw new Error('Account/teacher login toggle not found on login page');
+        }
+
+        console.log(`✅ Found account toggle (${await accountToggle.textContent().catch(() => 'unknown')}), clicking...`);
+        await accountToggle.click();
+        console.log('✅ Account toggle clicked');
 
         // Wait for the account form to appear and ensure we're in login mode
         console.log('⏳ Waiting for account form to load...');

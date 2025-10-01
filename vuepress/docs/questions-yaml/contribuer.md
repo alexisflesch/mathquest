@@ -4,7 +4,7 @@ title: 🤝 Contribuer à la base commune de questions
 
 # 🤝 Contribuer à la base commune de questions
 
-Vous souhaitez enrichir la base de questions partagée de MathQuest (hébergée sur GitHub) ? Voici comment proposer vos propres questions et les rendre accessibles à tous.
+Vous souhaitez enrichir la base de questions partagée de Kutsum (hébergée sur GitHub) ? Voici comment proposer vos propres questions et les rendre accessibles à tous.
 
 👉 **Voir la base de questions sur GitHub :**
 
@@ -28,7 +28,7 @@ La structure des dossiers est organisée par **Niveau** (`CP`, `CE1`, ...), puis
 Deux possibilités :
 - **Contact direct (recommandé pour débuter)** : envoyez vos fichiers ou questions à alexis.flesch@gmail.com (idéal si vous n'êtes pas à l'aise avec GitHub).
 - **Pull Request sur GitHub** :
-    - Rendez-vous sur [le dépôt GitHub de MathQuest](https://github.com/aflesch/mathquest) et cliquez sur "Fork" pour créer votre copie personnelle.
+    - Rendez-vous sur [le dépôt GitHub de Kutsum](https://github.com/aflesch/mathquest) et cliquez sur "Fork" pour créer votre copie personnelle.
     - Ajoutez vos fichiers YAML dans le bon dossier (`questions/6e/`, etc.), puis ouvrez une Pull Request vers la branche principale du dépôt d'origine. Décrivez brièvement votre contribution (niveau, thèmes, nombre de questions, etc.).
 
 

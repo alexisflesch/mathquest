@@ -426,6 +426,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         stats={stats}
                         hideExplanation={hideExplanation}
                         keepTitleWhenExpanded={keepTitleWhenExpanded}
+                        preloadChart={true}
                     />
                 )}
                 {/* Affiche les réponses si en mode édition ET si elles sont ouvertes */}

@@ -12,6 +12,7 @@ const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const deferredTournamentFlow_1 = require("../deferredTournamentFlow");
 const sharedLeaderboard_1 = require("../sharedLeaderboard");
+const helpers_1 = require("./helpers");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('EndGameHandler');
 /**
@@ -179,6 +180,12 @@ function endGameHandler(io, socket) {
                 }, '[QUIZ-SCORE-FIX] Error persisting final leaderboard to database');
                 // Continue with cleanup even if persistence fails to avoid hanging state
             }
+            // Get the updated game control state BEFORE Redis cleanup (needs Redis data)
+            const controlStateResult = await (0, helpers_1.getGameControlState)(gameId, userId, false);
+            if (!controlStateResult.controlState) {
+                logger.error({ gameId, errorDetails: controlStateResult.errorDetails }, 'Failed to get updated game control state after end game');
+                // Continue with cleanup even if control state fails
+            }
             // Clean up all Redis data for this game (live and deferred sessions)
             await cleanupRedisGameData(accessCode, gameId, io);
             // Clean up in-memory deferred session tracking
@@ -188,6 +195,10 @@ function endGameHandler(io, socket) {
             const dashboardRoom = `dashboard_${gameId}`;
             const gameRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameId}`;
+            // Emit updated game control state to dashboard (CRITICAL: frontend needs this to update status)
+            if (controlStateResult.controlState) {
+                io.to(dashboardRoom).emit(events_1.SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, controlStateResult.controlState);
+            }
             // To dashboard
             io.to(dashboardRoom).emit('dashboard_game_ended', {
                 gameId,
