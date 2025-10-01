@@ -84,8 +84,8 @@ body {
 .hero {
     background: linear-gradient(135deg, var(--primary-dark) 0%, #2563eb 100%);
     color: white;
-    /* include safe inset top so hero content doesn't get overlapped on devices with notches */
-    padding: calc(8rem + var(--safe-inset-top)) 0 6rem 0;
+    /* reduced vertical padding to make hero less tall */
+    padding: calc(5.25rem + var(--safe-inset-top)) 0 3.5rem 0;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -108,10 +108,10 @@ body {
 }
 
 .hero-title {
-    font-size: 3.5rem;
+    font-size: 2.8rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
-    line-height: 1.1;
+    margin-bottom: 1rem;
+    line-height: 1.08;
 }
 
 .hero-slogan {
@@ -204,6 +204,15 @@ body {
     background: var(--background);
 }
 
+/* subtle separators between content sections */
+.value-prop,
+.contribute,
+.features,
+.screenshots,
+.cta-section {
+    border-top: 1px solid var(--border);
+}
+
 .section-title {
     font-size: 2.5rem;
     text-align: center;
@@ -218,10 +227,62 @@ body {
     margin-bottom: 3rem;
 }
 
+.section-description {
+    text-align: left;
+    max-width: 820px;
+    margin: 0 auto 2.25rem auto;
+    /* center the block while keeping text-left */
+    color: var(--muted);
+    font-size: 1.05rem;
+}
+
+.slogan-after-title {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    /* bring slogan closer to title */
+    color: var(--muted);
+}
+
+/* spacing after slogan: unify spacing for description or subtitle following slogan */
+.slogan-after-title+.section-description,
+.slogan-after-title+.section-subtitle {
+    margin-top: 1.6rem;
+}
+
 .values {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
+
+}
+
+/* reduce space after the section title in the value-prop area specifically */
+.value-prop .section-title {
+    margin-bottom: 0.5rem;
+}
+
+/* make screenshots title spacing match value-prop so slogans align */
+.screenshots .section-title {
+    margin-bottom: 0.5rem;
+}
+
+/* Contribute section styles */
+.contribute {
+    padding: 3rem 0;
+    background: var(--background);
+}
+
+.contribute-text {
+    max-width: 820px;
+    margin: 0 auto 0.75rem auto;
+    color: var(--muted);
+    text-align: left;
+}
+
+.contribute-cta {
+    text-align: center;
+    margin-top: 1rem;
 }
 
 .value {
@@ -231,6 +292,8 @@ body {
     background: var(--background);
     border: 1px solid var(--border);
     transition: all 0.3s ease;
+    margin-top: 1.6rem;
+    /* increase to create breathing room */
 }
 
 .value:hover {
@@ -257,7 +320,7 @@ body {
 
 .features {
     padding: 5rem 0;
-    background: linear-gradient(180deg, var(--background) 0%, rgba(95, 188, 211, 0.05) 100%);
+    background: var(--background);
 }
 
 .feature-grid {
@@ -332,7 +395,8 @@ body {
 }
 
 .screenshots {
-    padding: 5rem 0;
+    padding: 2rem 0;
+    /* tightened further from 3rem */
     background: var(--background);
 }
 
@@ -481,6 +545,11 @@ body {
     min-height: 320px;
 }
 
+/* spacing between slogan and carousel */
+.screenshots .carousel {
+    margin-top: 1.5rem;
+}
+
 .carousel .swiper-slide {
     overflow: hidden;
 }
@@ -566,8 +635,8 @@ body {
 
 .cta-section {
     padding: 6rem 0;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-    color: white;
+    background: var(--background);
+    color: var(--foreground);
     text-align: center;
 }
 
@@ -643,7 +712,7 @@ body {
     }
 
     .hero {
-        padding: 5rem 0 4rem 0;
+        padding: 4rem 0 3rem 0;
     }
 
     .hero-content {
@@ -652,14 +721,17 @@ body {
     }
 
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2rem;
         line-height: 1.2;
         margin-top: 0;
     }
 
     .hero-subtitle {
-        font-size: 1.05rem;
-        line-height: 1.5;
+        font-size: 1.3rem;
+        margin-top: 0.25rem;
+        /* bring subtitle closer to title */
+        margin-bottom: 2.75rem;
+        /* slightly more space before CTAs */
     }
 
     .hero-cta {
@@ -685,8 +757,22 @@ body {
         font-size: 2rem;
     }
 
+    .section-description {
+        text-align: center;
+        margin: 0 auto 1.5rem auto;
+    }
+
     .values {
         grid-template-columns: 1fr;
+    }
+
+    /* For medium screens (between 768px and 1000px) force a 2x2 grid so values don't layout 3+1 */
+}
+
+@media (min-width: 769px) and (max-width: 1000px) {
+    .values {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
     }
 
     .feature-grid {
@@ -772,3 +858,5 @@ html:not([data-theme="dark"]) .theme-toggle {
     border-color: var(--border);
     color: var(--primary-dark);
 }
+
+/* end of globals.css */

@@ -4,6 +4,7 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import 'swiper/css/a11y'
+import Image from 'next/image'
 
 type Props = {
     images: string[]
@@ -31,10 +32,13 @@ export default function Carousel({ images, onImageClick, onSlideChange, getAlt }
                 {images.map((src: string) => (
                     <SwiperSlide key={src}>
                         <div className="carousel-item" style={{ padding: '0 0.5rem' }} onClick={() => onImageClick && onImageClick(src)}>
-                            <img
+                            <Image
                                 src={src}
                                 alt={getAlt ? (getAlt(src) ?? "Capture d'écran de Kutsum") : "Capture d'écran de Kutsum"}
-                                loading="lazy"
+                                width={1200}
+                                height={720}
+                                style={{ objectFit: 'contain', width: '100%', height: 'auto' }}
+                                priority={false}
                             />
                         </div>
                     </SwiperSlide>
