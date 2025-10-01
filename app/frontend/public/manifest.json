@@ -48,7 +48,10 @@
       "form_factor": "wide"
     }
   ],
-  "categories": ["education", "games"],
+  "categories": [
+    "education",
+    "games"
+  ],
   "shortcuts": [
     {
       "name": "Rejoindre un quiz",

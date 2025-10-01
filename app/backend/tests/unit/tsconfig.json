@@ -5,6 +5,9 @@
         "**/*.tsx"
     ],
     "compilerOptions": {
-        "types": ["jest", "node"]
+        "types": [
+            "jest",
+            "node"
+        ]
     }
 }

@@ -49,10 +49,10 @@ export class EmailService {
             this.apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
         }
 
-    this.senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@kutsum.org';
-    this.senderName = process.env.BREVO_SENDER_NAME || 'Kutsum';
+        this.senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@kutsum.org';
+        this.senderName = process.env.BREVO_SENDER_NAME || 'Kutsum';
         this.frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3008';
-    this.appName = process.env.APP_NAME || 'Kutsum';
+        this.appName = process.env.APP_NAME || 'Kutsum';
 
         logger.info('EmailService initialized', {
             isConfigured: this.isConfigured,
