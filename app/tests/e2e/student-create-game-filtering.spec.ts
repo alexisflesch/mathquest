@@ -37,10 +37,10 @@ test.describe('Student Create Game - Cross-Filter Compatibility', () => {
     test('should filter disciplines when grade level L2 is selected', async ({ page }) => {
         // Select L2 grade level
         await page.click('[data-testid="grade-level-dropdown"]');
-        
+
         // Wait for the dropdown options to appear
         await page.waitForSelector('text=L2', { state: 'visible', timeout: 5000 });
-        
+
         await page.click('text=L2');
 
         // Wait for disciplines to load
