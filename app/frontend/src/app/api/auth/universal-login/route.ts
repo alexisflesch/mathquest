@@ -37,13 +37,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Ensure action is set for backend compatibility
+        const requestWithAction = { ...validatedRequest, action: validatedRequest.action || 'login' };
+
         // Forward the request to the backend universal login endpoint
-        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/auth/login`, {
+        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/auth/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(validatedRequest),
+            body: JSON.stringify(requestWithAction),
         });
 
         if (!backendResponse.ok) {

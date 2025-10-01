@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="auto">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kutsum – Plateforme d'exercices et tournois de maths</title>
+    <meta name="description"
+        content="Kutsum est une plateforme moderne pour s'entraîner et organiser des tournois de mathématiques. Accédez à l'app, la documentation, et le code source.">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="icon" href="favicon.ico">
+    <script>
+        // Auto dark/light mode + toggle
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+        function getPreferredTheme() {
+            const stored = localStorage.getItem('theme');
+            if (stored) return stored;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        function applyTheme() {
+            const theme = getPreferredTheme();
+            setTheme(theme);
+            document.getElementById('theme-toggle-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        document.addEventListener('DOMContentLoaded', applyTheme);
+    </script>
+</head>
+
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">
+        <span id="theme-toggle-icon">🌙</span>
+    </button>
+    <header class="header">
+        <h1>Kutsum</h1>
+        <p>Plateforme moderne d'exercices et de tournois de mathématiques.<br>Entraînez-vous, organisez des
+            compétitions, progressez !</p>
+        <nav class="links">
+            <a class="link-btn" href="https://app.kutsum.org" target="_blank" rel="noopener">Accéder à l'application</a>
+            <a class="link-btn" href="https://docs.kutsum.org" target="_blank" rel="noopener">Documentation</a>
+            <a class="link-btn" href="https://github.com/alexisflesch/mathquest" target="_blank" rel="noopener">Code
+                source</a>
+        </nav>
+    </header>
+    <main>
+        <section class="screenshots">
+            <!-- Screenshots insérés ici dynamiquement ou manuellement -->
+            <img class="screenshot" src="assets/login-page.png" alt="Page de connexion Kutsum">
+            <img class="screenshot" src="assets/tournament-join-form.png" alt="Formulaire tournoi Kutsum">
+        </section>
+    </main>
+    <footer style="text-align:center; color:var(--muted-foreground); padding:2rem 0 1rem 0; font-size:0.95rem;">
+        © 2025 Kutsum – <a href="https://github.com/alexisflesch/mathquest"
+            style="color:var(--primary);text-decoration:none;">alexisflesch/mathquest</a>
+    </footer>
+    <script>
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            setTheme(next);
+            document.getElementById('theme-toggle-icon').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+                document.getElementById('theme-toggle-icon').textContent = e.matches ? '☀️' : '🌙';
+            }
+        });
+    </script>
+</body>
+
+</html>
