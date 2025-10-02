@@ -6,13 +6,13 @@ import { viteBundler } from '@vuepress/bundler-vite'
 export default defineUserConfig({
 
   lang: 'fr-FR',
-  title: 'MathQuest',
+  title: 'Kutsum',
   description: 'Alternative libre et open source à Kahoot, pour les enseignants et leurs élèves.',
-  base: '/mathquest/',
+  base: '/',
 
   head: [
-    ['link', { rel: 'icon', href: '/mathquest/favicon.ico' }],
-    ['link', { rel: 'stylesheet', href: '/mathquest/styles/screenshots.css' }]
+    ['link', { rel: 'icon', href: '/favicon.ico' }],
+    ['link', { rel: 'stylesheet', href: '/styles/screenshots.css' }]
   ],
 
   theme: defaultTheme({

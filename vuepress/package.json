@@ -1,11 +1,11 @@
 {
-  "name": "mathquest-doc",
+  "name": "kutsum-doc",
   "version": "0.0.1",
-  "description": "Documentation de l'appli mathquest",
+  "description": "Documentation de l'appli kutsum",
   "license": "GPL",
   "type": "module",
   "scripts": {
-    "docs:build": "vuepress build docs",
+    "docs:build": "vuepress build docs && node scripts/write-cname.js",
     "docs:clean-dev": "vuepress dev docs --clean-cache",
     "docs:dev": "vuepress dev docs",
     "docs:update-package": "npx vp-update"

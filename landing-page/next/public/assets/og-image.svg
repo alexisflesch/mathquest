@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated OG image for Kutsum -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5fbcd3" />
+      <stop offset="1" stop-color="#153B50" />
+    </linearGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;800&amp;display=swap');
+      .bg { fill: url(#g); }
+      .title { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; font-weight:800; font-size:56px; fill:#fff }
+      .slogan { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; font-weight:600; font-size:28px; fill:rgba(255,255,255,0.95) }
+      .tag { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; font-weight:600; font-size:18px; fill:rgba(255,255,255,0.9) }
+    </style>
+  </defs>
+  <rect width="1200" height="630" rx="24" class="bg" />
+  <g transform="translate(72,120)">
+    <text class="title">Kutsum</text>
+    <text class="slogan" y="72">L'application de révisions qui n'en fait qu'à sa tête</text>
+    <text class="tag" y="140">Quiz interactifs · Tournois · Suivi des élèves · Open source</text>
+  </g>
+  <!-- small app icon (shield) -->
+  <g transform="translate(960,60) scale(2)">
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="#ffffff" opacity="0.12"/>
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="#5fbcd3" />
+  </g>
+</svg>

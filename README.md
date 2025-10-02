@@ -1,6 +1,12 @@
-# 🎓 Kutsum (anciennement MathQuest)
+# Liens
 
-**Kutsum** est la nouvelle identité de notre application de quiz en temps réel **libre et gratuite**, pensée pour faciliter les révisions et dynamiser les cours. Elle s'inspire de Kahoot, mais avec une philosophie de partage des ressources, sans collecte de données ni marketing.
+- [Landing page](https://www.kutsum.org)
+- [Application](https://app.kutsum.org)
+- [Documentation](https://docs.kutsum.org)
+
+# Kutsum
+
+**Kutsum** est une application de quiz en temps réel **libre et gratuite**, pensée pour faciliter les révisions et dynamiser les cours. Elle s'inspire de Kahoot, mais avec une philosophie de partage des ressources, sans collecte de données ni marketing.
 
 > ✨ **Tagline** — *« L'appli de révisions qui n'en fait qu'à sa tête »*
 
@@ -16,7 +22,6 @@
 - 👥 **Système de tournois** - Les élèves peuvent organiser des tournois entre eux sur des thèmes de leur choix
 - 🏋️‍♂️ **Mode entraînement individuel** - Les élèves peuvent s'entraîner en autonomie, sans timer ni classement
 - 📱 **Interface responsive** - Fonctionne parfaitement sur mobile, tablette et ordinateur
-- 📊 **Suivi des performances** - Tableaux de bord détaillés pour les enseignants
 - 🔧 **Libre et personnalisable** - Code source ouvert, hébergement autonome
 - 📐 **Support LaTeX complet** - Parfait pour les enseignants de mathématiques
 

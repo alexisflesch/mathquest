@@ -206,7 +206,7 @@ pm2 start node --name mathquest-frontend --cwd ./ -- ./node_modules/next/dist/bi
 
 ## 📄 Informations
 
-- **Nom** : Kutsum (anciennement MathQuest)
+- **Nom** : Kutsum
 - **Licence** : [GPL v3](https://www.gnu.org/licenses/gpl-3.0.html)
 - **Auteur** : [Alexis Flesch](https://hire.alexisfles.ch)
 - **Hébergement** : Serveur personnel, sans pub ni traçage

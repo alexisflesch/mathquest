@@ -1,0 +1,82 @@
+# Node dependencies
+node_modules/
+
+# Next.js build output
+# Next.js build output (keep .next ignored; allow compiled static outputs to be committed)
+.next/
+
+# Production
+# (Leave build/dist committed so compiled static site can be stored in the repo)
+# /build/
+# /dist/
+
+# Local env files (keep example.env in repository)
+.env
+.env.*.local
+.env.local
+.env.production.local
+
+# Next.js types
+next-env.d.ts
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Build/test coverage
+coverage/
+
+# Storybook
+.storybook/
+
+# Vercel / deployment
+.vercel/
+.now/
+
+# npm cache
+.npm/
+
+# Mac file metadata
+*.icloud
+
+# Local npm env
+.env.local
+
+# Temporary files
+tmp/
+temp/
+
+# Ignore lockfile if using yarn or pnpm? Keep package-lock.json if present
+# (By default we track lockfiles; uncomment to ignore)
+# package-lock.json
+# yarn.lock
+
+# JetBrains
+.idea/
+
+# Ignore generated public assets
+# (retain public/static in repo so compiled assets can be committed)
+# /public/static/
+
+# Keep example.env tracked
+!example.env

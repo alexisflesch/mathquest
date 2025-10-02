@@ -2,8 +2,8 @@
 home: true
 heroImage: false
 heroText: Kutsum
-tagline: L'appli de révisions qui n'en fait qu'à sa tête
-footer: Documentation Kutsum (anciennement MathQuest) | GPL-3.0 2025
+tagline: L'application de révisions qui n'en fait qu'à sa tête
+footer: Documentation Kutsum | GPL-3.0 2025
 ---
 
 

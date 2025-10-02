@@ -53,11 +53,17 @@ function LoginPageInnerComponent() {
         }
     }, [userState, router, finalRedirectUrl]);
 
-    // Set initial auth mode based on URL params
+    // Set initial auth mode based on URL params (accepts aliases)
     useEffect(() => {
-        const mode = searchParams?.get('mode') as AuthMode;
-        if (mode && ['guest', 'student', 'teacher'].includes(mode)) {
-            setAuthMode(mode);
+        const modeParam = searchParams?.get('mode') || searchParams?.get('tab');
+        if (!modeParam) return;
+
+        // Normalize common aliases: account -> student, guest -> guest
+        if (modeParam === 'guest') {
+            setSimpleMode('guest');
+        } else if (modeParam === 'account' || modeParam === 'student') {
+            // Account alias maps to the account tab (student flows)
+            setSimpleMode('account');
         }
     }, [searchParams]);
 

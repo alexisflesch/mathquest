@@ -314,7 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 AUTH_ENDPOINTS.LOGIN,
                 {
                     method: 'POST',
-                    body: JSON.stringify({ email, password }),
+                    body: JSON.stringify({ action: 'login', email, password }),
                 },
                 undefined,
                 UniversalLoginResponseSchema
@@ -999,7 +999,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 AUTH_ENDPOINTS.LOGIN,
                 {
                     method: 'POST',
-                    body: JSON.stringify({ email, password }),
+                    body: JSON.stringify({ action: 'login', email, password }),
                 },
                 undefined,
                 UniversalLoginResponseSchema
