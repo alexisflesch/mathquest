@@ -137,8 +137,7 @@ export default function Home() {
             {/* Dev warning */}
             <div className="w-full mt-6">
               <div className="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg p-4 shadow-sm text-base">
-                <strong>⚠️ En développement :</strong> certaines fonctionnalités peuvent manquer et le service être interrompu pour mise à jour.
-                Auto-hébergez l&apos;application si possible.
+                <strong>⚠️ En développement :</strong> le service peut être interrompu pour mise à jour.
               </div>
             </div>
           </div>
@@ -243,8 +242,7 @@ export default function Home() {
             {/* Dev warning */}
             <div className="w-full mt-6">
               <div className="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg p-4 shadow-sm text-base">
-                <strong>⚠️ En développement :</strong> certaines fonctionnalités peuvent manquer et le service être interrompu pour mise à jour.
-                Auto-hébergez l&apos;application si possible.
+                <strong>⚠️ En développement :</strong> le service peut être interrompu pour mise à jour.
               </div>
             </div>
           </div>
@@ -339,8 +337,7 @@ export default function Home() {
             {/* Dev warning */}
             <div className="w-full mt-6">
               <div className="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg p-4 shadow-sm text-base">
-                <strong>⚠️ En développement :</strong> certaines fonctionnalités peuvent manquer et le service être interrompu pour mise à jour.
-                Auto-hébergez l&apos;application si possible.
+                <strong>⚠️ En développement :</strong> le service peut être interrompu pour mise à jour.
               </div>
             </div>
           </div>
