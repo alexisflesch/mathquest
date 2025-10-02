@@ -160,8 +160,8 @@ export default function Home() {
             </div>
 
             <div className="text-center mx-auto">
-              <p className="text-lg text-muted-foreground mb-8">Keep Up The Speed, Unleash Mastery !</p>
-              <p className="text-sm text-base-content mb-2 text-left">Bonjour {username} 👋, ravi de te revoir !</p>
+              <p className="text-lg text-muted-foreground mb-8">Keep Up The Speed, Unleash Mastery&nbsp;!</p>
+              <p className="text-sm text-base-content mb-2 text-left">Bonjour {username} 👋, ravi de te revoir&nbsp;!</p>
               <p className="text-sm text-muted-foreground mb-6 text-left md:hidden">Utilise les boutons ci-dessous ou le menu pour naviguer dans l'application.</p>
 
               {/* Mobile: Quick action buttons */}
@@ -266,8 +266,8 @@ export default function Home() {
             </div>
 
             <div className="text-center mx-auto">
-              <p className="text-lg text-muted-foreground mb-8">Keep Up The Speed, Unleash Mastery !</p>
-              <p className="text-sm text-base-content mb-2 text-left">Bonjour {username} 👋, ravi de vous revoir !</p>
+              <p className="text-lg text-muted-foreground mb-8">Keep Up The Speed, Unleash Mastery&nbsp;!</p>
+              <p className="text-sm text-base-content mb-2 text-left">Bonjour {username} 👋, ravi de vous revoir&nbsp;!</p>
               <p className="text-sm text-muted-foreground mb-6 text-left md:hidden">Utilisez les boutons ci-dessous ou le menu pour gérer vos activités.</p>
 
               {/* Mobile: Quick action buttons */}
