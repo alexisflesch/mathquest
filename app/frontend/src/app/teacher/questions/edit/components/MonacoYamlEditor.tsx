@@ -4,14 +4,16 @@ import React, { useRef, useEffect } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import type * as monaco from 'monaco-editor';
 import yaml from 'js-yaml';
+import { ParsedMetadata } from '../types/metadata';
 
 interface MonacoYamlEditorProps {
     value: string;
     onChange: (value: string, cursorPosition?: number) => void;
     error: string | null;
+    metadata: ParsedMetadata;
 }
 
-export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onChange, error }) => {
+export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onChange, error, metadata }) => {
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const monacoRef = useRef<Monaco | null>(null);
 
@@ -19,8 +21,59 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
         editorRef.current = editor;
         monacoRef.current = monaco;
 
+        // Helper to find the current question's context (gradeLevel, discipline, themes)
+        const getCurrentQuestionContext = (fullText: string, currentLine: number): {
+            gradeLevel?: string;
+            discipline?: string;
+            themes: string[];
+        } => {
+            const lines = fullText.split('\n');
+            let gradeLevel: string | undefined;
+            let discipline: string | undefined;
+            const themes: string[] = [];
+
+            // Scan backwards from current line to find question start and context
+            for (let i = currentLine - 1; i >= 0; i--) {
+                const line = lines[i].trim();
+
+                // Stop at previous question
+                if (i < currentLine - 1 && line.startsWith('- uid:')) {
+                    break;
+                }
+
+                // Extract gradeLevel
+                if (line.startsWith('gradeLevel:')) {
+                    const match = line.match(/gradeLevel:\s*(\S+)/);
+                    if (match) gradeLevel = match[1];
+                }
+
+                // Extract discipline
+                if (line.startsWith('discipline:')) {
+                    const match = line.match(/discipline:\s*(.+?)$/);
+                    if (match) discipline = match[1].trim();
+                }
+
+                // Extract themes (in themes array)
+                if (line.startsWith('themes:')) {
+                    // Scan forward to collect theme items
+                    for (let j = i + 1; j < lines.length; j++) {
+                        const themeLine = lines[j].trim();
+                        if (themeLine.startsWith('- ')) {
+                            const theme = themeLine.substring(2).trim();
+                            if (theme) themes.push(theme);
+                        } else if (themeLine && !themeLine.startsWith('- ')) {
+                            break; // End of themes array
+                        }
+                    }
+                }
+            }
+
+            return { gradeLevel, discipline, themes };
+        };
+
         // Register autocomplete provider for YAML
         const completionProvider = monaco.languages.registerCompletionItemProvider('yaml', {
+            triggerCharacters: [' ', ':', '\n', '-'],
             provideCompletionItems: (model, position) => {
                 const textUntilPosition = model.getValueInRange({
                     startLineNumber: position.lineNumber,
@@ -37,184 +90,205 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                     endColumn: word.endColumn,
                 };
 
-                // Check if we're at the start of a new question
-                const isNewQuestion = textUntilPosition.trim().startsWith('-') || textUntilPosition.trim() === '';
+                // Check for special conditions where we show suggestions immediately
+                const afterColon = textUntilPosition.trim().endsWith(':');
+                const afterColonWithSpace = textUntilPosition.trim().match(/:\s*$/);
+                const inArrayItem = textUntilPosition.trim().startsWith('-');
 
-                // Field suggestions
-                const fieldSuggestions: monaco.languages.CompletionItem[] = [
-                    {
-                        label: 'uid',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Unique identifier for the question',
-                        insertText: 'uid: ""',
-                        range: range,
-                    },
-                    {
-                        label: 'author',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Author of the question',
-                        insertText: 'author: ""',
-                        range: range,
-                    },
-                    {
-                        label: 'discipline',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Academic discipline',
-                        insertText: 'discipline: "Mathématiques"',
-                        range: range,
-                    },
-                    {
-                        label: 'title',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Question title',
-                        insertText: 'title: ""',
-                        range: range,
-                    },
-                    {
-                        label: 'text',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Question text/prompt',
-                        insertText: 'text: ""',
-                        range: range,
-                    },
-                    {
-                        label: 'questionType',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Type of question: single_choice, multiple_choice, or numeric',
-                        insertText: 'questionType: "single_choice"',
-                        range: range,
-                    },
-                    {
-                        label: 'themes',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Themes/topics covered',
-                        insertText: 'themes: []',
-                        range: range,
-                    },
-                    {
-                        label: 'tags',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Additional tags',
-                        insertText: 'tags: []',
-                        range: range,
-                    },
-                    {
-                        label: 'timeLimit',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Time limit in seconds (10-300)',
-                        insertText: 'timeLimit: 30',
-                        range: range,
-                    },
-                    {
-                        label: 'difficulty',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Difficulty level (1-5)',
-                        insertText: 'difficulty: 1',
-                        range: range,
-                    },
-                    {
-                        label: 'gradeLevel',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Grade level',
-                        insertText: 'gradeLevel: "CE1"',
-                        range: range,
-                    },
-                    {
-                        label: 'answerOptions',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Answer options for multiple choice questions',
-                        insertText: 'answerOptions:\n  - ""\n  - ""',
-                        range: range,
-                    },
-                    {
-                        label: 'correctAnswers',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Correct answers (boolean array for multiple choice)',
-                        insertText: 'correctAnswers: [true, false]',
-                        range: range,
-                    },
-                    {
-                        label: 'correctAnswer',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Correct answer for numeric questions',
-                        insertText: 'correctAnswer: 0',
-                        range: range,
-                    },
-                    {
-                        label: 'explanation',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Explanation shown after answering',
-                        insertText: 'explanation: ""',
-                        range: range,
-                    },
-                    {
-                        label: 'feedbackWaitTime',
-                        kind: monaco.languages.CompletionItemKind.Field,
-                        documentation: 'Time to show feedback in seconds (5-60)',
-                        insertText: 'feedbackWaitTime: 15',
-                        range: range,
-                    },
-                ];
-
-                // Value suggestions for specific fields
-                const valueSuggestions: monaco.languages.CompletionItem[] = [];
-
-                // Check if we're typing after "questionType:"
-                if (textUntilPosition.includes('questionType:')) {
-                    valueSuggestions.push(
-                        {
-                            label: 'single_choice',
-                            kind: monaco.languages.CompletionItemKind.Value,
-                            documentation: 'Single choice question (one correct answer)',
-                            insertText: '"single_choice"',
-                            range: range,
-                        },
-                        {
-                            label: 'multiple_choice',
-                            kind: monaco.languages.CompletionItemKind.Value,
-                            documentation: 'Multiple choice question (multiple correct answers)',
-                            insertText: '"multiple_choice"',
-                            range: range,
-                        },
-                        {
-                            label: 'numeric',
-                            kind: monaco.languages.CompletionItemKind.Value,
-                            documentation: 'Numeric question (number answer)',
-                            insertText: '"numeric"',
-                            range: range,
-                        }
-                    );
+                // Show autocomplete if:
+                // 1. Right after ":" or ": " (for value suggestions)
+                // 2. In an array item (starts with -)
+                // 3. Word is at least 3 characters (for field names)
+                if (!afterColon && !afterColonWithSpace && !inArrayItem && word.word.length < 3) {
+                    return { suggestions: [] };
                 }
 
-                // Check if we're typing after "gradeLevel:"
-                if (textUntilPosition.includes('gradeLevel:')) {
-                    ['CP', 'CE1', 'CE2', 'CM1', 'CM2', 'L1', 'L2'].forEach(level => {
-                        valueSuggestions.push({
+                const suggestions: monaco.languages.CompletionItem[] = [];
+                const trimmedLine = textUntilPosition.trim();
+                const beforeWord = textUntilPosition.slice(0, -word.word.length);
+
+                // Get full context for grade-level validation
+                const fullText = model.getValue();
+                const context = getCurrentQuestionContext(fullText, position.lineNumber);
+
+                // Determine if we're in a value position (after a field name and colon)
+                // CRITICAL: Check the UNTRIMMED line to catch cases like "discipline: " (with trailing space)
+                const lineHasColon = textUntilPosition.includes(':');
+                const colonPosition = textUntilPosition.indexOf(':');
+                const cursorAfterColon = lineHasColon && position.column > colonPosition + 1;
+                const isInValuePosition = lineHasColon && cursorAfterColon;
+
+                // Field name suggestions (only if NOT in value position and NOT in array)
+                // We're in value position if:
+                // - The line contains a colon
+                // - The cursor is after the colon
+                // - We're typing the value (not the field name)
+                if (!isInValuePosition && !afterColon && !trimmedLine.includes(':') && !inArrayItem) {
+                    const fieldSuggestions = [
+                        { label: 'uid', insertText: 'uid: $0', doc: 'Unique identifier' },
+                        { label: 'author', insertText: 'author: $0', doc: 'Author name' },
+                        { label: 'discipline', insertText: 'discipline: $0', doc: 'Academic discipline' },
+                        { label: 'title', insertText: 'title: $0', doc: 'Question title' },
+                        { label: 'text', insertText: 'text: $0', doc: 'Question text' },
+                        { label: 'questionType', insertText: 'questionType: $0', doc: 'Question type' },
+                        { label: 'themes', insertText: 'themes: [$0]', doc: 'Themes/topics' },
+                        { label: 'tags', insertText: 'tags: [$0]', doc: 'Additional tags' },
+                        { label: 'timeLimit', insertText: 'timeLimit: ${0:30}', doc: 'Time limit in seconds' },
+                        { label: 'difficulty', insertText: 'difficulty: ${0:1}', doc: 'Difficulty (1-5)' },
+                        { label: 'gradeLevel', insertText: 'gradeLevel: $0', doc: 'Grade level' },
+                        { label: 'answerOptions', insertText: 'answerOptions: [$0]', doc: 'Answer options (MC)' },
+                        { label: 'correctAnswers', insertText: 'correctAnswers: [${0:true}, false]', doc: 'Correct answers (MC)' },
+                        { label: 'correctAnswer', insertText: 'correctAnswer: ${0:0}', doc: 'Correct answer (numeric)' },
+                        { label: 'explanation', insertText: 'explanation: $0', doc: 'Explanation text' },
+                        { label: 'feedbackWaitTime', insertText: 'feedbackWaitTime: ${0:15}', doc: 'Feedback duration (sec)' },
+                        { label: 'excludedFrom', insertText: 'excludedFrom: [$0]', doc: 'Exclude from question types' },
+                    ];
+
+                    fieldSuggestions.forEach(field => {
+                        if (field.label.toLowerCase().includes(word.word.toLowerCase())) {
+                            suggestions.push({
+                                label: field.label,
+                                kind: monaco.languages.CompletionItemKind.Field,
+                                documentation: field.doc,
+                                insertText: field.insertText,
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                sortText: `0_${field.label}`,
+                            });
+                        }
+                    });
+                }
+
+                // Value suggestions based on field context
+
+                // questionType values
+                if (beforeWord.includes('questionType:')) {
+                    ['single_choice', 'multiple_choice', 'numeric'].forEach(type => {
+                        suggestions.push({
+                            label: type,
+                            kind: monaco.languages.CompletionItemKind.Value,
+                            documentation: `Question type: ${type}`,
+                            insertText: type,
+                            range: range,
+                            sortText: `1_${type}`,
+                        });
+                    });
+                }
+
+                // gradeLevel values from metadata
+                if (beforeWord.includes('gradeLevel:')) {
+                    metadata.gradeLevels.forEach(level => {
+                        suggestions.push({
                             label: level,
                             kind: monaco.languages.CompletionItemKind.Value,
                             documentation: `Grade level: ${level}`,
-                            insertText: `"${level}"`,
+                            insertText: level,
                             range: range,
+                            sortText: `1_${level}`,
                         });
                     });
                 }
 
-                // Check if we're typing after "discipline:"
-                if (textUntilPosition.includes('discipline:')) {
-                    ['Mathématiques', 'Français', 'Histoire', 'Géographie', 'Sciences'].forEach(discipline => {
-                        valueSuggestions.push({
-                            label: discipline,
+                // discipline values from metadata - FILTERED BY GRADE LEVEL
+                if (beforeWord.includes('discipline:') && context.gradeLevel) {
+                    const levelData = metadata.metadata[context.gradeLevel];
+                    if (levelData) {
+                        levelData.disciplines.forEach(disc => {
+                            suggestions.push({
+                                label: disc.nom,
+                                kind: monaco.languages.CompletionItemKind.Value,
+                                documentation: `Discipline: ${disc.nom} (${context.gradeLevel})`,
+                                insertText: disc.nom,
+                                range: range,
+                                sortText: `1_${disc.nom}`,
+                            });
+                        });
+                    }
+                }
+
+                // Check if we're in themes/tags array
+                const lines = fullText.split('\n');
+                let inThemesArray = false;
+                let inTagsArray = false;
+
+                for (let i = position.lineNumber - 1; i >= 0; i--) {
+                    const line = lines[i];
+                    if (line.trim().startsWith('themes:')) {
+                        inThemesArray = true;
+                        break;
+                    }
+                    if (line.trim().startsWith('tags:')) {
+                        inTagsArray = true;
+                        break;
+                    }
+                    if (line.trim().startsWith('- uid:') || (line.includes(':') && !line.trim().startsWith('-'))) {
+                        break;
+                    }
+                }
+
+                // themes values from metadata - FILTERED BY GRADE LEVEL AND DISCIPLINE
+                if (inThemesArray && inArrayItem && context.gradeLevel && context.discipline) {
+                    const levelData = metadata.metadata[context.gradeLevel];
+                    if (levelData) {
+                        const disciplineData = levelData.disciplines.find(d => d.nom === context.discipline);
+                        if (disciplineData) {
+                            disciplineData.themes.forEach(theme => {
+                                suggestions.push({
+                                    label: theme.nom,
+                                    kind: monaco.languages.CompletionItemKind.Value,
+                                    documentation: `Theme: ${theme.nom} (${context.gradeLevel} - ${context.discipline})`,
+                                    insertText: theme.nom,
+                                    range: range,
+                                    sortText: `1_${theme.nom}`,
+                                });
+                            });
+                        }
+                    }
+                }
+
+                // tags values from metadata - FILTERED BY GRADE LEVEL, DISCIPLINE, AND THEMES
+                if (inTagsArray && inArrayItem && context.gradeLevel && context.discipline && context.themes.length > 0) {
+                    const levelData = metadata.metadata[context.gradeLevel];
+                    if (levelData) {
+                        const disciplineData = levelData.disciplines.find(d => d.nom === context.discipline);
+                        if (disciplineData) {
+                            const allTags = new Set<string>();
+                            context.themes.forEach(themeName => {
+                                const themeData = disciplineData.themes.find(t => t.nom === themeName);
+                                if (themeData) {
+                                    themeData.tags.forEach(tag => allTags.add(tag));
+                                }
+                            });
+
+                            Array.from(allTags).sort().forEach(tag => {
+                                suggestions.push({
+                                    label: tag,
+                                    kind: monaco.languages.CompletionItemKind.Value,
+                                    documentation: `Tag: ${tag} (for selected themes)`,
+                                    insertText: tag,
+                                    range: range,
+                                    sortText: `1_${tag}`,
+                                });
+                            });
+                        }
+                    }
+                }
+
+                // excludedFrom values
+                if (beforeWord.includes('excludedFrom:') && inArrayItem) {
+                    ['tournament', 'quiz', 'practice'].forEach(type => {
+                        suggestions.push({
+                            label: type,
                             kind: monaco.languages.CompletionItemKind.Value,
-                            documentation: `Discipline: ${discipline}`,
-                            insertText: `"${discipline}"`,
+                            documentation: `Exclude from: ${type}`,
+                            insertText: type,
                             range: range,
+                            sortText: `1_${type}`,
                         });
                     });
                 }
 
-                return {
-                    suggestions: [...fieldSuggestions, ...valueSuggestions],
-                };
+                return { suggestions };
             },
         });
 
@@ -372,20 +446,24 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                     insertSpaces: true,
                     formatOnPaste: false,
                     formatOnType: false,
-                    // Enable autocomplete
+                    // Enable automatic autocomplete after 3 characters
                     quickSuggestions: {
                         other: true,
                         comments: false,
                         strings: true,
                     },
+                    quickSuggestionsDelay: 0, // Show immediately when conditions are met
                     suggest: {
-                        showWords: false,
+                        showWords: false, // Don't suggest random words from document
                         showSnippets: true,
                         snippetsPreventQuickSuggestions: false,
+                        filterGraceful: true,
+                        localityBonus: true,
                     },
                     suggestOnTriggerCharacters: true,
-                    acceptSuggestionOnCommitCharacter: true,
-                    acceptSuggestionOnEnter: 'on',
+                    acceptSuggestionOnCommitCharacter: false, // CRITICAL: Don't auto-accept on typing
+                    acceptSuggestionOnEnter: 'on', // Only accept on explicit Enter
+                    tabCompletion: 'on',
                     // Disable browser spellcheck
                     'semanticHighlighting.enabled': true,
                 }}

@@ -45,14 +45,14 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             const disciplines = getDisciplinesForGradeLevel(metadata, question.gradeLevel);
             setAvailableDisciplines(disciplines);
 
-            // Reset discipline if it's not in the new list
-            if (question.discipline && !disciplines.includes(question.discipline)) {
+            // Reset discipline only when using the form editor to avoid rewriting YAML edits
+            if (mode === 'form' && question.discipline && !disciplines.includes(question.discipline)) {
                 onChange({ ...question, discipline: '' });
             }
         } else {
             setAvailableDisciplines([]);
         }
-    }, [question.gradeLevel, metadata]);
+    }, [question.gradeLevel, question.discipline, metadata, mode, onChange]);
 
     // Update available themes when discipline changes
     useEffect(() => {
@@ -60,8 +60,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             const themes = getThemesForDiscipline(metadata, question.gradeLevel, question.discipline);
             setAvailableThemes(themes);
 
-            // Reset themes if they're not in the new list
-            if (question.themes && question.themes.length > 0) {
+            if (mode === 'form' && question.themes && question.themes.length > 0) {
                 const validThemes = question.themes.filter(t => themes.includes(t));
                 if (validThemes.length !== question.themes.length) {
                     onChange({ ...question, themes: validThemes });
@@ -70,7 +69,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         } else {
             setAvailableThemes([]);
         }
-    }, [question.gradeLevel, question.discipline, metadata]);
+    }, [question.gradeLevel, question.discipline, question.themes, metadata, mode, onChange]);
 
     // Update available tags when themes change
     useEffect(() => {
@@ -78,8 +77,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             const tags = getTagsForThemes(metadata, question.gradeLevel, question.discipline, question.themes);
             setAvailableTags(tags);
 
-            // Reset tags if they're not in the new list
-            if (question.tags && question.tags.length > 0) {
+            if (mode === 'form' && question.tags && question.tags.length > 0) {
                 const validTags = question.tags.filter(t => tags.includes(t));
                 if (validTags.length !== question.tags.length) {
                     onChange({ ...question, tags: validTags });
@@ -88,7 +86,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         } else {
             setAvailableTags([]);
         }
-    }, [question.gradeLevel, question.discipline, question.themes, metadata]);
+    }, [question.gradeLevel, question.discipline, question.themes, question.tags, metadata, mode, onChange]);
 
     // Position cursor at selected question when switching to YAML mode or when selection changes
     useEffect(() => {
@@ -509,6 +507,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 value={yamlText}
                                 onChange={onYamlChange}
                                 error={null}
+                                metadata={metadata}
                             />
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
