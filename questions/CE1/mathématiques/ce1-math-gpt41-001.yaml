@@ -7,7 +7,6 @@
   title: "Calcul mental et lecture"
   text: "La maman de Léa lui a donné 12 bonbons. Elle en a mangé 5 et donné 3 à son petit frère. Combien lui en reste-t-il ?"
   questionType: "numeric"
-  discipline: "Mathématiques"
   themes: ["Calcul"]
   tags: ["calcul mental"]
   timeLimit: 30
