@@ -36,6 +36,10 @@ interface QuestionEditorProps {
     selectedQuestionIndex: number;
     yamlError: string | null;
     metadata: ParsedMetadata;
+    // Imperative ref for editor actions
+    editorRef?: React.Ref<any>;
+    // Called when the editor's cursor/selection moves (offset)
+    onCursorPosition?: (cursorPosition: number) => void;
 }
 
 export const QuestionEditor: React.FC<QuestionEditorProps> = ({
@@ -48,6 +52,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     selectedQuestionIndex,
     yamlError,
     metadata,
+    editorRef,
+    onCursorPosition,
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -545,8 +551,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                             <MonacoYamlEditor
                                 value={yamlText}
                                 onChange={onYamlChange}
+                                onCursorPosition={onCursorPosition}
                                 error={null}
                                 metadata={metadata}
+                                ref={editorRef}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-3 italic flex items-center gap-1">

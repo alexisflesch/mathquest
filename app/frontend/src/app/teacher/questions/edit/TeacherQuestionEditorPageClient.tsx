@@ -73,6 +73,8 @@ export default function TeacherQuestionEditorPageClient() {
     const [questions, setQuestions] = useState<EditorQuestion[]>([]);
     const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
     const [editorMode, setEditorMode] = useState<'form' | 'yaml'>('form');
+    // Imperative ref for Monaco editor
+    const editorImperativeRef = useRef<any>(null);
     const [mobileTab, setMobileTab] = useState<'questions' | 'editor' | 'preview'>('questions');
     const [yamlError, setYamlError] = useState<string | null>(null);
     const [metadata, setMetadata] = useState<ParsedMetadata | null>(null);
@@ -254,6 +256,11 @@ export default function TeacherQuestionEditorPageClient() {
     const handleSelectQuestion = (index: number) => {
         setSelectedQuestionIndex(index);
         setMobileTab('editor');
+        // Request the editor to reveal the selected question's uid
+        const q = questions[index];
+        if (q && q.uid && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
+            editorImperativeRef.current.revealUid(q.uid);
+        }
     };
 
     const handleAddQuestion = () => {
@@ -328,6 +335,10 @@ export default function TeacherQuestionEditorPageClient() {
         const updatedQuestions = questions.map((q, i) => i === selectedQuestionIndex ? finalQuestion : q);
         setQuestions(updatedQuestions);
         setYamlText(questionsToYaml(updatedQuestions));
+        // If the edited question is the current selection, ask editor to reveal its uid
+        if (updatedQuestions[selectedQuestionIndex] && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
+            editorImperativeRef.current.revealUid(updatedQuestions[selectedQuestionIndex].uid);
+        }
     };
 
     const handleYamlChange = (newYamlText: string, cursorPosition?: number) => {
@@ -347,6 +358,8 @@ export default function TeacherQuestionEditorPageClient() {
                     const questionIndex = getQuestionIndexFromCursor(newYamlText, cursorPosition);
                     if (questionIndex !== -1 && questionIndex < updatedQuestions.length) {
                         setSelectedQuestionIndex(questionIndex);
+                        // Ensure preview switches to this question
+                        setMobileTab('editor');
                     }
                 }
             }
@@ -410,6 +423,30 @@ export default function TeacherQuestionEditorPageClient() {
         window.addEventListener('resize', computeMainHeight);
         return () => window.removeEventListener('resize', computeMainHeight);
     }, [isMobileWidth]);
+
+    // When entering YAML mode (transition), request the editor to go to currently selected question uid
+    const prevEditorModeRef = React.useRef(editorMode);
+    useEffect(() => {
+        const prev = prevEditorModeRef.current;
+        if (prev !== 'yaml' && editorMode === 'yaml' && questions[selectedQuestionIndex]) {
+            const q = questions[selectedQuestionIndex];
+            if (q && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
+                editorImperativeRef.current.revealUid(q.uid);
+            }
+        }
+        prevEditorModeRef.current = editorMode;
+    }, [editorMode, selectedQuestionIndex, questions]);
+
+    const handleCursorPosition = (cursorPosition: number) => {
+        try {
+            const questionIndex = getQuestionIndexFromCursor(yamlText, cursorPosition);
+            if (questionIndex !== -1 && questionIndex < questions.length) {
+                setSelectedQuestionIndex(questionIndex);
+            }
+        } catch (e) {
+            // ignore
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
@@ -491,6 +528,8 @@ export default function TeacherQuestionEditorPageClient() {
                                         selectedQuestionIndex={selectedQuestionIndex}
                                         yamlError={yamlError}
                                         metadata={metadata}
+                                        editorRef={editorImperativeRef}
+                                        onCursorPosition={handleCursorPosition}
                                     />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">
