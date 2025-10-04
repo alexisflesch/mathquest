@@ -204,8 +204,9 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
         <div className="flex items-center gap-3">
             <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-2 text-foreground font-semibold text-sm rounded-md hover:opacity-90 transition-all flex items-center gap-2 border border-border hover:border-foreground"
+                className="px-3 py-2 text-primary-foreground font-semibold text-sm rounded-md hover:opacity-90 transition-all flex items-center gap-2 border border-border hover:border-foreground"
                 title="Importer des questions YAML"
+                style={{ backgroundColor: 'rgba(6,182,212,0.12)' }}
             >
                 <UploadCloud className="w-5 h-5" />
                 <span>Importer</span>
@@ -213,13 +214,12 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
             <button
                 onClick={handleExport}
                 disabled={questions.length === 0}
-                className="px-3 py-2 text-foreground font-semibold text-sm rounded-md hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all flex items-center gap-2 border border-border/60 hover:border-foreground"
+                className="px-3 py-2 text-primary-foreground font-semibold text-sm rounded-md hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all flex items-center gap-2 border border-border/60 hover:border-foreground"
                 title="Exporter les questions en YAML"
+                style={questions.length === 0 ? undefined : { backgroundColor: 'rgba(6,182,212,0.12)' }}
             >
                 <Download className="w-5 h-5" />
-                <span>Exporter
-                    ({questions.length})
-                </span>
+                <span>Exporter</span>
             </button>
             <input
                 ref={fileInputRef}
