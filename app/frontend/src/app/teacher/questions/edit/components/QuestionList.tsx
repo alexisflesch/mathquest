@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { EditorQuestion } from '../types';
 
@@ -25,8 +25,25 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     sidebarCollapsed = false,
     onToggleSidebar,
 }) => {
-    // Render a compact collapsed view when sidebarCollapsed is true
-    if (sidebarCollapsed) {
+    // Track whether we're on a small (mobile) viewport so we can force-expanded
+    // behaviour: on mobile we always show the expanded list and hide the
+    // collapse/expand burger button.
+    const [isMobile, setIsMobile] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false;
+        return window.innerWidth <= 768;
+    });
+
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
+
+    // If on mobile, ignore the collapsed state and always render expanded
+    const effectiveCollapsed = sidebarCollapsed && !isMobile;
+
+    // Render a compact collapsed view when sidebarCollapsed is true (and not mobile)
+    if (effectiveCollapsed) {
         return (
             <div className="bg-base-100 rounded-lg shadow-md border border-border p-2 h-full flex flex-col items-center overflow-hidden">
                 <div className="w-full flex items-center justify-start mb-2">
@@ -80,7 +97,8 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                     <button
                         onClick={() => onToggleSidebar && onToggleSidebar()}
                         aria-label={sidebarCollapsed ? 'Expand questions list' : 'Collapse questions list'}
-                        className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted/50"
+                        // Hide the collapse/expand button on small screens - mobile should always be expanded
+                        className="hidden md:flex w-8 h-8 rounded-md items-center justify-center hover:bg-muted/50"
                     >
                         <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />

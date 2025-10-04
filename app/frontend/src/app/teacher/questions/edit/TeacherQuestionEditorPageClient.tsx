@@ -46,9 +46,17 @@ export default function TeacherQuestionEditorPageClient() {
         if (!el) return;
 
         const update = () => {
-            const w = el.clientWidth;
-            // If available width is less than 1100px, force collapse. This threshold can be tuned.
-            setSidebarForcedCollapsed(w < 1100);
+            const contentWidth = el.clientWidth;
+            // If available content width is less than 1100px, force collapse.
+            setSidebarForcedCollapsed(contentWidth < 1100);
+
+            // Use the viewport width (window.innerWidth) to decide whether we
+            // are in a mobile viewport or should stack the layout. This avoids
+            // stacking panels simply because the content area is narrower when
+            // the global app sidebar is visible.
+            const viewportW = window.innerWidth;
+            setIsMobileWidth(viewportW <= 768);
+            setIsStackedWidth(viewportW < 900);
         };
 
         update();
@@ -68,6 +76,11 @@ export default function TeacherQuestionEditorPageClient() {
     const [mobileTab, setMobileTab] = useState<'questions' | 'editor' | 'preview'>('questions');
     const [yamlError, setYamlError] = useState<string | null>(null);
     const [metadata, setMetadata] = useState<ParsedMetadata | null>(null);
+    const [isMobileWidth, setIsMobileWidth] = useState<boolean>(false);
+    // When the main content area is narrow but not strictly mobile, we want to
+    // stack the panels vertically instead of keeping a 3-column grid. This
+    // prevents hidden columns from compressing visible content.
+    const [isStackedWidth, setIsStackedWidth] = useState<boolean>(false);
 
     // Load metadata on mount
     useEffect(() => {
@@ -398,11 +411,8 @@ export default function TeacherQuestionEditorPageClient() {
 
                     // For small screens (mobile), collapse to a single column so hidden panels
                     // (questions/editor/preview) don't take up space behind overlays.
-                    // We compute the template at runtime based on the available width so HMR
-                    // updates reflect immediately without a full Next build.
-                    const availableWidth = mainRef.current ? mainRef.current.clientWidth : window.innerWidth;
-                    const isMobileWidth = availableWidth <= 768;
-
+                    // Use the ResizeObserver-driven `isMobileWidth` state (initialized on mount)
+                    // instead of reading clientWidth during render.
                     const gridTemplate = isMobileWidth
                         ? '1fr' // single column on mobile
                         : `${left} minmax(0, 1fr) minmax(14rem, 20rem)`;
