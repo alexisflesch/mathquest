@@ -311,7 +311,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                         disabled={false}
                                         aria-disabled={readonly}
                                         tabIndex={readonly ? -1 : 0}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'auto' }}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflowX: 'auto', overflowY: 'visible' }}
                                     >
                                         {/* Histogram bar as background */}
                                         {showStats && statPercent !== null && (

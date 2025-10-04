@@ -1482,12 +1482,36 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 .question-text-in-live-page {
   white-space: pre-line;
   text-align: left;
-  overflow-y: auto;
-  max-height: 200px;
-  /* Adjust as needed for your layout */
+  /* Keep vertical overflow visible (no vertical scrollbars) but allow horizontal
+     scrolling when content (e.g. wide MathJax formulas) exceeds container width. */
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  max-height: none;
 }
 
 
 .question-text-in-dashboards {
   white-space: pre-line;
+}
+
+/* Prevent unnecessary vertical scrollbars on MathJax formulas inside question displays.
+   Use specific descendant selectors (valid CSS) so only MathJax elements inside
+   question text containers are affected. */
+
+.question-text-in-dashboards .mjx-container,
+.question-text-in-dashboards .mjx-chtml,
+.question-text-in-dashboards .MathJax {
+  /* Allow horizontal scrolling for wide formulas in dashboards, keep vertical visible */
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Also ensure MathJax elements inside the live question text do not produce
+   internal scrollbars — scoped narrowly to avoid changing other layouts. */
+.question-text-in-live-page .mjx-container,
+.question-text-in-live-page .mjx-chtml,
+.question-text-in-live-page .MathJax {
+  /* Allow MathJax to scroll horizontally when necessary, and never vertically */
+  overflow-x: auto !important;
+  overflow-y: visible !important;
 }
