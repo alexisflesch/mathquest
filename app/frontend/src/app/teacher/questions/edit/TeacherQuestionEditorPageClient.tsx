@@ -528,9 +528,7 @@ export default function TeacherQuestionEditorPageClient() {
 
             {/* Mobile FABs for import/export (visible only on small screens) */}
             <div ref={mobileFabRef} className="md:hidden fixed right-4 bottom-6 z-50">
-                <div className="bg-card p-2 rounded-xl shadow-md">
-                    <ImportExportControls questions={questions} onImport={handleImport} />
-                </div>
+                <ImportExportControls questions={questions} onImport={handleImport} compact />
             </div>
         </div>
     );

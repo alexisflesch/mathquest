@@ -8,11 +8,14 @@ import { UploadCloud, Download } from 'lucide-react';
 interface ImportExportControlsProps {
     questions: EditorQuestion[];
     onImport: (questions: EditorQuestion[]) => void;
+    // Render a compact FAB-style variant (icon-only round buttons)
+    compact?: boolean;
 }
 
 export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
     questions,
     onImport,
+    compact = false,
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -160,6 +163,42 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
             alert('Erreur lors de l\'exportation');
         }
     };
+
+    if (compact) {
+        return (
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-full p-3 flex items-center justify-center border border-border text-primary shadow-sm hover:opacity-90 transition-all"
+                    title="Importer des questions YAML"
+                    aria-label="Importer"
+                    style={{ backgroundColor: 'rgba(6,182,212,0.12)' }}
+                >
+                    <UploadCloud className="w-5 h-5" />
+                </button>
+
+                <button
+                    onClick={handleExport}
+                    disabled={questions.length === 0}
+                    className="rounded-full p-3 flex items-center justify-center border border-border text-primary shadow-sm hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all"
+                    title="Exporter les questions en YAML"
+                    aria-label="Exporter"
+                    style={{ backgroundColor: 'rgba(6,182,212,0.12)' }}
+                >
+                    <Download className="w-5 h-5" />
+                </button>
+
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".yaml,.yml"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="flex items-center gap-3">
