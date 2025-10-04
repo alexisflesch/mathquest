@@ -201,6 +201,7 @@ export default function TeacherQuestionEditorPageClient() {
     const handleAddQuestion = () => {
         const newQuestion = createEmptyQuestion();
         const updatedQuestions = [...questions, newQuestion];
+        setQuestions(updatedQuestions);
         setYamlText(questionsToYaml(updatedQuestions));
         setSelectedQuestionIndex(updatedQuestions.length - 1);
         setMobileTab('editor');

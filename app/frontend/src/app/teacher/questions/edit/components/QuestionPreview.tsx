@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { EditorQuestion, isNumericQuestion, isMultipleChoiceQuestion } from '../types';
 import QuestionCard from '@/components/QuestionCard';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
@@ -18,6 +18,52 @@ interface QuestionPreviewProps {
 export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, questionIndex, totalQuestions }) => {
     // State for projection-mode preview (always showing correct answers)
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
+    const [scale, setScale] = useState(1);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Pixel 7 inner viewport dimensions (CSS pixels)
+    const PHONE_WIDTH = 412;
+    const PHONE_HEIGHT = 915;
+    // Visual frame border in px (must match border-[3px])
+    const PHONE_BORDER = 3;
+    // Outer visual size including border (box-shadow is visually clipped by container overflow)
+    const OUTER_PHONE_WIDTH = PHONE_WIDTH + 2 * PHONE_BORDER;
+    const OUTER_PHONE_HEIGHT = PHONE_HEIGHT + 2 * PHONE_BORDER;
+
+    // Calculate scale factor to fit container
+    useEffect(() => {
+        const updateScale = () => {
+            const container = containerRef.current;
+            if (!container) return;
+
+            // Use computed paddings to get true available content box
+            const styles = window.getComputedStyle(container);
+            const padX = parseFloat(styles.paddingLeft || '0') + parseFloat(styles.paddingRight || '0');
+            const padY = parseFloat(styles.paddingTop || '0') + parseFloat(styles.paddingBottom || '0');
+
+            const availableWidth = container.clientWidth - padX;
+            const availableHeight = container.clientHeight - padY;
+
+            // Fit the OUTER phone box (including border) into available area
+            const scaleX = availableWidth / OUTER_PHONE_WIDTH;
+            const scaleY = availableHeight / OUTER_PHONE_HEIGHT;
+            const newScale = Math.min(scaleX, scaleY, 1); // Never scale up beyond 1
+
+            setScale(Number.isFinite(newScale) && newScale > 0 ? newScale : 1);
+        };
+
+        updateScale();
+
+        // Track container size changes precisely
+        const ro = new ResizeObserver(() => updateScale());
+        if (containerRef.current) ro.observe(containerRef.current);
+
+        window.addEventListener('resize', updateScale);
+        return () => {
+            window.removeEventListener('resize', updateScale);
+            ro.disconnect();
+        };
+    }, []);
 
     // Convert EditorQuestion to QuestionDataForStudent format
     const convertToQuestionDataForStudent = (editorQuestion: EditorQuestion): QuestionDataForStudent => {
@@ -88,15 +134,35 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
     };
 
     return (
-        <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col">
+        <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col overflow-hidden">
             {/* Smartphone Frame */}
-            <div className="flex-1 flex items-center justify-center p-6 overflow-hidden bg-gradient-to-br from-muted/30 to-background">
-                <div className="relative w-80 max-h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2.5rem] border-4 border-gray-700 shadow-2xl overflow-hidden" style={{ aspectRatio: '9/19.5' }}>
-                    {/* Smartphone Notch */}
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-10 shadow-lg"></div>
+            <div 
+                ref={containerRef}
+                className="flex-1 flex items-center justify-center p-3 overflow-hidden bg-gradient-to-br from-muted/30 to-background"
+            >
+                {/* Wrapper that takes up scaled outer phone space (prevents overflow) */}
+                <div
+                    style={{
+                        width: `${OUTER_PHONE_WIDTH * scale}px`,
+                        height: `${OUTER_PHONE_HEIGHT * scale}px`,
+                        position: 'relative'
+                    }}
+                >
+                    {/* Pixel 7 dimensions: 412x915 CSS pixels, dynamically scaled to fit */}
+                    <div 
+                        className="absolute top-0 left-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2rem] border-[3px] border-gray-700 shadow-2xl overflow-hidden"
+                        style={{ 
+                            width: `${PHONE_WIDTH}px`,
+                            height: `${PHONE_HEIGHT}px`,
+                            transform: `scale(${scale})`,
+                            transformOrigin: 'top left'
+                        }}
+                    >
+                        {/* Smartphone Notch */}
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-10 shadow-lg"></div>
 
-                    {/* Screen Content */}
-                    <div className="h-full bg-white overflow-hidden flex flex-col relative">
+                        {/* Screen Content */}
+                        <div className="h-full bg-white overflow-hidden flex flex-col relative">
                         {/* Simplified non-clickable navbar */}
                         <div className="flex-shrink-0 bg-[color:var(--navbar)] text-white h-16 flex items-center px-3 pointer-events-none">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,6 +227,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                             </div>
                         )}
                     </div>
+                </div>
+                {/* Close wrapper div */}
                 </div>
             </div>
         </div>
