@@ -395,7 +395,18 @@ export default function TeacherQuestionEditorPageClient() {
                 {(() => {
                     const effectiveCollapsed = sidebarCollapsed || sidebarForcedCollapsed;
                     const left = effectiveCollapsed ? '4rem' : '18rem';
-                    const gridTemplate = `${left} minmax(0, 1fr) minmax(14rem, 20rem)`;
+
+                    // For small screens (mobile), collapse to a single column so hidden panels
+                    // (questions/editor/preview) don't take up space behind overlays.
+                    // We compute the template at runtime based on the available width so HMR
+                    // updates reflect immediately without a full Next build.
+                    const availableWidth = mainRef.current ? mainRef.current.clientWidth : window.innerWidth;
+                    const isMobileWidth = availableWidth <= 768;
+
+                    const gridTemplate = isMobileWidth
+                        ? '1fr' // single column on mobile
+                        : `${left} minmax(0, 1fr) minmax(14rem, 20rem)`;
+
                     return (
                         <div ref={mainRef} className="grid gap-2 h-full" style={{ gridTemplateColumns: gridTemplate }}>
                             {/* Left Sidebar - Question List */}
