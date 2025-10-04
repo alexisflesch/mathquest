@@ -5,7 +5,7 @@ import Home from '../page';
 
 // Mock next/link and next/image for testing environment
 jest.mock('next/link', () => ({ __esModule: true, default: ({ children }: any) => <div>{children}</div> }));
-jest.mock('next/image', () => ({ __esModule: true, default: (props: any) => <img alt={props.alt} /> }));
+jest.mock('next/image', () => ({ __esModule: true, default: (props: any) => <div data-testid="next-image-mock" {...props} /> }));
 
 // Mock AuthProvider hook with helpers to switch states
 jest.mock('@/components/AuthProvider', () => {

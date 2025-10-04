@@ -139,7 +139,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                                     onClick={() => setShowFeedbackOverlay(true)}
                                     className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
                                 >
-                                    Voir l'explication
+                                    Voir l&apos;explication
                                 </button>
                             </div>
                         )}

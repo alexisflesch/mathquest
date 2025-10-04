@@ -471,7 +471,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-foreground mb-1">
-                                    Temps d'attente du feedback (ms) <span className="text-muted-foreground">(optionnel)</span>
+                                    Temps d&apos;attente du feedback (ms) <span className="text-muted-foreground">(optionnel)</span>
                                 </label>
                                 <input
                                     type="number"
@@ -481,7 +481,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Délai avant l'affichage du feedback après validation (0 pour immédiat)
+                                    Délai avant l&apos;affichage du feedback après validation (0 pour immédiat)
                                 </p>
                             </div>
                         </div>

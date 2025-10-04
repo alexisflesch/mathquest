@@ -18,9 +18,8 @@ import { ParsedMetadata } from '../types/metadata';
 import type * as monaco from 'monaco-editor';
 
 // Mock Monaco Editor
-jest.mock('@monaco-editor/react', () => ({
-    __esModule: true,
-    default: ({ onMount, value, onChange }: any) => {
+jest.mock('@monaco-editor/react', () => {
+    const MockMonacoEditor = ({ onMount, value, onChange }: any) => {
         // Simulate editor mount
         React.useEffect(() => {
             if (onMount) {
@@ -28,11 +27,16 @@ jest.mock('@monaco-editor/react', () => ({
                 const mockMonaco = createMockMonaco();
                 onMount(mockEditor, mockMonaco);
             }
-        }, [onMount]);
-        
+        }, [onMount, value, onChange]);
+
         return <div data-testid="monaco-editor">{value}</div>;
-    },
-}));
+    };
+
+    return {
+        __esModule: true,
+        default: MockMonacoEditor,
+    };
+});
 
 // Helper to create mock Monaco editor instance
 function createMockEditor(initialValue: string, onChange: (value: string) => void): any {
@@ -78,7 +82,7 @@ function createMockEditor(initialValue: string, onChange: (value: string) => voi
 // Helper to create mock Monaco instance
 function createMockMonaco(): any {
     const registeredProviders: any[] = [];
-    
+
     return {
         languages: {
             registerCompletionItemProvider: jest.fn((language: string, provider: any) => {
@@ -268,7 +272,7 @@ describe('MonacoYamlEditor - Autocomplete', () => {
             // Simulate: user goes back to "Mathématiques", erases it, types "a"
             // Expected: "discipline: a" (preserves rest of YAML)
             // BUG: Would replace entire structure with default template
-            
+
             // The range should ONLY cover the word "Mathématiques", not the entire document
         });
 
@@ -314,7 +318,7 @@ describe('MonacoYamlEditor - Autocomplete', () => {
 
         it('should not suggest field names when editing a value after colon', async () => {
             const yaml = '- discipline: Math';
-            
+
             const { container } = render(
                 <MonacoYamlEditor
                     value={yaml}

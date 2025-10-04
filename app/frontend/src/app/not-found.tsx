@@ -3,10 +3,10 @@ import dynamicImport from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-const LoginPageClient = dynamicImport(() => import('./LoginPageClient'), {
+const NotFoundClient = dynamicImport(() => import('./NotFoundClient'), {
     loading: () => <div>Loading...</div>
 });
 
-export default function LoginPage() {
-    return <LoginPageClient />;
+export default function NotFound() {
+    return <NotFoundClient />;
 }
