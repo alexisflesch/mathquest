@@ -245,6 +245,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <div className="flex border-b border-border flex-shrink-0 bg-muted/30">
                 <button
                     onClick={() => onModeChange('form')}
+                    title="Éditez la question avec des champs visuels."
                     className={`flex-1 px-6 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${mode === 'form'
                         ? 'bg-card border-b-2 border-primary text-primary shadow-sm'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -255,6 +256,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                 </button>
                 <button
                     onClick={() => onModeChange('yaml')}
+                    title="Éditez la question en YAML brut."
                     className={`flex-1 px-6 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${mode === 'yaml'
                         ? 'bg-card border-b-2 border-primary text-primary shadow-sm'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -278,6 +280,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     value={question.title || ''}
                                     onChange={(e) => handleFieldChange('title', e.target.value)}
                                     placeholder="Titre"
+                                    title="Titre de la question"
                                     className="w-full pl-12 pr-4 py-3 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-base font-medium transition-all"
                                 />
                             </div>
@@ -289,38 +292,46 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         {/* Two-column stacked controls: left column shows Niveau then Thèmes; right column shows Discipline then Tags */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-4">
-                                <EnhancedSingleSelectDropdown
-                                    options={metadata.gradeLevels}
-                                    value={question.gradeLevel || ''}
-                                    onChange={(value) => handleFieldChange('gradeLevel', value)}
-                                    placeholder="Sélectionner un niveau"
-                                />
+                                <div title="Niveau scolaire">
+                                    <EnhancedSingleSelectDropdown
+                                        options={metadata.gradeLevels}
+                                        value={question.gradeLevel || ''}
+                                        onChange={(value) => handleFieldChange('gradeLevel', value)}
+                                        placeholder="Sélectionner un niveau"
+                                    />
+                                </div>
 
-                                <EnhancedMultiSelectDropdown
-                                    options={availableThemes.map(t => ({ value: t, label: t, isCompatible: true }))}
-                                    selected={question.themes || []}
-                                    onChange={(values) => handleFieldChange('themes', values)}
-                                    placeholder="Sélectionner un ou plusieurs thèmes"
-                                    disabled={!question.gradeLevel || availableThemes.length === 0}
-                                />
+                                <div title="Choisissez un ou plusieurs thèmes liés au niveau et à la discipline.">
+                                    <EnhancedMultiSelectDropdown
+                                        options={availableThemes.map(t => ({ value: t, label: t, isCompatible: true }))}
+                                        selected={question.themes || []}
+                                        onChange={(values) => handleFieldChange('themes', values)}
+                                        placeholder="Sélectionner un ou plusieurs thèmes"
+                                        disabled={!question.gradeLevel || availableThemes.length === 0}
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-4">
-                                <EnhancedSingleSelectDropdown
-                                    options={availableDisciplines}
-                                    value={question.discipline || ''}
-                                    onChange={(value) => handleFieldChange('discipline', value)}
-                                    placeholder="Sélectionner une discipline"
-                                    disabled={!question.gradeLevel || availableDisciplines.length === 0}
-                                />
+                                <div title="Discipline">
+                                    <EnhancedSingleSelectDropdown
+                                        options={availableDisciplines}
+                                        value={question.discipline || ''}
+                                        onChange={(value) => handleFieldChange('discipline', value)}
+                                        placeholder="Sélectionner une discipline"
+                                        disabled={!question.gradeLevel || availableDisciplines.length === 0}
+                                    />
+                                </div>
 
-                                <EnhancedMultiSelectDropdown
-                                    options={availableTags.map(t => ({ value: t, label: t, isCompatible: true }))}
-                                    selected={question.tags || []}
-                                    onChange={(values) => handleFieldChange('tags', values)}
-                                    placeholder="Sélectionner un ou plusieurs tags"
-                                    disabled={!question.themes || question.themes.length === 0 || availableTags.length === 0}
-                                />
+                                <div title="Mots-clés liés aux thèmes sélectionnés">
+                                    <EnhancedMultiSelectDropdown
+                                        options={availableTags.map(t => ({ value: t, label: t, isCompatible: true }))}
+                                        selected={question.tags || []}
+                                        onChange={(values) => handleFieldChange('tags', values)}
+                                        placeholder="Sélectionner un ou plusieurs tags"
+                                        disabled={!question.themes || question.themes.length === 0 || availableTags.length === 0}
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -336,6 +347,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         value={question.uid}
                                         onChange={(e) => handleFieldChange('uid', e.target.value)}
                                         placeholder="UID"
+                                        title="Identifiant unique de la question (modifiable)."
                                         className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all"
                                     />
                                 </div>
@@ -348,6 +360,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         value={question.author || ''}
                                         onChange={(e) => handleFieldChange('author', e.target.value)}
                                         placeholder="Auteur"
+                                        title="Auteur"
                                         className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all"
                                     />
                                 </div>
@@ -362,6 +375,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     <select
                                         value={question.questionType}
                                         onChange={(e) => handleFieldChange('questionType', e.target.value as any)}
+                                        title="Type de la question"
                                         className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none"
                                     >
                                         <option value="numeric">Numérique</option>
@@ -378,6 +392,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         value={question.timeLimit || 30}
                                         onChange={(e) => handleFieldChange('timeLimit', parseInt(e.target.value))}
                                         placeholder="Temps (s)"
+                                        title="Temps alloué (secondes)"
                                         className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
@@ -392,6 +407,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         value={question.difficulty || 1}
                                         onChange={(e) => handleFieldChange('difficulty', parseInt(e.target.value))}
                                         placeholder="Difficulté"
+                                        title="Difficulté (1–5)"
                                         className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
@@ -407,6 +423,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     onChange={(e) => handleFieldChange('text', e.target.value)}
                                     rows={3}
                                     placeholder="Question"
+                                    title="Texte de la question (LaTeX supporté)."
                                     className="w-full pl-12 pr-4 py-3 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 />
                             </div>
@@ -434,6 +451,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     </label>
                                     <button
                                         onClick={addAnswerOption}
+                                        title="Ajouter une nouvelle option de réponse."
                                         className="px-4 py-2 bg-success text-success-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm"
                                     >
                                         + Ajouter
@@ -446,19 +464,21 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                                 type={question.questionType === 'single_choice' ? 'radio' : 'checkbox'}
                                                 checked={question.correctAnswers[index]}
                                                 onChange={() => handleCorrectAnswerToggle(index)}
+                                                title="Marquer comme réponse correcte."
                                                 className="w-5 h-5 text-success focus:ring-success cursor-pointer"
                                             />
                                             <input
                                                 type="text"
                                                 value={option}
                                                 onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
+                                                title={`Texte de la réponse ${index + 1}`}
                                                 className="flex-1 px-2 py-1.5 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                                 placeholder={`Réponse ${index + 1}`}
                                             />
                                             <button
                                                 onClick={() => removeAnswerOption(index)}
+                                                title="Supprimer cette option."
                                                 className="p-2 text-alert hover:bg-alert/10 rounded-lg transition-all"
-                                                title="Supprimer"
                                             >
                                                 <X className="w-5 h-5" />
                                             </button>
@@ -478,6 +498,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         onChange={(e) => handleFieldChange('explanation', e.target.value)}
                                         rows={3}
                                         placeholder="Explication (optionnel)"
+                                        title="Explication à afficher après la correction"
                                         className="w-full pl-12 pr-4 py-3 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
@@ -489,7 +510,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         type="number"
                                         value={question.feedbackWaitTime || 0}
                                         onChange={(e) => handleFieldChange('feedbackWaitTime', parseInt(e.target.value) || 0)}
-                                        placeholder="Délai feedback (ms) - 0 pour immédiat"
+                                        placeholder="Temps explication (s)"
+                                        title="Temps durant lequel l'explication sera affichée en mode tournoi"
                                         className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
