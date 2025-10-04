@@ -46,18 +46,18 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0 overflow-hidden">
                                 {/* First row: Title */}
-                                <h3 className={`text-sm font-semibold truncate mb-1 text-foreground`}>
+                                <h3 className={`text-sm font-semibold truncate mb-1 text-foreground pl-0`}>
                                     <MathJaxWrapper zoomFactor={1}>{question.title || 'Sans titre'}</MathJaxWrapper>
                                 </h3>
 
                                 {/* Second row: Type (QCM/QCU/Numérique) and themes (left-aligned, truncated) */}
-                                <div className="flex items-center gap-2 mb-2 justify-start">
-                                    <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary`}>
+                                <div className="flex items-center gap-2 mb-2 justify-start pl-0">
+                                    <span className={`inline-flex items-center justify-start w-auto text-[10px] font-semibold uppercase pl-0 pr-2 py-0.5 rounded bg-primary/10 text-primary text-left`}>
                                         {question.questionType === 'numeric' ? 'Numérique' :
                                             question.questionType === 'single_choice' ? 'QCU' : 'QCM'}
                                     </span>
                                     <span className="text-xs text-muted-foreground/70">•</span>
-                                    <span className={`text-xs font-medium ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-muted-foreground'} text-left max-w-[160px] truncate`}>
+                                    <span className={`text-xs font-medium ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-muted-foreground'} text-left max-w-[160px] truncate min-w-0`}>
                                         {Array.isArray(question.themes) && question.themes.length > 0 ? question.themes.join(', ') : 'Sans thèmes'}
                                     </span>
                                 </div>
@@ -75,7 +75,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                                         e.stopPropagation();
                                         onDeleteQuestion(index);
                                     }}
-                                    className={`absolute top-2 right-2 p-1 rounded-md transition-colors text-alert hover:bg-alert/10`} 
+                                    className={`absolute top-2 right-2 p-1 rounded-md transition-colors text-alert hover:bg-alert/10`}
                                     title="Supprimer la question"
                                     aria-label={`Supprimer la question ${index + 1}`}
                                 >

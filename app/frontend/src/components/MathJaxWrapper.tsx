@@ -94,7 +94,7 @@ const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor
     return (
         <MathJaxContext config={mathJaxConfig} version={3}>
             {isClient ? (
-                <div style={containerStyle} className={("" )}>
+                <div style={containerStyle} className={("")}>
                     <MathJax
                         dynamic={true}
                         onError={err => logger.error('MathJax error', err)}
