@@ -139,7 +139,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
             {/* Smartphone Frame */}
             <div
                 ref={containerRef}
-                className="flex-1 flex items-center justify-center p-3 overflow-hidden bg-gradient-to-br from-muted/30 to-background"
+                className="flex-1 flex items-center justify-center p-1 overflow-hidden bg-gradient-to-br from-muted/30 to-background"
             >
                 {/* Wrapper that takes up scaled outer phone space (prevents overflow) */}
                 <div

@@ -385,7 +385,7 @@ export default function TeacherQuestionEditorPageClient() {
                 </div>
 
                 {/* Right - Preview */}
-                <div className={`w-full md:w-96 overflow-hidden ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
+                <div className={`w-full md:w-72 overflow-hidden ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
                     {selectedQuestion ? (
                         <QuestionPreview
                             question={selectedQuestion}
