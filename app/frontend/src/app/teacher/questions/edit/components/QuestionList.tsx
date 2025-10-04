@@ -37,22 +37,25 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                         key={question.uid}
                         role="button"
                         aria-selected={selectedQuestionIndex === index}
-                        className={`relative p-4 rounded-lg border cursor-pointer transition-colors ${selectedQuestionIndex === index
-                            ? 'bg-primary/30 border-primary shadow ring-2 ring-primary/50 hover:!bg-primary/30'
+                        className={`relative p-4 rounded-lg border cursor-pointer transition-colors flex items-start ${selectedQuestionIndex === index
+                            ? 'border-border text-foreground shadow-md ring-1'
                             : 'bg-background border-border hover:bg-muted/40'
                             }`}
+                        style={selectedQuestionIndex === index ? { backgroundColor: 'rgba(6,182,212,0.12)' } : undefined}
                         onClick={() => onSelectQuestion(index)}
                     >
-                        <div className="flex items-start justify-between gap-2">
+                        {/* left accent when selected (in-flow to avoid clipping) */}
+                        <div className="flex items-start justify-between gap-2 w-full">
+                            {/* no in-flow accent to avoid layout shift; use background tint only */}
                             <div className="flex-1 min-w-0 overflow-hidden">
                                 {/* First row: Title */}
-                                <h3 className={`text-sm font-semibold truncate mb-1 text-foreground pl-0`}>
+                                <h3 className={`text-sm font-semibold truncate mb-1 ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-foreground'} pl-0`}>
                                     <MathJaxWrapper zoomFactor={1}>{question.title || 'Sans titre'}</MathJaxWrapper>
                                 </h3>
 
                                 {/* Second row: Type (QCM/QCU/Numérique) and themes (left-aligned, truncated) */}
                                 <div className="flex items-center gap-2 mb-2 justify-start pl-0">
-                                    <span className={`inline-flex items-center justify-start w-auto text-[10px] font-semibold uppercase pl-0 pr-2 py-0.5 rounded bg-primary/10 text-primary text-left`}>
+                                    <span className={`inline-flex items-center justify-start w-auto text-[10px] font-semibold uppercase pl-0 pr-2 py-0.5 rounded text-left ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-primary'}`}>
                                         {question.questionType === 'numeric' ? 'Numérique' :
                                             question.questionType === 'single_choice' ? 'QCU' : 'QCM'}
                                     </span>
