@@ -161,21 +161,26 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
             <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm flex items-center gap-2"
                 title="Importer des questions YAML"
             >
-                📁 Importer
+                <span>📁</span>
+                <span>Importer</span>
             </button>
             <button
                 onClick={handleExport}
                 disabled={questions.length === 0}
-                className="px-3 py-1.5 bg-secondary text-secondary-foreground text-sm rounded hover:bg-secondary/90 disabled:bg-muted disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all shadow-sm flex items-center gap-2"
                 title="Exporter les questions en YAML"
             >
-                💾 Exporter ({questions.length})
+                <span>💾</span>
+                <span>Exporter</span>
+                <span className="px-2 py-0.5 bg-secondary-foreground/20 rounded-full text-xs font-bold">
+                    {questions.length}
+                </span>
             </button>
             <input
                 ref={fileInputRef}

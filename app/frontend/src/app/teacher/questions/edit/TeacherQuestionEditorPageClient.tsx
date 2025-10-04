@@ -317,13 +317,18 @@ export default function TeacherQuestionEditorPageClient() {
     ];
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
             {/* Header */}
-            <div className="bg-card border-b border-border px-4 py-3">
+            <div className="bg-card border-b-2 border-primary/20 shadow-md px-6 py-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-foreground">
-                        Éditeur de Questions
-                    </h1>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-md">
+                            <span className="text-2xl">📝</span>
+                        </div>
+                        <h1 className="text-2xl font-bold text-foreground">
+                            Éditeur de Questions
+                        </h1>
+                    </div>
                     <ImportExportControls
                         questions={questions}
                         onImport={handleImport}
@@ -339,7 +344,7 @@ export default function TeacherQuestionEditorPageClient() {
             />
 
             {/* Main Layout */}
-            <div className="flex flex-col md:flex-row h-[calc(100vh-73px-48px-64px)] md:h-[calc(100vh-73px)]">
+            <div className="flex flex-col md:flex-row h-[calc(100vh-73px-48px-64px)] md:h-[calc(100vh-85px)] gap-4 p-4">
                 {/* Left Sidebar - Question List */}
                 <div className={`w-full md:w-80 ${mobileTab === 'questions' ? 'block' : 'hidden md:block'}`}>
                     <QuestionList
@@ -366,8 +371,13 @@ export default function TeacherQuestionEditorPageClient() {
                             metadata={metadata}
                         />
                     ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">
-                            {!metadata ? 'Chargement des métadonnées...' : 'Sélectionnez une question pour commencer'}
+                        <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">
+                            <div className="text-center">
+                                <div className="text-4xl mb-3">🤔</div>
+                                <p className="text-base font-medium">
+                                    {!metadata ? 'Chargement des métadonnées...' : 'Sélectionnez une question pour commencer'}
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -381,8 +391,11 @@ export default function TeacherQuestionEditorPageClient() {
                             totalQuestions={questions.length}
                         />
                     ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">
-                            Aucun aperçu disponible
+                        <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">
+                            <div className="text-center">
+                                <div className="text-4xl mb-3">👁️</div>
+                                <p className="text-base font-medium">Aucun aperçu disponible</p>
+                            </div>
                         </div>
                     )}
                 </div>

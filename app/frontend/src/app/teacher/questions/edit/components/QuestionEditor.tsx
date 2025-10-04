@@ -8,6 +8,23 @@ import EnhancedSingleSelectDropdown from '@/components/EnhancedSingleSelectDropd
 import EnhancedMultiSelectDropdown from '@/components/EnhancedMultiSelectDropdown';
 import { MonacoYamlEditor } from './MonacoYamlEditor';
 import yaml from 'js-yaml';
+import {
+    Heading,
+    Key,
+    User,
+    Settings,
+    Clock,
+    Star,
+    MessageSquare,
+    CheckCircle,
+    Lightbulb,
+    Timer,
+    X,
+    FileEdit,
+    FileCode,
+    CheckCheck,
+    AlertCircle
+} from 'lucide-react';
 
 interface QuestionEditorProps {
     question: EditorQuestion;
@@ -223,25 +240,27 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     };
 
     return (
-        <div className="bg-card rounded-lg shadow-sm border border-border h-full flex flex-col">
+        <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col">
             {/* Mode Tabs */}
-            <div className="flex border-b border-border flex-shrink-0">
+            <div className="flex border-b border-border flex-shrink-0 bg-muted/30">
                 <button
                     onClick={() => onModeChange('form')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${mode === 'form'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    className={`flex-1 px-6 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${mode === 'form'
+                        ? 'bg-card border-b-2 border-primary text-primary shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                         }`}
                 >
+                    <FileEdit className="w-4 h-4" />
                     Formulaire
                 </button>
                 <button
                     onClick={() => onModeChange('yaml')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${mode === 'yaml'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    className={`flex-1 px-6 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${mode === 'yaml'
+                        ? 'bg-card border-b-2 border-primary text-primary shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                         }`}
                 >
+                    <FileCode className="w-4 h-4" />
                     YAML
                 </button>
             </div>
@@ -252,16 +271,16 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     <div className="space-y-6">
                         {/* Title - Prominent */}
                         <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">
-                                Titre
-                            </label>
-                            <input
-                                type="text"
-                                value={question.title || ''}
-                                onChange={(e) => handleFieldChange('title', e.target.value)}
-                                placeholder="Titre de la question"
-                                className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-base"
-                            />
+                            <div className="relative">
+                                <Heading className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={question.title || ''}
+                                    onChange={(e) => handleFieldChange('title', e.target.value)}
+                                    placeholder="Titre"
+                                    className="w-full pl-12 pr-4 py-3 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-base font-medium transition-all"
+                                />
+                            </div>
                         </div>
 
                         {/* Cascading Dropdowns */}
@@ -317,137 +336,138 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         {/* UID and Author - editable but pre-filled */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    UID
-                                </label>
-                                <input
-                                    type="text"
-                                    value={question.uid}
-                                    onChange={(e) => handleFieldChange('uid', e.target.value)}
-                                    placeholder="Identifiant unique"
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
-                                />
+                                <div className="relative">
+                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        value={question.uid}
+                                        onChange={(e) => handleFieldChange('uid', e.target.value)}
+                                        placeholder="UID"
+                                        className="w-full pl-11 pr-4 py-2 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all"
+                                    />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Auteur
-                                </label>
-                                <input
-                                    type="text"
-                                    value={question.author || ''}
-                                    onChange={(e) => handleFieldChange('author', e.target.value)}
-                                    placeholder="Nom de l'auteur"
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
-                                />
+                                <div className="relative">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        value={question.author || ''}
+                                        onChange={(e) => handleFieldChange('author', e.target.value)}
+                                        placeholder="Auteur"
+                                        className="w-full pl-11 pr-4 py-2 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all"
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         {/* Question Type and Settings - BEFORE Question Text */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Type
-                                </label>
-                                <select
-                                    value={question.questionType}
-                                    onChange={(e) => handleFieldChange('questionType', e.target.value as any)}
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                                >
-                                    <option value="numeric">Numérique</option>
-                                    <option value="single_choice">Choix unique</option>
-                                    <option value="multiple_choice">Choix multiple</option>
-                                </select>
+                                <div className="relative">
+                                    <Settings className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+                                    <select
+                                        value={question.questionType}
+                                        onChange={(e) => handleFieldChange('questionType', e.target.value as any)}
+                                        className="w-full pl-11 pr-4 py-2 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none"
+                                    >
+                                        <option value="numeric">Numérique</option>
+                                        <option value="single_choice">Choix unique</option>
+                                        <option value="multiple_choice">Choix multiple</option>
+                                    </select>
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Temps limite (s)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={question.timeLimit || 30}
-                                    onChange={(e) => handleFieldChange('timeLimit', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                                />
+                                <div className="relative">
+                                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                    <input
+                                        type="number"
+                                        value={question.timeLimit || 30}
+                                        onChange={(e) => handleFieldChange('timeLimit', parseInt(e.target.value))}
+                                        placeholder="Temps (s)"
+                                        className="w-full pl-11 pr-4 py-2 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Difficulté
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="5"
-                                    value={question.difficulty || 1}
-                                    onChange={(e) => handleFieldChange('difficulty', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                                />
+                                <div className="relative">
+                                    <Star className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="5"
+                                        value={question.difficulty || 1}
+                                        onChange={(e) => handleFieldChange('difficulty', parseInt(e.target.value))}
+                                        placeholder="Difficulté"
+                                        className="w-full pl-11 pr-4 py-2 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         {/* Question Text - AFTER Type/Time/Difficulty */}
                         <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">
-                                Question
-                            </label>
-                            <textarea
-                                value={question.text}
-                                onChange={(e) => handleFieldChange('text', e.target.value)}
-                                rows={3}
-                                placeholder="Entrez le texte de la question ici..."
-                                className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                            />
+                            <div className="relative">
+                                <MessageSquare className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />
+                                <textarea
+                                    value={question.text}
+                                    onChange={(e) => handleFieldChange('text', e.target.value)}
+                                    rows={3}
+                                    placeholder="Question"
+                                    className="w-full pl-12 pr-4 py-3 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                />
+                            </div>
                         </div>
 
                         {/* Answer Section */}
                         {isNumericQuestion(question) ? (
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Réponse correcte
-                                </label>
-                                <input
-                                    type="number"
-                                    value={question.correctAnswer}
-                                    onChange={(e) => onChange({ ...question, correctAnswer: parseFloat(e.target.value) })}
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                                />
+                            <div className="bg-success/5 p-4 rounded-lg border-2 border-success/20">
+                                <div className="relative">
+                                    <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-success pointer-events-none" />
+                                    <input
+                                        type="number"
+                                        value={question.correctAnswer}
+                                        onChange={(e) => onChange({ ...question, correctAnswer: parseFloat(e.target.value) })}
+                                        placeholder="Réponse correcte"
+                                        className="w-full pl-12 pr-4 py-3 border-2 border-success/30 bg-background rounded-lg focus:ring-2 focus:ring-success focus:border-success transition-all"
+                                    />
+                                </div>
                             </div>
                         ) : (
-                            <div>
+                            <div className="bg-primary/5 p-4 rounded-lg border-2 border-primary/20">
                                 <div className="flex items-center justify-between mb-3">
-                                    <label className="block text-sm font-medium text-foreground">
-                                        Réponses
+                                    <label className="block text-sm font-semibold text-foreground">
+                                        ✅ Réponses
                                     </label>
                                     <button
                                         onClick={addAnswerOption}
-                                        className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+                                        className="px-4 py-2 bg-success text-success-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm"
                                     >
                                         + Ajouter
                                     </button>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {question.answerOptions.map((option, index) => (
-                                        <div key={index} className="flex items-center gap-2">
+                                        <div key={index} className="flex items-center gap-3 bg-background p-3 rounded-lg border border-border">
                                             <input
                                                 type={question.questionType === 'single_choice' ? 'radio' : 'checkbox'}
                                                 checked={question.correctAnswers[index]}
                                                 onChange={() => handleCorrectAnswerToggle(index)}
-                                                className="text-blue-600 focus:ring-primary"
+                                                className="w-5 h-5 text-success focus:ring-success cursor-pointer"
                                             />
                                             <input
                                                 type="text"
                                                 value={option}
                                                 onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
-                                                className="flex-1 px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
+                                                className="flex-1 px-3 py-2 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                                 placeholder={`Réponse ${index + 1}`}
                                             />
                                             <button
                                                 onClick={() => removeAnswerOption(index)}
-                                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                                className="p-2 text-alert hover:bg-alert/10 rounded-lg transition-all"
                                                 title="Supprimer"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
+                                                <X className="w-5 h-5" />
                                             </button>
                                         </div>
                                     ))}
@@ -456,53 +476,57 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         )}
 
                         {/* Explanation and Feedback Settings */}
-                        <div className="space-y-4">
+                        <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Explication <span className="text-muted-foreground">(optionnel)</span>
-                                </label>
-                                <textarea
-                                    value={question.explanation || ''}
-                                    onChange={(e) => handleFieldChange('explanation', e.target.value)}
-                                    rows={3}
-                                    placeholder="Explication de la réponse à montrer après validation (optionnel)"
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                                />
+                                <div className="relative">
+                                    <Lightbulb className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />
+                                    <textarea
+                                        value={question.explanation || ''}
+                                        onChange={(e) => handleFieldChange('explanation', e.target.value)}
+                                        rows={3}
+                                        placeholder="Explication (optionnel)"
+                                        className="w-full pl-12 pr-4 py-3 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Temps d&apos;attente du feedback (ms) <span className="text-muted-foreground">(optionnel)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    value={question.feedbackWaitTime || 0}
-                                    onChange={(e) => handleFieldChange('feedbackWaitTime', parseInt(e.target.value) || 0)}
-                                    placeholder="0 = affichage immédiat"
-                                    className="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Délai avant l&apos;affichage du feedback après validation (0 pour immédiat)
-                                </p>
+                                <div className="relative">
+                                    <Timer className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                    <input
+                                        type="number"
+                                        value={question.feedbackWaitTime || 0}
+                                        onChange={(e) => handleFieldChange('feedbackWaitTime', parseInt(e.target.value) || 0)}
+                                        placeholder="Délai feedback (ms) - 0 pour immédiat"
+                                        className="w-full pl-11 pr-4 py-2 border-2 border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                 ) : (
                     <div className="flex flex-col h-full">
-                        <div className="flex items-center justify-between mb-2">
-                            <label className="block text-sm font-medium text-foreground">
-                                YAML Editor
-                            </label>
-                            <p className="text-xs text-muted-foreground">
-                                ✨ Validation en temps réel
-                            </p>
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2 text-foreground">
+                                <FileCode className="w-5 h-5" />
+                                <label className="block text-sm font-semibold">
+                                    Éditeur YAML
+                                </label>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-success font-medium px-3 py-1 bg-success/10 rounded-full">
+                                <CheckCheck className="w-3 h-3" />
+                                Validation en temps réel
+                            </div>
                         </div>
                         {yamlError && (
-                            <div className="mb-3 p-3 bg-destructive/10 border border-destructive/30 rounded-md">
-                                <p className="text-sm text-destructive font-medium">Erreur de format YAML:</p>
-                                <p className="text-xs text-destructive/80 mt-1">{yamlError}</p>
+                            <div className="mb-3 p-4 bg-alert/10 border-2 border-alert/30 rounded-lg">
+                                <div className="flex items-center gap-2 text-alert font-semibold mb-1">
+                                    <AlertCircle className="w-4 h-4" />
+                                    <p className="text-sm">Erreur de format YAML:</p>
+                                </div>
+                                <p className="text-xs text-alert/90 font-mono ml-6">{yamlError}</p>
                             </div>
                         )}
-                        <div className="flex-1 min-h-[500px]">
+                        <div className="flex-1 min-h-[500px] border-2 border-border rounded-lg overflow-hidden shadow-inner">
                             <MonacoYamlEditor
                                 value={yamlText}
                                 onChange={onYamlChange}
@@ -510,7 +534,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 metadata={metadata}
                             />
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-xs text-muted-foreground mt-3 italic flex items-center gap-1">
+                            <Lightbulb className="w-3 h-3" />
                             Les lignes rouges ondulées indiquent des erreurs. Passez la souris dessus pour plus de détails.
                         </p>
                     </div>

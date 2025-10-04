@@ -88,12 +88,20 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
     };
 
     return (
-        <div className="bg-card rounded-lg shadow-sm border border-border h-full flex flex-col">
+        <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col">
+            {/* Header */}
+            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <span className="text-xl">📱</span>
+                    Aperçu Mobile
+                </h3>
+            </div>
+
             {/* Smartphone Frame */}
-            <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-                <div className="relative w-80 max-h-full bg-gray-900 rounded-[2.5rem] border-4 border-gray-800 shadow-2xl overflow-hidden" style={{ aspectRatio: '9/19.5' }}>
+            <div className="flex-1 flex items-center justify-center p-6 overflow-hidden bg-gradient-to-br from-muted/30 to-background">
+                <div className="relative w-80 max-h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2.5rem] border-4 border-gray-700 shadow-2xl overflow-hidden" style={{ aspectRatio: '9/19.5' }}>
                     {/* Smartphone Notch */}
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-10"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-10 shadow-lg"></div>
 
                     {/* Screen Content */}
                     <div className="h-full bg-white overflow-hidden flex flex-col relative">
@@ -134,12 +142,12 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
 
                         {/* Explanation Button (like practice page) */}
                         {question.explanation && (
-                            <div className="flex-shrink-0 p-3 border-t border-border bg-background">
+                            <div className="flex-shrink-0 p-3 border-t border-border bg-muted/20">
                                 <button
                                     onClick={() => setShowFeedbackOverlay(true)}
-                                    className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
+                                    className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all text-sm font-semibold shadow-sm"
                                 >
-                                    Voir l&apos;explication
+                                    💡 Voir l&apos;explication
                                 </button>
                             </div>
                         )}
@@ -165,8 +173,9 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
             </div>
 
             {/* Preview Info */}
-            <div className="flex-shrink-0 p-3 border-t border-border bg-muted/50">
-                <div className="text-xs text-muted-foreground text-center">
+            <div className="flex-shrink-0 p-3 border-t border-border bg-gradient-to-r from-success/10 to-primary/10">
+                <div className="text-xs font-medium text-foreground text-center flex items-center justify-center gap-2">
+                    <span className="text-success">✓</span>
                     Aperçu avec réponses correctes
                 </div>
             </div>
