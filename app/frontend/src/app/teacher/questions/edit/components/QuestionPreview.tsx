@@ -24,7 +24,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
 
     // Pixel 7 inner viewport dimensions (CSS pixels)
     const PHONE_WIDTH = 412;
-    const PHONE_HEIGHT = 915;
+    const PHONE_HEIGHT = 922; // Slightly adjusted to approximate Pixel 7 visible area
     // Visual frame border in px (must match border-[3px])
     const PHONE_BORDER = 3;
     // Outer visual size including border (box-shadow is visually clipped by container overflow)
@@ -159,11 +159,40 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                             transformOrigin: 'top left'
                         }}
                     >
-                        {/* Smartphone Notch */}
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-10 shadow-lg"></div>
-
                         {/* Screen Content */}
                         <div className="h-full bg-base-200 overflow-hidden flex flex-col relative">
+                            {/* Device Status Bar (time, signal, wifi, battery) */}
+                            <div
+                                className="flex-shrink-0 h-6 flex items-center justify-between px-3"
+                                style={{ background: 'var(--navbar)', color: 'var(--light-foreground)' }}
+                            >
+                                {/* Time */}
+                                <div className="text-[11px] font-semibold tracking-wide">9:41</div>
+
+                                {/* Icons */}
+                                <div className="flex items-center gap-1 text-[color:var(--light-foreground)]">
+                                    {/* Cellular bars */}
+                                    <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="2" y="7" width="2" height="3" rx="0.5" fill="currentColor" />
+                                        <rect x="6" y="5" width="2" height="5" rx="0.5" fill="currentColor" />
+                                        <rect x="10" y="3" width="2" height="7" rx="0.5" fill="currentColor" />
+                                        <rect x="14" y="1" width="2" height="9" rx="0.5" fill="currentColor" />
+                                    </svg>
+                                    {/* WiFi */}
+                                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M1 4.5C4.5 1.5 11.5 1.5 15 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        <path d="M3 7C6 4.5 10 4.5 13 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        <path d="M6 9.5C7.5 8.5 8.5 8.5 10 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        <circle cx="8" cy="11" r="1" fill="currentColor" />
+                                    </svg>
+                                    {/* Battery */}
+                                    <svg width="22" height="12" viewBox="0 0 22 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="1" y="1" width="18" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                                        <rect x="3" y="3" width="12" height="6" rx="1" fill="currentColor" />
+                                        <rect x="19.5" y="4" width="2" height="4" rx="0.5" fill="currentColor" />
+                                    </svg>
+                                </div>
+                            </div>
                             {/* Simplified non-clickable navbar */}
                             <div className="flex-shrink-0 bg-[color:var(--navbar)] text-white h-16 flex items-center px-3 pointer-events-none">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,8 +203,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
 
                             {/* Floating timer chip (mirror TournamentTimer mobile) */}
                             <div
-                                className="absolute top-16 right-4 z-20 navbar-timer-bg px-4 py-2 rounded-full shadow-lg border border-primary"
-                                style={{ background: 'var(--navbar)', color: 'var(--primary-foreground)' }}
+                                className="absolute right-4 z-50 navbar-timer-bg px-4 py-2 rounded-full shadow-lg border border-primary"
+                                style={{ background: 'var(--navbar)', color: 'var(--primary-foreground)', top: 'calc(1.5rem + 5rem + 0.5rem)' }}
                             >
                                 <div className="flex items-center gap-1 align-middle">
                                     <TimerIcon className="w-5 h-5" style={{ display: 'block', color: 'var(--light-foreground)' }} />
