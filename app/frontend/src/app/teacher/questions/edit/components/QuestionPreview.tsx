@@ -139,7 +139,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
             {/* Smartphone Frame */}
             <div
                 ref={containerRef}
-                className="flex-1 flex items-center justify-center p-1 overflow-hidden bg-gradient-to-br from-muted/30 to-background"
+                className="flex-1 flex items-start justify-center p-0 overflow-hidden bg-transparent"
             >
                 {/* Wrapper that takes up scaled outer phone space (prevents overflow) */}
                 <div
@@ -151,7 +151,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                 >
                     {/* Pixel 7 dimensions: 412x915 CSS pixels, dynamically scaled to fit */}
                     <div
-                        className="absolute top-0 left-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2rem] border-[3px] border-gray-700 shadow-2xl overflow-hidden"
+                        className="absolute top-0 left-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2rem] border-[3px] border-gray-700 overflow-hidden"
                         style={{
                             width: `${PHONE_WIDTH}px`,
                             height: `${PHONE_HEIGHT}px`,
