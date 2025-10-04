@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { MessageCircle } from 'lucide-react';
 import { EditorQuestion, isNumericQuestion, isMultipleChoiceQuestion } from '../types';
 import QuestionCard from '@/components/QuestionCard';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
@@ -136,7 +137,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
     return (
         <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col overflow-hidden">
             {/* Smartphone Frame */}
-            <div 
+            <div
                 ref={containerRef}
                 className="flex-1 flex items-center justify-center p-3 overflow-hidden bg-gradient-to-br from-muted/30 to-background"
             >
@@ -149,9 +150,9 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                     }}
                 >
                     {/* Pixel 7 dimensions: 412x915 CSS pixels, dynamically scaled to fit */}
-                    <div 
+                    <div
                         className="absolute top-0 left-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2rem] border-[3px] border-gray-700 shadow-2xl overflow-hidden"
-                        style={{ 
+                        style={{
                             width: `${PHONE_WIDTH}px`,
                             height: `${PHONE_HEIGHT}px`,
                             transform: `scale(${scale})`,
@@ -162,73 +163,80 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-10 shadow-lg"></div>
 
                         {/* Screen Content */}
-                        <div className="h-full bg-white overflow-hidden flex flex-col relative">
-                        {/* Simplified non-clickable navbar */}
-                        <div className="flex-shrink-0 bg-[color:var(--navbar)] text-white h-16 flex items-center px-3 pointer-events-none">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                            <div className="ml-3 text-sm font-medium truncate">{question.title || 'Sans titre'}</div>
-                        </div>
-
-                        {/* Question Content with proper padding */}
-                        <div className="flex-1 overflow-y-auto p-4">
-                            <MathJaxWrapper>
-                                <QuestionCard
-                                    currentQuestion={questionData}
-                                    questionIndex={questionIndex - 1}
-                                    totalQuestions={totalQuestions}
-                                    isMultipleChoice={isMultipleChoice}
-                                    selectedAnswer={null}
-                                    setSelectedAnswer={() => { }}
-                                    selectedAnswers={[]}
-                                    setSelectedAnswers={() => { }}
-                                    handleSingleChoice={handleSingleChoice}
-                                    handleSubmitMultiple={handleSubmitMultiple}
-                                    answered={true}
-                                    readonly={true}
-                                    projectionMode={true}
-                                    isQuizMode={false}
-                                    correctAnswers={getCorrectAnswers()}
-                                    numericAnswer={isNumericQuestion(question) ? String(question.correctAnswer) : ''}
-                                    setNumericAnswer={() => { }}
-                                    handleNumericSubmit={handleNumericSubmit}
-                                    numericCorrectAnswer={getNumericCorrectAnswer()}
-                                />
-                            </MathJaxWrapper>
-                        </div>
-
-                        {/* Explanation Button (like practice page) */}
-                        {question.explanation && (
-                            <div className="flex-shrink-0 p-3 border-t border-border bg-muted/20">
-                                <button
-                                    onClick={() => setShowFeedbackOverlay(true)}
-                                    className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all text-sm font-semibold shadow-sm"
-                                >
-                                    💡 Voir l&apos;explication
-                                </button>
+                        <div className="h-full bg-muted/20 overflow-hidden flex flex-col relative">
+                            {/* Simplified non-clickable navbar */}
+                            <div className="flex-shrink-0 bg-[color:var(--navbar)] text-white h-16 flex items-center px-3 pointer-events-none">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                                <div className="ml-3 text-sm font-medium truncate">{question.title || 'Sans titre'}</div>
                             </div>
-                        )}
 
-                        {/* Feedback Overlay Modal INSIDE smartphone screen */}
-                        {showFeedbackOverlay && question.explanation && (
-                            <div className="absolute inset-0 z-20">
-                                <AnswerFeedbackOverlay
-                                    explanation={question.explanation}
-                                    duration={10}
-                                    onClose={() => setShowFeedbackOverlay(false)}
-                                    isCorrect={undefined}
-                                    correctAnswers={isMultipleChoiceQuestion(question) ? question.correctAnswers : undefined}
-                                    answerOptions={getAnswerOptions()}
-                                    allowManualClose={true}
-                                    mode="practice"
-                                    showTimer={false}
-                                />
+                            {/* Question Content with proper padding */}
+                            <div className="flex-1 overflow-y-auto p-4">
+                                {/* Card container to mirror practice page */}
+                                <div className="card w-full bg-base-100 rounded-lg shadow-xl my-4 relative">
+                                    <MathJaxWrapper>
+                                        <QuestionCard
+                                            currentQuestion={questionData}
+                                            questionIndex={questionIndex - 1}
+                                            totalQuestions={totalQuestions}
+                                            isMultipleChoice={isMultipleChoice}
+                                            selectedAnswer={null}
+                                            setSelectedAnswer={() => { }}
+                                            selectedAnswers={[]}
+                                            setSelectedAnswers={() => { }}
+                                            handleSingleChoice={handleSingleChoice}
+                                            handleSubmitMultiple={handleSubmitMultiple}
+                                            answered={true}
+                                            readonly={true}
+                                            projectionMode={true}
+                                            isQuizMode={false}
+                                            correctAnswers={getCorrectAnswers()}
+                                            numericAnswer={isNumericQuestion(question) ? String(question.correctAnswer) : ''}
+                                            setNumericAnswer={() => { }}
+                                            handleNumericSubmit={handleNumericSubmit}
+                                            numericCorrectAnswer={getNumericCorrectAnswer()}
+                                        />
+                                    </MathJaxWrapper>
+
+                                    {/* Practice-like controls row (no next/bilan) */}
+                                    {question.explanation && (
+                                        <div className="mt-4">
+                                            <div className="flex justify-start items-center">
+                                                <button
+                                                    className="btn btn-outline btn-sm flex items-center gap-2"
+                                                    onClick={() => setShowFeedbackOverlay(true)}
+                                                    title="Explication"
+                                                >
+                                                    <MessageCircle size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        )}
+
+
+                            {/* Feedback Overlay Modal INSIDE smartphone screen */}
+                            {showFeedbackOverlay && question.explanation && (
+                                <div className="absolute inset-0 z-20">
+                                    <AnswerFeedbackOverlay
+                                        explanation={question.explanation}
+                                        duration={10}
+                                        onClose={() => setShowFeedbackOverlay(false)}
+                                        isCorrect={undefined}
+                                        correctAnswers={isMultipleChoiceQuestion(question) ? question.correctAnswers : undefined}
+                                        answerOptions={getAnswerOptions()}
+                                        allowManualClose={true}
+                                        mode="practice"
+                                        showTimer={false}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-                {/* Close wrapper div */}
+                    {/* Close wrapper div */}
                 </div>
             </div>
         </div>
