@@ -76,7 +76,11 @@ export default function TeacherQuestionEditorPageClient() {
     const [mobileTab, setMobileTab] = useState<'questions' | 'editor' | 'preview'>('questions');
     const [yamlError, setYamlError] = useState<string | null>(null);
     const [metadata, setMetadata] = useState<ParsedMetadata | null>(null);
-    const [isMobileWidth, setIsMobileWidth] = useState<boolean>(false);
+    // Initialize from the viewport to reduce layout flicker on mount.
+    const [isMobileWidth, setIsMobileWidth] = useState<boolean>(() => {
+        if (typeof window !== 'undefined') return window.innerWidth <= 768;
+        return false;
+    });
     // When the main content area is narrow but not strictly mobile, we want to
     // stack the panels vertically instead of keeping a 3-column grid. This
     // prevents hidden columns from compressing visible content.
@@ -371,39 +375,79 @@ export default function TeacherQuestionEditorPageClient() {
         { id: 'preview', label: 'Aperçu' },
     ];
 
+    // We'll compute the mobile main container height dynamically by
+    // measuring the visible top bars and FAB so the content fits without
+    // producing a page scrollbar on small viewports.
+    const mobileTabsRef = useRef<HTMLDivElement | null>(null);
+    const mobileFabRef = useRef<HTMLDivElement | null>(null);
+    const [mainContainerInlineHeight, setMainContainerInlineHeight] = useState<string | undefined>(() => {
+        if (typeof window !== 'undefined') return undefined;
+        return undefined;
+    });
+
+    const computeMainHeight = () => {
+        if (typeof window === 'undefined') return;
+        if (!isMobileWidth) {
+            setMainContainerInlineHeight(undefined);
+            return;
+        }
+
+        const viewportH = window.innerHeight;
+        // Try to measure a top-level header if it exists in the DOM.
+        const topHeader = document.querySelector('header') as HTMLElement | null;
+        const topHeaderH = topHeader ? topHeader.clientHeight : 0;
+        const tabsH = mobileTabsRef.current ? mobileTabsRef.current.clientHeight : 0;
+        const fabH = mobileFabRef.current ? mobileFabRef.current.clientHeight : 0;
+
+        // Add a small safety gap
+        const safety = 12;
+        const reserved = topHeaderH + tabsH + fabH + safety;
+        setMainContainerInlineHeight(`calc(100vh - ${reserved}px)`);
+    };
+
+    useEffect(() => {
+        computeMainHeight();
+        window.addEventListener('resize', computeMainHeight);
+        return () => window.removeEventListener('resize', computeMainHeight);
+    }, [isMobileWidth]);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-            {/* Header */}
-            <div className="bg-card border-b-2 border-primary/20 shadow-md px-6 py-2">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-md">
-                            <Edit className="w-4 h-4 text-primary-foreground" aria-hidden />
+            {/* Header - hidden on small viewports to save vertical space */}
+            {!isMobileWidth && (
+                <div className="bg-card border-b-2 border-primary/20 shadow-md px-6 py-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-md">
+                                <Edit className="w-4 h-4 text-primary-foreground" aria-hidden />
+                            </div>
+                            <h1 className="text-2xl font-bold text-foreground">
+                                Éditeur de Questions
+                            </h1>
                         </div>
-                        <h1 className="text-2xl font-bold text-foreground">
-                            Éditeur de Questions
-                        </h1>
-                    </div>
 
-                    {/* Desktop import/export controls (hidden on small screens) */}
-                    <div className="hidden md:flex">
-                        <ImportExportControls
-                            questions={questions}
-                            onImport={handleImport}
-                        />
+                        {/* Desktop import/export controls (hidden on small screens) */}
+                        <div className="hidden md:flex">
+                            <ImportExportControls
+                                questions={questions}
+                                onImport={handleImport}
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Mobile Tabs */}
-            <MobileTabs
-                tabs={mobileTabs}
-                activeTab={mobileTab}
-                onTabChange={(tab) => setMobileTab(tab as typeof mobileTab)}
-            />
+            <div ref={mobileTabsRef}>
+                <MobileTabs
+                    tabs={mobileTabs}
+                    activeTab={mobileTab}
+                    onTabChange={(tab) => setMobileTab(tab as typeof mobileTab)}
+                />
+            </div>
 
             {/* Main Layout */}
-            <div className="h-[calc(100vh-73px-48px-64px)] md:h-[calc(100vh-85px)] p-4">
+            <div className="p-4 md:h-[calc(100vh-85px)]" style={{ height: mainContainerInlineHeight }}>
                 {/** Compute grid template columns: left (collapsed or full), center flex, preview clamp **/}
                 {(() => {
                     const effectiveCollapsed = sidebarCollapsed || sidebarForcedCollapsed;
@@ -483,7 +527,7 @@ export default function TeacherQuestionEditorPageClient() {
             </div>
 
             {/* Mobile FABs for import/export (visible only on small screens) */}
-            <div className="md:hidden fixed right-4 bottom-6 z-50">
+            <div ref={mobileFabRef} className="md:hidden fixed right-4 bottom-6 z-50">
                 <div className="bg-card p-2 rounded-xl shadow-md">
                     <ImportExportControls questions={questions} onImport={handleImport} />
                 </div>
