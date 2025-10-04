@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Timer as TimerIcon } from 'lucide-react';
 import { EditorQuestion, isNumericQuestion, isMultipleChoiceQuestion } from '../types';
 import QuestionCard from '@/components/QuestionCard';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
@@ -163,7 +163,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-10 shadow-lg"></div>
 
                         {/* Screen Content */}
-                        <div className="h-full bg-muted/20 overflow-hidden flex flex-col relative">
+                        <div className="h-full bg-base-200 overflow-hidden flex flex-col relative">
                             {/* Simplified non-clickable navbar */}
                             <div className="flex-shrink-0 bg-[color:var(--navbar)] text-white h-16 flex items-center px-3 pointer-events-none">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,10 +172,33 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                                 <div className="ml-3 text-sm font-medium truncate">{question.title || 'Sans titre'}</div>
                             </div>
 
-                            {/* Question Content with proper padding */}
-                            <div className="flex-1 overflow-y-auto p-4">
+                            {/* Floating timer chip (mirror TournamentTimer mobile) */}
+                            <div
+                                className="absolute top-16 right-4 z-20 navbar-timer-bg px-4 py-2 rounded-full shadow-lg border border-primary"
+                                style={{ background: 'var(--navbar)', color: 'var(--primary-foreground)' }}
+                            >
+                                <div className="flex items-center gap-1 align-middle">
+                                    <TimerIcon className="w-5 h-5" style={{ display: 'block', color: 'var(--light-foreground)' }} />
+                                    <span className="text-lg font-bold flex items-center leading-none" style={{ color: 'var(--light-foreground)' }}>
+                                        {(() => {
+                                            const val = (question.timeLimit || 30); // seconds
+                                            if (val === null || val === undefined || val < 0) return '0';
+                                            const rounded = Math.max(0, Math.floor(val));
+                                            if (rounded >= 60) {
+                                                const m = Math.floor(rounded / 60);
+                                                const s = rounded % 60;
+                                                return `${m}:${s.toString().padStart(2, '0')}`;
+                                            }
+                                            return rounded.toString();
+                                        })()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Question Content: vertically centered card like live main-content */}
+                            <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
                                 {/* Card container to mirror practice page */}
-                                <div className="card w-full bg-base-100 rounded-lg shadow-xl my-4 relative">
+                                <div className="card w-full max-w-2xl bg-base-100 shadow-xl my-6 relative">
                                     <MathJaxWrapper>
                                         <QuestionCard
                                             currentQuestion={questionData}
