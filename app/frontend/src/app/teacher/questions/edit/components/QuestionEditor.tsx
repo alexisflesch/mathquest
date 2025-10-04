@@ -240,7 +240,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     };
 
     return (
-        <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col">
+        <div className="bg-base-100 rounded-lg shadow-md border border-border h-full flex flex-col">
             {/* Mode Tabs */}
             <div className="flex border-b border-border flex-shrink-0 bg-muted/30">
                 <button

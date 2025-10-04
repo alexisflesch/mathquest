@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { EditorQuestion } from '../types';
 
 interface QuestionListProps {
@@ -19,7 +20,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     onDeleteQuestion,
 }) => {
     return (
-        <div className="bg-card rounded-lg shadow-md border border-border p-4 h-full flex flex-col">
+        <div className="bg-base-100 rounded-lg shadow-md border border-border p-4 h-full flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
                 <h2 className="text-xl font-bold text-foreground">Questions</h2>
                 <button
@@ -30,37 +31,38 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {questions.map((question, index) => (
                     <div
                         key={question.uid}
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${selectedQuestionIndex === index
-                            ? 'bg-primary text-primary-foreground border-primary shadow-lg scale-[1.02] ring-2 ring-primary/30'
-                            : 'bg-background border-border hover:border-primary/50 hover:shadow-md hover:scale-[1.01]'
+                        role="button"
+                        aria-selected={selectedQuestionIndex === index}
+                        className={`p-4 rounded-lg border cursor-pointer transition-colors ${selectedQuestionIndex === index
+                            ? 'bg-primary/30 border-primary shadow ring-2 ring-primary/50 hover:!bg-primary/30'
+                            : 'bg-background border-border hover:bg-muted/40'
                             }`}
                         onClick={() => onSelectQuestion(index)}
                     >
-                        <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0 overflow-hidden">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${selectedQuestionIndex === index
-                                        ? 'bg-primary-foreground text-primary'
-                                        : 'bg-primary/10 text-primary'
-                                        }`}>
+                                    <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary`}>
                                         {question.questionType === 'numeric' ? 'Numérique' :
                                             question.questionType === 'single_choice' ? 'Choix unique' : 'Choix multiple'}
                                     </span>
-                                    <span className={`text-xs ${selectedQuestionIndex === index ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>•</span>
-                                    <span className={`text-xs font-medium ${selectedQuestionIndex === index ? 'text-primary-foreground/90' : 'text-muted-foreground'}`}>
+                                    <span className="text-xs text-muted-foreground/70">•</span>
+                                    <span className={`text-xs font-medium ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                                         {question.discipline || 'Sans discipline'}
                                     </span>
                                 </div>
-                                <h3 className={`text-sm font-bold truncate mb-1 ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-foreground'}`}>
+                                <h3 className={`text-xs font-semibold truncate mb-1 text-foreground`}>
                                     {question.title || 'Sans titre'}
                                 </h3>
-                                <p className={`text-xs truncate ${selectedQuestionIndex === index ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-                                    {question.text}
-                                </p>
+                                <div className="text-xs truncate text-muted-foreground">
+                                    <MathJaxWrapper>
+                                        <div className="truncate">{question.text}</div>
+                                    </MathJaxWrapper>
+                                </div>
                             </div>
                             {questions.length > 1 && (
                                 <button
@@ -68,10 +70,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                                         e.stopPropagation();
                                         onDeleteQuestion(index);
                                     }}
-                                    className={`ml-3 p-2 rounded-md transition-all ${selectedQuestionIndex === index
-                                        ? 'text-primary-foreground hover:bg-primary-foreground/20'
-                                        : 'text-alert hover:bg-alert/10'
-                                        }`}
+                                    className={`ml-3 p-2 rounded-md transition-colors text-alert hover:bg-alert/10`}
                                     title="Supprimer la question"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

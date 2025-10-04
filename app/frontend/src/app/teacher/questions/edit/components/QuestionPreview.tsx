@@ -135,7 +135,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
     };
 
     return (
-        <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col overflow-hidden">
+        <div className="h-full flex flex-col overflow-hidden bg-transparent">
             {/* Smartphone Frame */}
             <div
                 ref={containerRef}
