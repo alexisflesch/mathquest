@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import type * as monaco from 'monaco-editor';
 import yaml from 'js-yaml';
@@ -16,10 +16,45 @@ interface MonacoYamlEditorProps {
 export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onChange, error, metadata }) => {
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const monacoRef = useRef<Monaco | null>(null);
+    const [themeName, setThemeName] = useState<'vs' | 'vs-dark'>('vs');
+
+    useEffect(() => {
+        const applyThemeFromDocument = () => {
+            try {
+                const applied = document.documentElement.getAttribute('data-theme');
+                const isDark = applied === 'dark';
+                const desired = isDark ? 'vs-dark' : 'vs';
+                setThemeName(desired as 'vs' | 'vs-dark');
+                if (monacoRef.current && monacoRef.current.editor) {
+                    monacoRef.current.editor.setTheme(desired);
+                }
+            } catch (e) {
+                // ignore
+            }
+        };
+
+        applyThemeFromDocument();
+
+        const mo = new MutationObserver(() => applyThemeFromDocument());
+        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => mo.disconnect();
+    }, []);
 
     const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
         editorRef.current = editor;
         monacoRef.current = monaco;
+
+        // Ensure Monaco uses the current theme on mount
+        try {
+            const applied = document.documentElement.getAttribute('data-theme');
+            const isDark = applied === 'dark';
+            const desired = isDark ? 'vs-dark' : 'vs';
+            setThemeName(desired as 'vs' | 'vs-dark');
+            // Apply to monaco directly as well
+            monaco.editor.setTheme(desired);
+        } catch (e) {
+            // ignore
+        }
 
         // Helper to find the current question's context (gradeLevel, discipline, themes)
         const getCurrentQuestionContext = (fullText: string, currentLine: number): {
@@ -433,7 +468,7 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                 value={value}
                 onChange={handleEditorChange}
                 onMount={handleEditorDidMount}
-                theme="vs"
+                theme={themeName}
                 options={{
                     minimap: { enabled: false },
                     fontSize: 13,
