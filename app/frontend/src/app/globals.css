@@ -1515,3 +1515,32 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
   overflow-x: auto !important;
   overflow-y: visible !important;
 }
+
+/* Very specific override: some runtime or injected inline styles (MathJax or scripts)
+   can set overflow on the question text container. The DevTools trace shows the
+   .question-text-in-live-page element inside the card sometimes computes
+   overflow-y: auto despite author rules. This selector targets the common
+   card wrapper + tqcard-content tree and force-ensures no vertical scrollbar
+   while preserving horizontal scrolling. Narrow and documented to avoid regressions. */
+.card.w-full.max-w-2xl .tqcard-content > .question-text-in-live-page {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Additional narrow override: target the immediate content wrapper inside the
+   question text container. Some MathJax CHTML nodes insert a DIV/span that can
+   be a few pixels taller due to font-size/line-height; force no max-height and
+   allow horizontal scroll while preventing a vertical scrollbar */
+.card.w-full.max-w-2xl .tqcard-content > .question-text-in-live-page > div {
+  overflow-x: auto !important;
+  overflow-y: clip !important; /* clip avoids showing a scrollbar while preserving layout */
+  max-height: none !important;
+}
+
+/* Prevent any vertical scrollbars inside question cards (question text and answers).
+   Scoped narrowly to .tqcard-content to avoid affecting other scrollable regions like
+   the main page content, dialogs, etc. Horizontal scrolling is still allowed where set. */
+.tqcard-content,
+.tqcard-content * {
+  overflow-y: visible !important;
+}

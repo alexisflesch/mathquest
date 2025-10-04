@@ -167,7 +167,11 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
             )}
             {/* Question text */}
-            <div className={`text-xl font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}>
+            <div
+                className={`text-xl font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}
+                // Inline style: robustly enforce horizontal scrolling and no vertical scrollbars
+                style={{ overflowX: 'auto', overflowY: 'visible' }}
+            >
                 <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
             </div>
 
