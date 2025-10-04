@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { Edit } from 'lucide-react';
 import { EditorQuestion, createEmptyQuestion } from './types';
 import { QuestionList } from './components/QuestionList';
 import { QuestionEditor } from './components/QuestionEditor';
@@ -320,11 +321,11 @@ export default function TeacherQuestionEditorPageClient() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
             {/* Header */}
-            <div className="bg-card border-b-2 border-primary/20 shadow-md px-6 py-4">
+            <div className="bg-card border-b-2 border-primary/20 shadow-md px-6 py-2">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-md">
-                            <span className="text-2xl">📝</span>
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-md">
+                            <Edit className="w-4 h-4 text-primary-foreground" aria-hidden />
                         </div>
                         <h1 className="text-2xl font-bold text-foreground">
                             Éditeur de Questions

@@ -25,7 +25,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                 <h2 className="text-xl font-bold text-foreground">Questions</h2>
                 <button
                     onClick={onAddQuestion}
-                    className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:opacity-90 transition-all shadow-sm"
+                    className="px-4 py-2 text-foreground font-semibold text-sm rounded-md hover:opacity-90 transition-all border border-border hover:border-foreground"
                 >
                     + Ajouter
                 </button>

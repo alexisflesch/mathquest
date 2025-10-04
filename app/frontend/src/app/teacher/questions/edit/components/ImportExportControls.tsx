@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { EditorQuestion } from '../types';
 import yaml from 'js-yaml';
+import { UploadCloud, Download } from 'lucide-react';
 
 interface ImportExportControlsProps {
     questions: EditorQuestion[];
@@ -164,22 +165,21 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
         <div className="flex items-center gap-3">
             <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm flex items-center gap-2"
+                className="px-3 py-2 text-foreground font-semibold text-sm rounded-md hover:opacity-90 transition-all flex items-center gap-2 border border-border hover:border-foreground"
                 title="Importer des questions YAML"
             >
-                <span>📁</span>
+                <UploadCloud className="w-5 h-5" />
                 <span>Importer</span>
             </button>
             <button
                 onClick={handleExport}
                 disabled={questions.length === 0}
-                className="px-4 py-2 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all shadow-sm flex items-center gap-2"
+                className="px-3 py-2 text-foreground font-semibold text-sm rounded-md hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all flex items-center gap-2 border border-border/60 hover:border-foreground"
                 title="Exporter les questions en YAML"
             >
-                <span>💾</span>
-                <span>Exporter</span>
-                <span className="px-2 py-0.5 bg-secondary-foreground/20 rounded-full text-xs font-bold">
-                    {questions.length}
+                <Download className="w-5 h-5" />
+                <span>Exporter
+                    ({questions.length})
                 </span>
             </button>
             <input
