@@ -131,7 +131,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                         {/* left accent when selected (in-flow to avoid clipping) */}
                         <div className="flex items-start justify-between gap-2 w-full">
                             {/* no in-flow accent to avoid layout shift; use background tint only */}
-                            <div className="flex-1 min-w-0 overflow-hidden">
+                            <div className="flex-1 min-w-0 overflow-hidden pr-8">
                                 {/* First row: Title */}
                                 <h3 className={`text-sm font-semibold truncate mb-1 ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-foreground'} pl-0`}>
                                     <MathJaxWrapper zoomFactor={1}>{question.title || 'Sans titre'}</MathJaxWrapper>
