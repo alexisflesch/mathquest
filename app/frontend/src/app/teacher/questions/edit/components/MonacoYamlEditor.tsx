@@ -368,7 +368,8 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                                     startColumn: 1,
                                     endLineNumber: lineNumber,
                                     endColumn: 100,
-                                    message: `Missing required field: ${field}`
+                                    // French: "Champ manquant"
+                                    message: `Champ manquant : ${field}`
                                 });
                             }
                         });
@@ -381,7 +382,7 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                                 startColumn: 1,
                                 endLineNumber: lineNumber,
                                 endColumn: 100,
-                                message: 'Numeric questions require correctAnswer (number)'
+                                message: "Les questions numériques requièrent le champ correctAnswer (nombre)"
                             });
                         } else if ((item.questionType === 'single_choice' || item.questionType === 'multiple_choice')) {
                             if (!Array.isArray(item.answerOptions)) {
@@ -391,7 +392,7 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                                     startColumn: 1,
                                     endLineNumber: lineNumber,
                                     endColumn: 100,
-                                    message: 'Multiple choice questions require answerOptions array'
+                                    message: "Les questions à choix multiple requièrent un tableau 'answerOptions'"
                                 });
                             }
                             if (!Array.isArray(item.correctAnswers)) {
@@ -401,7 +402,7 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                                     startColumn: 1,
                                     endLineNumber: lineNumber,
                                     endColumn: 100,
-                                    message: 'Multiple choice questions require correctAnswers array'
+                                    message: "Les questions à choix multiple requièrent un tableau 'correctAnswers'"
                                 });
                             }
                         }
@@ -416,7 +417,8 @@ export const MonacoYamlEditor: React.FC<MonacoYamlEditorProps> = ({ value, onCha
                         startColumn: e.mark.column + 1,
                         endLineNumber: e.mark.line + 1,
                         endColumn: Math.min(e.mark.column + 20, 200),
-                        message: e.message || 'YAML syntax error'
+                        // Show a French parse error message; include original message if present
+                        message: e.message ? `Erreur YAML: ${e.message}` : 'Erreur de syntaxe YAML'
                     });
                 }
                 // Silently ignore other validation errors while user is typing
