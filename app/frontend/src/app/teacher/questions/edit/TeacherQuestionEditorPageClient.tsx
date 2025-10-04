@@ -399,16 +399,16 @@ export default function TeacherQuestionEditorPageClient() {
                     return (
                         <div ref={mainRef} className="grid gap-2 h-full" style={{ gridTemplateColumns: gridTemplate }}>
                             {/* Left Sidebar - Question List */}
-                            <div className={`${mobileTab === 'questions' ? 'block' : 'hidden md:block'} bg-transparent relative h-full flex` }>
+                            <div className={`${mobileTab === 'questions' ? 'block' : 'hidden md:block'} bg-transparent relative h-full flex`}>
                                 <div className="h-full w-full">
                                     <QuestionList
-                                    questions={questions}
-                                    selectedQuestionIndex={selectedQuestionIndex}
-                                    onSelectQuestion={handleSelectQuestion}
-                                    onAddQuestion={handleAddQuestion}
-                                    onDeleteQuestion={handleDeleteQuestion}
-                                    sidebarCollapsed={effectiveCollapsed}
-                                    onToggleSidebar={() => setSidebarCollapsed(s => !s)}
+                                        questions={questions}
+                                        selectedQuestionIndex={selectedQuestionIndex}
+                                        onSelectQuestion={handleSelectQuestion}
+                                        onAddQuestion={handleAddQuestion}
+                                        onDeleteQuestion={handleDeleteQuestion}
+                                        sidebarCollapsed={effectiveCollapsed}
+                                        onToggleSidebar={() => setSidebarCollapsed(s => !s)}
                                     />
                                 </div>
                             </div>
