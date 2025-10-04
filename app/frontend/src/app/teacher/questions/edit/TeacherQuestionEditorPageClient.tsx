@@ -75,6 +75,8 @@ export default function TeacherQuestionEditorPageClient() {
     const [editorMode, setEditorMode] = useState<'form' | 'yaml'>('form');
     // Imperative ref for Monaco editor
     const editorImperativeRef = useRef<any>(null);
+    // If the user selects a question while the editor is not mounted, store uid to reveal once ready
+    const pendingRevealUidRef = useRef<string | null>(null);
     const [mobileTab, setMobileTab] = useState<'questions' | 'editor' | 'preview'>('questions');
     const [yamlError, setYamlError] = useState<string | null>(null);
     const [metadata, setMetadata] = useState<ParsedMetadata | null>(null);
@@ -258,8 +260,12 @@ export default function TeacherQuestionEditorPageClient() {
         setMobileTab('editor');
         // Request the editor to reveal the selected question's uid
         const q = questions[index];
-        if (q && q.uid && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
-            editorImperativeRef.current.revealUid(q.uid);
+        if (q && q.uid) {
+            if (editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
+                editorImperativeRef.current.revealUid(q.uid);
+            } else {
+                pendingRevealUidRef.current = q.uid;
+            }
         }
     };
 
@@ -448,6 +454,15 @@ export default function TeacherQuestionEditorPageClient() {
         }
     };
 
+    const handleEditorReady = () => {
+        // If there is a pending reveal (user clicked in form mode then switched to YAML), perform it now
+        const uid = pendingRevealUidRef.current;
+        if (uid && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
+            editorImperativeRef.current.revealUid(uid);
+            pendingRevealUidRef.current = null;
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
             {/* Header - hidden on small viewports to save vertical space */}
@@ -530,6 +545,7 @@ export default function TeacherQuestionEditorPageClient() {
                                         metadata={metadata}
                                         editorRef={editorImperativeRef}
                                         onCursorPosition={handleCursorPosition}
+                                        onEditorReady={handleEditorReady}
                                     />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">

@@ -13,6 +13,8 @@ interface MonacoYamlEditorProps {
     onCursorPosition?: (cursorPosition: number) => void;
     error: string | null;
     metadata: ParsedMetadata;
+    // Called when the underlying Monaco editor has been mounted and is ready
+    onEditorReady?: () => void;
 }
 
 export type MonacoYamlEditorHandle = {
@@ -20,7 +22,7 @@ export type MonacoYamlEditorHandle = {
 };
 
 export const MonacoYamlEditor = React.forwardRef<MonacoYamlEditorHandle, MonacoYamlEditorProps>(
-    ({ value, onChange, onCursorPosition, error, metadata }, ref) => {
+    ({ value, onChange, onCursorPosition, error, metadata, onEditorReady }, ref) => {
         const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
         const monacoRef = useRef<Monaco | null>(null);
         const [themeName, setThemeName] = useState<'vs' | 'vs-dark'>('vs');
@@ -517,6 +519,13 @@ export const MonacoYamlEditor = React.forwardRef<MonacoYamlEditorHandle, MonacoY
 
             // Focus editor
             editor.focus();
+
+            // Notify parent that the editor is ready to receive imperative commands
+            try {
+                if (onEditorReady) onEditorReady();
+            } catch (e) {
+                // ignore
+            }
 
             // Cleanup selection listener when unmounting
             return () => {

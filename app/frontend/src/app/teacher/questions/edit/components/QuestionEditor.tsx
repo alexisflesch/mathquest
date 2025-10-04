@@ -40,6 +40,8 @@ interface QuestionEditorProps {
     editorRef?: React.Ref<any>;
     // Called when the editor's cursor/selection moves (offset)
     onCursorPosition?: (cursorPosition: number) => void;
+    // Called when the Monaco editor is ready/mounted
+    onEditorReady?: () => void;
 }
 
 export const QuestionEditor: React.FC<QuestionEditorProps> = ({
@@ -54,6 +56,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     metadata,
     editorRef,
     onCursorPosition,
+    onEditorReady,
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -555,6 +558,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 error={null}
                                 metadata={metadata}
                                 ref={editorRef}
+                                onEditorReady={onEditorReady}
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-3 italic flex items-center gap-1">
