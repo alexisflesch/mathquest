@@ -355,8 +355,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         </div>
 
                         {/* Question Type and Settings - BEFORE Question Text */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="md:col-span-2">
                                 <div className="relative">
                                     <Settings className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
                                     <select
@@ -370,7 +370,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     </select>
                                 </div>
                             </div>
-                            <div>
+                            <div className="md:col-span-1">
                                 <div className="relative">
                                     <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                     <input
@@ -382,7 +382,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     />
                                 </div>
                             </div>
-                            <div>
+                            <div className="md:col-span-1">
                                 <div className="relative">
                                     <Star className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                     <input
@@ -427,7 +427,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+                            <div className="bg-primary/5 p-4 rounded-lg border border-dropdown-border">
                                 <div className="flex items-center justify-between mb-3">
                                     <label className="block text-sm font-semibold text-foreground">
                                         ✅ Réponses
@@ -439,9 +439,9 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         + Ajouter
                                     </button>
                                 </div>
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     {question.answerOptions.map((option, index) => (
-                                        <div key={index} className="flex items-center gap-3 bg-background p-3 rounded-lg">
+                                        <div key={index} className="flex items-center gap-2 bg-background p-2 rounded-lg">
                                             <input
                                                 type={question.questionType === 'single_choice' ? 'radio' : 'checkbox'}
                                                 checked={question.correctAnswers[index]}
@@ -452,7 +452,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                                 type="text"
                                                 value={option}
                                                 onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
-                                                className="flex-1 px-3 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                                className="flex-1 px-2 py-1.5 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                                 placeholder={`Réponse ${index + 1}`}
                                             />
                                             <button
@@ -469,7 +469,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         )}
 
                         {/* Explanation and Feedback Settings */}
-                        <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
+                        <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-dropdown-border">
                             <div>
                                 <div className="relative">
                                     <Lightbulb className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />
