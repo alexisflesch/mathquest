@@ -324,40 +324,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                             </div>
                         </div>
 
-                        {/* Row: Question Type and Difficulty (two columns) */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <div className="relative">
-                                    <Settings className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-                                    <select
-                                        value={question.questionType}
-                                        onChange={(e) => handleFieldChange('questionType', e.target.value as any)}
-                                        className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none"
-                                    >
-                                        <option value="numeric">Numérique</option>
-                                        <option value="single_choice">Choix unique</option>
-                                        <option value="multiple_choice">Choix multiple</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            <div>
-                                <div className="relative">
-                                    <Star className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                                    <select
-                                        value={String(question.difficulty || 1)}
-                                        onChange={(e) => handleFieldChange('difficulty', parseInt(e.target.value))}
-                                        className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none"
-                                    >
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* UID and Author - editable but pre-filled */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -411,7 +378,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         value={question.timeLimit || 30}
                                         onChange={(e) => handleFieldChange('timeLimit', parseInt(e.target.value))}
                                         placeholder="Temps (s)"
-                                        className="w-full pl-11 pr-4 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                        className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
@@ -425,7 +392,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         value={question.difficulty || 1}
                                         onChange={(e) => handleFieldChange('difficulty', parseInt(e.target.value))}
                                         placeholder="Difficulté"
-                                        className="w-full pl-11 pr-4 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                        className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
@@ -474,7 +441,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 </div>
                                 <div className="space-y-3">
                                     {question.answerOptions.map((option, index) => (
-                                        <div key={index} className="flex items-center gap-3 bg-background p-3 rounded-lg border border-border">
+                                        <div key={index} className="flex items-center gap-3 bg-background p-3 rounded-lg">
                                             <input
                                                 type={question.questionType === 'single_choice' ? 'radio' : 'checkbox'}
                                                 checked={question.correctAnswers[index]}
