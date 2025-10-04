@@ -605,3 +605,5 @@ export const MonacoYamlEditor = React.forwardRef<MonacoYamlEditorHandle, MonacoY
             </div>
         );
     });
+
+MonacoYamlEditor.displayName = 'MonacoYamlEditor';

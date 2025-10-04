@@ -121,7 +121,6 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                     <div
                         key={question.uid}
                         role="button"
-                        aria-selected={selectedQuestionIndex === index}
                         className={`relative p-4 rounded-lg border cursor-pointer transition-colors flex items-start ${selectedQuestionIndex === index
                             ? 'border-border text-foreground shadow-md ring-1'
                             : 'bg-background border-border hover:bg-muted/40'
