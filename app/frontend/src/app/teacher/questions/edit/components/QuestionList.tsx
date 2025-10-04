@@ -10,6 +10,10 @@ interface QuestionListProps {
     onSelectQuestion: (index: number) => void;
     onAddQuestion: () => void;
     onDeleteQuestion: (index: number) => void;
+    // New: whether the sidebar is currently collapsed (narrow)
+    sidebarCollapsed?: boolean;
+    // New: callback to toggle collapse state
+    onToggleSidebar?: () => void;
 }
 
 export const QuestionList: React.FC<QuestionListProps> = ({
@@ -18,11 +22,74 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     onSelectQuestion,
     onAddQuestion,
     onDeleteQuestion,
+    sidebarCollapsed = false,
+    onToggleSidebar,
 }) => {
+    // Render a compact collapsed view when sidebarCollapsed is true
+    if (sidebarCollapsed) {
+        return (
+            <div className="bg-base-100 rounded-lg shadow-md border border-border p-2 h-full flex flex-col items-center overflow-hidden">
+                <div className="w-full flex items-center justify-start mb-2">
+                    {/* Top-left toggle */}
+                    <div className="pl-1">
+                        <button
+                            onClick={() => onToggleSidebar && onToggleSidebar()}
+                            aria-label={sidebarCollapsed ? 'Expand questions list' : 'Collapse questions list'}
+                            className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted/50"
+                        >
+                            <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Compact stacked icons for questions */}
+                <div className="flex-1 w-full overflow-y-auto py-1 flex flex-col items-center gap-2">
+                    {questions.map((q, i) => (
+                        <button
+                            key={q.uid}
+                            onClick={() => onSelectQuestion(i)}
+                            className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${selectedQuestionIndex === i ? 'bg-primary text-primary-foreground' : 'bg-muted/20 text-muted-foreground'}`}
+                            title={q.title || `Question ${i + 1}`}
+                            aria-label={`Question ${i + 1}`}
+                        >
+                            <span className="text-xs font-semibold">{i + 1}</span>
+                        </button>
+                    ))}
+                </div>
+
+                <div className="w-full flex items-center justify-center pt-2">
+                    <button
+                        onClick={onAddQuestion}
+                        className="px-3 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:opacity-90 transition-all"
+                        aria-label="Ajouter une question"
+                    >
+                        +
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-base-100 rounded-lg shadow-md border border-border p-4 h-full flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                <h2 className="text-xl font-bold text-foreground">Questions</h2>
+                {/* Top-left toggle */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => onToggleSidebar && onToggleSidebar()}
+                        aria-label={sidebarCollapsed ? 'Expand questions list' : 'Collapse questions list'}
+                        className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted/50"
+                    >
+                        <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    <h2 className="text-xl font-bold text-foreground">Questions</h2>
+                </div>
+
                 <button
                     onClick={onAddQuestion}
                     className="px-4 py-2 text-foreground font-semibold text-sm rounded-md hover:opacity-90 transition-all border border-border hover:border-foreground"

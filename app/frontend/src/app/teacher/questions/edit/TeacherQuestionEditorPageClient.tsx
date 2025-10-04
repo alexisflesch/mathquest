@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Edit } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Edit, Menu } from 'lucide-react';
 import { EditorQuestion, createEmptyQuestion } from './types';
 import { QuestionList } from './components/QuestionList';
 import { QuestionEditor } from './components/QuestionEditor';
@@ -21,6 +21,46 @@ import yaml from 'js-yaml';
  */
 
 export default function TeacherQuestionEditorPageClient() {
+    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+        try {
+            return localStorage.getItem('mq_sidebar_collapsed') === '1';
+        } catch (e) {
+            return false;
+        }
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('mq_sidebar_collapsed', sidebarCollapsed ? '1' : '0');
+        } catch (e) {
+            // ignore
+        }
+    }, [sidebarCollapsed]);
+
+    // Auto-collapse when the main content area becomes too narrow (accounts for global app nav)
+    const mainRef = useRef<HTMLDivElement | null>(null);
+    const [sidebarForcedCollapsed, setSidebarForcedCollapsed] = useState(false);
+
+    useEffect(() => {
+        const el = mainRef.current;
+        if (!el) return;
+
+        const update = () => {
+            const w = el.clientWidth;
+            // If available width is less than 1100px, force collapse. This threshold can be tuned.
+            setSidebarForcedCollapsed(w < 1100);
+        };
+
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        window.addEventListener('resize', update);
+        return () => {
+            ro.disconnect();
+            window.removeEventListener('resize', update);
+        };
+    }, []);
+
     const [yamlText, setYamlText] = useState('');
     const [questions, setQuestions] = useState<EditorQuestion[]>([]);
     const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
@@ -331,10 +371,14 @@ export default function TeacherQuestionEditorPageClient() {
                             Éditeur de Questions
                         </h1>
                     </div>
-                    <ImportExportControls
-                        questions={questions}
-                        onImport={handleImport}
-                    />
+
+                    {/* Desktop import/export controls (hidden on small screens) */}
+                    <div className="hidden md:flex">
+                        <ImportExportControls
+                            questions={questions}
+                            onImport={handleImport}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -346,60 +390,81 @@ export default function TeacherQuestionEditorPageClient() {
             />
 
             {/* Main Layout */}
-            <div className="flex flex-col md:flex-row h-[calc(100vh-73px-48px-64px)] md:h-[calc(100vh-85px)] gap-4 p-4">
-                {/* Left Sidebar - Question List */}
-                <div className={`w-full md:w-80 ${mobileTab === 'questions' ? 'block' : 'hidden md:block'}`}>
-                    <QuestionList
-                        questions={questions}
-                        selectedQuestionIndex={selectedQuestionIndex}
-                        onSelectQuestion={handleSelectQuestion}
-                        onAddQuestion={handleAddQuestion}
-                        onDeleteQuestion={handleDeleteQuestion}
-                    />
-                </div>
+            <div className="h-[calc(100vh-73px-48px-64px)] md:h-[calc(100vh-85px)] p-4">
+                {/** Compute grid template columns: left (collapsed or full), center flex, preview clamp **/}
+                {(() => {
+                    const effectiveCollapsed = sidebarCollapsed || sidebarForcedCollapsed;
+                    const left = effectiveCollapsed ? '4rem' : '18rem';
+                    const gridTemplate = `${left} minmax(0, 1fr) minmax(14rem, 20rem)`;
+                    return (
+                        <div ref={mainRef} className="grid gap-2 h-full" style={{ gridTemplateColumns: gridTemplate }}>
+                            {/* Left Sidebar - Question List */}
+                            <div className={`${mobileTab === 'questions' ? 'block' : 'hidden md:block'} bg-transparent relative h-full flex` }>
+                                <div className="h-full w-full">
+                                    <QuestionList
+                                    questions={questions}
+                                    selectedQuestionIndex={selectedQuestionIndex}
+                                    onSelectQuestion={handleSelectQuestion}
+                                    onAddQuestion={handleAddQuestion}
+                                    onDeleteQuestion={handleDeleteQuestion}
+                                    sidebarCollapsed={effectiveCollapsed}
+                                    onToggleSidebar={() => setSidebarCollapsed(s => !s)}
+                                    />
+                                </div>
+                            </div>
 
-                {/* Center - Editor */}
-                <div className={`flex-1 overflow-hidden ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
-                    {selectedQuestion && metadata ? (
-                        <QuestionEditor
-                            question={selectedQuestion}
-                            onChange={handleQuestionChange}
-                            mode={editorMode}
-                            onModeChange={setEditorMode}
-                            yamlText={yamlText}
-                            onYamlChange={handleYamlChange}
-                            selectedQuestionIndex={selectedQuestionIndex}
-                            yamlError={yamlError}
-                            metadata={metadata}
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">
-                            <div className="text-center">
-                                <div className="text-4xl mb-3">🤔</div>
-                                <p className="text-base font-medium">
-                                    {!metadata ? 'Chargement des métadonnées...' : 'Sélectionnez une question pour commencer'}
-                                </p>
+                            {/* Center - Editor */}
+                            <div className={`min-w-0 overflow-hidden ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
+                                {selectedQuestion && metadata ? (
+                                    <QuestionEditor
+                                        question={selectedQuestion}
+                                        onChange={handleQuestionChange}
+                                        mode={editorMode}
+                                        onModeChange={setEditorMode}
+                                        yamlText={yamlText}
+                                        onYamlChange={handleYamlChange}
+                                        selectedQuestionIndex={selectedQuestionIndex}
+                                        yamlError={yamlError}
+                                        metadata={metadata}
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">
+                                        <div className="text-center">
+                                            <div className="text-4xl mb-3">🤔</div>
+                                            <p className="text-base font-medium">
+                                                {!metadata ? 'Chargement des métadonnées...' : 'Sélectionnez une question pour commencer'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Right - Preview */}
+                            <div className={`${mobileTab === 'preview' ? 'block' : 'hidden md:block'} overflow-hidden`}>
+                                {selectedQuestion ? (
+                                    <QuestionPreview
+                                        question={selectedQuestion}
+                                        questionIndex={selectedQuestionIndex + 1}
+                                        totalQuestions={questions.length}
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">
+                                        <div className="text-center">
+                                            <div className="text-4xl mb-3">👁️</div>
+                                            <p className="text-base font-medium">Aucun aperçu disponible</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    )}
-                </div>
+                    );
+                })()}
+            </div>
 
-                {/* Right - Preview */}
-                <div className={`w-full md:w-72 overflow-hidden ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
-                    {selectedQuestion ? (
-                        <QuestionPreview
-                            question={selectedQuestion}
-                            questionIndex={selectedQuestionIndex + 1}
-                            totalQuestions={questions.length}
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground bg-card rounded-lg shadow-md border border-border">
-                            <div className="text-center">
-                                <div className="text-4xl mb-3">👁️</div>
-                                <p className="text-base font-medium">Aucun aperçu disponible</p>
-                            </div>
-                        </div>
-                    )}
+            {/* Mobile FABs for import/export (visible only on small screens) */}
+            <div className="md:hidden fixed right-4 bottom-6 z-50">
+                <div className="bg-card p-2 rounded-xl shadow-md">
+                    <ImportExportControls questions={questions} onImport={handleImport} />
                 </div>
             </div>
         </div>
