@@ -89,14 +89,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
 
     return (
         <div className="bg-card rounded-lg shadow-md border border-border h-full flex flex-col">
-            {/* Header */}
-            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10">
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                    <span className="text-xl">📱</span>
-                    Aperçu Mobile
-                </h3>
-            </div>
-
             {/* Smartphone Frame */}
             <div className="flex-1 flex items-center justify-center p-6 overflow-hidden bg-gradient-to-br from-muted/30 to-background">
                 <div className="relative w-80 max-h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2.5rem] border-4 border-gray-700 shadow-2xl overflow-hidden" style={{ aspectRatio: '9/19.5' }}>
@@ -110,7 +102,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
-                            <div className="ml-3 text-sm font-medium">Aperçu Question</div>
+                            <div className="ml-3 text-sm font-medium truncate">{question.title || 'Sans titre'}</div>
                         </div>
 
                         {/* Question Content with proper padding */}
@@ -169,14 +161,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                             </div>
                         )}
                     </div>
-                </div>
-            </div>
-
-            {/* Preview Info */}
-            <div className="flex-shrink-0 p-3 border-t border-border bg-gradient-to-r from-success/10 to-primary/10">
-                <div className="text-xs font-medium text-foreground text-center flex items-center justify-center gap-2">
-                    <span className="text-success">✓</span>
-                    Aperçu avec réponses correctes
                 </div>
             </div>
         </div>

@@ -9,7 +9,7 @@ import EnhancedMultiSelectDropdown from '@/components/EnhancedMultiSelectDropdow
 import { MonacoYamlEditor } from './MonacoYamlEditor';
 import yaml from 'js-yaml';
 import {
-    Heading,
+    FileText,
     Key,
     User,
     Settings,
@@ -272,7 +272,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         {/* Title - Prominent */}
                         <div>
                             <div className="relative">
-                                <Heading className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                                 <input
                                     type="text"
                                     value={question.title || ''}
