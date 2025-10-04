@@ -61,6 +61,7 @@ const mathJaxConfig = {
 export interface MathJaxWrapperProps {
     children: React.ReactNode;
     zoomFactor?: number; // Optional zoom factor prop
+    className?: string;
 }
 
 // Client-side only MathJax component
@@ -85,15 +86,15 @@ const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor
         }
     }, [zoomFactor, isClient]);
 
-    // Create an inline style for the container with scaling
+    // Create an inline style for the container with scaling (use em so it's relative to parent)
     const containerStyle: React.CSSProperties = {
-        fontSize: `${zoomFactor}rem`,
+        fontSize: `${zoomFactor}em`,
     };
 
     return (
         <MathJaxContext config={mathJaxConfig} version={3}>
             {isClient ? (
-                <div style={containerStyle}>
+                <div style={containerStyle} className={("" )}>
                     <MathJax
                         dynamic={true}
                         onError={err => logger.error('MathJax error', err)}
