@@ -541,7 +541,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 <p className="text-xs text-alert/90 font-mono ml-6">{yamlError}</p>
                             </div>
                         )}
-                        <div className="flex-1 min-h-[500px] border border-border rounded-lg overflow-hidden shadow-inner">
+                        <div className="flex-1 min-h-0 border border-border rounded-lg overflow-hidden shadow-inner">
                             <MonacoYamlEditor
                                 value={yamlText}
                                 onChange={onYamlChange}
