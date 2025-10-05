@@ -30,12 +30,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     sidebarCollapsed = false,
     onToggleSidebar,
 }) => {
-    // Debug log to help verify problem computation (open browser console)
-    React.useEffect(() => {
-        if (typeof window !== 'undefined') {
-            console.debug('[QuestionList] problems:', problems);
-        }
-    }, [problems]);
+    // No logging here to avoid spamming console during typing or frequent re-renders.
     // Track whether we're on a small (mobile) viewport so we can force-expanded
     // behaviour: on mobile we always show the expanded list and hide the
     // collapse/expand burger button.

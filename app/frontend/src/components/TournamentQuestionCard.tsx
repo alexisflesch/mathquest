@@ -137,7 +137,10 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
         userSelect: 'none' as const,    // Prevents text selection
     } : {};
 
-    console.debug('[TournamentQuestionCard] Rendering with questionText:', questionTextToDisplay, 'answersToDisplay:', answersToDisplay, 'currentQuestion prop:', currentQuestion);
+    if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.debug('[TournamentQuestionCard] Rendering with questionText:', questionTextToDisplay, 'answersToDisplay:', answersToDisplay, 'currentQuestion prop:', currentQuestion);
+    }
 
     return (
         <div className="tqcard-content w-full flex flex-col gap-6 items-center" style={readonlyStyle}>
