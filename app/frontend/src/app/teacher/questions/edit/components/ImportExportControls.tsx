@@ -161,7 +161,7 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            } catch (error) {
+        } catch (error) {
             console.error('Export error:', error);
             setModalState({ isOpen: true, title: 'Exportation', message: 'Erreur lors de l\'exportation' });
         }

@@ -51,7 +51,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     // We'll render a single container and animate its width. Inside, we render
     // either the compact collapsed view or the full expanded view.
     const collapsedView = (
-        <div className="bg-base-100 rounded-lg shadow-md border border-border p-2 h-full flex flex-col items-center overflow-hidden">
+        <div className="bg-base-100 rounded-lg shadow-md border border-border p-2 h-full flex flex-col items-center min-h-0">
             <div className="w-full flex items-center justify-start mb-2">
                 {/* Top-left toggle */}
                 <div className="pl-1">
@@ -121,7 +121,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     );
 
     const expandedView = (
-        <div className="bg-base-100 rounded-lg shadow-md border border-border p-4 h-full flex flex-col overflow-hidden">
+        <div className="bg-base-100 rounded-lg shadow-md border border-border p-4 h-full flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
                 {/* Top-left toggle */}
                 <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
             animate={{ width: isMobile ? '100%' : sidebarWidth }}
             transition={isMobile ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }}
             style={{ width: isMobile ? '100%' : sidebarWidth }}
-            className="h-full"
+            className="h-full min-h-0"
         >
             {effectiveCollapsed ? collapsedView : expandedView}
         </motion.div>

@@ -528,22 +528,31 @@ export default function TeacherQuestionEditorPageClient() {
 
     const computeMainHeight = () => {
         if (typeof window === 'undefined') return;
-        if (!isMobileWidth) {
-            setMainContainerInlineHeight(undefined);
-            return;
-        }
 
         const viewportH = window.innerHeight;
         // Try to measure a top-level header if it exists in the DOM.
         const topHeader = document.querySelector('header') as HTMLElement | null;
         const topHeaderH = topHeader ? topHeader.clientHeight : 0;
-        const tabsH = mobileTabsRef.current ? mobileTabsRef.current.clientHeight : 0;
-        const fabH = mobileFabRef.current ? mobileFabRef.current.clientHeight : 0;
 
-        // Add a small safety gap
-        const safety = 12;
-        const reserved = topHeaderH + tabsH + fabH + safety;
-        setMainContainerInlineHeight(`calc(100vh - ${reserved}px)`);
+        if (isMobileWidth) {
+            const tabsH = mobileTabsRef.current ? mobileTabsRef.current.clientHeight : 0;
+            const fabH = mobileFabRef.current ? mobileFabRef.current.clientHeight : 0;
+
+            // Add a small safety gap
+            const safety = 12;
+            const reserved = topHeaderH + tabsH + fabH + safety;
+            setMainContainerInlineHeight(`calc(100vh - ${reserved}px)`);
+        } else {
+            // Desktop: measure the page header
+            const pageHeader = document.querySelector('.bg-card.border-b-2.border-primary\\/20') as HTMLElement | null;
+            const pageHeaderH = pageHeader ? pageHeader.clientHeight : 0;
+
+            // Add padding and safety gap
+            const padding = 32; // 2 * p-4 (16px each side)
+            const safety = 8;
+            const reserved = topHeaderH + pageHeaderH + padding + safety;
+            setMainContainerInlineHeight(`calc(100vh - ${reserved}px)`);
+        }
     };
 
     useEffect(() => {
@@ -621,7 +630,7 @@ export default function TeacherQuestionEditorPageClient() {
             </div>
 
             {/* Main Layout */}
-            <div className="p-4 md:h-[calc(100vh-85px)]" style={{ height: mainContainerInlineHeight }}>
+            <div className="p-4 min-h-0" style={{ height: mainContainerInlineHeight }}>
                 {/** Compute grid template columns: left (collapsed or full), center flex, preview clamp **/}
                 {(() => {
                     const effectiveCollapsed = sidebarCollapsed || sidebarForcedCollapsed;
@@ -636,10 +645,10 @@ export default function TeacherQuestionEditorPageClient() {
                         : `${left} minmax(0, 1fr) minmax(14rem, 20rem)`;
 
                     return (
-                        <div ref={mainRef} className="grid gap-2 h-full" style={{ gridTemplateColumns: gridTemplate }}>
+                        <div ref={mainRef} className="grid gap-2 h-full overflow-hidden min-h-0" style={{ gridTemplateColumns: gridTemplate }}>
                             {/* Left Sidebar - Question List */}
-                            <div className={`${mobileTab === 'questions' ? 'block' : 'hidden md:block'} bg-transparent relative h-full flex`}>
-                                <div className="h-full w-full">
+                            <div className={`${mobileTab === 'questions' ? 'block' : 'hidden md:block'} bg-transparent relative h-full flex min-h-0`}>
+                                <div className="h-full w-full min-h-0">
                                     <QuestionList
                                         questions={questions}
                                         selectedQuestionIndex={selectedQuestionIndex}
@@ -654,7 +663,7 @@ export default function TeacherQuestionEditorPageClient() {
                             </div>
 
                             {/* Center - Editor */}
-                            <div className={`min-w-0 overflow-hidden ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
+                            <div className={`min-w-0 overflow-hidden min-h-0 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
                                 {selectedQuestion && metadata ? (
                                     <QuestionEditor
                                         question={selectedQuestion}
@@ -683,7 +692,7 @@ export default function TeacherQuestionEditorPageClient() {
                             </div>
 
                             {/* Right - Preview */}
-                            <div className={`${mobileTab === 'preview' ? 'block' : 'hidden md:block'} overflow-hidden`}>
+                            <div className={`${mobileTab === 'preview' ? 'block' : 'hidden md:block'} overflow-hidden min-h-0`}>
                                 {selectedQuestion ? (
                                     <QuestionPreview
                                         question={selectedQuestion}
