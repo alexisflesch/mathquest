@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, XCircle, Trash2 } from 'lucide-react';
+import { AlertTriangle, XCircle, Trash2, ArrowRightFromLine, ArrowLeftFromLine } from 'lucide-react';
+import { motion } from 'framer-motion';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { EditorQuestion } from '../types';
 
@@ -52,30 +53,32 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     // If on mobile, ignore the collapsed state and always render expanded
     const effectiveCollapsed = sidebarCollapsed && !isMobile;
 
-    // Render a compact collapsed view when sidebarCollapsed is true (and not mobile)
-    if (effectiveCollapsed) {
-        return (
-            <div className="bg-base-100 rounded-lg shadow-md border border-border p-2 h-full flex flex-col items-center overflow-hidden">
-                <div className="w-full flex items-center justify-start mb-2">
-                    {/* Top-left toggle */}
-                    <div className="pl-1">
-                        <button
-                            onClick={() => onToggleSidebar && onToggleSidebar()}
-                            aria-label={sidebarCollapsed ? 'Expand questions list' : 'Collapse questions list'}
-                            className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted/50"
-                        >
-                            <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                    </div>
+    // We'll render a single container and animate its width. Inside, we render
+    // either the compact collapsed view or the full expanded view.
+    const collapsedView = (
+        <div className="bg-base-100 rounded-lg shadow-md border border-border p-2 h-full flex flex-col items-center overflow-hidden">
+            <div className="w-full flex items-center justify-start mb-2">
+                {/* Top-left toggle */}
+                <div className="pl-1">
+                    <button
+                        onClick={() => onToggleSidebar && onToggleSidebar()}
+                        aria-label={sidebarCollapsed ? 'Expand questions list' : 'Collapse questions list'}
+                        className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted/50"
+                    >
+                        {sidebarCollapsed ? (
+                            <ArrowRightFromLine className="w-4 h-4 text-foreground" aria-hidden />
+                        ) : (
+                            <ArrowLeftFromLine className="w-4 h-4 text-foreground" aria-hidden />
+                        )}
+                    </button>
                 </div>
+            </div>
 
-                {/* Compact stacked icons for questions */}
-                <div className="flex-1 w-full overflow-y-auto py-1 flex flex-col items-center gap-2">
-                    {questions.map((q, i) => (
+            {/* Compact stacked icons for questions */}
+            <div className="flex-1 w-full overflow-y-auto py-1 flex flex-col items-center gap-2">
+                {questions.map((q, i) => (
+                    <div key={q.uid} className="relative">
                         <button
-                            key={q.uid}
                             onClick={() => onSelectQuestion(i)}
                             className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${selectedQuestionIndex === i ? 'bg-primary text-primary-foreground' : 'bg-muted/20 text-muted-foreground'}`}
                             title={q.title || `Question ${i + 1}`}
@@ -83,23 +86,52 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                         >
                             <span className="text-xs font-semibold">{i + 1}</span>
                         </button>
-                    ))}
-                </div>
 
-                <div className="w-full flex items-center justify-center pt-2">
-                    <button
-                        onClick={onAddQuestion}
-                        className="px-3 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:opacity-90 transition-all"
-                        aria-label="Ajouter une question"
-                    >
-                        +
-                    </button>
-                </div>
+                        {/* Compact badges for collapsed view: small stacked icons top-right of the button */}
+                        {problems && problems[i] && problems[i].length > 0 && (
+                            <div className="absolute -top-1 -right-1 flex flex-col items-center gap-0">
+                                {problems[i].some(x => x.type === 'error') && (
+                                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-transparent">
+                                        <XCircle size={12} className="text-red-600" />
+                                    </div>
+                                )}
+                                {problems[i].some(x => x.type === 'warning') && (
+                                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-transparent -mt-0">
+                                        <AlertTriangle size={12} className="text-amber-500" />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Compact delete button: small trash icon top-left */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteQuestion(i);
+                            }}
+                            aria-label={`Supprimer la question ${i + 1}`}
+                            title="Supprimer la question"
+                            className="absolute -top-1 -left-1 w-6 h-6 rounded-sm flex items-center justify-center bg-transparent p-0"
+                        >
+                            <Trash2 size={12} className="text-alert" />
+                        </button>
+                    </div>
+                ))}
             </div>
-        );
-    }
 
-    return (
+            <div className="w-full flex items-center justify-center pt-2">
+                <button
+                    onClick={onAddQuestion}
+                    className="px-3 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:opacity-90 transition-all"
+                    aria-label="Ajouter une question"
+                >
+                    +
+                </button>
+            </div>
+        </div>
+    );
+
+    const expandedView = (
         <div className="bg-base-100 rounded-lg shadow-md border border-border p-4 h-full flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
                 {/* Top-left toggle */}
@@ -112,9 +144,11 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                         // Hide the collapse/expand button on small screens - mobile should always be expanded
                         className="hidden md:flex w-8 h-8 rounded-md items-center justify-center hover:bg-muted/50"
                     >
-                        <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                        {sidebarCollapsed ? (
+                            <ArrowRightFromLine className="w-4 h-4 text-foreground" aria-hidden />
+                        ) : (
+                            <ArrowLeftFromLine className="w-4 h-4 text-foreground" aria-hidden />
+                        )}
                     </button>
 
                     <h2 className="text-xl font-bold text-foreground">Questions</h2>
@@ -234,5 +268,19 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                 </div>
             )}
         </div>
+    );
+
+    const sidebarWidth = effectiveCollapsed ? '4rem' : '18rem';
+
+    return (
+        <motion.div
+            initial={false}
+            animate={{ width: sidebarWidth }}
+            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+            style={{ width: sidebarWidth }}
+            className="h-full"
+        >
+            {effectiveCollapsed ? collapsedView : expandedView}
+        </motion.div>
     );
 };
