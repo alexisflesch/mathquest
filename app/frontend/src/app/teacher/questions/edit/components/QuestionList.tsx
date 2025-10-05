@@ -259,14 +259,14 @@ export const QuestionList: React.FC<QuestionListProps> = ({
         </div>
     );
 
-    const sidebarWidth = effectiveCollapsed ? '4rem' : '18rem';
+    const sidebarWidth = effectiveCollapsed ? '4rem' : (isMobile ? '100%' : '18rem');
 
     return (
         <motion.div
             initial={false}
-            animate={{ width: sidebarWidth }}
-            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            style={{ width: sidebarWidth }}
+            animate={{ width: isMobile ? '100%' : sidebarWidth }}
+            transition={isMobile ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }}
+            style={{ width: isMobile ? '100%' : sidebarWidth }}
             className="h-full"
         >
             {effectiveCollapsed ? collapsedView : expandedView}
