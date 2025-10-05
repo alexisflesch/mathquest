@@ -74,49 +74,43 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                 </div>
             </div>
 
-            {/* Compact stacked icons for questions */}
-            <div className="flex-1 w-full overflow-y-auto py-1 flex flex-col items-center gap-2">
-                {questions.map((q, i) => (
-                    <div key={q.uid} className="relative">
-                        <button
-                            onClick={() => onSelectQuestion(i)}
-                            className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${selectedQuestionIndex === i ? 'bg-primary text-primary-foreground' : 'bg-muted/20 text-muted-foreground'}`}
-                            title={q.title || `Question ${i + 1}`}
-                            aria-label={`Question ${i + 1}`}
-                        >
-                            <span className="text-xs font-semibold">{i + 1}</span>
-                        </button>
+            {/* Compact stacked small cards for questions */}
+            <div className="flex-1 w-full overflow-y-auto overflow-x-hidden py-1 flex flex-col items-center gap-1">
+                {questions.map((q, i) => {
+                    const p = problems && problems[i] ? problems[i] : [];
+                    const hasError = p.some(x => x.type === 'error');
+                    const hasWarning = !hasError && p.some(x => x.type === 'warning');
+                    const selected = selectedQuestionIndex === i;
 
-                        {/* Compact badges for collapsed view: small stacked icons top-right of the button */}
-                        {problems && problems[i] && problems[i].length > 0 && (
-                            <div className="absolute -top-1 -right-1 flex flex-col items-center gap-0">
-                                {problems[i].some(x => x.type === 'error') && (
-                                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-transparent">
-                                        <XCircle size={12} className="text-red-600" />
-                                    </div>
-                                )}
-                                {problems[i].some(x => x.type === 'warning') && (
-                                    <div className="w-4 h-4 rounded-full flex items-center justify-center bg-transparent -mt-0">
-                                        <AlertTriangle size={12} className="text-amber-500" />
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                    // tiny card styles: show a left border when error/warning
+                    const borderClass = hasError ? 'border-l-4 border-red-600' : hasWarning ? 'border-l-4 border-amber-500' : '';
+                    const selectedBg = selected ? { backgroundColor: 'rgba(6,182,212,0.12)' } : undefined;
 
-                        {/* Compact delete button: small trash icon top-left */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDeleteQuestion(i);
-                            }}
-                            aria-label={`Supprimer la question ${i + 1}`}
-                            title="Supprimer la question"
-                            className="absolute -top-1 -left-1 w-6 h-6 rounded-sm flex items-center justify-center bg-transparent p-0"
-                        >
-                            <Trash2 size={12} className="text-alert" />
-                        </button>
-                    </div>
-                ))}
+                    return (
+                        <div key={q.uid} className={`w-10 h-7 rounded-sm shadow-sm border border-border overflow-hidden transition-colors flex-none flex items-center justify-between px-1 ${borderClass} ${selected ? 'text-primary-foreground' : 'text-muted-foreground'}`} style={selectedBg}>
+                            <button
+                                onClick={() => onSelectQuestion(i)}
+                                title={q.title || `Question ${i + 1}`}
+                                aria-label={`Question ${i + 1}`}
+                                className="flex items-center gap-1 text-sm font-semibold"
+                            >
+                                <span className="pl-0">{i + 1}</span>
+                            </button>
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteQuestion(i);
+                                }}
+                                aria-label={`Supprimer la question ${i + 1}`}
+                                title="Supprimer la question"
+                                className="w-4 h-4 rounded-sm flex items-center justify-center bg-transparent p-0"
+                            >
+                                <Trash2 size={12} className="text-alert" />
+                            </button>
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="w-full flex items-center justify-center pt-2">
