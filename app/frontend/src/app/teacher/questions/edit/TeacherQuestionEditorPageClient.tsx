@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Edit, Menu } from 'lucide-react';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import InfoModal from '@/components/SharedModal';
 import { EditorQuestion, createEmptyQuestion } from './types';
 import { QuestionList } from './components/QuestionList';
 import { QuestionEditor } from './components/QuestionEditor';
@@ -278,22 +280,45 @@ export default function TeacherQuestionEditorPageClient() {
         setMobileTab('editor');
     };
 
+    // Delete flow: open confirmation modal from the UI and perform deletion here
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; index: number | null; isLoading?: boolean }>({ isOpen: false, index: null, isLoading: false });
+
     const handleDeleteQuestion = (index: number) => {
         if (questions.length <= 1) {
-            alert('Vous devez garder au moins une question.');
+            // Use the confirmation modal for consistency but provide immediate feedback
+            setDeleteModal({ isOpen: true, index, isLoading: false });
             return;
         }
 
-        if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
-            const updatedQuestions = questions.filter((_, i) => i !== index);
-            setYamlText(questionsToYaml(updatedQuestions));
+        setDeleteModal({ isOpen: true, index, isLoading: false });
+    };
 
-            if (selectedQuestionIndex === index) {
-                setSelectedQuestionIndex(Math.max(0, index - 1));
-            } else if (selectedQuestionIndex > index) {
-                setSelectedQuestionIndex(selectedQuestionIndex - 1);
-            }
+    const doConfirmDelete = () => {
+        if (deleteModal.index === null) return;
+
+        const index = deleteModal.index;
+
+        // Prevent deleting last item via modal confirmation
+        if (questions.length <= 1) {
+            // close modal and do nothing
+            setDeleteModal({ isOpen: false, index: null, isLoading: false });
+            return;
         }
+
+        setDeleteModal(prev => ({ ...prev, isLoading: true }));
+
+        // perform deletion
+        const updatedQuestions = questions.filter((_, i) => i !== index);
+        setQuestions(updatedQuestions);
+        setYamlText(questionsToYaml(updatedQuestions));
+
+        if (selectedQuestionIndex === index) {
+            setSelectedQuestionIndex(Math.max(0, index - 1));
+        } else if (selectedQuestionIndex > index) {
+            setSelectedQuestionIndex(selectedQuestionIndex - 1);
+        }
+
+        setDeleteModal({ isOpen: false, index: null, isLoading: false });
     };
 
     const handleQuestionChange = (updatedQuestion: EditorQuestion) => {
@@ -675,6 +700,27 @@ export default function TeacherQuestionEditorPageClient() {
             <div ref={mobileFabRef} className="md:hidden fixed right-4 bottom-6 z-50">
                 <ImportExportControls questions={questions} onImport={handleImport} compact />
             </div>
+            {/* Delete confirmation / info modals */}
+            <ConfirmationModal
+                isOpen={deleteModal.isOpen && questions.length > 1}
+                title="Supprimer la question"
+                message={`Êtes-vous sûr de vouloir supprimer la question ${deleteModal.index !== null ? deleteModal.index + 1 : ''} ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                cancelText="Annuler"
+                onConfirm={doConfirmDelete}
+                onCancel={() => setDeleteModal({ isOpen: false, index: null, isLoading: false })}
+                type="danger"
+                isLoading={!!deleteModal.isLoading}
+            />
+
+            <InfoModal isOpen={deleteModal.isOpen && questions.length <= 1} onClose={() => setDeleteModal({ isOpen: false, index: null, isLoading: false })} title="Suppression impossible">
+                <div className="dialog-modal-content">
+                    <p>Vous devez garder au moins une question.</p>
+                    <div className="dialog-modal-actions">
+                        <button className="dialog-modal-btn" onClick={() => setDeleteModal({ isOpen: false, index: null, isLoading: false })}>Fermer</button>
+                    </div>
+                </div>
+            </InfoModal>
         </div>
     );
 }

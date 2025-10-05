@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { EditorQuestion } from '../types';
 import yaml from 'js-yaml';
 import { UploadCloud, Download } from 'lucide-react';
+import InfoModal from '@/components/SharedModal';
 
 interface ImportExportControlsProps {
     questions: EditorQuestion[];
@@ -19,6 +20,8 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const [modalState, setModalState] = useState<{ isOpen: boolean; title?: string; message?: string }>({ isOpen: false, title: undefined, message: undefined });
+
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         handleFiles(files);
@@ -32,7 +35,7 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
         const yamlFiles = files.filter(file => file.name.endsWith('.yaml') || file.name.endsWith('.yml'));
 
         if (yamlFiles.length === 0) {
-            alert('Veuillez sélectionner des fichiers YAML (.yaml ou .yml)');
+            setModalState({ isOpen: true, title: 'Importation', message: 'Veuillez sélectionner des fichiers YAML (.yaml ou .yml)' });
             return;
         }
 
@@ -53,17 +56,17 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
                     }
                 } catch (error) {
                     console.error(`Error parsing ${file.name}:`, error);
-                    alert(`Erreur lors de l'analyse du fichier ${file.name}`);
+                    setModalState({ isOpen: true, title: 'Importation', message: `Erreur lors de l'analyse du fichier ${file.name}` });
                 }
             }
 
             if (importedQuestions.length > 0) {
                 onImport(importedQuestions);
-                alert(`${importedQuestions.length} question(s) importée(s) avec succès`);
+                setModalState({ isOpen: true, title: 'Importation', message: `${importedQuestions.length} question(s) importée(s) avec succès` });
             }
         } catch (error) {
             console.error('Import error:', error);
-            alert('Erreur lors de l\'importation');
+            setModalState({ isOpen: true, title: 'Importation', message: 'Erreur lors de l\'importation' });
         }
     };
 
@@ -158,9 +161,9 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        } catch (error) {
+            } catch (error) {
             console.error('Export error:', error);
-            alert('Erreur lors de l\'exportation');
+            setModalState({ isOpen: true, title: 'Exportation', message: 'Erreur lors de l\'exportation' });
         }
     };
 
@@ -196,6 +199,14 @@ export const ImportExportControls: React.FC<ImportExportControlsProps> = ({
                     onChange={handleFileSelect}
                     className="hidden"
                 />
+                <InfoModal isOpen={modalState.isOpen} onClose={() => setModalState({ isOpen: false })} title={modalState.title}>
+                    <div className="dialog-modal-content">
+                        <p>{modalState.message}</p>
+                        <div className="dialog-modal-actions">
+                            <button className="dialog-modal-btn" onClick={() => setModalState({ isOpen: false })}>Fermer</button>
+                        </div>
+                    </div>
+                </InfoModal>
             </div>
         );
     }
