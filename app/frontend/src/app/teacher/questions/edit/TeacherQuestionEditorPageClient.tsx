@@ -229,21 +229,41 @@ export default function TeacherQuestionEditorPageClient() {
         return yamlString.replace(/\n- uid:/g, '\n\n- uid:');
     };
 
-    // Load from localStorage on mount
+    // Load from localStorage on mount. If none exists, create the first question and persist it.
     useEffect(() => {
-        const saved = localStorage.getItem('question-editor-yaml');
-        if (saved) {
-            try {
-                setYamlText(saved);
-                const parsedQuestions = parseYamlToQuestions(saved);
-                setQuestions(parsedQuestions);
-            } catch (e) {
-                console.error('Failed to load saved YAML data:', e);
+        try {
+            const saved = localStorage.getItem('question-editor-yaml');
+            if (saved) {
+                try {
+                    setYamlText(saved);
+                    const parsedQuestions = parseYamlToQuestions(saved);
+                    setQuestions(parsedQuestions);
+                } catch (e) {
+                    // If parsing failed, create a default question for the in-memory editor
+                    // but DO NOT overwrite the user's saved YAML in localStorage. Overwriting
+                    // would cause data loss if the user had typed something invalid and
+                    // then refreshed. Keep the invalid saved YAML intact so users can recover.
+                    console.error('Failed to load saved YAML data:', e);
+                    const defaultQuestion = createEmptyQuestion();
+                    const yamlForDefault = questionsToYaml([defaultQuestion]);
+                    setQuestions([defaultQuestion]);
+                    setYamlText(yamlForDefault);
+                    // Intentionally do not call localStorage.setItem here.
+                }
+            } else {
                 const defaultQuestion = createEmptyQuestion();
+                const yamlForDefault = questionsToYaml([defaultQuestion]);
                 setQuestions([defaultQuestion]);
-                setYamlText(questionsToYaml([defaultQuestion]));
+                setYamlText(yamlForDefault);
+                try {
+                    localStorage.setItem('question-editor-yaml', yamlForDefault);
+                } catch (err) {
+                    // ignore storage errors
+                }
             }
-        } else {
+        } catch (err) {
+            // localStorage might throw (privacy mode). Fallback to in-memory defaults.
+            console.warn('localStorage unavailable when initializing question editor', err);
             const defaultQuestion = createEmptyQuestion();
             setQuestions([defaultQuestion]);
             setYamlText(questionsToYaml([defaultQuestion]));
