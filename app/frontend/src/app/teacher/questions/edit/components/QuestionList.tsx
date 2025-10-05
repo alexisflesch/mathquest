@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { AlertTriangle, XCircle, Trash2 } from 'lucide-react';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { EditorQuestion } from '../types';
 
@@ -10,6 +11,8 @@ interface QuestionListProps {
     onSelectQuestion: (index: number) => void;
     onAddQuestion: () => void;
     onDeleteQuestion: (index: number) => void;
+    // Per-question problems computed by parent. Array aligned with `questions`.
+    problems?: Array<Array<{ type: 'error' | 'warning'; message: string }>>;
     // New: whether the sidebar is currently collapsed (narrow)
     sidebarCollapsed?: boolean;
     // New: callback to toggle collapse state
@@ -22,9 +25,16 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     onSelectQuestion,
     onAddQuestion,
     onDeleteQuestion,
+    problems,
     sidebarCollapsed = false,
     onToggleSidebar,
 }) => {
+    // Debug log to help verify problem computation (open browser console)
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            console.debug('[QuestionList] problems:', problems);
+        }
+    }, [problems]);
     // Track whether we're on a small (mobile) viewport so we can force-expanded
     // behaviour: on mobile we always show the expanded list and hide the
     // collapse/expand burger button.
@@ -94,6 +104,8 @@ export const QuestionList: React.FC<QuestionListProps> = ({
             <div className="flex items-center justify-between mb-4 flex-shrink-0">
                 {/* Top-left toggle */}
                 <div className="flex items-center gap-2">
+                    {/* Removed global problem counters - per-item icons shown next to each question */}
+
                     <button
                         onClick={() => onToggleSidebar && onToggleSidebar()}
                         aria-label={sidebarCollapsed ? 'Expand questions list' : 'Collapse questions list'}
@@ -157,19 +169,53 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                             </div>
                             {questions.length > 1 && (
                                 // Move delete icon to top-right corner
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDeleteQuestion(index);
-                                    }}
-                                    className={`absolute top-2 right-2 p-1 rounded-md transition-colors text-alert hover:bg-alert/10`}
-                                    title="Supprimer la question"
-                                    aria-label={`Supprimer la question ${index + 1}`}
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
+                                <>
+                                    {/* Absolute container for delete button + badge to ensure consistent placement */}
+                                    <div className="absolute top-2 right-2 flex flex-col items-center gap-0 z-20">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDeleteQuestion(index);
+                                            }}
+                                            className={`p-1 rounded-md transition-colors text-alert hover:bg-alert/10`}
+                                            title="Supprimer la question"
+                                            aria-label={`Supprimer la question ${index + 1}`}
+                                        >
+                                            <Trash2 size={18} aria-hidden />
+                                        </button>
+
+                                        {problems && problems[index] && problems[index].length > 0 && (() => {
+                                            const p = problems[index];
+                                            const errors = p.filter(x => x.type === 'error');
+                                            const warnings = p.filter(x => x.type === 'warning');
+
+                                            // Render both icons when both present. Error icon should be above warning.
+                                            return (
+                                                <>
+                                                    {errors.length > 0 && (
+                                                        <button
+                                                            className="p-1 rounded-full bg-transparent hover:bg-alert/10"
+                                                            title={errors.map(x => x.message).join('; ')}
+                                                            aria-label={`Erreur: ${errors.length}`}
+                                                        >
+                                                            <XCircle size={18} className="text-red-600" />
+                                                        </button>
+                                                    )}
+
+                                                    {warnings.length > 0 && (
+                                                        <button
+                                                            className="p-1 rounded-full bg-transparent hover:bg-amber-100"
+                                                            title={warnings.map(x => x.message).join('; ')}
+                                                            aria-label={`Avertissement: ${warnings.length}`}
+                                                        >
+                                                            <AlertTriangle size={18} className="text-amber-500" />
+                                                        </button>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>

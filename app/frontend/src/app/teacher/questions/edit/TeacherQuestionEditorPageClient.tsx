@@ -388,6 +388,95 @@ export default function TeacherQuestionEditorPageClient() {
 
     const selectedQuestion = questions[selectedQuestionIndex];
 
+    // Compute per-question problems to show badges in the question list
+    // Problem format: { type: 'error'|'warning', message: string }
+    const problemsByQuestion = React.useMemo(() => {
+        // Try to parse the raw YAML so we detect missing fields exactly like Monaco's validation
+        try {
+            const parsed = yaml.load(yamlText);
+
+            if (!Array.isArray(parsed)) {
+                // If parsing doesn't produce an array, return empty problems (Monaco will show parse markers)
+                return questions.map(() => []);
+            }
+
+            // Initialize rawProblems array aligned to the parsed length (we'll later align to `questions`)
+            const rawProblems: Array<Array<{ type: 'error' | 'warning'; message: string }>> = parsed.map(() => []);
+
+            // Build uid count from parsed items
+            const uidCount: Record<string, number> = {};
+            parsed.forEach((item: any) => {
+                if (item && typeof item === 'object' && item.uid) uidCount[item.uid] = (uidCount[item.uid] || 0) + 1;
+            });
+
+            // Required fields (match Monaco's list)
+            const requiredFields = ['uid', 'author', 'discipline', 'title', 'text', 'questionType', 'themes', 'timeLimit', 'difficulty', 'gradeLevel'];
+
+            parsed.forEach((item: any, i: number) => {
+                if (!item || typeof item !== 'object') {
+                    rawProblems[i].push({ type: 'error', message: 'Entrée de question invalide' });
+                    return;
+                }
+
+                // Missing required fields -> ERROR (treat missing required fields as errors)
+                requiredFields.forEach((f) => {
+                    if (!(f in item) || item[f] === undefined || item[f] === null || item[f] === '') {
+                        rawProblems[i].push({ type: 'error', message: `Champ manquant : ${f}` });
+                    }
+                });
+
+                // Duplicate uid -> error
+                if (item.uid && uidCount[item.uid] > 1) {
+                    rawProblems[i].push({ type: 'error', message: 'uid non unique' });
+                }
+
+                // Type-specific checks
+                if (item.questionType === 'numeric') {
+                    if (typeof item.correctAnswer !== 'number') {
+                        rawProblems[i].push({ type: 'error', message: 'correctAnswer manquant ou invalide' });
+                    } else if (item.correctAnswer < 0) {
+                        rawProblems[i].push({ type: 'warning', message: 'Réponse numérique négative' });
+                    }
+                } else if (item.questionType === 'single_choice' || item.questionType === 'multiple_choice') {
+                    if (!Array.isArray(item.correctAnswers)) {
+                        rawProblems[i].push({ type: 'error', message: "correctAnswers manquant" });
+                    } else {
+                        const trueCount = item.correctAnswers.filter(Boolean).length;
+                        if (item.questionType === 'multiple_choice' && trueCount <= 1) {
+                            rawProblems[i].push({ type: 'warning', message: 'QCM avec une seule réponse correcte' });
+                        }
+                        if (item.questionType === 'single_choice' && trueCount !== 1) {
+                            rawProblems[i].push({ type: 'error', message: 'QCU doit avoir exactement une réponse correcte' });
+                        }
+                    }
+                }
+            });
+
+            // Align rawProblems to the current `questions` array so the UI can reliably
+            // look up problems by the question index. Prefer matching by uid when possible,
+            // falling back to positional mapping when uid is missing.
+            const problemsByUid: Record<string, Array<{ type: 'error' | 'warning'; message: string }>> = {};
+            rawProblems.forEach((arr, i) => {
+                const item = parsed[i];
+                const key = item && item.uid ? String(item.uid) : `__idx_${i}`;
+                problemsByUid[key] = arr;
+            });
+
+            const aligned: Array<Array<{ type: 'error' | 'warning'; message: string }>> = questions.map((q, i) => {
+                const keyByUid = q && q.uid ? String(q.uid) : undefined;
+                if (keyByUid && problemsByUid[keyByUid]) return problemsByUid[keyByUid];
+                // fallback to positional mapping if uid didn't match
+                const posKey = `__idx_${i}`;
+                return problemsByUid[posKey] || [];
+            });
+
+            return aligned;
+        } catch (e) {
+            // If YAML is invalid, Monaco will show markers; in this case we don't add per-question problems because parsing failed.
+            return questions.map(() => []);
+        }
+    }, [questions, yamlText]);
+
     const mobileTabs = [
         { id: 'questions', label: 'Questions' },
         { id: 'editor', label: 'Édition' },
@@ -524,6 +613,7 @@ export default function TeacherQuestionEditorPageClient() {
                                         onSelectQuestion={handleSelectQuestion}
                                         onAddQuestion={handleAddQuestion}
                                         onDeleteQuestion={handleDeleteQuestion}
+                                        problems={problemsByQuestion}
                                         sidebarCollapsed={effectiveCollapsed}
                                         onToggleSidebar={() => setSidebarCollapsed(s => !s)}
                                     />
