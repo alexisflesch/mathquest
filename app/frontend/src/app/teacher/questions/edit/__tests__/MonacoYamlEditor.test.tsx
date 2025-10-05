@@ -41,11 +41,17 @@ jest.mock('@monaco-editor/react', () => {
 // Helper to create mock Monaco editor instance
 function createMockEditor(initialValue: string, onChange: (value: string) => void): any {
     let content = initialValue;
+    const modelChangeCallbacks: any[] = [];
+    const selectionCallbacks: any[] = [];
+
     const model = {
         getValue: () => content,
         setValue: (newValue: string) => {
             content = newValue;
             onChange(newValue);
+            // trigger registered callbacks to simulate editor events
+            modelChangeCallbacks.forEach((cb: any) => cb());
+            selectionCallbacks.forEach((cb: any) => cb());
         },
         getValueInRange: (range: any) => {
             const lines = content.split('\n');
@@ -73,8 +79,22 @@ function createMockEditor(initialValue: string, onChange: (value: string) => voi
         getPosition: () => ({ lineNumber: 1, column: 1 }),
         focus: jest.fn(),
         onDidChangeModelContent: jest.fn((callback) => {
-            // Store callback for testing
-            return { dispose: jest.fn() };
+            modelChangeCallbacks.push(callback);
+            return {
+                dispose: jest.fn(() => {
+                    const idx = modelChangeCallbacks.indexOf(callback);
+                    if (idx !== -1) modelChangeCallbacks.splice(idx, 1);
+                })
+            };
+        }),
+        onDidChangeCursorSelection: jest.fn((callback) => {
+            selectionCallbacks.push(callback);
+            return {
+                dispose: jest.fn(() => {
+                    const idx = selectionCallbacks.indexOf(callback);
+                    if (idx !== -1) selectionCallbacks.splice(idx, 1);
+                })
+            };
         }),
     };
 }
