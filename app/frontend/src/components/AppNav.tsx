@@ -41,6 +41,7 @@ import {
     Moon,
     ClipboardList,
     User,
+    Edit,
 } from 'lucide-react';
 import { motion, useAnimation } from 'framer-motion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
@@ -141,6 +142,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
         'Se connecter': LogIn,
         'Enregistrer mon compte': UserPlus,
         'Profil requis': AlertTriangle,
+        'Éditer des questions': Edit,
     };
 
     // Menu structure based on the new 4-state authentication system
@@ -187,6 +189,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { defaultMode: 'section', label: 'Enseignant' },
                     { label: 'Mes activités', href: '/teacher/games' },
                     { label: 'Créer une activité', href: '/teacher/games/new' },
+                    { label: 'Éditer des questions', href: '/teacher/questions/edit' },
                     { defaultMode: 'section', label: 'Compte' },
                     { label: 'Mon profil', href: '/profile' },
                 ];

@@ -56,7 +56,7 @@ jest.mock('@monaco-editor/react', () => {
                 };
 
                 // expose the mock editor to the test via window so we can simulate typing
-                // @ts-ignore
+                // @ts-expect-error: assigning custom property to window for test mocking
                 window.__mockMonacoEditor = mockEditor;
 
                 onMount(mockEditor as any, mockMonaco as any);
@@ -80,7 +80,6 @@ describe('MonacoYamlEditor lag / excessive logging reproduction', () => {
     });
 
     afterEach(() => {
-        // @ts-ignore
         delete (window as any).__mockMonacoEditor;
     });
 
@@ -121,7 +120,6 @@ describe('MonacoYamlEditor lag / excessive logging reproduction', () => {
         });
 
         // Grab the mock editor exposed on window and simulate many typing updates
-        // @ts-ignore
         const mockEditor = (window as any).__mockMonacoEditor;
         expect(mockEditor).toBeDefined();
 
