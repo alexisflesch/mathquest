@@ -516,11 +516,13 @@ export default function TeacherQuestionEditorPageClient() {
         { id: 'preview', label: 'Aperçu' },
     ];
 
-    // We'll compute the mobile main container height dynamically by
-    // measuring the visible top bars and FAB so the content fits without
-    // producing a page scrollbar on small viewports.
+    // We'll compute the main container height dynamically by measuring the
+    // visible top bars and FAB so the content fits without producing a page
+    // scrollbar on small viewports. We attach a ref to the page header so
+    // measurements are reliable instead of querying fragile selectors.
     const mobileTabsRef = useRef<HTMLDivElement | null>(null);
     const mobileFabRef = useRef<HTMLDivElement | null>(null);
+    const pageHeaderRef = useRef<HTMLDivElement | null>(null);
     const [mainContainerInlineHeight, setMainContainerInlineHeight] = useState<string | undefined>(() => {
         if (typeof window !== 'undefined') return undefined;
         return undefined;
@@ -533,6 +535,8 @@ export default function TeacherQuestionEditorPageClient() {
         // Try to measure a top-level header if it exists in the DOM.
         const topHeader = document.querySelector('header') as HTMLElement | null;
         const topHeaderH = topHeader ? topHeader.clientHeight : 0;
+        // Prefer the explicit page header ref (more reliable than selector matching)
+        const pageHeaderH = pageHeaderRef.current ? pageHeaderRef.current.clientHeight : 0;
 
         if (isMobileWidth) {
             const tabsH = mobileTabsRef.current ? mobileTabsRef.current.clientHeight : 0;
@@ -540,17 +544,12 @@ export default function TeacherQuestionEditorPageClient() {
 
             // Add a small safety gap
             const safety = 12;
-            const reserved = topHeaderH + tabsH + fabH + safety;
+            const reserved = topHeaderH + pageHeaderH + tabsH + fabH + safety;
             setMainContainerInlineHeight(`calc(100vh - ${reserved}px)`);
         } else {
-            // Desktop: measure the page header
-            const pageHeader = document.querySelector('.bg-card.border-b-2.border-primary\\/20') as HTMLElement | null;
-            const pageHeaderH = pageHeader ? pageHeader.clientHeight : 0;
-
-            // Add padding and safety gap
-            const padding = 32; // 2 * p-4 (16px each side)
-            const safety = 8;
-            const reserved = topHeaderH + pageHeaderH + padding + safety;
+            // Desktop: use the requested 54px reserved height so top/bottom
+            // spacing visually matches the desired 54px.
+            const reserved = 54;
             setMainContainerInlineHeight(`calc(100vh - ${reserved}px)`);
         }
     };
@@ -598,7 +597,7 @@ export default function TeacherQuestionEditorPageClient() {
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
             {/* Header - hidden on small viewports to save vertical space */}
             {!isMobileWidth && (
-                <div className="bg-card border-b-2 border-primary/20 shadow-md px-6 py-2">
+                <div ref={pageHeaderRef} className="bg-card border-b-2 border-primary/20 shadow-md px-6 py-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-md">
@@ -630,7 +629,7 @@ export default function TeacherQuestionEditorPageClient() {
             </div>
 
             {/* Main Layout */}
-            <div className="p-4 min-h-0" style={{ height: mainContainerInlineHeight }}>
+            <div className="pt-5 pb-5 px-4 min-h-0" style={{ height: mainContainerInlineHeight }}>
                 {/** Compute grid template columns: left (collapsed or full), center flex, preview clamp **/}
                 {(() => {
                     const effectiveCollapsed = sidebarCollapsed || sidebarForcedCollapsed;
