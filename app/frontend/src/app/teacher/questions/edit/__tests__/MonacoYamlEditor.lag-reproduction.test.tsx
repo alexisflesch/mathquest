@@ -51,8 +51,8 @@ jest.mock('@monaco-editor/react', () => {
                 };
 
                 const mockMonaco = {
-                    languages: { registerCompletionItemProvider: () => ({ dispose: () => {} }) },
-                    editor: { setModelMarkers: () => {} },
+                    languages: { registerCompletionItemProvider: () => ({ dispose: () => { } }) },
+                    editor: { setModelMarkers: () => { } },
                 };
 
                 // expose the mock editor to the test via window so we can simulate typing
@@ -85,7 +85,7 @@ describe('MonacoYamlEditor lag / excessive logging reproduction', () => {
     });
 
     it('should not produce excessive console.debug calls while typing rapidly', async () => {
-        const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+        const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => { });
 
         // Wrapper that connects editor -> state -> QuestionList
         function Wrapper() {

@@ -250,11 +250,19 @@ export default function TeacherQuestionEditorPageClient() {
         }
     }, []);
 
-    // Autosave to localStorage
+    // Autosave to localStorage (debounced to avoid blocking main thread on every keystroke)
     useEffect(() => {
-        if (yamlText) {
-            localStorage.setItem('question-editor-yaml', yamlText);
-        }
+        const timer = setTimeout(() => {
+            try {
+                if (yamlText) {
+                    localStorage.setItem('question-editor-yaml', yamlText);
+                }
+            } catch (e) {
+                // ignore storage errors
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
     }, [yamlText]);
 
     const handleSelectQuestion = (index: number) => {

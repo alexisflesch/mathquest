@@ -24,7 +24,7 @@
  *
  * See README.md for logging and documentation standards.
  */
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { MathJaxContext, MathJax } from 'better-react-mathjax';
 import { createLogger } from '../clientLogger';
 import dynamic from 'next/dynamic';
@@ -65,7 +65,7 @@ export interface MathJaxWrapperProps {
 }
 
 // Client-side only MathJax component
-const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor = 1 }) => {
+const ClientOnlyMathJaxInner: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor = 1 }) => {
     const [isClient, setIsClient] = useState(false);
     // Ref to track changes to zoomFactor
     const prevZoomRef = useRef(zoomFactor);
@@ -91,15 +91,35 @@ const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor
         fontSize: `${zoomFactor}em`,
     };
 
+    // Memoize the children content as a string so we avoid re-typesetting when
+    // the input hasn't changed. If children is not a string, fallback to React's
+    // default identity (will re-render).
+    const childrenString = useMemo(() => {
+        if (typeof children === 'string') return children;
+        try {
+            // Attempt to stringify common React nodes (arrays, fragments)
+            return JSON.stringify(children);
+        } catch (e) {
+            return undefined;
+        }
+    }, [children]);
+
     return (
         <MathJaxContext config={mathJaxConfig} version={3}>
             {isClient ? (
-                <div style={containerStyle} className={("")}>
+                <div style={containerStyle} className={("") }>
                     <MathJax
                         dynamic={true}
                         onError={err => logger.error('MathJax error', err)}
                     >
-                        {children}
+                        {childrenString !== undefined ? (
+                            // When we can represent children deterministically as a string,
+                            // render that string (ensures stable identity between renders)
+                            childrenString
+                        ) : (
+                            // Fallback to original children when we can't stringify
+                            children
+                        )}
                     </MathJax>
                 </div>
             ) : (
@@ -108,6 +128,11 @@ const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor
         </MathJaxContext>
     );
 };
+
+// Wrap the inner component with React.memo so that re-renders only happen when
+// props change (shallow compare). The main benefit is preventing parent re-renders
+// from forcing MathJax to re-typeset when `children` content is stable.
+const ClientOnlyMathJax = React.memo(ClientOnlyMathJaxInner);
 
 // Use Next.js dynamic import with ssr: false to completely skip server-side rendering
 const MathJaxWrapper = dynamic(() => Promise.resolve(ClientOnlyMathJax), {

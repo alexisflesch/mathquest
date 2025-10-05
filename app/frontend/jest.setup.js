@@ -190,3 +190,73 @@ if (typeof window !== 'undefined' && !window.StorageEvent) {
         storageArea;
     };
 }
+
+// Global mock for @monaco-editor/react to ensure tests get a stable, synchronous
+// mock editor instead of the real loader which renders a Loading placeholder in jsdom.
+// This mirrors the small in-test mock used by some unit tests but centralizes it so
+// all tests benefit and behave consistently.
+try {
+    // Only apply when running under Jest
+    if (typeof jest !== 'undefined') {
+        jest.mock('@monaco-editor/react', () => {
+            const React = require('react');
+
+            const MockMonacoEditor = (props) => {
+                const { onMount, value, onChange } = props || {};
+                React.useEffect(() => {
+                    if (onMount) {
+                        let content = value || '';
+
+                        const modelChangeCallbacks = [];
+                        const selectionCallbacks = [];
+
+                        const model = {
+                            getValue: () => content,
+                            setValue: (v) => {
+                                content = v;
+                                if (onChange) onChange(v);
+                                modelChangeCallbacks.forEach((cb) => cb());
+                                selectionCallbacks.forEach((cb) => cb());
+                            },
+                            getValueInRange: () => '',
+                            getWordUntilPosition: () => ({ word: '', startColumn: 1, endColumn: 1 }),
+                            getOffsetAt: () => 0,
+                        };
+
+                        const mockEditor = {
+                            getModel: () => model,
+                            setValue: model.setValue,
+                            focus: () => { },
+                            setPosition: () => { },
+                            revealPositionInCenter: () => { },
+                            onDidChangeModelContent: (cb) => { modelChangeCallbacks.push(cb); return { dispose: () => { } }; },
+                            onDidChangeCursorSelection: (cb) => { selectionCallbacks.push(cb); return { dispose: () => { } }; },
+                            getPosition: () => ({ lineNumber: 1, column: 1 }),
+                        };
+
+                        const mockMonaco = {
+                            languages: { registerCompletionItemProvider: () => ({ dispose: () => { } }) },
+                            editor: { setModelMarkers: () => { }, setTheme: () => { } },
+                            MarkerSeverity: { Error: 8, Warning: 4, Info: 2, Hint: 1 },
+                        };
+
+                        if (typeof window !== 'undefined') window.__mockMonacoEditor = mockEditor;
+
+                        // Call the onMount hook to simulate real Monaco mounting
+                        try {
+                            onMount(mockEditor, mockMonaco);
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                }, [onMount, value, onChange]);
+
+                return React.createElement('div', { 'data-testid': 'monaco-editor' }, value || '');
+            };
+
+            return { __esModule: true, default: MockMonacoEditor };
+        });
+    }
+} catch (e) {
+    // If mocking fails for any reason (non-Jest environment), silently ignore.
+}
