@@ -99,15 +99,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
 
     const questionData = convertToQuestionDataForStudent(question);
 
-    useEffect(() => {
-        try {
-            console.info('[QuestionPreview DEBUG] question prop:', question);
-            console.info('[QuestionPreview DEBUG] derived questionData:', questionData);
-        } catch (e) {
-            // ignore
-        }
-    }, [question, questionData]);
-
     // Determine if this is a multiple choice question (needed for QuestionCard)
     const isMultipleChoice = question.questionType === 'single_choice' || question.questionType === 'multiple_choice';
 

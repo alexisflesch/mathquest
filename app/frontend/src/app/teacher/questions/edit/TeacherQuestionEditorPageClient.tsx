@@ -233,35 +233,18 @@ export default function TeacherQuestionEditorPageClient() {
     useEffect(() => {
         try {
             const saved = localStorage.getItem('question-editor-yaml');
-            // DEBUG: Log what we actually read from localStorage immediately (avoid relying on state values)
-            try {
-                console.info('[TeacherQuestionEditor DEBUG] raw saved from localStorage:', saved);
-            } catch (e) {
-                // ignore
-            }
             if (saved) {
                 try {
-                    // Try parsing here and log parsing result so we can see what's happening on the VPS
-                    let parsedPreview: any = undefined;
-                    try {
-                        parsedPreview = yaml.load(saved);
-                        console.info('[TeacherQuestionEditor DEBUG] parsedPreview (yaml.load):', parsedPreview);
-                    } catch (parseErr: any) {
-                        console.warn('[TeacherQuestionEditor DEBUG] yaml.load parse error:', (parseErr && parseErr.message) || parseErr);
-                    }
+                    // Try parsing here to validate
+                    yaml.load(saved);
+                } catch (parseErr: any) {
+                    console.warn('yaml.load parse error:', (parseErr && parseErr.message) || parseErr);
+                }
 
+                try {
                     setYamlText(saved);
                     const parsedQuestions = parseYamlToQuestions(saved);
                     setQuestions(parsedQuestions);
-
-                    // DEBUG: print what was set so we can inspect runtime values in production builds
-                    // Remove this log after debugging the VPS issue.
-                    try {
-                        console.info('[TeacherQuestionEditor DEBUG] set yamlText to:', saved);
-                        console.info('[TeacherQuestionEditor DEBUG] set questions to:', parsedQuestions);
-                    } catch (e) {
-                        // ignore
-                    }
                 } catch (e) {
                     // If parsing failed, create a default question for the in-memory editor
                     // but DO NOT overwrite the user's saved YAML in localStorage. Overwriting
