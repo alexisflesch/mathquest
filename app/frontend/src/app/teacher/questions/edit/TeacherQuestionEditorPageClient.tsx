@@ -268,6 +268,18 @@ export default function TeacherQuestionEditorPageClient() {
             setQuestions([defaultQuestion]);
             setYamlText(questionsToYaml([defaultQuestion]));
         }
+
+        // DEBUG: print loaded state once so we can inspect runtime values in production builds
+        // Remove this log after debugging the VPS issue.
+        try {
+            // Slight delay to ensure state setters above have been applied in the mounted component
+            setTimeout(() => {
+                console.info('[TeacherQuestionEditor DEBUG] yamlText (initial):', yamlText);
+                console.info('[TeacherQuestionEditor DEBUG] questions (initial):', questions);
+            }, 50);
+        } catch (e) {
+            // ignore
+        }
     }, []);
 
     // Autosave to localStorage (debounced to avoid blocking main thread on every keystroke)
