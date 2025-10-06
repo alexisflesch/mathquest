@@ -169,8 +169,9 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             {/* Question text */}
             <div
                 className={`text-xl font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}
-                // Inline style: robustly enforce horizontal scrolling and no vertical scrollbars
-                style={{ overflowX: 'auto', overflowY: 'visible' }}
+                // Inline style: allow the MathJax container to expand vertically while preserving horizontal scrolling.
+                // alignSelf/stretch and minHeight:0 help avoid flexbox compression from ancestors.
+                style={{ display: 'block', alignSelf: 'stretch', minHeight: 0 as any, overflowX: 'auto', overflowY: 'visible' }}
             >
                 <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
             </div>
@@ -288,6 +289,9 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                             } else {
                                 statPercent = null;
                             }
+                            // Detect display-mode LaTeX (\[ ... \] or \begin{...}) in the answer text.
+                            const hasDisplayMath = typeof answerText === 'string' && (/\\\[|\\begin\{/).test(answerText);
+
                             return (
                                 <li
                                     key={idx}
@@ -315,7 +319,18 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                         disabled={false}
                                         aria-disabled={readonly}
                                         tabIndex={readonly ? -1 : 0}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflowX: 'auto', overflowY: 'visible' }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: hasDisplayMath ? 'flex-start' : 'center',
+                                            justifyContent: 'space-between',
+                                            position: 'relative',
+                                            overflowX: 'auto',
+                                            overflowY: 'visible',
+                                            // Relax minHeight for answers containing display math so the button can grow
+                                            minHeight: hasDisplayMath ? 'auto' : undefined,
+                                            paddingTop: hasDisplayMath ? '0.75rem' : undefined,
+                                            paddingBottom: hasDisplayMath ? '0.75rem' : undefined,
+                                        }}
                                     >
                                         {/* Histogram bar as background */}
                                         {showStats && statPercent !== null && (
@@ -336,7 +351,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                             />
                                         )}
                                         {/* Button content above the bar */}
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+                                        <span style={{ display: 'block', alignItems: 'flex-start', position: 'relative', zIndex: 1, width: '100%' }}>
                                             <MathJaxWrapper>{answerText}</MathJaxWrapper>
                                         </span>
                                         {/* Right-aligned percentage and icon */}

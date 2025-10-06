@@ -1,0 +1,93 @@
+/* mathjax-overrides.css
+
+   Purpose: keep MathJax-specific layout overrides in one small file so
+   `globals.css` stays manageable. These rules are narrowly scoped to
+   question display containers (.question-text-in-live-page and
+   .question-text-in-dashboards) and target MathJax display-mode and
+   container elements which can introduce fractional/rounded heights
+   resulting in unwanted vertical scrollbars inside question cards.
+
+   Approach: Prefer letting MathJax expand vertically (overflow-y: visible)
+   while allowing horizontal scrolling for wide formulas (overflow-x: auto).
+   This avoids clipping content while removing internal vertical scrollbars.
+*/
+
+/* Narrow scope: question text in live pages
+   IMPORTANT: avoid applying to every descendant (no "*") because MathJax
+   creates many internal boxes; setting overflow on every inner node
+   produces nested scrollbars. Instead, target only the outer wrapper and
+   the MathJax container elements, then force inner MathJax children to
+   remain visible (no scroll) so only the outer element can scroll.
+*/
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page {
+    /* allow horizontal scrolling for wide formulas, allow vertical expansion */
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+/* MathJax display-mode and block wrappers (\[ ... \]) */
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .MathJax_Display,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-block,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-chtml,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .MathJax {
+    /* Keep horizontal scrolling for wide formulas, but do not create vertical scrollbars */
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+/* Prevent nested MathJax children from becoming scrollable. Target inner
+   rendered nodes inside the MathJax / mjx-chtml wrappers so glyph boxes
+   don't get their own scrollbars. */
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .MathJax *,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-chtml * {
+    overflow: visible !important;
+}
+
+/* Apply same treatment to dashboard/tournament variants */
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .MathJax_Display,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-chtml,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .MathJax {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .MathJax *,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-chtml * {
+    overflow: visible !important;
+}
+
+/* MathJax inside answer buttons (multiple-choice answers)
+   The answers render MathJax inside buttons with class `tqcard-answer`.
+   Ensure MathJax containers inside answers can expand vertically and
+   that inner MathJax children don't create nested scrollbars. */
+.card.w-full.max-w-2xl .tqcard-content .tqcard-answer .MathJax,
+.card.w-full.max-w-2xl .tqcard-content .tqcard-answer mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .tqcard-answer .mjx-chtml,
+.card.w-full.max-w-2xl .tqcard-content .tqcard-answer .MathJax {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.card.w-full.max-w-2xl .tqcard-content .tqcard-answer .MathJax *,
+.card.w-full.max-w-2xl .tqcard-content .tqcard-answer .mjx-chtml * {
+    overflow: visible !important;
+}
+
+/* Force mjx-container to size to its content inside question cards and answers.
+   MathJax sometimes sets internal scroll regions; this rule forces the container
+   to grow vertically so scrollHeight == clientHeight and no scrollbar appears. */
+/* (removed aggressive mjx-container sizing — keep lighter-weight rules above)
+   The earlier forced sizing caused a blank scroll area; we prefer component-level
+   structural fixes and targeted answer-button overrides instead. */
