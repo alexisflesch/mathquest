@@ -284,6 +284,9 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <div className="flex-1 overflow-y-auto p-6">
                 {mode === 'form' ? (
                     <div className="space-y-6">
+                        {/* Paramètres - moved before Title and bold */}
+                        <h2 className="text-lg font-semibold my-3">Paramètres</h2>
+
                         {/* Title - Prominent */}
                         <div>
                             <div className="relative">
@@ -298,9 +301,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 />
                             </div>
                         </div>
-
-                        {/* Second row: informational left-aligned label */}
-                        <div className="text-m text-muted-foreground mb-2">Paramètres</div>
 
                         {/* Two-column stacked controls: left column shows Niveau then Thèmes; right column shows Discipline then Tags */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -429,8 +429,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                             </div>
                         </div>
 
-                        {/* Combined Question + Answer Card */}
-                        <div className="bg-card p-4 rounded-lg border border-dropdown-border">
+                        {/* Question heading */}
+                        <h2 className="text-lg font-semibold my-3">Question</h2>
+
+                        {/* Combined Question + Answer (no outer border) */}
                             {/* Question Text area with icon */}
                             <div className="relative mb-4">
                                 <MessageSquare className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />
@@ -503,10 +505,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     </div>
                                 </div>
                             )}
-                        </div>
 
-                        {/* Explanation and Feedback Settings */}
-                        <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-dropdown-border">
+                        {/* Explication and Feedback Settings */}
+                        <h2 className="text-lg font-semibold my-3">Explication</h2>
+                        <div className="space-y-4 bg-muted/30 p-4 rounded-lg">
                             <div>
                                 <div className="relative">
                                     <Lightbulb className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />
@@ -538,11 +540,9 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                 ) : (
                     <div className="flex flex-col h-full">
                         <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2 text-foreground">
+                                <div className="flex items-center gap-2 text-foreground">
                                 <FileCode className="w-5 h-5" />
-                                <label className="block text-sm font-semibold">
-                                    Éditeur YAML
-                                </label>
+                                <h2 className="text-lg font-semibold my-3">Éditeur YAML</h2>
                             </div>
                             <div className="flex items-center gap-1 text-xs text-success font-medium px-3 py-1 bg-success/10 rounded-full">
                                 <CheckCheck className="w-3 h-3" />
