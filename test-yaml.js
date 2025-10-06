@@ -18,8 +18,8 @@ const testYaml = `- uid: question-1759738086489
 - uid: fdqjklm`;
 
 try {
-  const parsed = yaml.load(testYaml);
-  console.log('Parsed YAML:', JSON.stringify(parsed, null, 2));
+    const parsed = yaml.load(testYaml);
+    console.log('Parsed YAML:', JSON.stringify(parsed, null, 2));
 } catch (e) {
-  console.error('Parse error:', e.message);
+    console.error('Parse error:', e.message);
 }
