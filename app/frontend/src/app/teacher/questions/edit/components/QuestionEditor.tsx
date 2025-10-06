@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 import { EditorQuestion, isNumericQuestion, isMultipleChoiceQuestion, questionToYaml } from '../types';
 import { ParsedMetadata } from '../types/metadata';
 import { getDisciplinesForGradeLevel, getThemesForDiscipline, getTagsForThemes } from '../utils/metadata';
@@ -59,6 +60,9 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
     onEditorReady,
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Auth for pre-filling author
+    const { userProfile } = useAuth();
 
     // Cascading dropdown state
     const [availableDisciplines, setAvailableDisciplines] = useState<string[]>([]);
@@ -366,7 +370,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                     <input
                                         type="text"
-                                        value={question.author || ''}
+                                        value={question.author || userProfile?.username || ''}
                                         onChange={(e) => handleFieldChange('author', e.target.value)}
                                         placeholder="Auteur"
                                         title="Auteur"

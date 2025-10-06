@@ -86,9 +86,9 @@ export const createEmptyQuestion = (uid?: string): EditorQuestion => {
     const questionUid = uid || `question-${Date.now()}`;
     return {
         uid: questionUid,
-        author: 'Teacher',
-        discipline: 'Mathématiques',
-        title: 'Nouvelle question',
+        author: '',
+        discipline: '',
+        title: '',
         // Leave the stored text empty by default; helper/placeholder text is shown in the editor UI
         text: '',
         questionType: 'numeric',
@@ -96,7 +96,7 @@ export const createEmptyQuestion = (uid?: string): EditorQuestion => {
         tags: [],
         timeLimit: 30,
         difficulty: 1,
-        gradeLevel: 'CP',
+        gradeLevel: '',
         explanation: '',
         feedbackWaitTime: 15,
         correctAnswer: 0,
