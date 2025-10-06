@@ -7,6 +7,7 @@ import gameControlRouter from './gameControl'; // Added import for gameControlRo
 import quizTemplatesRouter from './quizTemplates'; // Import quizTemplatesRouter
 import gamesRouter from './games'; // Re-enabled gamesRouter
 import questionsRouter from './questions'; // Import questionsRouter
+import taxonomyRouter from './taxonomy';
 import studentRouter from './student'; // Import studentRouter
 import usersRouter from './users'; // Import usersRouter
 import myTournamentsRouter from './myTournaments'; // Import myTournamentsRouter
@@ -37,6 +38,9 @@ router.use('/games', gamesRouter); // Re-enabled gamesRouter mounting
 
 // Mount the game control router
 router.use('/game-control', gameControlRouter);
+
+// Mount the taxonomy router BEFORE questions router (more specific route first)
+router.use('/questions/taxonomy', taxonomyRouter);
 
 // Mount the questions router (no teacherAuth, allow public GET)
 router.use('/questions', questionsRouter);

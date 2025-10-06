@@ -63,6 +63,11 @@ export type GameInstance = $Result.DefaultSelection<Prisma.$GameInstancePayload>
  * 
  */
 export type GameParticipant = $Result.DefaultSelection<Prisma.$GameParticipantPayload>
+/**
+ * Model Taxonomy
+ * 
+ */
+export type Taxonomy = $Result.DefaultSelection<Prisma.$TaxonomyPayload>
 
 /**
  * Enums
@@ -333,6 +338,16 @@ export class PrismaClient<
     * ```
     */
   get gameParticipant(): Prisma.GameParticipantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.taxonomy`: Exposes CRUD operations for the **Taxonomy** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Taxonomies
+    * const taxonomies = await prisma.taxonomy.findMany()
+    * ```
+    */
+  get taxonomy(): Prisma.TaxonomyDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -782,7 +797,8 @@ export namespace Prisma {
     GameTemplate: 'GameTemplate',
     QuestionsInGameTemplate: 'QuestionsInGameTemplate',
     GameInstance: 'GameInstance',
-    GameParticipant: 'GameParticipant'
+    GameParticipant: 'GameParticipant',
+    Taxonomy: 'Taxonomy'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -801,7 +817,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "teacherProfile" | "studentProfile" | "question" | "multipleChoiceQuestion" | "numericQuestion" | "gameTemplate" | "questionsInGameTemplate" | "gameInstance" | "gameParticipant"
+      modelProps: "user" | "teacherProfile" | "studentProfile" | "question" | "multipleChoiceQuestion" | "numericQuestion" | "gameTemplate" | "questionsInGameTemplate" | "gameInstance" | "gameParticipant" | "taxonomy"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1545,6 +1561,80 @@ export namespace Prisma {
           }
         }
       }
+      Taxonomy: {
+        payload: Prisma.$TaxonomyPayload<ExtArgs>
+        fields: Prisma.TaxonomyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TaxonomyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TaxonomyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>
+          }
+          findFirst: {
+            args: Prisma.TaxonomyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TaxonomyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>
+          }
+          findMany: {
+            args: Prisma.TaxonomyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>[]
+          }
+          create: {
+            args: Prisma.TaxonomyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>
+          }
+          createMany: {
+            args: Prisma.TaxonomyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TaxonomyCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>[]
+          }
+          delete: {
+            args: Prisma.TaxonomyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>
+          }
+          update: {
+            args: Prisma.TaxonomyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>
+          }
+          deleteMany: {
+            args: Prisma.TaxonomyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TaxonomyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TaxonomyUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>[]
+          }
+          upsert: {
+            args: Prisma.TaxonomyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxonomyPayload>
+          }
+          aggregate: {
+            args: Prisma.TaxonomyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTaxonomy>
+          }
+          groupBy: {
+            args: Prisma.TaxonomyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TaxonomyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TaxonomyCountArgs<ExtArgs>
+            result: $Utils.Optional<TaxonomyCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1639,6 +1729,7 @@ export namespace Prisma {
     questionsInGameTemplate?: QuestionsInGameTemplateOmit
     gameInstance?: GameInstanceOmit
     gameParticipant?: GameParticipantOmit
+    taxonomy?: TaxonomyOmit
   }
 
   /* Types for Logging */
@@ -13289,6 +13380,997 @@ export namespace Prisma {
 
 
   /**
+   * Model Taxonomy
+   */
+
+  export type AggregateTaxonomy = {
+    _count: TaxonomyCountAggregateOutputType | null
+    _min: TaxonomyMinAggregateOutputType | null
+    _max: TaxonomyMaxAggregateOutputType | null
+  }
+
+  export type TaxonomyMinAggregateOutputType = {
+    id: string | null
+    gradeLevel: string | null
+    contentHash: string | null
+    updatedAt: Date | null
+  }
+
+  export type TaxonomyMaxAggregateOutputType = {
+    id: string | null
+    gradeLevel: string | null
+    contentHash: string | null
+    updatedAt: Date | null
+  }
+
+  export type TaxonomyCountAggregateOutputType = {
+    id: number
+    gradeLevel: number
+    content: number
+    contentHash: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TaxonomyMinAggregateInputType = {
+    id?: true
+    gradeLevel?: true
+    contentHash?: true
+    updatedAt?: true
+  }
+
+  export type TaxonomyMaxAggregateInputType = {
+    id?: true
+    gradeLevel?: true
+    contentHash?: true
+    updatedAt?: true
+  }
+
+  export type TaxonomyCountAggregateInputType = {
+    id?: true
+    gradeLevel?: true
+    content?: true
+    contentHash?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TaxonomyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Taxonomy to aggregate.
+     */
+    where?: TaxonomyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Taxonomies to fetch.
+     */
+    orderBy?: TaxonomyOrderByWithRelationInput | TaxonomyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TaxonomyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Taxonomies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Taxonomies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Taxonomies
+    **/
+    _count?: true | TaxonomyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TaxonomyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TaxonomyMaxAggregateInputType
+  }
+
+  export type GetTaxonomyAggregateType<T extends TaxonomyAggregateArgs> = {
+        [P in keyof T & keyof AggregateTaxonomy]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTaxonomy[P]>
+      : GetScalarType<T[P], AggregateTaxonomy[P]>
+  }
+
+
+
+
+  export type TaxonomyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TaxonomyWhereInput
+    orderBy?: TaxonomyOrderByWithAggregationInput | TaxonomyOrderByWithAggregationInput[]
+    by: TaxonomyScalarFieldEnum[] | TaxonomyScalarFieldEnum
+    having?: TaxonomyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TaxonomyCountAggregateInputType | true
+    _min?: TaxonomyMinAggregateInputType
+    _max?: TaxonomyMaxAggregateInputType
+  }
+
+  export type TaxonomyGroupByOutputType = {
+    id: string
+    gradeLevel: string
+    content: JsonValue
+    contentHash: string | null
+    updatedAt: Date
+    _count: TaxonomyCountAggregateOutputType | null
+    _min: TaxonomyMinAggregateOutputType | null
+    _max: TaxonomyMaxAggregateOutputType | null
+  }
+
+  type GetTaxonomyGroupByPayload<T extends TaxonomyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TaxonomyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TaxonomyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TaxonomyGroupByOutputType[P]>
+            : GetScalarType<T[P], TaxonomyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TaxonomySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    gradeLevel?: boolean
+    content?: boolean
+    contentHash?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["taxonomy"]>
+
+  export type TaxonomySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    gradeLevel?: boolean
+    content?: boolean
+    contentHash?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["taxonomy"]>
+
+  export type TaxonomySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    gradeLevel?: boolean
+    content?: boolean
+    contentHash?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["taxonomy"]>
+
+  export type TaxonomySelectScalar = {
+    id?: boolean
+    gradeLevel?: boolean
+    content?: boolean
+    contentHash?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TaxonomyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "gradeLevel" | "content" | "contentHash" | "updatedAt", ExtArgs["result"]["taxonomy"]>
+
+  export type $TaxonomyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Taxonomy"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      gradeLevel: string
+      content: Prisma.JsonValue
+      contentHash: string | null
+      updatedAt: Date
+    }, ExtArgs["result"]["taxonomy"]>
+    composites: {}
+  }
+
+  type TaxonomyGetPayload<S extends boolean | null | undefined | TaxonomyDefaultArgs> = $Result.GetResult<Prisma.$TaxonomyPayload, S>
+
+  type TaxonomyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TaxonomyFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TaxonomyCountAggregateInputType | true
+    }
+
+  export interface TaxonomyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Taxonomy'], meta: { name: 'Taxonomy' } }
+    /**
+     * Find zero or one Taxonomy that matches the filter.
+     * @param {TaxonomyFindUniqueArgs} args - Arguments to find a Taxonomy
+     * @example
+     * // Get one Taxonomy
+     * const taxonomy = await prisma.taxonomy.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TaxonomyFindUniqueArgs>(args: SelectSubset<T, TaxonomyFindUniqueArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Taxonomy that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TaxonomyFindUniqueOrThrowArgs} args - Arguments to find a Taxonomy
+     * @example
+     * // Get one Taxonomy
+     * const taxonomy = await prisma.taxonomy.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TaxonomyFindUniqueOrThrowArgs>(args: SelectSubset<T, TaxonomyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Taxonomy that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxonomyFindFirstArgs} args - Arguments to find a Taxonomy
+     * @example
+     * // Get one Taxonomy
+     * const taxonomy = await prisma.taxonomy.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TaxonomyFindFirstArgs>(args?: SelectSubset<T, TaxonomyFindFirstArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Taxonomy that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxonomyFindFirstOrThrowArgs} args - Arguments to find a Taxonomy
+     * @example
+     * // Get one Taxonomy
+     * const taxonomy = await prisma.taxonomy.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TaxonomyFindFirstOrThrowArgs>(args?: SelectSubset<T, TaxonomyFindFirstOrThrowArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Taxonomies that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxonomyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Taxonomies
+     * const taxonomies = await prisma.taxonomy.findMany()
+     * 
+     * // Get first 10 Taxonomies
+     * const taxonomies = await prisma.taxonomy.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const taxonomyWithIdOnly = await prisma.taxonomy.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TaxonomyFindManyArgs>(args?: SelectSubset<T, TaxonomyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Taxonomy.
+     * @param {TaxonomyCreateArgs} args - Arguments to create a Taxonomy.
+     * @example
+     * // Create one Taxonomy
+     * const Taxonomy = await prisma.taxonomy.create({
+     *   data: {
+     *     // ... data to create a Taxonomy
+     *   }
+     * })
+     * 
+     */
+    create<T extends TaxonomyCreateArgs>(args: SelectSubset<T, TaxonomyCreateArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Taxonomies.
+     * @param {TaxonomyCreateManyArgs} args - Arguments to create many Taxonomies.
+     * @example
+     * // Create many Taxonomies
+     * const taxonomy = await prisma.taxonomy.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TaxonomyCreateManyArgs>(args?: SelectSubset<T, TaxonomyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Taxonomies and returns the data saved in the database.
+     * @param {TaxonomyCreateManyAndReturnArgs} args - Arguments to create many Taxonomies.
+     * @example
+     * // Create many Taxonomies
+     * const taxonomy = await prisma.taxonomy.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Taxonomies and only return the `id`
+     * const taxonomyWithIdOnly = await prisma.taxonomy.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TaxonomyCreateManyAndReturnArgs>(args?: SelectSubset<T, TaxonomyCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Taxonomy.
+     * @param {TaxonomyDeleteArgs} args - Arguments to delete one Taxonomy.
+     * @example
+     * // Delete one Taxonomy
+     * const Taxonomy = await prisma.taxonomy.delete({
+     *   where: {
+     *     // ... filter to delete one Taxonomy
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TaxonomyDeleteArgs>(args: SelectSubset<T, TaxonomyDeleteArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Taxonomy.
+     * @param {TaxonomyUpdateArgs} args - Arguments to update one Taxonomy.
+     * @example
+     * // Update one Taxonomy
+     * const taxonomy = await prisma.taxonomy.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TaxonomyUpdateArgs>(args: SelectSubset<T, TaxonomyUpdateArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Taxonomies.
+     * @param {TaxonomyDeleteManyArgs} args - Arguments to filter Taxonomies to delete.
+     * @example
+     * // Delete a few Taxonomies
+     * const { count } = await prisma.taxonomy.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TaxonomyDeleteManyArgs>(args?: SelectSubset<T, TaxonomyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Taxonomies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxonomyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Taxonomies
+     * const taxonomy = await prisma.taxonomy.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TaxonomyUpdateManyArgs>(args: SelectSubset<T, TaxonomyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Taxonomies and returns the data updated in the database.
+     * @param {TaxonomyUpdateManyAndReturnArgs} args - Arguments to update many Taxonomies.
+     * @example
+     * // Update many Taxonomies
+     * const taxonomy = await prisma.taxonomy.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Taxonomies and only return the `id`
+     * const taxonomyWithIdOnly = await prisma.taxonomy.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TaxonomyUpdateManyAndReturnArgs>(args: SelectSubset<T, TaxonomyUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Taxonomy.
+     * @param {TaxonomyUpsertArgs} args - Arguments to update or create a Taxonomy.
+     * @example
+     * // Update or create a Taxonomy
+     * const taxonomy = await prisma.taxonomy.upsert({
+     *   create: {
+     *     // ... data to create a Taxonomy
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Taxonomy we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TaxonomyUpsertArgs>(args: SelectSubset<T, TaxonomyUpsertArgs<ExtArgs>>): Prisma__TaxonomyClient<$Result.GetResult<Prisma.$TaxonomyPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Taxonomies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxonomyCountArgs} args - Arguments to filter Taxonomies to count.
+     * @example
+     * // Count the number of Taxonomies
+     * const count = await prisma.taxonomy.count({
+     *   where: {
+     *     // ... the filter for the Taxonomies we want to count
+     *   }
+     * })
+    **/
+    count<T extends TaxonomyCountArgs>(
+      args?: Subset<T, TaxonomyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TaxonomyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Taxonomy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxonomyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TaxonomyAggregateArgs>(args: Subset<T, TaxonomyAggregateArgs>): Prisma.PrismaPromise<GetTaxonomyAggregateType<T>>
+
+    /**
+     * Group by Taxonomy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxonomyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TaxonomyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TaxonomyGroupByArgs['orderBy'] }
+        : { orderBy?: TaxonomyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TaxonomyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTaxonomyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Taxonomy model
+   */
+  readonly fields: TaxonomyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Taxonomy.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TaxonomyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Taxonomy model
+   */
+  interface TaxonomyFieldRefs {
+    readonly id: FieldRef<"Taxonomy", 'String'>
+    readonly gradeLevel: FieldRef<"Taxonomy", 'String'>
+    readonly content: FieldRef<"Taxonomy", 'Json'>
+    readonly contentHash: FieldRef<"Taxonomy", 'String'>
+    readonly updatedAt: FieldRef<"Taxonomy", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Taxonomy findUnique
+   */
+  export type TaxonomyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * Filter, which Taxonomy to fetch.
+     */
+    where: TaxonomyWhereUniqueInput
+  }
+
+  /**
+   * Taxonomy findUniqueOrThrow
+   */
+  export type TaxonomyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * Filter, which Taxonomy to fetch.
+     */
+    where: TaxonomyWhereUniqueInput
+  }
+
+  /**
+   * Taxonomy findFirst
+   */
+  export type TaxonomyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * Filter, which Taxonomy to fetch.
+     */
+    where?: TaxonomyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Taxonomies to fetch.
+     */
+    orderBy?: TaxonomyOrderByWithRelationInput | TaxonomyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Taxonomies.
+     */
+    cursor?: TaxonomyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Taxonomies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Taxonomies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Taxonomies.
+     */
+    distinct?: TaxonomyScalarFieldEnum | TaxonomyScalarFieldEnum[]
+  }
+
+  /**
+   * Taxonomy findFirstOrThrow
+   */
+  export type TaxonomyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * Filter, which Taxonomy to fetch.
+     */
+    where?: TaxonomyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Taxonomies to fetch.
+     */
+    orderBy?: TaxonomyOrderByWithRelationInput | TaxonomyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Taxonomies.
+     */
+    cursor?: TaxonomyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Taxonomies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Taxonomies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Taxonomies.
+     */
+    distinct?: TaxonomyScalarFieldEnum | TaxonomyScalarFieldEnum[]
+  }
+
+  /**
+   * Taxonomy findMany
+   */
+  export type TaxonomyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * Filter, which Taxonomies to fetch.
+     */
+    where?: TaxonomyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Taxonomies to fetch.
+     */
+    orderBy?: TaxonomyOrderByWithRelationInput | TaxonomyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Taxonomies.
+     */
+    cursor?: TaxonomyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Taxonomies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Taxonomies.
+     */
+    skip?: number
+    distinct?: TaxonomyScalarFieldEnum | TaxonomyScalarFieldEnum[]
+  }
+
+  /**
+   * Taxonomy create
+   */
+  export type TaxonomyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * The data needed to create a Taxonomy.
+     */
+    data: XOR<TaxonomyCreateInput, TaxonomyUncheckedCreateInput>
+  }
+
+  /**
+   * Taxonomy createMany
+   */
+  export type TaxonomyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Taxonomies.
+     */
+    data: TaxonomyCreateManyInput | TaxonomyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Taxonomy createManyAndReturn
+   */
+  export type TaxonomyCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * The data used to create many Taxonomies.
+     */
+    data: TaxonomyCreateManyInput | TaxonomyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Taxonomy update
+   */
+  export type TaxonomyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * The data needed to update a Taxonomy.
+     */
+    data: XOR<TaxonomyUpdateInput, TaxonomyUncheckedUpdateInput>
+    /**
+     * Choose, which Taxonomy to update.
+     */
+    where: TaxonomyWhereUniqueInput
+  }
+
+  /**
+   * Taxonomy updateMany
+   */
+  export type TaxonomyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Taxonomies.
+     */
+    data: XOR<TaxonomyUpdateManyMutationInput, TaxonomyUncheckedUpdateManyInput>
+    /**
+     * Filter which Taxonomies to update
+     */
+    where?: TaxonomyWhereInput
+    /**
+     * Limit how many Taxonomies to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Taxonomy updateManyAndReturn
+   */
+  export type TaxonomyUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * The data used to update Taxonomies.
+     */
+    data: XOR<TaxonomyUpdateManyMutationInput, TaxonomyUncheckedUpdateManyInput>
+    /**
+     * Filter which Taxonomies to update
+     */
+    where?: TaxonomyWhereInput
+    /**
+     * Limit how many Taxonomies to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Taxonomy upsert
+   */
+  export type TaxonomyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * The filter to search for the Taxonomy to update in case it exists.
+     */
+    where: TaxonomyWhereUniqueInput
+    /**
+     * In case the Taxonomy found by the `where` argument doesn't exist, create a new Taxonomy with this data.
+     */
+    create: XOR<TaxonomyCreateInput, TaxonomyUncheckedCreateInput>
+    /**
+     * In case the Taxonomy was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TaxonomyUpdateInput, TaxonomyUncheckedUpdateInput>
+  }
+
+  /**
+   * Taxonomy delete
+   */
+  export type TaxonomyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+    /**
+     * Filter which Taxonomy to delete.
+     */
+    where: TaxonomyWhereUniqueInput
+  }
+
+  /**
+   * Taxonomy deleteMany
+   */
+  export type TaxonomyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Taxonomies to delete
+     */
+    where?: TaxonomyWhereInput
+    /**
+     * Limit how many Taxonomies to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Taxonomy without action
+   */
+  export type TaxonomyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Taxonomy
+     */
+    select?: TaxonomySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Taxonomy
+     */
+    omit?: TaxonomyOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -13440,6 +14522,17 @@ export namespace Prisma {
   export type GameParticipantScalarFieldEnum = (typeof GameParticipantScalarFieldEnum)[keyof typeof GameParticipantScalarFieldEnum]
 
 
+  export const TaxonomyScalarFieldEnum: {
+    id: 'id',
+    gradeLevel: 'gradeLevel',
+    content: 'content',
+    contentHash: 'contentHash',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TaxonomyScalarFieldEnum = (typeof TaxonomyScalarFieldEnum)[keyof typeof TaxonomyScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -13454,6 +14547,13 @@ export namespace Prisma {
   };
 
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -14354,6 +15454,58 @@ export namespace Prisma {
     completedAt?: DateTimeNullableWithAggregatesFilter<"GameParticipant"> | Date | string | null
   }
 
+  export type TaxonomyWhereInput = {
+    AND?: TaxonomyWhereInput | TaxonomyWhereInput[]
+    OR?: TaxonomyWhereInput[]
+    NOT?: TaxonomyWhereInput | TaxonomyWhereInput[]
+    id?: StringFilter<"Taxonomy"> | string
+    gradeLevel?: StringFilter<"Taxonomy"> | string
+    content?: JsonFilter<"Taxonomy">
+    contentHash?: StringNullableFilter<"Taxonomy"> | string | null
+    updatedAt?: DateTimeFilter<"Taxonomy"> | Date | string
+  }
+
+  export type TaxonomyOrderByWithRelationInput = {
+    id?: SortOrder
+    gradeLevel?: SortOrder
+    content?: SortOrder
+    contentHash?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaxonomyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    gradeLevel?: string
+    AND?: TaxonomyWhereInput | TaxonomyWhereInput[]
+    OR?: TaxonomyWhereInput[]
+    NOT?: TaxonomyWhereInput | TaxonomyWhereInput[]
+    content?: JsonFilter<"Taxonomy">
+    contentHash?: StringNullableFilter<"Taxonomy"> | string | null
+    updatedAt?: DateTimeFilter<"Taxonomy"> | Date | string
+  }, "id" | "gradeLevel">
+
+  export type TaxonomyOrderByWithAggregationInput = {
+    id?: SortOrder
+    gradeLevel?: SortOrder
+    content?: SortOrder
+    contentHash?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    _count?: TaxonomyCountOrderByAggregateInput
+    _max?: TaxonomyMaxOrderByAggregateInput
+    _min?: TaxonomyMinOrderByAggregateInput
+  }
+
+  export type TaxonomyScalarWhereWithAggregatesInput = {
+    AND?: TaxonomyScalarWhereWithAggregatesInput | TaxonomyScalarWhereWithAggregatesInput[]
+    OR?: TaxonomyScalarWhereWithAggregatesInput[]
+    NOT?: TaxonomyScalarWhereWithAggregatesInput | TaxonomyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Taxonomy"> | string
+    gradeLevel?: StringWithAggregatesFilter<"Taxonomy"> | string
+    content?: JsonWithAggregatesFilter<"Taxonomy">
+    contentHash?: StringNullableWithAggregatesFilter<"Taxonomy"> | string | null
+    updatedAt?: DateTimeWithAggregatesFilter<"Taxonomy"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     username: string
@@ -15142,6 +16294,62 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type TaxonomyCreateInput = {
+    id?: string
+    gradeLevel: string
+    content: JsonNullValueInput | InputJsonValue
+    contentHash?: string | null
+    updatedAt?: Date | string
+  }
+
+  export type TaxonomyUncheckedCreateInput = {
+    id?: string
+    gradeLevel: string
+    content: JsonNullValueInput | InputJsonValue
+    contentHash?: string | null
+    updatedAt?: Date | string
+  }
+
+  export type TaxonomyUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: StringFieldUpdateOperationsInput | string
+    content?: JsonNullValueInput | InputJsonValue
+    contentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxonomyUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: StringFieldUpdateOperationsInput | string
+    content?: JsonNullValueInput | InputJsonValue
+    contentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxonomyCreateManyInput = {
+    id?: string
+    gradeLevel: string
+    content: JsonNullValueInput | InputJsonValue
+    contentHash?: string | null
+    updatedAt?: Date | string
+  }
+
+  export type TaxonomyUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: StringFieldUpdateOperationsInput | string
+    content?: JsonNullValueInput | InputJsonValue
+    contentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxonomyUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: StringFieldUpdateOperationsInput | string
+    content?: JsonNullValueInput | InputJsonValue
+    contentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -15975,6 +17183,77 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumParticipantStatusFilter<$PrismaModel>
     _max?: NestedEnumParticipantStatusFilter<$PrismaModel>
+  }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type TaxonomyCountOrderByAggregateInput = {
+    id?: SortOrder
+    gradeLevel?: SortOrder
+    content?: SortOrder
+    contentHash?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaxonomyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    gradeLevel?: SortOrder
+    contentHash?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaxonomyMinOrderByAggregateInput = {
+    id?: SortOrder
+    gradeLevel?: SortOrder
+    contentHash?: SortOrder
+    updatedAt?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type StudentProfileCreateNestedOneWithoutUserInput = {
@@ -16999,6 +18278,29 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumParticipantStatusFilter<$PrismaModel>
     _max?: NestedEnumParticipantStatusFilter<$PrismaModel>
+  }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type StudentProfileCreateWithoutUserInput = {

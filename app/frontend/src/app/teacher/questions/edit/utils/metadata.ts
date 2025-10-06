@@ -1,40 +1,34 @@
-import yaml from 'js-yaml';
 import { GradeLevelMetadata, ParsedMetadata } from '../types/metadata';
-import { sortGradeLevels } from '@/utils/gradeLevelSort';
-
-// Metadata files content - will be loaded dynamically
-const metadataFiles: Record<string, string> = {};
+import { createApiUrl } from '@/config/api';
 
 /**
- * Parse and load all metadata from YAML files
- * This function loads the metadata files from the public directory
+ * Load all metadata from the backend taxonomy API
+ * This function fetches the taxonomy data from /api/v1/questions/taxonomy
  */
 export async function loadMetadata(): Promise<ParsedMetadata> {
-    const levels = ['CP', 'CE1', 'L1', 'L2'];
-    const metadata: Record<string, GradeLevelMetadata> = {};
-    
-    // Load all metadata files
-    await Promise.all(
-        levels.map(async (level) => {
-            try {
-                const response = await fetch(`/metadata/${level}.yaml`);
-                if (response.ok) {
-                    const content = await response.text();
-                    const parsed = yaml.load(content) as GradeLevelMetadata;
-                    metadata[level] = parsed;
-                }
-            } catch (error) {
-                console.error(`Failed to load metadata for ${level}:`, error);
-            }
-        })
-    );
+    try {
+        const response = await fetch(createApiUrl('/questions/taxonomy'), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
 
-    const gradeLevels = sortGradeLevels(Object.keys(metadata));
+        if (!response.ok) {
+            throw new Error(`Failed to load taxonomy: ${response.status}`);
+        }
 
-    return {
-        gradeLevels,
-        metadata,
-    };
+        const data = await response.json();
+        return data as ParsedMetadata;
+    } catch (error) {
+        console.error('Failed to load metadata from API:', error);
+        // Return empty metadata as fallback
+        return {
+            gradeLevels: [],
+            metadata: {},
+        };
+    }
 }
 
 /**
@@ -59,10 +53,10 @@ export function getThemesForDiscipline(
 ): string[] {
     const levelData = metadata.metadata[gradeLevel];
     if (!levelData) return [];
-    
+
     const disciplineData = levelData.disciplines.find(d => d.nom === discipline);
     if (!disciplineData) return [];
-    
+
     return disciplineData.themes.map(t => t.nom);
 }
 
@@ -78,18 +72,18 @@ export function getTagsForThemes(
 ): string[] {
     const levelData = metadata.metadata[gradeLevel];
     if (!levelData) return [];
-    
+
     const disciplineData = levelData.disciplines.find(d => d.nom === discipline);
     if (!disciplineData) return [];
-    
+
     const allTags = new Set<string>();
-    
+
     for (const themeName of themes) {
         const themeData = disciplineData.themes.find(t => t.nom === themeName);
         if (themeData) {
             themeData.tags.forEach(tag => allTags.add(tag));
         }
     }
-    
+
     return Array.from(allTags).sort();
 }
