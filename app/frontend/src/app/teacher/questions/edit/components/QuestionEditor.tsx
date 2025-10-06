@@ -432,9 +432,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         {/* Question heading */}
                         <h2 className="text-lg font-semibold my-3">Question</h2>
 
-                        {/* Combined Question + Answer (no outer border) */}
-                        {/* Question Text area with icon */}
-                        <div className="relative mb-4">
+                        {/* Combined Question + Answer (compact grouping) */}
+                        <div className="space-y-4">
+                            {/* Question Text area with icon */}
+                            <div className="relative mb-0">
                             <MessageSquare className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />
                             <textarea
                                 value={question.text}
@@ -446,7 +447,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                             />
                         </div>
 
-                        {/* Answers area - varies by question type */}
+                            {/* Answers area - varies by question type */}
                         {isNumericQuestion(question) ? (
                             <div title="Réponse correcte (numérique)">
                                 <div className="relative">
@@ -462,8 +463,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-primary/5 p-4 rounded-lg border border-dropdown-border">
-                                <div className="flex items-center justify-between mb-3">
+                <div className="bg-primary/5 p-2 rounded-lg border border-dropdown-border">
+                    <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-semibold text-foreground">
                                         ✅ Réponses
                                     </label>
@@ -505,6 +506,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 </div>
                             </div>
                         )}
+
+                        </div>
 
                         {/* Explication and Feedback Settings */}
                         <h2 className="text-lg font-semibold my-3">Explication</h2>
