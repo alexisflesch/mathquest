@@ -94,14 +94,14 @@ const ClientOnlyMathJaxInner: React.FC<MathJaxWrapperProps> = ({ children, zoomF
     // Memoize the children content as a string so we avoid re-typesetting when
     // the input hasn't changed. If children is not a string, fallback to React's
     // default identity (will re-render).
-    const childrenString = useMemo(() => {
-        if (typeof children === 'string') return children;
-        try {
-            // Attempt to stringify common React nodes (arrays, fragments)
-            return JSON.stringify(children);
-        } catch (e) {
-            return undefined;
+    const stringChildren = useMemo(() => {
+        if (typeof children === 'string') {
+            return children;
         }
+        if (Array.isArray(children) && children.every(child => typeof child === 'string')) {
+            return children.join('');
+        }
+        return undefined;
     }, [children]);
 
     return (
@@ -112,14 +112,7 @@ const ClientOnlyMathJaxInner: React.FC<MathJaxWrapperProps> = ({ children, zoomF
                         dynamic={true}
                         onError={err => logger.error('MathJax error', err)}
                     >
-                        {childrenString !== undefined ? (
-                            // When we can represent children deterministically as a string,
-                            // render that string (ensures stable identity between renders)
-                            childrenString
-                        ) : (
-                            // Fallback to original children when we can't stringify
-                            children
-                        )}
+                        {stringChildren !== undefined ? stringChildren : children}
                     </MathJax>
                 </div>
             ) : (
