@@ -89,7 +89,8 @@ export const createEmptyQuestion = (uid?: string): EditorQuestion => {
         author: 'Teacher',
         discipline: 'Mathématiques',
         title: 'Nouvelle question',
-        text: 'Entrez le texte de la question ici...',
+    // Leave the stored text empty by default; helper/placeholder text is shown in the editor UI
+    text: '',
         questionType: 'numeric',
         themes: [],
         tags: [],

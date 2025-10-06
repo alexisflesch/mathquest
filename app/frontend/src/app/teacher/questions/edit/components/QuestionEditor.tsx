@@ -379,18 +379,25 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         {/* Question Type and Settings - BEFORE Question Text */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="md:col-span-2">
-                                <div className="relative">
-                                    <Settings className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-                                    <select
-                                        value={question.questionType}
-                                        onChange={(e) => handleFieldChange('questionType', e.target.value as any)}
-                                        title="Type de la question"
-                                        className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none"
-                                    >
-                                        <option value="numeric">Numérique</option>
-                                        <option value="single_choice">Choix unique</option>
-                                        <option value="multiple_choice">Choix multiple</option>
-                                    </select>
+                                <div title="Type de la question">
+                                    {/* Use EnhancedSingleSelectDropdown for consistent UX with Grade Level */}
+                                    <EnhancedSingleSelectDropdown
+                                        options={[
+                                            'Numérique',
+                                            'Choix unique',
+                                            'Choix multiple',
+                                        ]}
+                                        value={
+                                            question.questionType === 'numeric' ? 'Numérique'
+                                                : question.questionType === 'single_choice' ? 'Choix unique'
+                                                    : 'Choix multiple'
+                                        }
+                                        onChange={(val) => {
+                                            const mapped = val === 'Numérique' ? 'numeric' : val === 'Choix unique' ? 'single_choice' : 'multiple_choice';
+                                            handleFieldChange('questionType', mapped as any);
+                                        }}
+                                        placeholder="Type de question"
+                                    />
                                 </div>
                             </div>
                             <div className="md:col-span-1">
@@ -407,95 +414,92 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 </div>
                             </div>
                             <div className="md:col-span-1">
-                                <div className="relative">
-                                    <Star className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="5"
-                                        value={question.difficulty || 1}
-                                        onChange={(e) => handleFieldChange('difficulty', parseInt(e.target.value))}
+                                <div title="Difficulté (1–5)">
+                                    <EnhancedSingleSelectDropdown
+                                        options={["1", "2", "3", "4", "5"]}
+                                        value={(question.difficulty || 1).toString()}
+                                        onChange={(val) => handleFieldChange('difficulty', parseInt(val))}
                                         placeholder="Difficulté"
-                                        title="Difficulté (1–5)"
-                                        className="w-full pl-11 pr-4 py-2 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Question Text - AFTER Type/Time/Difficulty */}
-                        <div>
-                            <div className="relative">
+                        {/* Combined Question + Answer Card */}
+                        <div className="bg-card p-4 rounded-lg border border-dropdown-border">
+                            {/* Question Text area with icon */}
+                            <div className="relative mb-4">
                                 <MessageSquare className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />
                                 <textarea
                                     value={question.text}
                                     onChange={(e) => handleFieldChange('text', e.target.value)}
                                     rows={3}
-                                    placeholder="Question"
+                                    placeholder="Entrez le texte de la question ici..."
                                     title="Texte de la question (LaTeX supporté)."
-                                    className="w-full pl-12 pr-4 py-3 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    className="w-full pl-12 pr-4 py-3 bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 />
                             </div>
-                        </div>
 
-                        {/* Answer Section */}
-                        {isNumericQuestion(question) ? (
-                            <div className="bg-success/5 p-4 rounded-lg border border-success/20">
-                                <div className="relative">
-                                    <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-success pointer-events-none" />
-                                    <input
-                                        type="number"
-                                        value={question.correctAnswer}
-                                        onChange={(e) => onChange({ ...question, correctAnswer: parseFloat(e.target.value) })}
-                                        placeholder="Réponse correcte"
-                                        className="w-full pl-12 pr-4 py-3 border border-success/30 bg-background rounded-lg focus:ring-2 focus:ring-success focus:border-success transition-all"
-                                    />
+                            {/* Answers area - varies by question type */}
+                            {isNumericQuestion(question) ? (
+                                <div title="Réponse correcte (numérique)" className="bg-success/5 p-4 rounded-lg border border-success/20">
+                                    <div className="relative">
+                                        <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-success pointer-events-none" />
+                                        <input
+                                            type="number"
+                                            value={question.correctAnswer}
+                                            onChange={(e) => onChange({ ...question, correctAnswer: parseFloat(e.target.value) })}
+                                            placeholder="Réponse correcte"
+                                            // Make the input visually blend into the outer card: no inner border/background
+                                            className="w-full pl-12 pr-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="bg-primary/5 p-4 rounded-lg border border-dropdown-border">
-                                <div className="flex items-center justify-between mb-3">
-                                    <label className="block text-sm font-semibold text-foreground">
-                                        ✅ Réponses
-                                    </label>
-                                    <button
-                                        onClick={addAnswerOption}
-                                        title="Ajouter une nouvelle option de réponse."
-                                        className="px-4 py-2 bg-success text-success-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm"
-                                    >
-                                        + Ajouter
-                                    </button>
+                            ) : (
+                                <div className="bg-primary/5 p-4 rounded-lg border border-dropdown-border">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <label className="block text-sm font-semibold text-foreground">
+                                            ✅ Réponses
+                                        </label>
+                                        <button
+                                            onClick={addAnswerOption}
+                                            title="Ajouter une nouvelle option de réponse."
+                                            className="px-4 py-2 bg-success text-success-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm"
+                                        >
+                                            + Ajouter
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {question.answerOptions.map((option, index) => (
+                                            <div key={index} className="flex items-center gap-2 bg-background p-2 rounded-lg">
+                                                <input
+                                                    type={question.questionType === 'single_choice' ? 'radio' : 'checkbox'}
+                                                    checked={question.correctAnswers[index]}
+                                                    onChange={() => handleCorrectAnswerToggle(index)}
+                                                    title="Marquer comme réponse correcte."
+                                                    className="w-5 h-5 text-success focus:ring-success cursor-pointer"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={option}
+                                                    onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
+                                                    title={`Texte de la réponse ${index + 1}`}
+                                                    className="flex-1 px-2 py-1.5 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                                    placeholder={`Réponse ${index + 1}`}
+                                                />
+                                                <button
+                                                    onClick={() => removeAnswerOption(index)}
+                                                    title="Supprimer cette option."
+                                                    className="p-2 text-alert hover:bg-alert/10 rounded-lg transition-all"
+                                                >
+                                                    <X className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    {question.answerOptions.map((option, index) => (
-                                        <div key={index} className="flex items-center gap-2 bg-background p-2 rounded-lg">
-                                            <input
-                                                type={question.questionType === 'single_choice' ? 'radio' : 'checkbox'}
-                                                checked={question.correctAnswers[index]}
-                                                onChange={() => handleCorrectAnswerToggle(index)}
-                                                title="Marquer comme réponse correcte."
-                                                className="w-5 h-5 text-success focus:ring-success cursor-pointer"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={option}
-                                                onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
-                                                title={`Texte de la réponse ${index + 1}`}
-                                                className="flex-1 px-2 py-1.5 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                                                placeholder={`Réponse ${index + 1}`}
-                                            />
-                                            <button
-                                                onClick={() => removeAnswerOption(index)}
-                                                title="Supprimer cette option."
-                                                className="p-2 text-alert hover:bg-alert/10 rounded-lg transition-all"
-                                            >
-                                                <X className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
                         {/* Explanation and Feedback Settings */}
                         <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-dropdown-border">
