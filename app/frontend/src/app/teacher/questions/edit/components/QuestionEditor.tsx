@@ -442,7 +442,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
 
                             {/* Answers area - varies by question type */}
                             {isNumericQuestion(question) ? (
-                                <div title="Réponse correcte (numérique)" className="bg-success/5 p-4 rounded-lg border border-success/20">
+                                <div title="Réponse correcte (numérique)">
                                     <div className="relative">
                                         <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-success pointer-events-none" />
                                         <input

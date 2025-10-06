@@ -89,15 +89,15 @@ export const createEmptyQuestion = (uid?: string): EditorQuestion => {
         author: 'Teacher',
         discipline: 'Mathématiques',
         title: 'Nouvelle question',
-    // Leave the stored text empty by default; helper/placeholder text is shown in the editor UI
-    text: '',
+        // Leave the stored text empty by default; helper/placeholder text is shown in the editor UI
+        text: '',
         questionType: 'numeric',
         themes: [],
         tags: [],
         timeLimit: 30,
         difficulty: 1,
-        gradeLevel: 'CE1',
-        explanation: 'Entrez l\'explication ici...',
+        gradeLevel: 'CP',
+        explanation: '',
         feedbackWaitTime: 15,
         correctAnswer: 0,
     };
