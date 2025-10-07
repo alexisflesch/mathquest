@@ -88,17 +88,18 @@ export default function HomePageClient() {
 
                             {/* CTA links - stacked on mobile (left aligned), centered on larger screens */}
                             <div className="p-3 w-full max-w-md mx-auto mt-2">
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-center gap-3 text-sm">
-                                    <span className='p-3 border border-base-200 rounded-md'>
-                                        <Link href="/login?mode=guest" aria-label="Commencer sans compte" className="inline-flex items-center gap-2 text-primary hover:underline text-sm leading-normal">
-                                            <Gamepad className="w-4 h-4" aria-hidden="true" />{'\u00A0'}
+                                {/* Use the same grid + full-width button style as teacher/guest mobile actions so labels align */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <span className="p-3 border border-base-200 rounded-md w-full inline-flex items-center gap-3 text-sm leading-normal">
+                                        <Link href="/login?mode=guest" aria-label="Commencer sans compte" className="inline-flex items-center gap-2 text-primary hover:underline w-full">
+                                            <Gamepad className="w-4 h-4" aria-hidden="true" />{"\u00A0"}
                                             <span className="text-sm leading-normal">Commencer sans compte</span>
                                         </Link>
                                     </span>
 
-                                    <span className='p-3 border border-base-200 rounded-md'>
-                                        <Link href="/login?mode=account" aria-label="Se connecter ou créer un compte" className="inline-flex items-center gap-2 text-primary hover:underline text-sm leading-normal">
-                                            <LogIn className="w-4 h-4" aria-hidden="true" />{'\u00A0'}
+                                    <span className="p-3 border border-base-200 rounded-md w-full inline-flex items-center gap-3 text-sm leading-normal">
+                                        <Link href="/login?mode=account" aria-label="Se connecter ou créer un compte" className="inline-flex items-center gap-2 text-primary hover:underline w-full">
+                                            <LogIn className="w-4 h-4" aria-hidden="true" />{"\u00A0"}
                                             <span className="text-sm leading-normal">Se connecter / Créer un compte</span>
                                         </Link>
                                     </span>

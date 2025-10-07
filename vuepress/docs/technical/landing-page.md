@@ -53,3 +53,4 @@ Source: `app/frontend/src/components/AuthProvider.tsx`
 - No automatic redirect from `/` to other sections to let users choose from the landing.
 - TypeScript checks pass for this file at the time of change.
 
+
