@@ -5,9 +5,9 @@ import { MessageCircle, Timer as TimerIcon } from 'lucide-react';
 import { EditorQuestion, isNumericQuestion, isMultipleChoiceQuestion } from '../types';
 import QuestionCard from '@/components/QuestionCard';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
-import MathJaxWrapper from '@/components/MathJaxWrapper';
 import type { z } from 'zod';
 import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+import MathJaxWrapper from '@/components/MathJaxWrapper';
 type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 
 interface QuestionPreviewProps {
@@ -230,29 +230,27 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({ question, ques
                             <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
                                 {/* Card container to mirror practice page */}
                                 <div className="card w-full max-w-2xl bg-base-100 shadow-xl my-6 relative">
-                                    <MathJaxWrapper>
-                                        <QuestionCard
-                                            currentQuestion={questionData}
-                                            questionIndex={questionIndex - 1}
-                                            totalQuestions={totalQuestions}
-                                            isMultipleChoice={isMultipleChoice}
-                                            selectedAnswer={null}
-                                            setSelectedAnswer={() => { }}
-                                            selectedAnswers={[]}
-                                            setSelectedAnswers={() => { }}
-                                            handleSingleChoice={handleSingleChoice}
-                                            handleSubmitMultiple={handleSubmitMultiple}
-                                            answered={true}
-                                            readonly={true}
-                                            projectionMode={true}
-                                            isQuizMode={false}
-                                            correctAnswers={getCorrectAnswers()}
-                                            numericAnswer={isNumericQuestion(question) ? String(question.correctAnswer) : ''}
-                                            setNumericAnswer={() => { }}
-                                            handleNumericSubmit={handleNumericSubmit}
-                                            numericCorrectAnswer={getNumericCorrectAnswer()}
-                                        />
-                                    </MathJaxWrapper>
+                                    <QuestionCard
+                                        currentQuestion={questionData}
+                                        questionIndex={questionIndex - 1}
+                                        totalQuestions={totalQuestions}
+                                        isMultipleChoice={isMultipleChoice}
+                                        selectedAnswer={null}
+                                        setSelectedAnswer={() => { }}
+                                        selectedAnswers={[]}
+                                        setSelectedAnswers={() => { }}
+                                        handleSingleChoice={handleSingleChoice}
+                                        handleSubmitMultiple={handleSubmitMultiple}
+                                        answered={true}
+                                        readonly={true}
+                                        projectionMode={true}
+                                        isQuizMode={false}
+                                        correctAnswers={getCorrectAnswers()}
+                                        numericAnswer={isNumericQuestion(question) ? String(question.correctAnswer) : ''}
+                                        setNumericAnswer={() => { }}
+                                        handleNumericSubmit={handleNumericSubmit}
+                                        numericCorrectAnswer={getNumericCorrectAnswer()}
+                                    />
 
                                     {/* Practice-like controls row (no next/bilan) */}
                                     {question.explanation && (

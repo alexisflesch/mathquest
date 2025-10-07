@@ -82,7 +82,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         } else {
             setAvailableDisciplines([]);
         }
-    }, [question.gradeLevel, question.discipline, metadata, mode, onChange]);
+    }, [question.gradeLevel, question.discipline, metadata, mode]);
 
     // Update available themes when discipline changes
     useEffect(() => {
@@ -99,7 +99,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         } else {
             setAvailableThemes([]);
         }
-    }, [question.gradeLevel, question.discipline, question.themes, metadata, mode, onChange]);
+    }, [question.gradeLevel, question.discipline, question.themes, metadata, mode]);
 
     // Update available tags when themes change
     useEffect(() => {
@@ -116,7 +116,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
         } else {
             setAvailableTags([]);
         }
-    }, [question.gradeLevel, question.discipline, question.themes, question.tags, metadata, mode, onChange]);
+    }, [question.gradeLevel, question.discipline, question.themes, question.tags, metadata, mode]);
 
     // Position cursor at selected question when switching to YAML mode or when selection changes
     useEffect(() => {

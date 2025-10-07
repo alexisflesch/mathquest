@@ -85,13 +85,13 @@ describe('QuestionCard horizontal scroll structure', () => {
             expect(btn.style.overflowX === '' || btn.style.overflowX === 'visible').toBe(true);
         }
 
-            // The left content span inside each button must NOT own horizontal scroll (overflow-x: visible)
+        // The left content span inside each button must NOT own horizontal scroll (overflow-x: visible)
         const contentSpans = buttons.map((btn) => btn.querySelector('span')) as (HTMLElement | null)[];
         expect(contentSpans.every(Boolean)).toBe(true);
-            for (const span of contentSpans) {
-                const ox = (span as HTMLElement).style.overflowX;
-                expect(ox === '' || ox === 'visible').toBe(true);
-            }
+        for (const span of contentSpans) {
+            const ox = (span as HTMLElement).style.overflowX;
+            expect(ox === '' || ox === 'visible').toBe(true);
+        }
 
         // Simulate "typing" by updating text and answers (re-render with longer content)
         const updated = buildPayload({
@@ -135,9 +135,9 @@ describe('QuestionCard horizontal scroll structure', () => {
 
         const contentSpans2 = buttons2.map((btn) => btn.querySelector('span')) as (HTMLElement | null)[];
         expect(contentSpans2.every(Boolean)).toBe(true);
-            for (const span of contentSpans2) {
-                const ox = (span as HTMLElement).style.overflowX;
-                expect(ox === '' || ox === 'visible').toBe(true);
-            }
+        for (const span of contentSpans2) {
+            const ox = (span as HTMLElement).style.overflowX;
+            expect(ox === '' || ox === 'visible').toBe(true);
+        }
     });
 });

@@ -69,13 +69,13 @@ describe('QuestionPreview horizontal scroll structure', () => {
             expect(btn.style.overflowX === '' || btn.style.overflowX === 'visible').toBe(true);
         }
 
-            // Inner left spans should NOT own horizontal scroll
+        // Inner left spans should NOT own horizontal scroll
         const contentSpans = buttons.map((btn) => btn.querySelector('span')) as (HTMLElement | null)[];
         expect(contentSpans.every(Boolean)).toBe(true);
-            for (const span of contentSpans) {
-                const ox = (span as HTMLElement).style.overflowX;
-                expect(ox === '' || ox === 'visible').toBe(true);
-            }
+        for (const span of contentSpans) {
+            const ox = (span as HTMLElement).style.overflowX;
+            expect(ox === '' || ox === 'visible').toBe(true);
+        }
 
         // Simulate typing by updating question content
         const updated = buildQuestion({
@@ -96,9 +96,9 @@ describe('QuestionPreview horizontal scroll structure', () => {
         }
 
         const contentSpans2 = buttons2.map((btn) => btn.querySelector('span')) as (HTMLElement | null)[];
-            for (const span of contentSpans2) {
-                const ox = (span as HTMLElement).style.overflowX;
-                expect(ox === '' || ox === 'visible').toBe(true);
-            }
+        for (const span of contentSpans2) {
+            const ox = (span as HTMLElement).style.overflowX;
+            expect(ox === '' || ox === 'visible').toBe(true);
+        }
     });
 });

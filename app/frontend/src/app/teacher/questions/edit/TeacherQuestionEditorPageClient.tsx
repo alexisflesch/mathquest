@@ -400,7 +400,16 @@ export default function TeacherQuestionEditorPageClient() {
 
         const updatedQuestions = questions.map((q, i) => i === selectedQuestionIndex ? finalQuestion : q);
         setQuestions(updatedQuestions);
-        setYamlText(questionsToYaml(updatedQuestions));
+        // Only reflect back to YAML when in YAML mode; when in Form mode we debounce
+        if (editorMode === 'yaml') {
+            setYamlText(questionsToYaml(updatedQuestions));
+        } else {
+            // Debounce YAML sync to avoid tight loops while typing in form
+            window.clearTimeout((handleQuestionChange as any)._debounce);
+            (handleQuestionChange as any)._debounce = window.setTimeout(() => {
+                setYamlText(prev => questionsToYaml(updatedQuestions));
+            }, 250);
+        }
         // If the edited question is the current selection, ask editor to reveal its uid
         if (updatedQuestions[selectedQuestionIndex] && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
             editorImperativeRef.current.revealUid(updatedQuestions[selectedQuestionIndex].uid);
@@ -582,9 +591,20 @@ export default function TeacherQuestionEditorPageClient() {
     };
 
     useEffect(() => {
-        computeMainHeight();
-        window.addEventListener('resize', computeMainHeight);
-        return () => window.removeEventListener('resize', computeMainHeight);
+        let rafId: number | null = null;
+        const throttled = () => {
+            if (rafId != null) return;
+            rafId = window.requestAnimationFrame(() => {
+                rafId = null;
+                computeMainHeight();
+            });
+        };
+        throttled();
+        window.addEventListener('resize', throttled);
+        return () => {
+            window.removeEventListener('resize', throttled);
+            if (rafId) cancelAnimationFrame(rafId);
+        };
     }, [isMobileWidth]);
 
     // When entering YAML mode (transition), request the editor to go to currently selected question uid

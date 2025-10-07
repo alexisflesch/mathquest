@@ -535,7 +535,7 @@ export const MonacoYamlEditor = React.forwardRef<MonacoYamlEditorHandle, MonacoY
         };
 
         const handleEditorChange = (value: string | undefined) => {
-            if (value !== undefined) {
+            if (value !== undefined && value !== editorRef.current?.getModel()?.getValue()) {
                 const position = editorRef.current?.getPosition();
                 const cursorPosition = position ? editorRef.current?.getModel()?.getOffsetAt(position) : undefined;
                 onChange(value, cursorPosition);
