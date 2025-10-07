@@ -25,3 +25,6 @@ node_modules
 # Python
 __pycache__/
 *.pyc
+
+# Test results
+/home/aflesch/mathquest/app/tests/e2e/results
