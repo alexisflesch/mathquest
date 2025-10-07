@@ -32,8 +32,8 @@
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page mjx-container,
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-chtml,
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .MathJax {
-    /* Keep horizontal scrolling for wide formulas, but do not create vertical scrollbars */
-    overflow-x: auto !important;
+    /* IMPORTANT: do not create horizontal scrollbars on inner wrappers. Let the outer container scroll. */
+    overflow-x: visible !important;
     overflow-y: visible !important;
     max-height: none !important;
 }
@@ -57,7 +57,7 @@
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards mjx-container,
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-chtml,
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .MathJax {
-    overflow-x: auto !important;
+    overflow-x: visible !important;
     overflow-y: visible !important;
     max-height: none !important;
 }
@@ -75,7 +75,8 @@
 .card.w-full.max-w-2xl .tqcard-content .tqcard-answer mjx-container,
 .card.w-full.max-w-2xl .tqcard-content .tqcard-answer .mjx-chtml,
 .card.w-full.max-w-2xl .tqcard-content .tqcard-answer .MathJax {
-    overflow-x: auto !important;
+    /* Answers already have overflow-x on the button; avoid inner scrollbars. */
+    overflow-x: visible !important;
     overflow-y: visible !important;
     max-height: none !important;
 }

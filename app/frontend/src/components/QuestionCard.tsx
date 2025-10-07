@@ -275,7 +275,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             ) : (
                 // Multiple choice questions
                 <>
-                    <ul className="flex flex-col w-full">
+                    <ul className="flex flex-col w-full min-w-0">
                         {answersToDisplay.map((answerText: string, idx: number) => {
                             const isSelected = effectiveIsMultipleChoice
                                 ? selectedAnswers.includes(idx)
@@ -295,7 +295,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                             return (
                                 <li
                                     key={idx}
-                                    className={idx !== answersToDisplay.length - 1 ? "mb-2" : ""}
+                                    className={(idx !== answersToDisplay.length - 1 ? "mb-2 " : "") + "min-w-0"}
                                     style={{ position: 'relative' }}
                                 >
                                     <button
@@ -324,7 +324,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                             alignItems: hasDisplayMath ? 'flex-start' : 'center',
                                             justifyContent: 'space-between',
                                             position: 'relative',
-                                            overflowX: 'auto',
+                                            // Let inner content manage horizontal scroll; avoid nested scrollbars on button itself
+                                            overflowX: 'visible',
                                             overflowY: 'visible',
                                             // Relax minHeight for answers containing display math so the button can grow
                                             minHeight: hasDisplayMath ? 'auto' : undefined,
@@ -351,11 +352,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                             />
                                         )}
                                         {/* Button content above the bar */}
-                                        <span style={{ display: 'block', alignItems: 'flex-start', position: 'relative', zIndex: 1, width: '100%' }}>
+                                        {/* Left content: allow shrink, but do NOT own horizontal scrollbars */}
+                                        <span style={{ display: 'block', alignItems: 'flex-start', position: 'relative', zIndex: 1, width: '100%', minWidth: 0, overflowX: 'visible', overflowY: 'visible' }}>
                                             <MathJaxWrapper>{answerText}</MathJaxWrapper>
                                         </span>
                                         {/* Right-aligned percentage and icon */}
-                                        <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1 }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1, flexShrink: 0 }}>
                                             {showStats && statPercent !== null && (
                                                 <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
                                                     {statPercent.toFixed(1)}%

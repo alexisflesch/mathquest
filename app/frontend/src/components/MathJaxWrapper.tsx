@@ -38,6 +38,11 @@ const mathJaxConfig = {
         inlineMath: [['\\(', '\\)']],
         displayMath: [['\\[', '\\]']],
         processEscapes: true,
+        // Prefer line breaking to horizontal scrollbars when feasible
+        chtml: {
+            displayAlign: 'left',
+        },
+        linebreaks: { automatic: true, width: 'container' },
         // Ignore erreurs de parsing LaTeX
         errorSettings: { message: [""] },
     },

@@ -105,6 +105,27 @@ global.Request = class MockRequest {
     }
 };
 
+// Polyfill ResizeObserver for jsdom environment
+if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
+    class MockResizeObserver {
+        constructor(callback) {
+            this._callback = typeof callback === 'function' ? callback : () => { };
+        }
+        observe() {
+            // Immediately invoke the callback once with empty entries to simulate initial observation
+            try {
+                this._callback([], this);
+            } catch (e) {
+                // ignore
+            }
+        }
+        unobserve() { }
+        disconnect() { }
+    }
+    window.ResizeObserver = MockResizeObserver;
+    global.ResizeObserver = MockResizeObserver;
+}
+
 // Mock Response for Next.js API route testing
 global.Response = class MockResponse {
     constructor(body, options = {}) {
