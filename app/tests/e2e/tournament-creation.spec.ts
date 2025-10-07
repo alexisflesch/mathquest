@@ -46,7 +46,7 @@ test.describe('Tournament Creation Tests', () => {
                 playMode: 'tournament',
                 gradeLevel: 'CP',
                 discipline: 'Mathématiques',
-                themes: ['additions'], // Array of themes - using French values!
+                themes: ['Calcul'], // Use theme that exists
                 nbOfQuestions: 5 // Use nbOfQuestions instead of questionCount
             }
         });

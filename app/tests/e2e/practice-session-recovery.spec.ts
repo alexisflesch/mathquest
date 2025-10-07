@@ -143,86 +143,51 @@ test.describe('Practice Session Recovery E2E', () => {
         test.setTimeout(60000); // Increase timeout to 60 seconds
 
         try {
-            // Step 1: Login using authenticateAsGuest
-            console.log('🔑 Logging in...');
+            // Step 1: Create student account and login
+            console.log('🔑 Creating and logging in student...');
             const dataHelper = new TestDataHelper(page);
             const studentData = dataHelper.generateTestData('practice_recovery_student');
-            // Use a very unique username that won't trigger autocomplete
-            await authenticateAsGuest(page, 'Xyz987UniqueTestUser');
-            console.log('✅ Login successful, on home page');
+            const student = await dataHelper.createStudent({
+                username: studentData.username,
+                email: studentData.email,
+                password: studentData.password
+            });
 
-            // Step 2: Create practice game via API (like comprehensive test)
+            // Login via backend API
+            const loginResponse = await page.request.post('http://localhost:3007/api/v1/auth/login', {
+                data: {
+                    email: student.email,
+                    password: student.password
+                }
+            });
+
+            if (!loginResponse.ok()) {
+                const errorBody = await loginResponse.text();
+                throw new Error(`Student login failed: ${loginResponse.status()} - ${errorBody}`);
+            }
+
+            console.log('✅ Student authentication successful');
+
+            // Step 2: Create practice game via API (like tournament test)
             console.log('🎯 Creating practice game...');
 
             // Wait a moment for session to be fully established
             await page.waitForTimeout(2000);
 
-            // Get auth cookies
-            const cookieHeader = await getAuthCookies(page);
-            console.log('🍪 Retrieved cookies:', cookieHeader);
-
-            // Get question UIDs
-            const questionsResponse = await page.request.get('/api/questions/list', {
-                params: {
-                    gradeLevel: 'CP',
-                    discipline: 'Mathématiques',
-                    themes: 'Calcul',
-                    limit: '5'
-                },
-                headers: {
-                    'Cookie': cookieHeader
-                }
-            });
-
-            if (!questionsResponse.ok()) {
-                throw new Error(`Failed to get questions: ${questionsResponse.status()}`);
-            }
-
-            const questionsData = await questionsResponse.json();
-            const questionUids = Array.isArray(questionsData) ? questionsData.slice(0, 5) : [];
-
-            if (questionUids.length === 0) {
-                throw new Error('No questions found for practice game creation');
-            }
-
-            // Create template via API
-            const templateResponse = await page.request.post('/api/game-templates', {
+            // Create practice game directly (no template needed for practice)
+            const gameResponse = await page.request.post('http://localhost:3007/api/v1/games', {
                 data: {
-                    name: 'Practice Recovery Template',
+                    name: 'Practice Recovery Game',
+                    playMode: 'practice',
                     gradeLevel: 'CP',
                     discipline: 'Mathématiques',
                     themes: ['Calcul'],
-                    questionUids: questionUids,
-                    description: 'AUTO: Created for practice recovery test',
-                    defaultMode: 'practice'
-                },
-                headers: {
-                    'Cookie': cookieHeader
-                }
-            });
-
-            if (!templateResponse.ok()) {
-                const errorText = await templateResponse.text();
-                throw new Error(`Failed to create practice template: ${templateResponse.status()} - ${errorText}`);
-            }
-
-            const templateData = await templateResponse.json();
-            const templateId = templateData.gameTemplate.id;
-
-            // Create practice game from template
-            const gameResponse = await page.request.post('/api/games', {
-                data: {
-                    name: 'Practice Recovery Game',
-                    gameTemplateId: templateId,
-                    playMode: 'practice',
+                    nbOfQuestions: 5,
                     settings: {
                         defaultMode: 'direct',
                         avatar: '🐨',
-                        username: 'PracticeRecoveryStudent'
+                        username: student.username
                     }
-                },
-                headers: {
-                    'Cookie': cookieHeader
                 }
             });
 
@@ -232,17 +197,39 @@ test.describe('Practice Session Recovery E2E', () => {
             }
 
             const gameData = await gameResponse.json();
-            const accessCode = gameData.gameInstance.accessCode || gameData.gameInstance.code;
+            const accessCode = gameData.gameInstance?.accessCode || gameData.accessCode;
             console.log(`✅ Practice game created with access code: ${accessCode}`);
 
-            // Step 3: Navigate to practice game
+            if (!accessCode) {
+                throw new Error('No access code received from game creation');
+            }
+
+            // Step 3: Login student on frontend
+            console.log('🔑 Logging in student on frontend...');
+            const loginHelper = new LoginHelper(page);
+            await loginHelper.loginAsAuthenticatedStudent({
+                email: student.email!,
+                password: student.password!
+            });
+            console.log('✅ Frontend login successful');
+
+            // Step 4: Navigate to practice game
             console.log('🎮 Starting practice session...');
             await page.goto(`http://localhost:3008/live/${accessCode}`);
             console.log('✅ Navigation to practice game completed');
 
             // Step 4: Test answer button detection and session recovery
             console.log('❓ Testing answer button detection...');
-            await page.waitForTimeout(3000);
+            await page.waitForTimeout(5000); // Wait longer for game to load
+
+            // Check if we need to join the game first
+            const joinButton = page.locator('button:has-text("Rejoindre"), button:has-text("Join"), button:has-text("Commencer")');
+            const joinVisible = await joinButton.isVisible().catch(() => false);
+            if (joinVisible) {
+                console.log('🎯 Joining the game...');
+                await joinButton.first().click();
+                await page.waitForTimeout(3000);
+            }
 
             // Try multiple selectors for answer buttons
             console.log('🔍 Looking for answer buttons...');
@@ -265,7 +252,7 @@ test.describe('Practice Session Recovery E2E', () => {
             // Log details of found buttons
             if (textCount > 0) {
                 console.log('📋 Button details:');
-                for (let i = 0; i < Math.min(textCount, 5); i++) {
+                for (let i = 0; i < Math.min(textCount, 10); i++) {
                     const button = textAnswers.nth(i);
                     const text = await button.textContent();
                     const classes = await button.getAttribute('class');
@@ -274,23 +261,32 @@ test.describe('Practice Session Recovery E2E', () => {
                 }
             }
 
-            // Try to click the first available answer button
-            let clicked = false;
-            if (btnAnswerCount > 0) {
-                console.log('🎯 Clicking first btn-answer button...');
-                await btnAnswer.first().click();
-                clicked = true;
-            } else if (tqcardCount > 0) {
-                console.log('🎯 Clicking first tqcard-answer button...');
-                await tqcardAnswer.first().click();
-                clicked = true;
-            } else if (textCount > 0) {
-                console.log('🎯 Clicking first button with text...');
-                await textAnswers.first().click();
-                clicked = true;
+            // Try to find actual answer buttons (not header buttons)
+            const answerSelectors = [
+                'button.btn-answer',
+                'button.tqcard-answer',
+                '.answer-option button',
+                '[data-testid="answer-button"]',
+                'button:has-text("A")', // Common answer labels
+                'button:has-text("B")',
+                'button:has-text("C")',
+                'button:has-text("D")'
+            ];
+
+            let answerButtons = null;
+            for (const selector of answerSelectors) {
+                const buttons = page.locator(selector);
+                const count = await buttons.count();
+                if (count > 0) {
+                    console.log(`✅ Found ${count} answer buttons with selector: ${selector}`);
+                    answerButtons = buttons;
+                    break;
+                }
             }
 
-            if (clicked) {
+            if (answerButtons) {
+                console.log('🎯 Clicking first answer button...');
+                await answerButtons.first().click();
                 console.log('✅ Answer button clicked successfully');
 
                 // Step 5: Test recovery by refreshing the page
@@ -299,8 +295,27 @@ test.describe('Practice Session Recovery E2E', () => {
                 console.log(`URL before refresh: ${beforeRefreshUrl}`);
 
                 // Capture current question content before refresh
-                const questionElements = page.locator('[data-testid="question-text"], .question-text, h2, h3, p').first();
-                const questionText = await questionElements.textContent();
+                const questionSelectors = [
+                    '[data-testid="question-text"]',
+                    '.question-text-in-live-page',
+                    '.question-text',
+                    '[class*="question-text"]',
+                    'h2, h3, p'
+                ];
+
+                let questionText = '';
+                for (const selector of questionSelectors) {
+                    const element = page.locator(selector).first();
+                    const count = await element.count();
+                    if (count > 0) {
+                        questionText = await element.textContent() || '';
+                        if (questionText.trim()) {
+                            console.log(`✅ Found question text with selector: ${selector}`);
+                            break;
+                        }
+                    }
+                }
+
                 console.log(`Question text before refresh: "${questionText}"`);
 
                 // Use goto instead of reload to avoid browser context issues
@@ -321,8 +336,19 @@ test.describe('Practice Session Recovery E2E', () => {
                 console.log(`URL after refresh: ${afterRefreshUrl}`);
 
                 // Check if question content is the same
-                const afterRefreshQuestionElements = page.locator('[data-testid="question-text"], .question-text, h2, h3, p').first();
-                const afterRefreshQuestionText = await afterRefreshQuestionElements.textContent();
+                let afterRefreshQuestionText = '';
+                for (const selector of questionSelectors) {
+                    const element = page.locator(selector).first();
+                    const count = await element.count();
+                    if (count > 0) {
+                        afterRefreshQuestionText = await element.textContent() || '';
+                        if (afterRefreshQuestionText.trim()) {
+                            console.log(`✅ Found question text after refresh with selector: ${selector}`);
+                            break;
+                        }
+                    }
+                }
+
                 console.log(`Question text after refresh: "${afterRefreshQuestionText}"`);
 
                 // Check if user is still logged in
@@ -356,8 +382,9 @@ test.describe('Practice Session Recovery E2E', () => {
                 console.log('\n✅ TEST COMPLETED: Practice session recovery analysis done');
 
             } else {
-                console.log('❌ No clickable answer buttons found');
-                console.log('ℹ️ Cannot test recovery without answer buttons');
+                console.log('❌ No answer buttons found, taking screenshot for debugging...');
+                await page.screenshot({ path: 'test-results/e2e/debug-no-answer-buttons.png' });
+                throw new Error('No answer buttons found on the practice game page');
             }
 
         } catch (error) {

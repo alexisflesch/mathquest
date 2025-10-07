@@ -216,61 +216,40 @@ test.describe('Single Choice Answer Reversion', () => {
 
             log('✅ Quiz created with access code:', quizData.accessCode);
 
-            // Step 2: Student joins quiz
-            log('👨‍🎓 Student joining quiz...');
+            // Step 2: Create student account and join quiz
+            log('👨‍🎓 Creating student account and joining quiz...');
 
             // Generate student data with French name
             const studentData = dataHelper.generateTestData('single_choice_student_xyz');
-            log('Generated student data:', studentData);
 
-            // Authenticate as guest student
-            await authenticateAsGuest(studentPage, {
+            // Create registered student account
+            const student = await dataHelper.createStudent({
                 username: studentData.username,
-                avatar: 'first'  // Use first available
+                email: studentData.email,
+                password: studentData.password
             });
 
-            log('✅ Student authenticated as guest');
+            log('✅ Student account created');
 
-            // Join the quiz - try direct access first
-            log('Attempting to join quiz directly...');
-            await studentPage.goto(`/live/${quizData.accessCode}`);
-            await studentPage.waitForTimeout(2000);
-
-            // Check if we're already on the live page or need to authenticate
-            const currentUrl = studentPage.url();
-            if (currentUrl.includes('/live/')) {
-                log('✅ Student joined quiz directly - already authenticated');
-            } else {
-                // If not on live page, we need to authenticate and join
-                log('Student not on live page, trying join flow...');
-                await studentPage.goto('/student/join');
-
-                // Re-check authentication state
-                const authCheckAfterNavigate = await studentPage.evaluate(() => {
-                    const token = localStorage.getItem('studentToken') || sessionStorage.getItem('studentToken');
-                    const user = localStorage.getItem('userProfile') || sessionStorage.getItem('userProfile');
-                    return { hasToken: !!token, hasUser: !!user };
-                });
-                log(`Student auth state after navigate: token=${authCheckAfterNavigate.hasToken}, user=${authCheckAfterNavigate.hasUser}`);
-
-                if (!authCheckAfterNavigate.hasToken || !authCheckAfterNavigate.hasUser) {
-                    log('❌ Student lost authentication, re-authenticating...');
-                    await authenticateAsGuest(studentPage, {
-                        username: studentData.username,
-                        avatar: 'first'
-                    });
-                    log('✅ Student re-authenticated as guest');
+            // Login student via backend API
+            const studentLoginResponse = await studentPage.request.post('http://localhost:3007/api/v1/auth/login', {
+                data: {
+                    email: studentData.email,
+                    password: studentData.password
                 }
+            });
 
-                await studentPage.fill('input[type="tel"], input[placeholder*="Code"]', quizData.accessCode);
-                log('Filled access code:', quizData.accessCode);
-                await studentPage.click('button:has-text("Rejoindre")');
-                log('Clicked join button');
+            if (!studentLoginResponse.ok()) {
+                const errorBody = await studentLoginResponse.text();
+                throw new Error(`Student login failed: ${studentLoginResponse.status()} - ${errorBody}`);
             }
 
-            // Verify student is on the live quiz page
-            await studentPage.waitForURL(`**/live/${quizData.accessCode}`, { timeout: 15000 });
-            log('✅ Student successfully joined quiz and is on live page');
+            log('✅ Student authenticated via API');
+
+            // Navigate to the quiz
+            log('Attempting to join quiz...');
+            await studentPage.goto(`/live/${quizData.accessCode}`);
+            await studentPage.waitForTimeout(2000);
 
             // Wait for student page to fully load
             await studentPage.waitForLoadState('networkidle');

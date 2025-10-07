@@ -5,6 +5,7 @@
  */
 
 import { test, expect, Page, Browser, BrowserContext } from '@playwright/test';
+import { TestDataHelper } from '../helpers/test-helpers';
 
 const TEST_CONFIG = {
     baseUrl: 'http://localhost:3008',
@@ -311,14 +312,33 @@ test.describe('Quiz Teacher Controls & Real-time Features', () => {
         }
 
         // Student joins the quiz
-        await authenticateGuestUser(studentPage, 'Marie');
-        await studentPage.goto(`${TEST_CONFIG.baseUrl}/student/join`);
-        await studentPage.locator('input[type="tel"]').fill(accessCode);
-        await studentPage.locator('button:has-text("Rejoindre")').click();
+        log('Creating and authenticating student...');
+        const dataHelper = new TestDataHelper(studentPage);
+        const studentData = dataHelper.generateTestData('teacher_controls_student');
+        const student = await dataHelper.createStudent({
+            username: studentData.username,
+            email: studentData.email,
+            password: studentData.password
+        });
 
-        // Wait for redirect to live page
-        await studentPage.waitForURL(`${TEST_CONFIG.baseUrl}/live/${accessCode}`, { timeout: 10000 });
-        log('✅ Student redirected to live page');
+        // Login student via API
+        const studentLoginResponse = await studentPage.request.post(`${TEST_CONFIG.backendUrl}/api/v1/auth/login`, {
+            data: {
+                email: studentData.email,
+                password: studentData.password
+            }
+        });
+
+        if (!studentLoginResponse.ok()) {
+            const errorBody = await studentLoginResponse.text();
+            throw new Error(`Student login failed: ${studentLoginResponse.status()} - ${errorBody}`);
+        }
+
+        log('✅ Student authenticated via API');
+
+        // Navigate to the quiz
+        await studentPage.goto(`${TEST_CONFIG.baseUrl}/live/${accessCode}`);
+        await studentPage.waitForTimeout(2000);
 
         await studentPage.waitForTimeout(1000); // Wait for socket connection
 
@@ -342,29 +362,20 @@ test.describe('Quiz Teacher Controls & Real-time Features', () => {
         const allButtons = await teacherPage.locator('button').allTextContents();
         log(`Available buttons: ${JSON.stringify(allButtons.slice(0, 15))}`); // Show first 15 buttons
 
-        // Look for play/pause/stop buttons with various selectors
-        const playButtonSelectors = [
-            'button[data-play-pause-btn]',
-            'button:has-text("Play")',
-            'button:has-text("▶️")',
-            'button:has-text("Start")',
-            'button.play-btn',
-            '.play-button button'
-        ];
-
-        let playButton;
-        for (const selector of playButtonSelectors) {
-            const buttons = teacherPage.locator(selector);
-            const count = await buttons.count();
-            log(`Found ${count} buttons with selector: ${selector}`);
-            if (count > 0) {
-                playButton = buttons.first();
-                log(`Using first play button with selector: ${selector}`);
-                break;
-            }
+        // First, try to select the first question if not already selected
+        const questionItems = teacherPage.locator('[data-testid="question"], .question-display, .sortable-question');
+        if (await questionItems.count() > 0) {
+            log('Selecting first question...');
+            await questionItems.first().click();
+            await teacherPage.waitForTimeout(500);
         }
 
-        if (playButton && await playButton.isVisible({ timeout: 2000 })) {
+        // Look for play button within the selected question
+        const firstQuestion = questionItems.first();
+        const playButton = firstQuestion.locator('button[data-testid="play-button"], button:has(svg), button[class*="play"]').first();
+
+        if (await playButton.count() > 0) {
+            log('Found play button within selected question');
             await playButton.click();
             log('✅ Teacher clicked play button on selected question');
 
