@@ -328,14 +328,25 @@ export function usePracticeSession({
     }, [updateState, clearStoredSessionId]);
 
     const handleSessionError = useCallback((payload: PracticeSessionErrorPayload) => {
-        logger.error('Practice session error', payload);
-
-        // Clear stored session ID if session was not found (allows starting new session)
+        // 'session_not_found' is a common, non-fatal condition during session recovery
+        // (for example when a stored session expired in Redis). Treat it as INFO
+        // so it doesn't spam the console as an ERROR while still clearing the
+        // stale stored session id.
         if (payload.errorType === 'session_not_found') {
+            logger.info('Practice session not found during recovery', payload);
             clearStoredSessionId();
             logger.info('Cleared stored session ID due to session_not_found error');
+
+            // Do not surface this as a user-visible error; just stop connecting
+            updateState({
+                connecting: false,
+                error: null
+            });
+            return;
         }
 
+        // Other error types are unexpected and should be surfaced as errors
+        logger.error('Practice session error', payload);
         updateState({
             error: payload.message,
             connecting: false
