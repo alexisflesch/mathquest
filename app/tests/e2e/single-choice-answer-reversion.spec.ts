@@ -2,7 +2,7 @@
  * E2E Test: Single Choice Answer Reversion
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { TestDataHelper, LoginHelper } from './helpers/test-helpers';
 
 // Test configuration
@@ -94,7 +94,7 @@ async function createQuizViaAPI(page: any, teacherData: any) {
 }
 
 // Helper to handle guest authentication
-async function authenticateAsGuest(page: any, userConfig: { username: string; avatar: string }): Promise<void> {
+async function authenticateAsGuest(page: Page, userConfig: { username: string; avatar: string }): Promise<void> {
     log(`Starting guest authentication for ${userConfig.username}...`);
 
     await page.goto(TEST_CONFIG.frontendUrl + '/login');
@@ -117,7 +117,7 @@ async function authenticateAsGuest(page: any, userConfig: { username: string; av
     // Wait a bit for avatars to load
     await page.waitForTimeout(1000);
 
-    // Select first available avatar
+    // Select first available avatar (with timeout protection)
     const avatarSelector = '[data-testid="avatar-option"], .avatar-option, img[alt*="avatar"], button:has(img)';
     await page.waitForSelector(avatarSelector, { timeout: 5000 });
     const avatars = page.locator(avatarSelector);
@@ -125,6 +125,7 @@ async function authenticateAsGuest(page: any, userConfig: { username: string; av
     log(`Found ${avatarCount} avatars to choose from`);
 
     if (avatarCount > 0) {
+        log('Attempting to click first avatar...');
         await avatars.first().click();
         log('Selected first available avatar');
 
@@ -133,9 +134,8 @@ async function authenticateAsGuest(page: any, userConfig: { username: string; av
         const postAvatarContent = await page.textContent('body');
         log(`Page content after avatar selection (first 500 chars): ${postAvatarContent?.substring(0, 500)}`);
     } else {
-        // Fallback: try clicking anywhere that might select an avatar
-        await page.click('body');
-        log('Clicked body as avatar fallback');
+        log('❌ No avatars found to select');
+        throw new Error('No avatars available for selection');
     }
 
     // Wait a moment after avatar selection
