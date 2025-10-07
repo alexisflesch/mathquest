@@ -11,6 +11,12 @@ jest.mock('../components/MonacoYamlEditor', () => ({
     ),
 }));
 
+jest.mock('@/components/AuthProvider', () => ({
+    useAuth: () => ({
+        userProfile: { username: 'testuser' }
+    }),
+}));
+
 const buildQuestion = (overrides: Partial<MultipleChoiceQuestion> = {}): MultipleChoiceQuestion => ({
     uid: 'test-question',
     discipline: 'a',
