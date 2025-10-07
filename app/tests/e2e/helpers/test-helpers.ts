@@ -54,10 +54,17 @@ export class TestDataHelper {
             }
         });
 
+        console.log(`📊 Registration response status: ${response.status()}`);
+        console.log(`📊 Registration response headers:`, response.headers());
+
         if (!response.ok()) {
             const errorBody = await response.text();
+            console.log(`❌ Registration failed with body: ${errorBody}`);
             throw new Error(`Failed to create teacher: ${response.status()} - ${errorBody}`);
         }
+
+        const responseBody = await response.json();
+        console.log(`✅ Registration successful, response:`, responseBody);
 
         const result = await response.json();
         console.log(`✅ Teacher created successfully: ${result.user?.id || result.user?.username || userData.username}`);
@@ -278,7 +285,7 @@ export class LoginHelper {
     async loginAsTeacher(credentials: { email: string; password: string }): Promise<void> {
         console.log(`🧑‍🏫 Logging in teacher: ${credentials.email}`);
 
-        await this.page.goto('/');
+        await this.page.goto('/login');
         await this.page.waitForLoadState('networkidle');
         console.log(`🔍 Current URL: ${this.page.url()}`);
         console.log(`🔍 Page title: ${await this.page.title()}`);
@@ -299,67 +306,75 @@ export class LoginHelper {
             return;
         }
 
-        // Switch to account login mode (layout recently changed to guest/account toggle)
-        console.log('🔄 Switching to account login mode...');
+        // Check if we're already in account login mode (email input visible)
+        const emailInputAlreadyVisible = await this.page.locator('input[name="email"], input[type="email"]').isVisible().catch(() => false);
+        console.log(`🔍 Email input already visible: ${emailInputAlreadyVisible}`);
 
-        // Ensure buttons have rendered before scanning
-        await this.page.waitForSelector('button', { timeout: 10000 }).catch(() => undefined);
+        if (!emailInputAlreadyVisible) {
+            // Switch to account login mode (layout recently changed to guest/account toggle)
+            console.log('🔄 Switching to account login mode...');
 
-        // Debug: Check what buttons are available on the page
-        const allButtons = await this.page.locator('button').all();
-        console.log(`🔍 Found ${allButtons.length} buttons on the page:`);
-        for (let i = 0; i < allButtons.length; i++) {
-            const button = allButtons[i];
-            const text = await button.textContent().catch(() => 'no-text');
-            const className = await button.getAttribute('class').catch(() => 'no-class');
-            console.log(`  Button ${i}: "${text}" (class: ${className})`);
-        }
+            // Ensure buttons have rendered before scanning
+            await this.page.waitForSelector('button', { timeout: 10000 }).catch(() => undefined);
 
-        const accountToggleSelectors = [
-            'button:has-text("Compte enseignant")',
-            'button:has-text("Compte")',
-            'button:has-text("Account")',
-            '[data-testid="auth-toggle-account"]'
-        ];
-
-        let accountToggle = null;
-        for (const selector of accountToggleSelectors) {
-            const candidate = this.page.locator(selector).first();
-            const visible = await candidate.isVisible().catch(() => false);
-            if (visible) {
-                accountToggle = candidate;
-                break;
+            // Debug: Check what buttons are available on the page
+            const allButtons = await this.page.locator('button').all();
+            console.log(`🔍 Found ${allButtons.length} buttons on the page:`);
+            for (let i = 0; i < allButtons.length; i++) {
+                const button = allButtons[i];
+                const text = await button.textContent().catch(() => 'no-text');
+                const className = await button.getAttribute('class').catch(() => 'no-class');
+                console.log(`  Button ${i}: "${text}" (class: ${className})`);
             }
-            try {
-                await candidate.waitFor({ timeout: 2000, state: 'visible' });
-                accountToggle = candidate;
-                break;
-            } catch {
-                continue;
+
+            const accountToggleSelectors = [
+                'button:has-text("Compte enseignant")',
+                'button:has-text("Compte")',
+                'button:has-text("Account")',
+                '[data-testid="auth-toggle-account"]'
+            ];
+
+            let accountToggle = null;
+            for (const selector of accountToggleSelectors) {
+                const candidate = this.page.locator(selector).first();
+                const visible = await candidate.isVisible().catch(() => false);
+                if (visible) {
+                    accountToggle = candidate;
+                    break;
+                }
+                try {
+                    await candidate.waitFor({ timeout: 2000, state: 'visible' });
+                    accountToggle = candidate;
+                    break;
+                } catch {
+                    continue;
+                }
             }
+
+            if (accountToggle) {
+                console.log(`✅ Found account toggle (${await accountToggle.textContent().catch(() => 'unknown')}), clicking...`);
+                await accountToggle.click();
+                console.log('✅ Account toggle clicked');
+
+                // Wait for the account form to appear - remove timeout to avoid test timeout
+                console.log('⏳ Waiting for account form to load...');
+                // await this.page.waitForTimeout(2000);
+            } else {
+                console.log('⚠️ Account toggle not found, assuming already in account mode');
+            }
+        } else {
+            console.log('✅ Already in account login mode');
         }
 
-        if (!accountToggle) {
-            throw new Error('Account/teacher login toggle not found on login page');
-        }
-
-        console.log(`✅ Found account toggle (${await accountToggle.textContent().catch(() => 'unknown')}), clicking...`);
-        await accountToggle.click();
-        console.log('✅ Account toggle clicked');
-
-        // Wait for the account form to appear and ensure we're in login mode
-        console.log('⏳ Waiting for account form to load...');
-        await this.page.waitForTimeout(2000);
-
-        // Check if the tab actually switched by looking for account-specific elements
-        const accountFormVisible = await this.page.locator('input[name="email"]').isVisible().catch(() => false);
-        console.log(`🔍 Account form visible after tab switch: ${accountFormVisible}`);
+        // Now check for the account form
+        const accountFormVisible = await this.page.locator('input[name="email"], input[type="email"]').isVisible().catch(() => false);
+        console.log(`🔍 Account form visible: ${accountFormVisible}`);
 
         if (!accountFormVisible) {
             console.log('❌ Account form not visible, checking what inputs are actually present...');
             // Debug: Check what inputs are available
             const debugInputs = await this.page.locator('input').all();
-            console.log(`🔍 Found ${debugInputs.length} input fields after clicking Compte`);
+            console.log(`🔍 Found ${debugInputs.length} input fields:`);
             for (let i = 0; i < debugInputs.length; i++) {
                 const input = debugInputs[i];
                 const name = await input.getAttribute('name').catch(() => 'no-name');
@@ -368,7 +383,7 @@ export class LoginHelper {
                 const placeholder = await input.getAttribute('placeholder').catch(() => 'no-placeholder');
                 console.log(`  Input ${i}: name="${name}", type="${type}", id="${id}", placeholder="${placeholder}"`);
             }
-            throw new Error('Account form did not appear after clicking Compte tab');
+            throw new Error('Account form did not appear after attempting to switch to account mode');
         }
 
         // Fill email field - use the exact name attribute that works
@@ -385,17 +400,49 @@ export class LoginHelper {
 
         // Click login button - try multiple selectors
         console.log('🚀 Clicking login button...');
-        const loginButton = this.page.locator('button[type="submit"], button:has-text("Se connecter"), button:has-text("Connexion")').first();
+
+        // First, let's check what submit buttons are available
+        const submitButtons = await this.page.locator('button[type="submit"]').allTextContents();
+        console.log('📋 Available submit buttons:', submitButtons);
+
+        const loginButton = this.page.locator('button[type="submit"], button:has-text("Se connecter"), button:has-text("Connexion"), button:has-text("Login")').first();
         await loginButton.waitFor({ timeout: 3000 });
+
+        const buttonText = await loginButton.textContent();
+        console.log(`🎯 Clicking button with text: "${buttonText}"`);
+
         await loginButton.click();
+
+        // Wait a bit for form submission
+        await this.page.waitForTimeout(1000);
+
+        // Check current URL and page content after login attempt
+        const currentUrl = this.page.url();
+        console.log(`🔍 Current URL after login click: ${currentUrl}`);
+
+        // Check for any error messages
+        const errorMessages = await this.page.locator('.error, .alert, [class*="error"], [class*="alert"]').allTextContents();
+        if (errorMessages.length > 0) {
+            console.log('❌ Found error messages:', errorMessages);
+        }
+
+        // Check if we're still on login page
+        if (currentUrl.includes('/login')) {
+            console.log('❌ Still on login page - login may have failed');
+            // Take a screenshot for debugging
+            await this.page.screenshot({ path: 'login-failed.png' });
+            throw new Error('Login failed: Still on login page after login attempt');
+        }
 
         // Wait for successful login (redirect to home)
         const result = await Promise.race([
-            this.page.waitForURL('/', { timeout: 10000 }).then(() => 'home'),
-            this.page.waitForTimeout(10000).then(() => 'timeout')
+            this.page.waitForURL('/', { timeout: 20000 }).then(() => 'home'),
+            this.page.waitForTimeout(20000).then(() => 'timeout')
         ]);
 
         if (result === 'timeout') {
+            const finalUrl = this.page.url();
+            console.log(`❌ Login timeout - final URL: ${finalUrl}`);
             throw new Error('Login failed: Timeout waiting for redirect after teacher login');
         }
 

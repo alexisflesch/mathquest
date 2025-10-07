@@ -126,35 +126,31 @@ async function authenticateGuestUser(page: Page, customUsername?: string): Promi
 
 // Helper to authenticate as teacher (using guest login for now)
 async function authenticateTeacherUser(page: Page): Promise<void> {
-    log('Starting teacher guest authentication');
+    log('Starting teacher account creation and authentication');
 
-    await page.goto(`${TEST_CONFIG.baseUrl}/login`);
+    const dataHelper = new TestDataHelper(page);
+    const loginHelper = new LoginHelper(page);
+
+    // Create teacher account
+    const teacherData = await dataHelper.createTeacher({
+        username: 'Pierre',
+        email: `test-teacher-${Date.now()}@test-mathquest.com`,
+        password: 'testpassword123'
+    });
+
+    // Navigate to login page (assuming login is on home page now)
+    await page.goto(`${TEST_CONFIG.baseUrl}/`);
     await page.waitForLoadState('networkidle');
 
-    // Use guest login instead of account login
-    const usernameInput = page.locator('input[placeholder*="name"], input[name="username"], input[id="username"]');
-    await usernameInput.waitFor({ timeout: 5000 });
+    // Login as teacher
+    await loginHelper.loginAsTeacher({
+        email: teacherData.email!,
+        password: 'testpassword123'
+    });
 
-    await usernameInput.fill('Pierre');
-    log('Filled username: Pierre');
-
-    // Wait for dropdown and click outside to close it
-    await page.waitForTimeout(1000);
-    await page.locator('body').click({ position: { x: 10, y: 10 } });
-    await page.waitForTimeout(500);
-
-    // Select avatar
-    const avatarButton = page.locator('button.emoji-avatar').first();
-    await avatarButton.click();
-
-    // Click submit button
-    const submitButton = page.locator('button[type="submit"], button:has-text("Connexion"), button:has-text("Se connecter"), button:has-text("Login"), button:has-text("Commencer")');
-    await submitButton.click();
-
-    // Wait for authentication to complete - wait twice like the working test
-    await page.waitForSelector('[data-testid="user-profile"], .user-profile, nav, header', { timeout: 15000 });
-    await page.waitForSelector('[data-testid="user-profile"], .user-profile, nav, header', { timeout: 15000 });
-    log(`✅ Guest teacher authentication successful for Pierre`);
+    // Verify login was successful
+    await expect(page.locator('button:has-text("Déconnexion"), button:has-text("Logout")')).toBeVisible();
+    log(`✅ Teacher authentication successful for ${teacherData.username}`);
 }
 
 // Helper to create a tournament directly (not from template)
@@ -834,6 +830,7 @@ test.describe('MathQuest Comprehensive Full Flow Test Suite', () => {
 
     test.describe('Quiz Full Flow', () => {
         test('complete quiz with teacher controls and multiple students', async ({ browser }) => {
+            test.setTimeout(30000);
             const contexts: BrowserContext[] = [];
             const pages: Page[] = [];
 
