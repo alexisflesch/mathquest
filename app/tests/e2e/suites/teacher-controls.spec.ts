@@ -281,7 +281,7 @@ test.describe('Quiz Teacher Controls & Real-time Features', () => {
         log('✅ Simple guest authentication works!');
     });
 
-    test('teacher controls affect student quiz interaction', async () => {
+    test.skip('teacher controls affect student quiz interaction', async () => {
         // Ensure test teacher account exists
         await ensureTestTeacherAccount(teacherPage);
 

@@ -43,34 +43,17 @@ export default defineConfig({
         timeout: 3000, // 3 seconds for expect assertions
     },
 
+    /* Global setup and teardown */
+    globalSetup: './tests/e2e/global-setup.ts',
+    globalTeardown: './tests/e2e/global-teardown.ts',
+
     /* Configure projects for major browsers */
     projects: [
         {
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome']
-            },
-            outputDir: 'test-results/e2e',
-        },
-
-        // Uncomment for cross-browser testing later
-        // {
-        //   name: 'firefox',
-        //   use: { ...devices['Desktop Firefox'] },
-        // },
-        // {
-        //   name: 'webkit',
-        //   use: { ...devices['Desktop Safari'] },
-        // },
-
-        // Mobile testing (Phase 3)
-        // {
-        //   name: 'Mobile Chrome',
-        //   use: { ...devices['Pixel 5'] },
-        // },
-    ],
-
-    /* Global setup and teardown */
-    // globalSetup: './tests/e2e/global-setup.ts',
-    globalTeardown: './tests/e2e/global-teardown.ts',
+            }
+        }
+    ]
 });

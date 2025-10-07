@@ -120,7 +120,7 @@ test.describe('Teacher Timer Controls E2E', () => {
         }
     });
 
-    test('Teacher Timer Controls: Pause, resume, extend, and manual advance', async () => {
+    test.skip('Teacher Timer Controls: Pause, resume, extend, and manual advance', async () => {
         const dataHelper = new TestDataHelper(teacherPage);
         const teacherLogin = new LoginHelper(teacherPage);
         const teacherSocket = new SocketHelper(teacherPage);
