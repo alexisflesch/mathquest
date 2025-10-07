@@ -302,7 +302,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                             </div>
                         </div>
 
-                        {/* Two-column stacked controls: left column shows Niveau then Thèmes; right column shows Discipline then Tags */}
+                        {/* Two-column stacked controls: ensure mobile stacking order is gradeLevel, discipline, themes, tags */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-4">
                                 <div title="Niveau scolaire">
@@ -314,18 +314,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     />
                                 </div>
 
-                                <div title="Choisissez un ou plusieurs thèmes liés au niveau et à la discipline.">
-                                    <EnhancedMultiSelectDropdown
-                                        options={availableThemes.map(t => ({ value: t, label: t, isCompatible: true }))}
-                                        selected={question.themes || []}
-                                        onChange={(values) => handleFieldChange('themes', values)}
-                                        placeholder="Sélectionner un ou plusieurs thèmes"
-                                        disabled={!question.gradeLevel || availableThemes.length === 0}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
                                 <div title="Discipline">
                                     <EnhancedSingleSelectDropdown
                                         options={availableDisciplines}
@@ -333,6 +321,18 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                         onChange={(value) => handleFieldChange('discipline', value)}
                                         placeholder="Sélectionner une discipline"
                                         disabled={!question.gradeLevel || availableDisciplines.length === 0}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div title="Choisissez un ou plusieurs thèmes liés au niveau et à la discipline.">
+                                    <EnhancedMultiSelectDropdown
+                                        options={availableThemes.map(t => ({ value: t, label: t, isCompatible: true }))}
+                                        selected={question.themes || []}
+                                        onChange={(values) => handleFieldChange('themes', values)}
+                                        placeholder="Sélectionner un ou plusieurs thèmes"
+                                        disabled={!question.gradeLevel || availableThemes.length === 0}
                                     />
                                 </div>
 
@@ -478,7 +478,8 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                     </div>
                                     <div className="space-y-2">
                                         {question.answerOptions.map((option, index) => (
-                                            <div key={index} className="flex items-center gap-2 bg-background p-2 rounded-lg">
+                                            // add min-w-0 so flex children (text input) can shrink on small screens
+                                            <div key={index} className="flex items-center gap-2 bg-background p-2 rounded-lg min-w-0">
                                                 <input
                                                     type={question.questionType === 'single_choice' ? 'radio' : 'checkbox'}
                                                     checked={question.correctAnswers[index]}
@@ -491,13 +492,15 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                                     value={option}
                                                     onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
                                                     title={`Texte de la réponse ${index + 1}`}
-                                                    className="flex-1 px-2 py-1.5 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                                    // allow input to shrink inside flex container
+                                                    className="flex-1 min-w-0 px-2 py-1.5 border border-dropdown-border bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                                     placeholder={`Réponse ${index + 1}`}
                                                 />
                                                 <button
                                                     onClick={() => removeAnswerOption(index)}
                                                     title="Supprimer cette option."
-                                                    className="p-2 text-alert hover:bg-alert/10 rounded-lg transition-all"
+                                                    // prevent the button from shrinking so icon stays visible and doesn't overflow
+                                                    className="p-2 text-alert hover:bg-alert/10 rounded-lg transition-all flex-shrink-0"
                                                 >
                                                     <X className="w-5 h-5" />
                                                 </button>
