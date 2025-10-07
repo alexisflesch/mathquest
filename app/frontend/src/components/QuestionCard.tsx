@@ -352,27 +352,31 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                             />
                                         )}
                                         {/* Button content above the bar */}
-                                        {/* Left content: allow shrink, but do NOT own horizontal scrollbars */}
+                                        {/* Badge strip above content (shown when readonly and correct/wrong) */}
+                                        {/* Right-side container: percentage and icons appear here visually but are absolutely positioned so the text can use full width */}
+                                        {(showStats && statPercent !== null) || showGood || showWrong ? (
+                                            <div className="answer-side-container" style={{ zIndex: 2 }}>
+                                                {showStats && statPercent !== null && (
+                                                    <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
+                                                        {statPercent.toFixed(1)}%
+                                                    </span>
+                                                )}
+                                                {showGood && (
+                                                    <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0, marginLeft: showStats ? 8 : 0 }}>
+                                                        <GoodAnswer size={18} iconColor="currentColor" />
+                                                    </span>
+                                                )}
+                                                {showWrong && (
+                                                    <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0, marginLeft: showStats ? 8 : 0 }}>
+                                                        <WrongAnswer size={18} iconColor="currentColor" />
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : null}
+
+                                        {/* Left content: allow shrink, do NOT own horizontal scrollbars. Text can use full width now. */}
                                         <span style={{ display: 'block', alignItems: 'flex-start', position: 'relative', zIndex: 1, width: '100%', minWidth: 0, overflowX: 'visible', overflowY: 'visible' }}>
                                             <MathJaxWrapper>{answerText}</MathJaxWrapper>
-                                        </span>
-                                        {/* Right-aligned percentage and icon */}
-                                        <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1, flexShrink: 0 }}>
-                                            {showStats && statPercent !== null && (
-                                                <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
-                                                    {statPercent.toFixed(1)}%
-                                                </span>
-                                            )}
-                                            {showGood && (
-                                                <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                                    <GoodAnswer size={18} iconColor="currentColor" />
-                                                </span>
-                                            )}
-                                            {showWrong && (
-                                                <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                                    <WrongAnswer size={18} iconColor="currentColor" />
-                                                </span>
-                                            )}
                                         </span>
                                     </button>
                                 </li>

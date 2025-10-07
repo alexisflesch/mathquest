@@ -619,7 +619,7 @@ textarea {
   background: var(--dropdown);
   border: 1.5px solid var(--input);
   border-radius: var(--radius);
-  padding: 0.75rem 1rem;
+  padding: 1.1rem 1rem 0.75rem;
   font-size: 1rem;
   color: var(--foreground);
   transition: border 0.15s, box-shadow 0.15s;
@@ -1018,6 +1018,22 @@ textarea:focus {
   /* Always show a border */
   color: var(--foreground);
   cursor: pointer;
+}
+
+/* removed top badge strip; side container retained below */
+
+/* Container used to show percentage and icons at the right without reserving layout space */
+.answer-side-container {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  /* visual only */
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .tqcard-answer-selected {
