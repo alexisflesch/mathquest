@@ -168,7 +168,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             )}
             {/* Question text */}
             <div
-                className={`text-xl font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}
+                className={`font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}
                 // Inline style: allow the MathJax container to expand vertically while preserving horizontal scrolling.
                 // alignSelf/stretch and minHeight:0 help avoid flexbox compression from ancestors.
                 style={{ display: 'block', alignSelf: 'stretch', minHeight: 0 as any, overflowX: 'auto', overflowY: 'visible' }}
