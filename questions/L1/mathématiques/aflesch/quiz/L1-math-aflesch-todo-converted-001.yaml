@@ -1,0 +1,157 @@
+- uid: aflesch-mt1-espaces-vectoriels-008
+  author: aflesch
+  discipline: Mathématiques
+  title: Le piège de la dimension
+  text: >
+    Soit une application linéaire \(f: E \to F\) avec \(\dim(E) = 3\) et
+    \(\dim(F) = 4\).
+
+    Laquelle de ces affirmations est toujours vraie?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+  tags:
+    - dimension
+    - rang
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Si \(f\) est injective, alors elle est aussi surjective.
+    - \(f\) n'est pas surjective.
+    - \(f\) est injective.
+    - Le rang de \(f\) est 4.
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+
+- uid: aflesch-mt1-applications-lineaires-001
+  author: aflesch
+  discipline: Mathématiques
+  title: Inversibilité en pratique (déterminant)
+  text: >
+    Soit \(f\) l'endomorphisme de \(\mathbb{R}^2\) dont la matrice dans la base
+    canonique
+
+    est \(A = \begin{pmatrix} 1 & 2 \\\\ k & 4 \end{pmatrix}\), où \(k\) est un
+    réel. Pour quelle valeur de \(k\) l'endomorphisme \(f\) n'est-il pas
+    bijectif ?
+  questionType: numeric
+  themes:
+    - Applications linéaires
+  tags:
+  tags:
+    - matrice d'application linéaire
+    - endomorphisme
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  correctAnswer: 2
+
+- uid: aflesch-mt1-espaces-vectoriels-009
+  author: aflesch
+  discipline: Mathématiques
+  title: Sous-espaces supplémentaires (cas concret)
+  text: >
+    Dans \(E = \mathbb{R}^2\), lesquels de ces couples de sous-espaces sont
+    supplémentaires ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - espace supplémentaire
+    - sous-espace vectoriel
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - F = Vect\((1,0)\) et G = Vect\((2,0)\).
+    - F = Vect\((1,0)\) et G = \(E\).
+    - F = Vect\((1,0)\) et G = Vect\((1,1)\)
+    - F = \(\{(0,0)\}\) et G = Vect\((1,2)\).
+  correctAnswers:
+    - false
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt1-applications-lineaires-002
+  author: aflesch
+  discipline: Mathématiques
+  title: Trouver un noyau (résolution de système)
+  text: >
+    Soit \(f\) l'endomorphisme de \(\mathbb{R}^3\) dont la matrice dans la base
+    canonique est :
+
+
+    \(\displaystyle A = \begin{pmatrix} 1 & 1 & 2 \\\\ 1 & 0 & 1 \\\\ 0 & 1 & 1
+    \end{pmatrix} \)
+
+
+    Quel vecteur est dans \(\ker(f)\)?
+  questionType: single_choice
+  themes:
+    - Applications linéaires
+  tags:
+    - noyau
+  timeLimit: 90
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - \((1, 1, -1)\)
+    - \((2, 1, 1)\)
+    - \((-1, -1, 1)\)
+    - \((1, 1, 1)\)
+  correctAnswers:
+    - false
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-010
+  author: aflesch
+  discipline: Mathématiques
+  title: Stabilité par un endomorphisme
+  text: >
+    Soit \(f\) l'endomorphisme de \(\mathbb{R}^3\) dont la matrice dans la base
+    canonique
+
+    \((e_1,e_2,e_3)\) est :
+
+
+    \(A = \begin{pmatrix} 1 & 2 & 0 \\\\ 3 & 4 & 0 \\\\ 0 & 0 & 5
+    \end{pmatrix}\)
+
+
+    Lequel de ces sous-espaces est stable par \(f\) ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - sous-espace vectoriel
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - La droite Vect\((e_1)\).
+    - La droite Vect\((e_3)\).
+    - Le plan Vect\((e_1, e_3)\).
+    - La droite Vect\((e_1+e_2)\).
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false

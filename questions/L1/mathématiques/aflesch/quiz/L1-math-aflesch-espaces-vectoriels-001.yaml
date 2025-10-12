@@ -2,8 +2,10 @@
   author: aflesch
   discipline: Mathématiques
   title: Base et famille
-  text: |
-    On considère deux vecteurs \(u\) et \(v\) non colinéaires de \(\mathbb{R}^2\).
+  text: >
+    On considère deux vecteurs \(u\) et \(v\) non colinéaires de
+    \(\mathbb{R}^2\).
+
     Laquelle des affirmations suivantes est correctement formulée ?
   questionType: single_choice
   themes:
@@ -14,6 +16,8 @@
   timeLimit: 45
   difficulty: 1
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \(\text{Vect}(u,v)\) est une base de \(\mathbb{R}^2\).
     - \((u,v)\) est une base de \(\text{Vect}(u,v)\).
@@ -29,8 +33,9 @@
   author: aflesch
   discipline: Mathématiques
   title: Sous-espace vectoriel
-  text: |
-    Laquelle des expressions suivantes désigne un sous-espace vectoriel de \(\mathbb{R}^n\) ?
+  text: >
+    Soient \(e_1\) et \(e_2\) deux vecteurs de \(\mathbb{R}^n\). Laquelle des
+    expressions suivantes désigne un sous-espace vectoriel de \(\mathbb{R}^n\)?
   questionType: single_choice
   themes:
     - Espaces vectoriels
@@ -39,6 +44,8 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \((e_1,e_2)\)
     - \(\{e_1,e_2\}\)
@@ -53,11 +60,10 @@
 - uid: aflesch-mt1-espaces-vectoriels-003
   author: aflesch
   discipline: Mathématiques
-  title: Famille vs espace (Vrai/Faux)
-  text: |
-    Dire si l'affirmation suivante est vraie ou fausse, et justifier.
-
-    « Si \(u\) et \(v\) sont deux vecteurs non colinéaires de \(\mathbb{R}^2\), alors \(\text{Vect}(u,v)\) est une base de \(\mathbb{R}^2\). »
+  title: Famille vs espace
+  text: >
+    Si \(u\) et \(v\) sont deux vecteurs non colinéaires de \(\mathbb{R}^2\),
+    alors \(\text{Vect}(u,v)\) est une base de \(\mathbb{R}^2\).
   questionType: single_choice
   themes:
     - Espaces vectoriels
@@ -67,9 +73,11 @@
   timeLimit: 90
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
-    - Vraie
-    - Fausse
+    - Vrai
+    - Faux
   correctAnswers:
     - false
     - true
@@ -78,9 +86,9 @@
   author: aflesch
   discipline: Mathématiques
   title: Familles de vecteurs dans \(\mathbb{R}^2\)
-  text: |
-    Soit \(u=(1,0)\), \(v=(0,1)\), \(w=(1,1)\) dans \(\mathbb{R}^2\).
-    Parmi les affirmations suivantes, laquelle est correcte ?
+  text: >
+    Soit \(u=(1,0)\), \(v=(0,1)\) et \(w=(1,1)\). Parmi les affirmations
+    suivantes, laquelle est correcte ?
   questionType: single_choice
   themes:
     - Espaces vectoriels
@@ -90,6 +98,8 @@
   timeLimit: 45
   difficulty: 1
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \((u,v,w)\) est une base de \(\mathbb{R}^2\).
     - \(\text{Vect}(u,v,w)\) est une famille libre.
@@ -105,10 +115,10 @@
   author: aflesch
   discipline: Mathématiques
   title: Dimension d'un sous-espace engendré
-  text: |
-    Soient \(u,v,w\in\mathbb{R}^5\) trois vecteurs linéairement indépendants.
-    Quelle est la dimension de \(\text{Vect}(u,v,w)\) ?
-  questionType: single_choice
+  text: >
+    Soient \(u\), \(v\) et \(w\) trois vecteurs de \(\mathbb{R}^5\) linéairement
+    indépendants. Quelle est la dimension de \(\text{Vect}(u,v,w)\) ?
+  questionType: numeric
   themes:
     - Espaces vectoriels
   tags:
@@ -117,16 +127,9 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: L1
-  answerOptions:
-    - 2
-    - 3
-    - 4
-    - 5
-  correctAnswers:
-    - false
-    - true
-    - false
-    - false
+  explanation: ''
+  feedbackWaitTime: 15
+  correctAnswer: 3
 
 - uid: aflesch-mt1-espaces-vectoriels-006
   author: aflesch
@@ -142,11 +145,15 @@
   timeLimit: 60
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
-    - Une famille de 4 vecteurs dans \(\mathbb{R}^3\) peut être libre.
-    - Une famille contenant le vecteur nul est libre.
-    - Une famille de 2 vecteurs non colinéaires dans \(\mathbb{R}^2\) est une base.
-    - \(\text{Vect}(u)\) est une droite vectorielle (si \(u\neq 0\)).
+    - Une famille de 4 vecteurs dans \(\mathbb{R}^3\) peut être libre
+    - Une famille contenant le vecteur nul est libre
+    - >-
+      Une famille de 2 vecteurs non colinéaires dans \(\mathbb{R}^2\) est une
+      base
+    - \(\text{Vect}(u)\) est une droite vectorielle
   correctAnswers:
     - false
     - true
@@ -156,11 +163,10 @@
 - uid: aflesch-mt1-espaces-vectoriels-007
   author: aflesch
   discipline: Mathématiques
-  title: Génératrice et base (Vrai/Faux)
-  text: |
-    Vrai ou faux ? Justifier.
-
-    « Si \((u,v)\) est une famille génératrice de \(E\) et que \(u\) et \(v\) ne sont pas colinéaires, alors \((u,v)\) est une base de \(E\). »
+  title: Génératrice et base
+  text: >
+    Si \((u,v)\) est une famille génératrice de \(E\) et que \(u\) et \(v\) ne
+    sont pas colinéaires, alors \((u,v)\) est une base de \(E\).
   questionType: single_choice
   themes:
     - Espaces vectoriels
@@ -170,103 +176,11 @@
   timeLimit: 90
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
-    - Vraie
-    - Fausse
-  correctAnswers:
-    - false
-    - true
-
-- uid: aflesch-mt1-espaces-vectoriels-008
-  author: aflesch
-  discipline: Mathématiques
-  title: Formulation correcte
-  text: |
-    Corrigez la phrase suivante (très fréquente, mais incorrecte) :
-
-    « Puisque \(u\) et \(v\) ne sont pas colinéaires, \(\text{Vect}(u,v)\) est une base de \(\mathbb{R}^2\). »
-  questionType: single_choice
-  themes:
-    - Espaces vectoriels
-  tags:
-    - base
-    - famille libre
-  timeLimit: 120
-  difficulty: 2
-  gradeLevel: L1
-  answerOptions:
-    - |
-      Puisque \(u\) et \(v\) ne sont pas colinéaires, \(\text{Vect}(u,v)\) est une base de \(\mathbb{R}^2\).
-    - |
-      Puisque \(u\) et \(v\) ne sont pas colinéaires, la famille \((u,v)\) est libre. Comme elle contient 2 vecteurs et que \(\dim(\mathbb{R}^2)=2\), c'est une base de \(\mathbb{R}^2\).
-    - |
-      La famille \(\{u,v\}\) est une base de \(\mathbb{R}^2\).
-    - |
-      Si \(u\) et \(v\) ne sont pas colinéaires alors \((u,v)\) engendre \(\mathbb{R}^3\).
-  correctAnswers:
-    - false
-    - true
-    - false
-    - false
-
-- uid: aflesch-mt1-espaces-vectoriels-009
-  author: aflesch
-  discipline: Mathématiques
-  title: Famille ordonnée vs ensemble
-  text: |
-    Laquelle de ces notations désigne une famille ordonnée de vecteurs ?
-  questionType: single_choice
-  themes:
-    - Espaces vectoriels
-  tags:
-    - famille libre
-  timeLimit: 30
-  difficulty: 1
-  gradeLevel: L1
-  answerOptions:
-    - \(\{u,v\}\)
-    - \(\text{Vect}(u,v)\)
-    - \((u,v)\)
-    - \(u+v\)
-  correctAnswers:
-    - false
-    - false
-    - true
-    - false
-
-- uid: aflesch-mt1-espaces-vectoriels-010
-  author: aflesch
-  discipline: Mathématiques
-  title: Synthèse (vrai/faux multiples)
-  text: |
-    Soit \(E=\text{Vect}(u,v,w)\subset\mathbb{R}^4\), avec \(u,v,w\) linéairement indépendants.
-    Répondre par vrai ou faux à chaque affirmation :
-
-    1. \(\dim E = 3\)
-    2. \((u,v,w)\) est une base de \(E\)
-    3. \(\text{Vect}(u,v,w)\) est une base de \(E\)
-    4. \((u,v)\) est une famille libre
-    5. \((u,v,w)\) est une base de \(\mathbb{R}^4\)
-  questionType: multiple_choice
-  themes:
-    - Espaces vectoriels
-  tags:
-    - dimension
-    - base
-  timeLimit: 90
-  difficulty: 2
-  gradeLevel: L1
-  answerOptions:
-    - Vrai
-    - Vrai
-    - Faux
     - Vrai
     - Faux
   correctAnswers:
-    - true
-    - true
     - false
     - true
-    - false
-
-...
