@@ -1,0 +1,108 @@
+- uid: aflesch-mt1-espaces-vectoriels-011
+  author: aflesch
+  discipline: Mathématiques
+  title: Dépendance linéaire simple
+  text: |
+    Soient \(u,v,w\) des vecteurs de \(\mathbb{R}^3\) tels que \(w=u+v\).
+    Que peut-on dire de la famille \((u,v,w)\) ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - famille liée
+    - combinaison linéaire
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: L1
+  answerOptions:
+    - Elle est libre.
+    - Elle est liée.
+    - Elle est génératrice de \(\mathbb{R}^3\).
+    - Elle contient le vecteur nul.
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-012
+  author: aflesch
+  discipline: Mathématiques
+  title: Vérifier une base
+  text: |
+    Soit \(E\) un espace vectoriel de dimension 3 et \((e_1,e_2,e_3)\) une
+    famille de \(E\). Pour montrer que cette famille est une base, il suffit de
+    prouver que :
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - base
+    - dimension
+  timeLimit: 45
+  difficulty: 2
+  gradeLevel: L1
+  answerOptions:
+    - La famille est libre.
+    - La famille est génératrice.
+    - La famille est libre et génératrice.
+    - La famille contient trois éléments.
+  correctAnswers:
+    - false
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-013
+  author: aflesch
+  discipline: Mathématiques
+  title: Coordonnées dans une base
+  text: |
+    Soit la base \((e_1,e_2)\) de \(\mathbb{R}^2\). Le vecteur \(v\) a pour
+    coordonnées \((2,-1)\) dans cette base. Quelle est l'expression de \(v\) ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - base
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L1
+  answerOptions:
+    - \(v=2e_1- e_2\)
+    - \(v=e_1+2e_2\)
+    - \(v=2e_1+ e_2\)
+    - \(v= -2e_1+ e_2\)
+  correctAnswers:
+    - true
+    - false
+    - false
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-014
+  author: aflesch
+  discipline: Mathématiques
+  title: Sous-espace engendré par des colonnes
+  text: |
+    Soit la matrice \(A=\begin{pmatrix}1&0\\0&1\\1&1\end{pmatrix}\). Les colonnes de
+    \(A\) engendrent-elles \(\mathbb{R}^3\) ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - rang
+  timeLimit: 60
+  difficulty: 2
+  gradeLevel: L1
+  answerOptions:
+    - Oui, car les deux colonnes sont linéairement indépendantes et forment une base de \(\mathbb{R}^3\).
+    - Non, car deux vecteurs ne peuvent pas engendrer \(\mathbb{R}^3\).
+    - Oui, car le rang de \(A\) est 3.
+    - Non, car au moins une colonne est le vecteur nul.
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+
+...

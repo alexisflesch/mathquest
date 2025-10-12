@@ -435,6 +435,24 @@ export default function TeacherQuestionEditorPageClient() {
                         setSelectedQuestionIndex(questionIndex);
                         // Ensure preview switches to this question
                         setMobileTab('editor');
+                    } else {
+                        // If cursor position is invalid (e.g., at end after paste), select the last question
+                        const lastQuestionIndex = updatedQuestions.length - 1;
+                        setSelectedQuestionIndex(lastQuestionIndex);
+                        setMobileTab('editor');
+                        // Position cursor at the last question
+                        if (updatedQuestions[lastQuestionIndex] && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
+                            editorImperativeRef.current.revealUid(updatedQuestions[lastQuestionIndex].uid);
+                        }
+                    }
+                } else {
+                    // If no cursor position provided (e.g., programmatic change), select the last question
+                    const lastQuestionIndex = updatedQuestions.length - 1;
+                    setSelectedQuestionIndex(lastQuestionIndex);
+                    setMobileTab('editor');
+                    // Position cursor at the last question
+                    if (updatedQuestions[lastQuestionIndex] && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
+                        editorImperativeRef.current.revealUid(updatedQuestions[lastQuestionIndex].uid);
                     }
                 }
             }
