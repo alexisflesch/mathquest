@@ -86,9 +86,41 @@
     overflow: visible !important;
 }
 
+/* Global helper wrapper for MathJax (added by assistant):
+   This class is added to the wrapper component so we can always
+   target MathJax output reliably and prevent vertical clipping. */
+.mq-mathjax-wrapper .MathJax_Display,
+.mq-mathjax-wrapper .mjx-block,
+.mq-mathjax-wrapper mjx-container,
+.mq-mathjax-wrapper .mjx-chtml,
+.mq-mathjax-wrapper .MathJax {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.mq-mathjax-wrapper .MathJax *,
+.mq-mathjax-wrapper .mjx-chtml * {
+    overflow: visible !important;
+}
+
 /* Force mjx-container to size to its content inside question cards and answers.
-   MathJax sometimes sets internal scroll regions; this rule forces the container
-   to grow vertically so scrollHeight == clientHeight and no scrollbar appears. */
-/* (removed aggressive mjx-container sizing — keep lighter-weight rules above)
-   The earlier forced sizing caused a blank scroll area; we prefer component-level
-   structural fixes and targeted answer-button overrides instead. */
+    MathJax sometimes sets internal scroll regions; this rule forces the container
+    to grow vertically so scrollHeight == clientHeight and no scrollbar appears.
+    (kept intentionally narrow and component-scoped) */
+
+/* Rendering smoothing + GPU hints
+   When the preview UI scales the student card via `transform: scale(...)`, some
+   browsers produce subtle vertical aliasing/seam artifacts on tall, stretchy
+   delimiters (parentheses/brackets). The rules below enable font-smoothing and
+   force GPU compositing on the MathJax render tree to reduce those seams.
+   These are narrow and only apply to MathJax output contained in the stable
+   wrapper class added to the MathJax component. */
+.mq-mathjax-wrapper,
+.mq-mathjax-wrapper .mjx-chtml,
+.mq-mathjax-wrapper .MathJax {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Keep smoothing but avoid forcing separate compositing layers which
+       can cause thin seam artifacts when the parent is scaled. */
+}

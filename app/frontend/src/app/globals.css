@@ -1549,16 +1549,18 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
    allow horizontal scroll while preventing a vertical scrollbar */
 .card.w-full.max-w-2xl .tqcard-content>.question-text-in-live-page>div {
   overflow-x: auto !important;
-  overflow-y: clip !important;
+  overflow-y: visible !important;
   /* clip avoids showing a scrollbar while preserving layout */
   max-height: none !important;
 }
 
 /* Prevent any vertical scrollbars inside question cards (question text and answers).
-   Scoped narrowly to .tqcard-content to avoid affecting other scrollable regions like
-   the main page content, dialogs, etc. Horizontal scrolling is still allowed where set. */
-.tqcard-content,
-.tqcard-content * {
+   Avoid applying to every descendant (no "*") because MathJax creates many
+   internal boxes that rely on computed overflow for correct rendering. Instead
+   target only the outer .tqcard-content container so inner MathJax nodes can
+   keep their native layout. This prevents nested scrollbars without breaking
+   MathJax's internal measurement. */
+.tqcard-content {
   overflow-y: visible !important;
 }
 
@@ -1574,7 +1576,11 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-chtml,
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .MathJax {
   overflow-x: auto !important;
-  overflow-y: clip !important;
+  /* Use visible rather than clip: clip can hide parts of MathJax rendered
+     elements and interfere with their internal sizing (causes missing parts
+     or cut brackets). visible keeps the content intact while outer container
+     controls scrolling. */
+  overflow-y: visible !important;
   max-height: none !important;
 }
 
@@ -1585,10 +1591,10 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-chtml,
 .card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .MathJax {
   overflow-x: auto !important;
-  overflow-y: clip !important;
+  overflow-y: visible !important;
   max-height: none !important;
 }
 
 /* Import MathJax-specific overrides in a separate file to keep globals.css smaller
    and to make future MathJax-targeted changes easier to find. */
-@import './mathjax-overrides.css';
+/* @import './mathjax-overrides.css'; */
