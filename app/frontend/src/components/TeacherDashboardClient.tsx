@@ -16,7 +16,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { gameControlStatePayloadSchema, type GameControlStatePayload } from '@shared/types/socketEvents.zod.dashboard';
-import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
+import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, DashboardAnswerStatsUpdatePayload, DashboardQuestionChangedPayload } from '@shared/types/socket/dashboardPayloads';
 import { io, Socket } from 'socket.io-client';
 import '@/app/question-cards.css';
 
@@ -344,6 +344,13 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     [payload.questionUid]: payload.stats
                 }));
                 logger.info('✅ Answer stats updated via alternative event:', payload.questionUid, payload.stats);
+            }
+        });
+        socket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_QUESTION_CHANGED, (payload: DashboardQuestionChangedPayload) => {
+            logger.info('📡 RECEIVED dashboard question changed:', payload);
+            if (payload.questionUid) {
+                setQuestionActiveUid(payload.questionUid);
+                logger.info('✅ Active question updated to:', payload.questionUid);
             }
         });
         const statsCheckInterval = setInterval(() => {

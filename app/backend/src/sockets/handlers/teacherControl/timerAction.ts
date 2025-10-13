@@ -299,8 +299,6 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
         const gameId = gameInstance.id;
         const userId = socket.data?.userId || socket.data?.user?.userId;
 
-        // ...existing code...
-
         logger.info({ gameId, userId, action, timerEndDateMs, questionUid }, 'Timer action handler entered');
 
         if (!gameId) {
@@ -718,8 +716,6 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
             // For 'edit' actions, we should NOT switch questions - stay on current question
             let targetQuestionUid = action === 'edit' ? (gameState.questionUids && gameState.currentQuestionIndex >= 0 ? gameState.questionUids[gameState.currentQuestionIndex] : null) : questionUid;
 
-            // ...existing code...
-
             if (targetQuestionUid) {
                 // Check if this is a different question than currently active
                 const currentQuestionUid = gameState.currentQuestionIndex >= 0 &&
@@ -727,8 +723,6 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     gameState.questionUids[gameState.currentQuestionIndex]
                     ? gameState.questionUids[gameState.currentQuestionIndex] || null
                     : null;
-
-                // ...existing code...
 
                 if (currentQuestionUid !== targetQuestionUid) {
                     // Switch to the new question
@@ -890,12 +884,17 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
                 serverTime: Date.now()
             });
-            logger.info({
-                action,
+            logger.warn({
+                marker: '[TIMER_SYNC_DEBUG]',
                 gameId,
-                timerStateAfterEmit: JSON.stringify(timer),
-                gameStateAfterEmit: JSON.stringify(gameState)
-            }, '[DEBUG] After emitting canonical timer events (EXTRA DEBUG)');
+                accessCode,
+                dashboardRoom,
+                emittedPayload: {
+                    timer: canonicalTimer,
+                    questionUid: timer.questionUid ?? undefined,
+                    serverTime: Date.now()
+                }
+            }, '[TIMER_SYNC_DEBUG] Timer update emitted to dashboard room - should be received by all dashboard sockets');
 
         } catch (error) {
             logger.error({ gameId, action, error }, '[TIMER_ACTION] Unhandled error in timerActionHandler');
