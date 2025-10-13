@@ -786,6 +786,17 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             <UsersRound className="w-4 h-4" />
                             {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}
                         </p>
+                        <p className="text-sm">
+                            <a
+                                href={projectionUrl}
+                                className="text-primary hover:text-primary/80 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Ouvrir la page de projection"
+                            >
+                                Ouvrir la vue projection
+                            </a>
+                        </p>
                     </div>
                 </div>
                 {loading && (

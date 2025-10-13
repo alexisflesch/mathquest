@@ -48,7 +48,7 @@
   tags:
     - matrice d'application linéaire
     - endomorphisme
-  timeLimit: 60
+  timeLimit: 45
   difficulty: 1
   gradeLevel: L1
   explanation: ''
@@ -91,13 +91,9 @@
   text: >
     Soit \(f\) l'endomorphisme de \(\mathbb{R}^3\) dont la matrice dans la base
     canonique est :
-
-
-    \(\displaystyle A = \begin{pmatrix} 1 & 1 & 2 \\\\ 1 & 0 & 1 \\\\ 0 & 1 & 1
-    \end{pmatrix} \)
-
-
-    Quel vecteur est dans \(\ker(f)\)?
+    \[A = \begin{pmatrix} 1 & 1 & 2 \\ 1 & 0 & 1 \\ 0 & 1 & 1
+    \end{pmatrix} \]
+    Quel vecteur est dans \(\mathrm{Ker}(f)\)?
   questionType: single_choice
   themes:
     - Applications linéaires
@@ -109,7 +105,7 @@
   explanation: ''
   feedbackWaitTime: 15
   answerOptions:
-    - \((1, 1, -1)\)
+    - \((1, -1, 1)\)
     - \((2, 1, 1)\)
     - \((-1, -1, 1)\)
     - \((1, 1, 1)\)

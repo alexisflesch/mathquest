@@ -173,7 +173,7 @@
   tags:
     - base
     - famille génératrice
-  timeLimit: 90
+  timeLimit: 45
   difficulty: 2
   gradeLevel: L1
   explanation: ''
@@ -182,5 +182,5 @@
     - Vrai
     - Faux
   correctAnswers:
-    - false
     - true
+    - false
