@@ -321,6 +321,7 @@ const DraggableResizable = React.memo(({
         height: element?.h ?? 100,
         touchAction: 'none',
         transform: dragTransform,
+        zIndex: element?.z ?? 1,
         // Remove transition to prevent jump-back effect during drag end
         background: 'transparent',
     };
