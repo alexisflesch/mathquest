@@ -18,7 +18,7 @@ function DraggableBox({ id, children, initial }: { id: string; children: React.R
                 if (!dragging.current) return;
                 setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
             }}
-            onPointerUp={(e) => { dragging.current = false; try { (e.target as Element).releasePointerCapture(e.pointerId); } catch {} }}
+            onPointerUp={(e) => { dragging.current = false; try { (e.target as Element).releasePointerCapture(e.pointerId); } catch { } }}
             style={{ position: 'absolute', left: pos.x, top: pos.y, width: 260, height: 120, background: '#fff', borderRadius: 8, padding: 12, boxShadow: '0 6px 18px rgba(0,0,0,0.08)', border: '2px solid #6dd3e3', touchAction: 'none', userSelect: 'none', cursor: 'grab' }}
             data-id={id}
         >

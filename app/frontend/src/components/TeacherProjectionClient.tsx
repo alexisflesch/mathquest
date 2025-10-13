@@ -273,6 +273,7 @@ const LeaderboardDisplay = React.memo(({
                                 score: entry.score,
                             }))}
                             correctAnswers={correctAnswersData?.correctAnswers || []}
+                            zoomFactor={zoomFactors.classement}
                         />
                     </div>
                 )}
