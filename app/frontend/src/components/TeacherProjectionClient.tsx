@@ -141,21 +141,14 @@ const QuestionDisplay = React.memo(({
                     >
                         <div
                             style={{
-                                transform: `scale(${zoomFactors.question})`,
-                                transformOrigin: 'top center',
-                                width: `calc(100% / ${zoomFactors.question})`,
-                                maxWidth: `calc(100% / ${zoomFactors.question})`,
-                                // For numeric questions with charts, use full height; otherwise auto
-                                height: (isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values)
-                                    ? `calc(100% / ${zoomFactors.question})`
-                                    : 'auto',
-                                minHeight: (isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values)
-                                    ? `calc(100% / ${zoomFactors.question})`
-                                    : 'auto',
+                                // Use font-size (em) based zoom: container keeps same physical size but text scales
+                                fontSize: `${zoomFactors.question}em`,
+                                // Child cards should keep their own physical sizes; use rem/em for fonts inside
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
-                                justifyContent: 'flex-start'
+                                justifyContent: 'flex-start',
+                                width: '100%'
                             }}
                         >
                             <div style={{ flex: '0 0 auto', width: '100%' }}>
@@ -178,6 +171,7 @@ const QuestionDisplay = React.memo(({
                                     stats={showStats && !isNumericQuestion ? statsToShow : undefined}
                                     showStats={showStats && !isNumericQuestion}
                                     projectionMode={true} // Add this prop to hide input fields in projection
+                                    zoomFactor={zoomFactors.question}
                                 />
                             </div>
 
@@ -265,10 +259,8 @@ const LeaderboardDisplay = React.memo(({
                 ) : (
                     <div
                         style={{
-                            transform: `scale(${zoomFactors.classement})`,
-                            transformOrigin: 'top center',
-                            width: `calc(100% / ${zoomFactors.classement})`,
-                            maxWidth: `calc(100% / ${zoomFactors.classement})`,
+                            fontSize: `${zoomFactors.classement}em`,
+                            width: '100%',
                             height: `calc(100% / ${zoomFactors.classement})`,
                             position: 'relative',
                         }}

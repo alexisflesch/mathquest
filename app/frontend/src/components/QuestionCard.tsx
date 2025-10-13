@@ -173,7 +173,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 // alignSelf/stretch and minHeight:0 help avoid flexbox compression from ancestors.
                 style={{ display: 'block', alignSelf: 'stretch', minHeight: 0 as any, overflowX: 'auto', overflowY: 'visible' }}
             >
-                <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
+                <MathJaxWrapper zoomFactor={zoomFactor}>{questionTextToDisplay}</MathJaxWrapper>
             </div>
 
             {/* Conditional rendering based on question type */}
@@ -376,7 +376,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 
                                         {/* Left content: allow shrink, do NOT own horizontal scrollbars. Text can use full width now. */}
                                         <span style={{ display: 'block', alignItems: 'flex-start', position: 'relative', zIndex: 1, width: '100%', minWidth: 0, overflowX: 'visible', overflowY: 'visible' }}>
-                                            <MathJaxWrapper>{answerText}</MathJaxWrapper>
+                                            {/* Ensure answers scale with the same zoomFactor as the question text */}
+                                            <MathJaxWrapper zoomFactor={zoomFactor}>{answerText}</MathJaxWrapper>
                                         </span>
                                     </button>
                                 </li>
