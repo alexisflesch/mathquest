@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Edit, Menu } from 'lucide-react';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import InfoModal from '@/components/SharedModal';
