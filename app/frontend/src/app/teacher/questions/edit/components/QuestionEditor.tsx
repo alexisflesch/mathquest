@@ -45,7 +45,7 @@ interface QuestionEditorProps {
     onEditorReady?: () => void;
 }
 
-export const QuestionEditor: React.FC<QuestionEditorProps> = ({
+export const QuestionEditor: React.FC<QuestionEditorProps> = React.memo(({
     question,
     onChange,
     mode,
@@ -581,4 +581,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             </div>
         </div>
     );
-};
+});
+
+QuestionEditor.displayName = 'QuestionEditor';

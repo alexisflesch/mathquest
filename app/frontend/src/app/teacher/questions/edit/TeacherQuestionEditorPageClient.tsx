@@ -356,7 +356,7 @@ export default function TeacherQuestionEditorPageClient() {
         setDeleteModal({ isOpen: false, index: null, isLoading: false });
     };
 
-    const handleQuestionChange = (updatedQuestion: EditorQuestion) => {
+    const handleQuestionChange = useCallback((updatedQuestion: EditorQuestion) => {
         // Handle question type conversion if the type has changed
         const currentQuestion = questions[selectedQuestionIndex];
         let finalQuestion = updatedQuestion;
@@ -414,9 +414,9 @@ export default function TeacherQuestionEditorPageClient() {
         if (updatedQuestions[selectedQuestionIndex] && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
             editorImperativeRef.current.revealUid(updatedQuestions[selectedQuestionIndex].uid);
         }
-    };
+    }, [questions, selectedQuestionIndex, editorMode, setQuestions, setYamlText, editorImperativeRef]);
 
-    const handleYamlChange = (newYamlText: string, cursorPosition?: number) => {
+    const handleYamlChange = useCallback((newYamlText: string, cursorPosition?: number) => {
         setYamlText(newYamlText);
 
         try {
@@ -463,7 +463,7 @@ export default function TeacherQuestionEditorPageClient() {
             setYamlError(errorMessage);
             // Don't log to console - errors are shown in UI
         }
-    };
+    }, [setYamlText, setQuestions, setYamlError, setSelectedQuestionIndex, setMobileTab, editorImperativeRef]);
 
     const handleImport = (importedQuestions: EditorQuestion[]) => {
         setQuestions(importedQuestions);
@@ -638,7 +638,7 @@ export default function TeacherQuestionEditorPageClient() {
         prevEditorModeRef.current = editorMode;
     }, [editorMode, selectedQuestionIndex, questions]);
 
-    const handleCursorPosition = (cursorPosition: number) => {
+    const handleCursorPosition = useCallback((cursorPosition: number) => {
         try {
             const questionIndex = getQuestionIndexFromCursor(yamlText, cursorPosition);
             if (questionIndex !== -1 && questionIndex < questions.length) {
@@ -647,16 +647,16 @@ export default function TeacherQuestionEditorPageClient() {
         } catch (e) {
             // ignore
         }
-    };
+    }, [yamlText, questions.length, setSelectedQuestionIndex]);
 
-    const handleEditorReady = () => {
+    const handleEditorReady = useCallback(() => {
         // If there is a pending reveal (user clicked in form mode then switched to YAML), perform it now
         const uid = pendingRevealUidRef.current;
         if (uid && editorImperativeRef.current && typeof editorImperativeRef.current.revealUid === 'function') {
             editorImperativeRef.current.revealUid(uid);
             pendingRevealUidRef.current = null;
         }
-    };
+    }, [editorImperativeRef]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
@@ -734,7 +734,7 @@ export default function TeacherQuestionEditorPageClient() {
                                         onChange={handleQuestionChange}
                                         mode={editorMode}
                                         onModeChange={setEditorMode}
-                                        yamlText={yamlText}
+                                        yamlText={editorMode === 'yaml' ? yamlText : ''}
                                         onYamlChange={handleYamlChange}
                                         selectedQuestionIndex={selectedQuestionIndex}
                                         yamlError={yamlError}
