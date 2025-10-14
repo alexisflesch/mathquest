@@ -54,8 +54,13 @@ return selected.slice(0, N)
 ## Tests Added
 - `backend/tests/unit/gameTemplateService.test.ts`: Unit test verifying balanced tag distribution
 
+## Documentation Updated
+- `vuepress/docs/technical/2025-10-14-question-selection-algorithm.md`: Technical implementation details
+- `vuepress/docs/utilisation/entrainement.md`: User-facing explanation for practice mode
+- `vuepress/docs/utilisation/tournoi.md`: User-facing explanation for tournament mode
+
 ## Validation
 - All existing tests pass
-- New test confirms even tag distribution (e.g., 3 tags, 9 questions → 3 per tag)
+- New test confirms even tag distribution (e.g., 9 questions across 3 tags = 3 each)
 - No duplicates ensured
 - Maintains backward compatibility

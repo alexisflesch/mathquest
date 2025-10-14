@@ -26,6 +26,14 @@ Avant de commencer, configurez votre tournoi :
 
 Partagez le code d’accès avec les participants pour qu’ils rejoignent le tournoi.
 
+### 🎯 Sélection équilibrée des questions
+Pour garantir une compétition équitable et variée, le système sélectionne automatiquement les questions de manière équilibrée :
+- **Répartition équilibrée par tags** : Les questions sont choisies pour couvrir uniformément tous les types d'exercices disponibles dans les thèmes sélectionnés
+- **Évitement des répétitions** : Tous les participants voient une variété de questions représentatives des thèmes travaillés
+- **Adaptation aux thèmes choisis** : Le système analyse tous les thèmes sélectionnés et équilibre la difficulté et les concepts abordés
+
+Cette approche assure que le tournoi évalue de manière complète les compétences des participants sur tous les aspects des thèmes abordés.
+
 ## ⏱️ Déroulement d’une session
 
 Une fois le tournoi lancé :

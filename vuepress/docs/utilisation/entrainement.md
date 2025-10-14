@@ -28,3 +28,11 @@ Une fois la session lancée :
 - **Pas de timer** : Prenez le temps de réfléchir à chaque question
 - **Aide disponible** : Consultez des indices ou explications si besoin
 - **Feedback immédiat (si disponible)** : Vous recevez un retour instantané lorsqu’une correction ou un indice est proposé pour la question
+
+### 🎯 Sélection intelligente des questions
+Pour optimiser votre apprentissage, le système sélectionne automatiquement les questions de manière équilibrée :
+- **Répartition équilibrée par tags** : Les questions sont choisies pour couvrir uniformément tous les types d'exercices disponibles dans les thèmes sélectionnés
+- **Évitement des répétitions** : Vous ne verrez pas plusieurs questions du même type à la suite
+- **Adaptation à vos thèmes** : Le système analyse tous les thèmes choisis et équilibre la difficulté et les concepts abordés
+
+Cette approche garantit une expérience d'apprentissage variée et complète, vous permettant de progresser sur tous les aspects des thèmes travaillés.
