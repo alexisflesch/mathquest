@@ -19,6 +19,12 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
     activeTab,
     onTabChange,
 }) => {
+    const handleTabChange = (tabId: string) => {
+        if (onTabChange) {
+            onTabChange(tabId);
+        }
+    };
+
     return (
         // Mobile-only tabs: increase touch target and legibility on small screens
         <div className="md:hidden bg-card shadow-sm">
@@ -26,7 +32,13 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
-                        onClick={() => onTabChange(tab.id)}
+                        onClick={() => handleTabChange(tab.id)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleTabChange(tab.id);
+                            }
+                        }}
                         // Larger padding, bigger text, and improved spacing for mobile (<768px)
                         className={`flex-1 py-4 px-5 text-center text-base font-semibold transition-all leading-5 ${activeTab === tab.id
                             ? 'border-b-4 border-primary text-primary bg-primary/10'

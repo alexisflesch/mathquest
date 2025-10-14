@@ -146,6 +146,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                 <button
                     onClick={onAddQuestion}
                     className="px-4 py-2 text-foreground font-semibold text-sm rounded-md hover:opacity-90 transition-all border border-border hover:border-foreground"
+                    aria-label="Ajouter une question"
                 >
                     + Ajouter
                 </button>
