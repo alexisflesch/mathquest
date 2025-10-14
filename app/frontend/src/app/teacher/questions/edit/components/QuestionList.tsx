@@ -82,9 +82,8 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                     const selectedBg = selected ? { backgroundColor: 'rgba(6,182,212,0.12)' } : undefined;
 
                     return (
-                        <div key={q.uid} className={`w-10 h-7 rounded-sm shadow-sm border border-border overflow-hidden transition-colors flex-none flex items-center justify-between px-1 ${borderClass} ${selected ? 'text-primary-foreground' : 'text-muted-foreground'}`} style={selectedBg}>
+                        <div key={q.uid} className={`w-10 h-7 rounded-sm shadow-sm border border-border overflow-hidden transition-colors flex-none flex items-center justify-between px-1 cursor-pointer ${borderClass} ${selected ? 'text-primary-foreground' : 'text-muted-foreground'}`} style={selectedBg} onClick={() => onSelectQuestion(i)}>
                             <button
-                                onClick={() => onSelectQuestion(i)}
                                 title={q.title || `Question ${i + 1}`}
                                 aria-label={`Question ${i + 1}`}
                                 className="flex items-center gap-1 text-sm font-semibold"
