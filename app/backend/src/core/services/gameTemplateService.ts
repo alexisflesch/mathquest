@@ -53,38 +53,14 @@ export class GameTemplateService {
             username = user?.username || 'Élève';
         }
 
-        // 1. Find random questions matching the filters
-        // First get all matching questions to shuffle them
-        const allQuestions = await prisma.question.findMany({
-            where: {
-                gradeLevel: data.gradeLevel,
-                discipline: data.discipline,
-                themes: { hasSome: data.themes },
-                NOT: {
-                    excludedFrom: {
-                        has: data.playMode
-                    }
-                }
-            },
-            select: { uid: true } // Only need UIDs for efficiency
-        });
-
-        // Only check that we have at least one question
-        if (allQuestions.length === 0) {
-            throw new Error('No questions found for the selected filters');
-        }
-
-        // Shuffle and take the requested number (Fisher-Yates shuffle)
-        const shuffledQuestions = [...allQuestions];
-        for (let i = shuffledQuestions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
-        }
-
-        // Take only what we need
-        const selectedQuestionUids = shuffledQuestions
-            .slice(0, data.nbOfQuestions)
-            .map(q => q.uid);
+        // 1. Select random questions balancing across tags
+        const selectedQuestionUids = await this.selectRandomQuestions(
+            data.discipline,
+            data.gradeLevel,
+            data.themes,
+            data.nbOfQuestions,
+            data.playMode
+        );
 
         // Now fetch the full question data for the selected UIDs
         const questions = await prisma.question.findMany({
@@ -333,6 +309,81 @@ export class GameTemplateService {
                 }
             }
         });
+    }
+
+    /**
+     * Get distinct tags for the given discipline, gradeLevel, and themes
+     */
+    private async getTagsForThemes(discipline: string, gradeLevel: string, themes: string[]): Promise<string[]> {
+        const result = await prisma.question.findMany({
+            where: {
+                discipline,
+                gradeLevel,
+                themes: { hasSome: themes },
+                isHidden: false
+            },
+            select: { tags: true }
+        });
+        const tagSet = new Set<string>();
+        result.forEach(q => q.tags.forEach(tag => tagSet.add(tag)));
+        return Array.from(tagSet);
+    }
+
+    /**
+     * Select N random questions balancing across tags
+     */
+    private async selectRandomQuestions(discipline: string, gradeLevel: string, themes: string[], N: number, playMode?: string): Promise<string[]> {
+        const tags = await this.getTagsForThemes(discipline, gradeLevel, themes);
+        if (tags.length === 0) {
+            throw new Error('No tags found for the selected filters');
+        }
+        const perTag = Math.ceil(N / tags.length);
+        const selectedQuestions: string[] = [];
+
+        for (const tag of tags) {
+            const questions = await prisma.question.findMany({
+                where: {
+                    discipline,
+                    themes: { hasSome: themes },
+                    tags: { has: tag },
+                    gradeLevel,
+                    isHidden: false,
+                    ...(playMode && { excludedFrom: { has: playMode } })
+                },
+                select: { uid: true },
+                orderBy: { uid: 'asc' }, // Note: RANDOM() not supported in Prisma orderBy, shuffle at end ensures randomness
+                take: perTag
+            });
+            const uids = questions.map(q => q.uid);
+            selectedQuestions.push(...uids);
+            if (selectedQuestions.length >= N) break;
+        }
+
+        // If not enough, query remaining
+        if (selectedQuestions.length < N) {
+            const remaining = await prisma.question.findMany({
+                where: {
+                    discipline,
+                    themes: { hasSome: themes },
+                    gradeLevel,
+                    isHidden: false,
+                    uid: { notIn: selectedQuestions },
+                    ...(playMode && { excludedFrom: { has: playMode } })
+                },
+                select: { uid: true },
+                orderBy: { uid: 'asc' },
+                take: N - selectedQuestions.length
+            });
+            selectedQuestions.push(...remaining.map(q => q.uid));
+        }
+
+        // Shuffle the final set
+        for (let i = selectedQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [selectedQuestions[i], selectedQuestions[j]] = [selectedQuestions[j], selectedQuestions[i]];
+        }
+
+        return selectedQuestions.slice(0, N);
     }
 }
 
