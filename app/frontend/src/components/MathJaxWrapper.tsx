@@ -67,10 +67,11 @@ export interface MathJaxWrapperProps {
     children: React.ReactNode;
     zoomFactor?: number; // Optional zoom factor prop
     className?: string;
+    constrainWidth?: boolean; // Optional prop to constrain width instead of using 100%
 }
 
 // Client-side only MathJax component
-const ClientOnlyMathJaxInner: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor = 1 }) => {
+const ClientOnlyMathJaxInner: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor = 1, constrainWidth = false, className }) => {
     const [isClient, setIsClient] = useState(false);
     // Ref to track changes to zoomFactor
     const prevZoomRef = useRef(zoomFactor);
@@ -112,13 +113,69 @@ const ClientOnlyMathJaxInner: React.FC<MathJaxWrapperProps> = ({ children, zoomF
     return (
         <MathJaxContext config={mathJaxConfig} version={3}>
             {isClient ? (
-                <div style={{ ...containerStyle, display: 'block', width: '100%' }} className={("")}>
-                    <MathJax
-                        dynamic={true}
-                        onError={err => logger.error('MathJax error', err)}
-                    >
-                        {stringChildren !== undefined ? stringChildren : children}
-                    </MathJax>
+                <div style={{ ...containerStyle, display: 'block', ...(constrainWidth ? {} : { width: '100%' }) }} className={className}>
+                    {constrainWidth ? (
+                        <>
+                            {/* Constrain MathJax output to the container width and force wrapping for long inline elements */}
+                            <div
+                                className="mq-constrain"
+                                style={{
+                                    maxWidth: '100%',
+                                    overflow: 'hidden',
+                                    wordBreak: 'break-word',
+                                    overflowWrap: 'anywhere',
+                                    whiteSpace: 'normal',
+                                }}
+                            >
+                                <MathJax
+                                    dynamic={true}
+                                    onError={err => logger.error('MathJax error', err)}
+                                >
+                                    {stringChildren !== undefined ? stringChildren : children}
+                                </MathJax>
+                            </div>
+
+                            {/* Scoped global rules to ensure MathJax-generated elements (mjx-container, .MathJax etc.)
+                                do not exceed the container width and wrap long content. `:global` is used because
+                                MathJax renders its own elements outside React's scope. */}
+                            <style jsx>{`
+                                .mq-constrain :global(mjx-container),
+                                .mq-constrain :global(.MathJax),
+                                .mq-constrain :global(.MJX-TEX),
+                                .mq-constrain :global(.mjx-math) {
+                                    max-width: 100% !important;
+                                    overflow-wrap: anywhere !important;
+                                    word-break: break-word !important;
+                                    white-space: normal !important;
+                                }
+                                /* Ensure SVG output scales down to container width */
+                                .mq-constrain :global(svg),
+                                .mq-constrain :global(svg *),
+                                .mq-constrain :global(.mjx-svg) {
+                                    max-width: 100% !important;
+                                    height: auto !important;
+                                    display: block !important;
+                                }
+                                /* Constrain MathJax tables and matrix structures */
+                                .mq-constrain :global(mjx-table),
+                                .mq-constrain :global(.mjx-mtable),
+                                .mq-constrain :global(.mjx-itable),
+                                .mq-constrain :global(table) {
+                                    max-width: 100% !important;
+                                    width: auto !important;
+                                    table-layout: auto !important;
+                                }
+                                .mq-constrain :global(.MathJax) { display: block !important; }
+                            `}</style>
+                        </>
+                    ) : (
+                        <MathJax
+                            dynamic={true}
+                            onError={err => logger.error('MathJax error', err)}
+                        >
+                            {stringChildren !== undefined ? stringChildren : children}
+                        </MathJax>
+                    )}
                 </div>
             ) : (
                 <span suppressHydrationWarning>{children}</span>

@@ -168,8 +168,8 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                             {/* no in-flow accent to avoid layout shift; use background tint only */}
                             <div className="flex-1 min-w-0 overflow-hidden pr-8">
                                 {/* First row: Title */}
-                                <h3 className={`text-sm font-semibold truncate mb-1 ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-foreground'} pl-0`}>
-                                    <MathJaxWrapper zoomFactor={1}>{question.title || 'Sans titre'}</MathJaxWrapper>
+                                <h3 className={`text-sm font-semibold break-words leading-tight mb-1 ${selectedQuestionIndex === index ? 'text-primary-foreground' : 'text-foreground'} pl-0`}>
+                                    <MathJaxWrapper zoomFactor={1} constrainWidth={true}>{question.title || 'Sans titre'}</MathJaxWrapper>
                                 </h3>
 
                                 {/* Second row: Type (QCM/QCU/Numérique) and themes (left-aligned, truncated) */}
@@ -184,11 +184,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                                     </span>
                                 </div>
 
-                                <div className="text-[10px] truncate text-muted-foreground">
-                                    <MathJaxWrapper zoomFactor={0.95}>
-                                        <div className="truncate">{question.text}</div>
-                                    </MathJaxWrapper>
-                                </div>
+                                {/* question preview removed by request to avoid overflow in cards */}
                             </div>
                             {questions.length > 1 && (
                                 // Move delete icon to top-right corner
@@ -267,7 +263,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
             animate={{ width: isMobile ? '100%' : sidebarWidth }}
             transition={isMobile ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }}
             style={{ width: isMobile ? '100%' : sidebarWidth }}
-            className="h-full min-h-0"
+            className="h-full min-h-0 min-w-0 overflow-x-hidden box-border"
         >
             {effectiveCollapsed ? collapsedView : expandedView}
         </motion.div>
