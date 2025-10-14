@@ -17,6 +17,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import CustomDropdown from "@/components/CustomDropdown";
+import LoadingScreen from "@/components/LoadingScreen";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import EnhancedSingleSelectDropdown from "@/components/EnhancedSingleSelectDropdown";
 import { createLogger } from '@/clientLogger';
@@ -512,7 +513,7 @@ function StudentCreateTournamentPageInner() {
 
 export default function StudentCreateTournamentPage() {
     return (
-        <Suspense fallback={<div>Chargement...</div>}>
+        <Suspense fallback={<LoadingScreen message="Chargement de la création de tournoi..." />}>
             <StudentCreateTournamentPageInner />
         </Suspense>
     );

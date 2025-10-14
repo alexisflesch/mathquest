@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, User as UserIcon, Settings, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '../../components/AuthProvider';
+import LoadingScreen from '../../components/LoadingScreen';
 import ProfileForm from '../../components/profile/ProfileForm';
 import AccountUpgradeForm from '../../components/profile/AccountUpgradeForm';
 import TeacherUpgradeForm from '../../components/profile/TeacherUpgradeForm';
@@ -239,7 +240,7 @@ function ProfilePageInner() {
 
 export default function ProfilePage() {
     return (
-        <Suspense fallback={<div>Chargement...</div>}>
+        <Suspense fallback={<LoadingScreen message="Chargement du profil..." />}>
             <ProfilePageInner />
         </Suspense>
     );

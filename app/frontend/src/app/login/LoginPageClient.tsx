@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, User, Mail, Lock, Shield, Gamepad } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '../../components/AuthProvider';
+import LoadingScreen from '../../components/LoadingScreen';
 import AuthModeToggle, { AuthMode } from '../../components/auth/AuthModeToggle';
 import GuestForm from '../../components/auth/GuestForm';
 import StudentAuthForm from '../../components/auth/StudentAuthForm';
@@ -393,7 +394,7 @@ function LoginPageInnerComponent() {
 
 export default function LoginPageClient() {
     return (
-        <Suspense fallback={<div>Chargement...</div>}>
+        <Suspense fallback={<LoadingScreen message="Chargement de la page de connexion..." />}>
             <LoginPageInnerComponent />
         </Suspense>
     );

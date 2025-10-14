@@ -15,6 +15,7 @@
 import React, { useEffect, useState } from "react";
 import AccessErrorPage from '@/components/AccessErrorPage';
 import TeacherProjectionClient from '@/components/TeacherProjectionClient';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useParams } from "next/navigation";
 
 export default function TeacherProjectionPage() {
@@ -50,7 +51,7 @@ export default function TeacherProjectionPage() {
             .finally(() => setLoading(false));
     }, [code]);
 
-    if (loading) return <div>Chargement...</div>;
+    if (loading) return <LoadingScreen message="Vérification de l'accès..." />;
     if (!result || !result.valid) {
         let message = 'Accès refusé.';
         if (result?.reason === 'NOT_AUTHENTICATED') message = 'Vous devez être connecté pour accéder à la projection.';
