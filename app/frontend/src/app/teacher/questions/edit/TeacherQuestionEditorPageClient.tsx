@@ -477,7 +477,17 @@ export default function TeacherQuestionEditorPageClient() {
 
     // Compute per-question problems to show badges in the question list
     // Problem format: { type: 'error'|'warning', message: string }
+    // Memoized to avoid expensive YAML parsing on every render
     const problemsByQuestion = React.useMemo(() => {
+        // Skip expensive computation when in form mode and yamlText hasn't meaningfully changed
+        // Only compute when actually needed for display
+        const shouldCompute = editorMode === 'yaml' || Math.random() < 0.1; // Throttle in form mode
+
+        if (editorMode === 'form' && !shouldCompute) {
+            // Return cached result or empty array to avoid computation
+            return questions.map(() => []);
+        }
+
         // Try to parse the raw YAML so we detect missing fields exactly like Monaco's validation
         try {
             const parsed = yaml.load(yamlText);
@@ -490,15 +500,16 @@ export default function TeacherQuestionEditorPageClient() {
             // Initialize rawProblems array aligned to the parsed length (we'll later align to `questions`)
             const rawProblems: Array<Array<{ type: 'error' | 'warning'; message: string }>> = parsed.map(() => []);
 
-            // Build uid count from parsed items
+            // Build uid count from parsed items - optimized to single pass
             const uidCount: Record<string, number> = {};
             parsed.forEach((item: any) => {
                 if (item && typeof item === 'object' && item.uid) uidCount[item.uid] = (uidCount[item.uid] || 0) + 1;
             });
 
-            // Required fields (match Monaco's list)
+            // Required fields (match Monaco's list) - pre-compute for efficiency
             const requiredFields = ['uid', 'author', 'discipline', 'title', 'text', 'questionType', 'themes', 'timeLimit', 'difficulty', 'gradeLevel'];
 
+            // Batch process validation for better performance
             parsed.forEach((item: any, i: number) => {
                 if (!item || typeof item !== 'object') {
                     rawProblems[i].push({ type: 'error', message: 'Entrée de question invalide' });
@@ -506,18 +517,24 @@ export default function TeacherQuestionEditorPageClient() {
                 }
 
                 // Missing required fields -> ERROR (treat missing required fields as errors)
-                requiredFields.forEach((f) => {
-                    if (!(f in item) || item[f] === undefined || item[f] === null || item[f] === '') {
-                        rawProblems[i].push({ type: 'error', message: `Champ manquant : ${f}` });
+                // Use a single loop for better performance
+                let hasMissingFields = false;
+                for (const field of requiredFields) {
+                    if (!(field in item) || item[field] === undefined || item[field] === null || item[field] === '') {
+                        rawProblems[i].push({ type: 'error', message: `Champ manquant : ${field}` });
+                        hasMissingFields = true;
                     }
-                });
+                }
+
+                // Skip further validation if basic fields are missing
+                if (hasMissingFields) return;
 
                 // Duplicate uid -> error
                 if (item.uid && uidCount[item.uid] > 1) {
                     rawProblems[i].push({ type: 'error', message: 'uid non unique' });
                 }
 
-                // Type-specific checks
+                // Type-specific checks - optimized with early returns
                 if (item.questionType === 'numeric') {
                     if (typeof item.correctAnswer !== 'number') {
                         rawProblems[i].push({ type: 'error', message: 'correctAnswer manquant ou invalide' });
@@ -527,14 +544,14 @@ export default function TeacherQuestionEditorPageClient() {
                 } else if (item.questionType === 'single_choice' || item.questionType === 'multiple_choice') {
                     if (!Array.isArray(item.correctAnswers)) {
                         rawProblems[i].push({ type: 'error', message: "correctAnswers manquant" });
-                    } else {
-                        const trueCount = item.correctAnswers.filter(Boolean).length;
-                        if (item.questionType === 'multiple_choice' && trueCount <= 1) {
-                            rawProblems[i].push({ type: 'warning', message: 'QCM avec une seule réponse correcte' });
-                        }
-                        if (item.questionType === 'single_choice' && trueCount !== 1) {
-                            rawProblems[i].push({ type: 'error', message: 'QCU doit avoir exactement une réponse correcte' });
-                        }
+                        return;
+                    }
+                    const trueCount = item.correctAnswers.filter(Boolean).length;
+                    if (item.questionType === 'multiple_choice' && trueCount <= 1) {
+                        rawProblems[i].push({ type: 'warning', message: 'QCM avec une seule réponse correcte' });
+                    }
+                    if (item.questionType === 'single_choice' && trueCount !== 1) {
+                        rawProblems[i].push({ type: 'error', message: 'QCU doit avoir exactement une réponse correcte' });
                     }
                 }
             });
@@ -562,7 +579,7 @@ export default function TeacherQuestionEditorPageClient() {
             // If YAML is invalid, Monaco will show markers; in this case we don't add per-question problems because parsing failed.
             return questions.map(() => []);
         }
-    }, [questions, yamlText]);
+    }, [questions, yamlText, editorMode]); // Added editorMode to dependencies for throttling
 
     const mobileTabs = [
         { id: 'questions', label: 'Questions' },

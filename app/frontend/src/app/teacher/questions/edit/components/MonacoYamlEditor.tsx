@@ -394,15 +394,26 @@ export const MonacoYamlEditor = React.forwardRef<MonacoYamlEditorHandle, MonacoY
             });
 
             // Add custom validation for YAML
+            let lastValidatedContent = '';
+            let lastMarkers: monaco.editor.IMarkerData[] = [];
             const validateYaml = () => {
                 const model = editor.getModel();
                 if (!model) return;
 
                 const content = model.getValue();
+
+                // Skip validation if content hasn't changed
+                if (content === lastValidatedContent) {
+                    monaco.editor.setModelMarkers(model, 'yaml-validator', lastMarkers);
+                    return;
+                }
+
                 const markers: monaco.editor.IMarkerData[] = [];
 
                 // Skip validation for empty or very short content
                 if (content.trim().length < 3) {
+                    lastValidatedContent = content;
+                    lastMarkers = [];
                     monaco.editor.setModelMarkers(model, 'yaml-validator', []);
                     return;
                 }
@@ -490,13 +501,22 @@ export const MonacoYamlEditor = React.forwardRef<MonacoYamlEditorHandle, MonacoY
                     // Silently ignore other validation errors while user is typing
                 }
 
+                // Cache the validation results
+                lastValidatedContent = content;
+                lastMarkers = markers;
                 monaco.editor.setModelMarkers(model, 'yaml-validator', markers);
             };
 
             // Validate on mount and on change
             validateYaml();
+            let validationTimeout: number | null = null;
             editor.onDidChangeModelContent(() => {
-                setTimeout(validateYaml, 300); // Debounce validation - increased to 300ms
+                // Clear previous timeout
+                if (validationTimeout) {
+                    window.clearTimeout(validationTimeout);
+                }
+                // Debounce validation - increased to 500ms for better performance
+                validationTimeout = window.setTimeout(validateYaml, 500);
             });
 
             // Listen to cursor selection changes and notify parent (debounced)
