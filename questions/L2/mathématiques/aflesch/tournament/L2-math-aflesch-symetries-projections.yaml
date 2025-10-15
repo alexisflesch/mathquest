@@ -109,7 +109,7 @@
   gradeLevel: "L2"
   discipline: "Mathématiques"
   themes: ["Symétries et projections"]
-  tags: ["projection vectorielle","matrices"]
+  tags: ["projection vectorielle"]
   title: "Classification d'une matrice"
   questionType: "single_choice"
   timeLimit: 30
