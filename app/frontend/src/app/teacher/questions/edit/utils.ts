@@ -7,29 +7,25 @@
  * @returns The index of the question the cursor is in, or -1 if not found
  */
 export function getQuestionIndexFromCursor(yamlContent: string, cursorPosition: number): number {
-    // If cursor is at the beginning, it's in the first question
-    if (cursorPosition === 0) {
-        return 0;
-    }
+    // Find all question start positions
+    const questionStarts: number[] = [];
+    const lines = yamlContent.split('\n');
 
-    const lines = yamlContent.substring(0, cursorPosition).split('\n');
-    let questionIndex = -1;
-    let inQuestion = false;
-
+    let currentPosition = 0;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-
-        // Check if this line starts a new question (indicated by - uid:)
         if (line.trim().startsWith('- uid:') || line.trim().startsWith('-uid:')) {
-            questionIndex++;
-            inQuestion = true;
+            questionStarts.push(currentPosition);
         }
-        // Alternative: check for array items starting with -
-        else if (line.trim().startsWith('- ') && !line.includes(':') && !inQuestion) {
-            questionIndex++;
-            inQuestion = true;
+        currentPosition += line.length + 1; // +1 for newline
+    }
+
+    // Find the last question start position that is <= cursorPosition
+    for (let i = questionStarts.length - 1; i >= 0; i--) {
+        if (questionStarts[i] <= cursorPosition) {
+            return i;
         }
     }
 
-    return questionIndex;
+    return 0; // Default to first question
 }

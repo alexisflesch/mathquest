@@ -556,9 +556,12 @@ export const MonacoYamlEditor = React.forwardRef<MonacoYamlEditorHandle, MonacoY
 
         const handleEditorChange = (value: string | undefined) => {
             if (value !== undefined) {
-                const position = editorRef.current?.getPosition();
-                const cursorPosition = position ? editorRef.current?.getModel()?.getOffsetAt(position) : undefined;
-                onChange(value, cursorPosition);
+                // Defer cursor position calculation to ensure it's updated after paste operations
+                setTimeout(() => {
+                    const position = editorRef.current?.getPosition();
+                    const cursorPosition = position ? editorRef.current?.getModel()?.getOffsetAt(position) : undefined;
+                    onChange(value, cursorPosition);
+                }, 0);
             }
         };
 
