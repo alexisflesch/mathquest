@@ -82,3 +82,46 @@
     - '\(s^2=\mathrm{Id}\)'
     - 'Aucune des réponses ci-dessus'
   correctAnswers: [false, false, false, true, false]
+
+
+- uid: "aflesch-mt3-symetries-projections-005"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Symétries et projections"]
+  tags: ["projection vectorielle"]
+  title: "Propriétés des projections"
+  questionType: "multiple_choice"
+  timeLimit: 60
+  difficulty: 1
+  text: |
+    Soit \(p\) une projection. Quelles propriétés sont toujours vraies ?
+  answerOptions:
+    - '\(\mathrm{Im}(p)\cap\mathrm{Ker}(p)=\{0\}\)'
+    - '\(p\) est injective'
+    - '\(p\) est surjective'
+    - 'Aucune des réponses ci-dessus'
+  correctAnswers: [true, false, false, false]
+
+
+- uid: "aflesch-mt3-symetries-projections-006"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Symétries et projections"]
+  tags: ["projection vectorielle","matrices"]
+  title: "Classification d'une matrice"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Dans la base canonique de \(\mathbb{R}^2\), la matrice
+    \[A = \begin{pmatrix}1 & 0\\ 0 & 0\end{pmatrix}\]
+    est associée à :
+  answerOptions:
+    - 'une symétrie'
+    - 'une projection'
+    - 'une homothétie'
+    - 'une rotation'
+    - 'Aucune des réponses ci-dessus'
+  correctAnswers: [false, true, false, false, false]

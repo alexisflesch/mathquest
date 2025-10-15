@@ -94,3 +94,21 @@
     - "La convergence absolue implique la divergence."
     - "Elles sont toutes fausses."
   correctAnswers: [true, true, false, false, false]
+
+
+- uid: "aflesch-mt3-integrales-generalisees-007"
+  author: "aflesch"
+  gradeLevel: "L2"
+  discipline: "Mathématiques"
+  themes: ["Intégrales généralisées"]
+  tags: ["convergence","absolue convergence"]
+  title: "Convergence et changement de signe"
+  questionType: "single_choice"
+  timeLimit: 30
+  difficulty: 1
+  text: |
+    Si \(f\) change de signe, la convergence de \(\int f\) ne garantit pas la convergence de \(\int |f|\) :
+  answerOptions:
+    - 'Vrai'
+    - 'Faux'
+  correctAnswers: [true, false]
