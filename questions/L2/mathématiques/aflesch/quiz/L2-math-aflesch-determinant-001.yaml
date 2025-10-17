@@ -108,7 +108,7 @@
   discipline: Mathématiques
   title: Calcul de déterminant 2x2
   text: >
-    Soit \(A=\begin{pmatrix}-1 & 2\\ 3 & 4\end{pmatrix}\). Calculer le
+    Soit \(A=\begin{pmatrix}2 & 2\\ 3 & 4\end{pmatrix}\). Calculer le
     déterminant de \(A\).
   questionType: numeric
   themes:
