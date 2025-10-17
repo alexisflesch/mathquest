@@ -117,6 +117,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const [gameInstanceName, setGameInstanceName] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
 
     // UI state
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null);
@@ -196,6 +197,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         });
         socket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info('Socket connected:', socket.id);
+            // Clear any reconnect UI/error on successful (re)connect
+            setIsReconnecting(false);
+            setError(null);
             logger.info('Joining dashboard with accessCode:', code);
             const payload: JoinDashboardPayload = { accessCode: code };
             try {
@@ -210,6 +214,11 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             if (eventName !== 'timer_updated' && eventName !== 'dashboard_timer_updated') {
                 logger.debug('Socket event:', eventName, ...args);
             }
+        });
+        // Show a reconnecting banner on disconnect; hook will auto try to reconnect
+        socket.on(SOCKET_EVENTS.DISCONNECT as any, (reason: string) => {
+            logger.warn('[DASHBOARD] Socket disconnected:', reason);
+            setIsReconnecting(true);
         });
         // Listen for backend confirmation of showStats state (projection_show_stats is canonical)
         // Listen for backend-confirmed showStats state (projection_show_stats is canonical)
@@ -370,8 +379,10 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         }, 10000);
         socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
             logger.error('Socket connection error:', error);
-            setError('Failed to connect to game server');
-            setLoading(false);
+            // Preserve current behavior for initial failures: fatal error
+            // If we were previously connected and this is a transient error, keep reconnect UI instead
+            setError(prev => (isReconnecting ? prev : 'Failed to connect to game server'));
+            if (!isReconnecting) setLoading(false);
         });
         socket.on(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, (error: any) => {
             // Log dashboard errors as warnings for user-triggered actions (not errors)
@@ -709,6 +720,18 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Remove legacy fetchQuizName effect: all naming now comes from socket payload
 
     if (authLoading) return <LoadingScreen message="Vérification de l&apos;authentification..." />;
+    // Reconnection overlay takes precedence over loading/error to provide UX feedback during transient drops
+    if (isReconnecting) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[color:var(--background)]">
+                <div className="text-center">
+                    <div className="flex justify-center mb-8"><InfinitySpin /></div>
+                    <h2 className="text-3xl font-bold mb-2 text-[color:var(--foreground)]">🧮 Kutsum</h2>
+                    <p className="text-lg text-[color:var(--muted-foreground)]">Reconnexion au serveur...</p>
+                </div>
+            </div>
+        );
+    }
     if (loading) return <LoadingScreen message="Chargement du tableau de bord..." />;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
     if (!code) return <div className="p-8 text-orange-600">Aucun code d&apos;accès fourni.</div>;

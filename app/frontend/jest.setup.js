@@ -281,3 +281,65 @@ try {
 } catch (e) {
     // If mocking fails for any reason (non-Jest environment), silently ignore.
 }
+
+// Global mock for next/navigation hooks in jsdom tests
+try {
+    if (typeof jest !== 'undefined') {
+        jest.mock('next/navigation', () => ({
+            useRouter: () => ({
+                push: jest.fn(),
+                replace: jest.fn(),
+                prefetch: jest.fn(),
+                back: jest.fn(),
+            }),
+            useSearchParams: () => ({ get: jest.fn() }),
+            usePathname: () => '/',
+            useParams: () => ({}),
+        }));
+    }
+} catch (_) { }
+
+// Global hard mock for socket.io-client to avoid real network in unit tests
+try {
+    if (typeof jest !== 'undefined') {
+        jest.mock('socket.io-client', () => {
+            const handlers = {};
+            const socket = {
+                id: 'test-socket',
+                connected: false,
+                on: jest.fn((event, cb) => {
+                    handlers[event] = handlers[event] || [];
+                    handlers[event].push(cb);
+                    return socket;
+                }),
+                off: jest.fn((event, cb) => {
+                    if (!event) return socket;
+                    if (!handlers[event]) return socket;
+                    if (!cb) { handlers[event] = []; return socket; }
+                    handlers[event] = handlers[event].filter(fn => fn !== cb);
+                    return socket;
+                }),
+                emit: jest.fn(),
+                onAny: jest.fn((cb) => {
+                    handlers['*'] = handlers['*'] || [];
+                    handlers['*'].push(cb);
+                    return socket;
+                }),
+                connect: jest.fn(() => {
+                    socket.connected = true;
+                    (handlers['connect'] || []).forEach(fn => fn());
+                    // Fire onAny subscriptions for 'connect'
+                    (handlers['*'] || []).forEach(fn => fn('connect'));
+                    return socket;
+                }),
+                disconnect: jest.fn(() => {
+                    socket.connected = false;
+                    (handlers['disconnect'] || []).forEach(fn => fn('io server disconnect'));
+                    (handlers['*'] || []).forEach(fn => fn('disconnect', 'io server disconnect'));
+                    return socket;
+                })
+            };
+            return { io: jest.fn(() => socket) };
+        });
+    }
+} catch (_) { }

@@ -41,9 +41,10 @@ export function initializeSocketIO(server: http.Server): SocketIOServer<ClientTo
         path: '/api/socket.io',
         // Socket.IO server configuration
         transports: ['websocket', 'polling'],
-        // Ping timeout configuration
-        pingTimeout: 30000,
-        pingInterval: 25000
+        // Ping timeout configuration (mobile-safe)
+        // Increased to reduce spurious disconnects on mobile devices that may sleep or switch radios
+        pingTimeout: 90000,
+        pingInterval: 45000
     });
 
     // Set up Redis adapter for horizontal scaling
