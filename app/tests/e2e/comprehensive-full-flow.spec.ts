@@ -762,7 +762,21 @@ test.describe('MathQuest Comprehensive Full Flow Test Suite', () => {
                 // Step 1: Authenticate as guest first, then create practice game
                 log('🚀 Starting practice session...');
                 await authenticateGuestUser(page, 'PracticeStudent');
-                const practiceData = await createPracticeGame(page);
+
+                // Create the practice game using a teacher-authenticated context to satisfy API auth requirements
+                // This avoids 401 errors when creating templates/games with guest cookies
+                const currentContext = page.context();
+                const browser = currentContext.browser();
+                if (!browser) {
+                    throw new Error('Unable to access browser instance from current context');
+                }
+
+                const teacherContext = await browser.newContext();
+                const teacherPage = await teacherContext.newPage();
+
+                await authenticateTeacherUser(teacherPage);
+                const practiceData = await createPracticeGame(teacherPage);
+                await teacherContext.close();
                 log(`📚 Practice game created with code: ${practiceData.accessCode}`);
 
                 // Step 2: Student navigates to practice session

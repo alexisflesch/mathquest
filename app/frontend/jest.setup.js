@@ -283,18 +283,29 @@ try {
 }
 
 // Global mock for next/navigation hooks in jsdom tests
+// Export jest.fn() so individual tests can override with mockReturnValue
 try {
     if (typeof jest !== 'undefined') {
+        const defaultRouter = () => ({
+            push: jest.fn(),
+            replace: jest.fn(),
+            prefetch: jest.fn(),
+            back: jest.fn(),
+        });
+        const defaultSearchParams = () => ({ get: jest.fn() });
+        const defaultPathname = () => '/';
+        const defaultParams = () => ({});
+
+        const useRouter = jest.fn(defaultRouter);
+        const useSearchParams = jest.fn(defaultSearchParams);
+        const usePathname = jest.fn(defaultPathname);
+        const useParams = jest.fn(defaultParams);
+
         jest.mock('next/navigation', () => ({
-            useRouter: () => ({
-                push: jest.fn(),
-                replace: jest.fn(),
-                prefetch: jest.fn(),
-                back: jest.fn(),
-            }),
-            useSearchParams: () => ({ get: jest.fn() }),
-            usePathname: () => '/',
-            useParams: () => ({}),
+            useRouter,
+            useSearchParams,
+            usePathname,
+            useParams,
         }));
     }
 } catch (_) { }

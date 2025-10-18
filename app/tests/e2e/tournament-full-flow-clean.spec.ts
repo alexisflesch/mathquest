@@ -18,6 +18,7 @@
  */
 
 import { test, expect, Page, BrowserContext } from '@playwright/test';
+import { TestDataHelper, LoginHelper } from './helpers/test-helpers';
 
 // Test configuration
 const TEST_CONFIG = {
@@ -52,101 +53,87 @@ async function waitAndLog(page: Page, timeout: number, message: string) {
     await page.waitForTimeout(timeout);
 }
 
-// Helper to handle user authentication
-async function authenticateUser(page: Page): Promise<void> {
-    log('Starting user authentication...');
-
+// Minimal guest authentication for student context
+async function authenticateGuest(page: Page, username: string = 'StudentE2E', avatar: string = '🐼'): Promise<void> {
+    log('Authenticating guest student...');
     await page.goto(TEST_CONFIG.baseUrl + '/login');
-
-    // Check if we're already logged in
-    try {
-        await page.waitForSelector('[data-testid="user-profile"]', { timeout: 2000 });
-        log('User already authenticated');
-        return;
-    } catch {
-        log('User not authenticated, proceeding with login...');
+    const usernameInput = page.locator('input[placeholder*="cher"], input[placeholder*="prénom"], input[placeholder*="pseudo"], input[placeholder*="name"], input[name="username"], [data-testid="username-input"]').first();
+    await usernameInput.waitFor({ timeout: 5000 });
+    await usernameInput.fill(username.substring(0, 3));
+    await page.waitForTimeout(400);
+    const dropdownOption = page.locator('ul li').first();
+    if (await dropdownOption.count() > 0) {
+        await dropdownOption.click();
+    } else {
+        await usernameInput.press('Enter');
     }
-
-    // Look for login elements
-    try {
-        // Try to find username input
-        const usernameInput = page.locator('input[placeholder*="name"], input[name="username"], input[id="username"], [data-testid="username-input"]');
-        await usernameInput.waitFor({ timeout: 5000 });
-
-        await usernameInput.fill(TEST_CONFIG.user.username);
-        log(`Filled username: ${TEST_CONFIG.user.username}`);
-
-        // Always select the emoji avatar before clicking login
-        const avatarButton = page.locator('button.emoji-avatar', { hasText: TEST_CONFIG.user.avatar });
-        await avatarButton.first().click();
-        log(`Selected avatar: ${TEST_CONFIG.user.avatar}`);
-
-        // Find and click submit/login button
-        const submitButton = page.locator('button[type="submit"], button:has-text("Connexion"), button:has-text("Se connecter"), button:has-text("Login")');
-        await submitButton.click();
-        log('Clicked login button');
-
-        // Wait for a robust post-login indicator
-        try {
-            await page.waitForSelector('[data-testid="user-profile"], .user-profile, [data-testid="dashboard"], nav, header, [data-testid="main-navbar"]', { timeout: 10000 });
-            log('User authentication successful');
-        } catch (waitError: any) {
-            log('Post-login selector not found, logging URL and partial content for debug', {
-                url: page.url(),
-                content: (await page.content()).substring(0, 500)
-            });
-            throw new Error(`Authentication likely succeeded but post-login selector not found: ${waitError.message}`);
-        }
-    } catch (error: any) {
-        log('Authentication failed', { error: error.message });
-        throw new Error(`Authentication failed: ${error.message}`);
-    }
+    const avatarButton = page.locator('button.emoji-avatar').first();
+    await avatarButton.click().catch(() => { });
+    const submitButton = page.locator('button[type="submit"], button:has-text("Connexion"), button:has-text("Se connecter"), button:has-text("Login"), button:has-text("Commencer")');
+    await submitButton.click();
+    await page.waitForSelector('[data-testid="user-profile"], nav, header', { timeout: 10000 });
+    log('Guest authentication complete');
 }
 
-// Helper to create tournament via API
+// Helper to authenticate as a real teacher (UI account login)
+async function authenticateTeacherUser(page: Page): Promise<{ email: string }> {
+    log('Starting teacher account creation and authentication...');
+
+    const dataHelper = new TestDataHelper(page);
+    const loginHelper = new LoginHelper(page);
+
+    // Create teacher via backend API
+    const teacherData = await dataHelper.createTeacher({
+        username: 'Pierre',
+        email: `e2e-teacher-${Date.now()}@test-mathquest.com`,
+        password: 'testpassword123'
+    });
+
+    // Go to frontend and login via account form
+    await page.goto(`${TEST_CONFIG.baseUrl}/`);
+    await page.waitForLoadState('networkidle');
+    await loginHelper.loginAsTeacher({ email: teacherData.email!, password: 'testpassword123' });
+    await expect(page.locator('button:has-text("Déconnexion"), button:has-text("Logout")')).toBeVisible();
+    log(`✅ Teacher authentication successful for ${teacherData.username}`);
+    return { email: teacherData.email! };
+}
+
+// Helper to create tournament via API (uses page.request with Cookie header from current auth)
 async function createTournament(context: BrowserContext, page: Page): Promise<TournamentData> {
     log('Creating tournament via API...');
 
     try {
-        // Use page.evaluate to call the frontend API directly with fetch
-        const response = await page.evaluate(async (data) => {
-            try {
-                const result = await fetch('/api/games', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data),
-                    credentials: 'include'
-                });
-                if (!result.ok) {
-                    const errorText = await result.text();
-                    throw new Error(`${result.status} - ${errorText}`);
+        // Collect auth cookies from the current page context
+        const cookies = await page.context().cookies();
+        const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+
+        // Use page.request with Cookie header so the backend sees the logged-in session
+        const apiResponse = await page.request.post('/api/games', {
+            data: {
+                name: TEST_CONFIG.user.username,
+                playMode: 'tournament',
+                gradeLevel: TEST_CONFIG.tournament.gradeLevel,
+                discipline: TEST_CONFIG.tournament.discipline,
+                themes: TEST_CONFIG.tournament.themes,
+                nbOfQuestions: 2,
+                settings: {
+                    defaultMode: 'direct',
+                    avatar: TEST_CONFIG.user.avatar,
+                    username: TEST_CONFIG.user.username
                 }
-                const jsonData = await result.json();
-                return { success: true, data: jsonData };
-            } catch (error: any) {
-                return { success: false, error: error.message };
-            }
-        }, {
-            name: TEST_CONFIG.user.username,
-            playMode: 'tournament',
-            gradeLevel: TEST_CONFIG.tournament.gradeLevel,
-            discipline: TEST_CONFIG.tournament.discipline,
-            themes: TEST_CONFIG.tournament.themes,
-            nbOfQuestions: 2,
-            settings: {
-                defaultMode: 'direct',
-                avatar: TEST_CONFIG.user.avatar,
-                username: TEST_CONFIG.user.username
+            },
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': cookieHeader
             }
         });
 
-        if (!response.success) {
-            throw new Error(`Failed to create tournament: ${response.error}`);
+        if (!apiResponse.ok()) {
+            const errorText = await apiResponse.text();
+            throw new Error(`Failed to create tournament: ${apiResponse.status()} - ${errorText}`);
         }
 
-        const tournamentData = response.data;
+        const tournamentData = await apiResponse.json();
         log('Tournament created successfully', tournamentData);
 
         return {
@@ -161,52 +148,93 @@ async function createTournament(context: BrowserContext, page: Page): Promise<To
 }
 
 // Helper to start tournament and verify all key elements
-async function startTournament(page: Page, accessCode: string): Promise<void> {
+async function startTournament(page: Page, accessCode: string): Promise<{ gameplayPage: Page, cleanup?: () => Promise<void> }> {
     log('Starting tournament...');
 
     try {
-        // Navigate to live page (not lobby - lobby is part of live page)
-        await page.goto(`${TEST_CONFIG.baseUrl}/live/${accessCode}`);
+        // Prepare a student page that joins the live game before starting (ensures at least one participant)
+        const browser = page.context().browser();
+        if (!browser) throw new Error('No browser instance available');
+        const studentContext = await browser.newContext();
+        const studentPage = await studentContext.newPage();
+        await authenticateGuest(studentPage, 'StudentE2E', '🐼');
+        await studentPage.goto(`${TEST_CONFIG.baseUrl}/live/${accessCode}`);
+        await studentPage.waitForURL(`**/live/${accessCode}`, { timeout: 10000 });
+        log('Student joined live page');
 
-        // Wait for socket connection and game join to complete
-        log('Waiting for socket connection and game join...');
-        await page.waitForTimeout(5000); // Give time for socket to connect and joinGame to execute
+        // Navigate teacher to lobby controls (primary control surface)
+        await page.goto(`${TEST_CONFIG.baseUrl}/lobby/${accessCode}`);
+        log('Teacher navigating to lobby controls');
 
-        // Wait for lobby to load
-        await page.waitForSelector('text=Participants connectés', { timeout: 10000 });
-        log('Lobby loaded successfully');
-
-        // Look for start button and click it
-        const startButton = page.locator('button:has-text("Démarrer le tournoi")');
-
-        if (await startButton.count() > 0) {
-            await startButton.click();
-            log('Clicked "Démarrer le tournoi" button');
-
-            // Wait for 5-second countdown
-            log('Waiting for 5-second countdown...');
+        // Wait for teacher control indicators in lobby
+        const controlIndicators = [
+            'text=Participants connectés',
+            '[data-testid="teacher-controls"]',
+            '[data-testid="start-tournament"], [data-testid="start-quiz"], button:has-text("Démarrer"), button:has-text("Start"), button:has-text("Commencer"), button:has-text("Démarrer le tournoi")'
+        ];
+        for (const sel of controlIndicators) {
             try {
-                await page.waitForSelector('text=/^[1-5]$/', { timeout: 8000 });
-                log('Countdown started - waiting for tournament to begin');
-
-                // Wait for countdown to finish
-                await page.waitForTimeout(6000);
-            } catch {
-                log('No countdown detected, tournament may start immediately');
-            }
-        } else {
-            log('No start button found, checking if tournament already started');
+                await page.waitForSelector(sel, { timeout: 8000 });
+                log(`Teacher control indicator visible: ${sel}`);
+                break;
+            } catch { /* try next */ }
         }
 
-        // Wait for redirect to live page
-        await page.waitForURL(`**/live/${accessCode}`, { timeout: 10000 });
-        log('Redirected to live tournament page');
+        // Prefer explicit data-testid controls
+        const dtStartButton = page.locator('[data-testid="start-tournament-button"], [data-testid="start-quiz"]').first();
+        if (await dtStartButton.count() > 0) {
+            await dtStartButton.click();
+            log('Clicked data-testid start button');
+        }
 
-        // Wait for question to appear
-        await page.waitForSelector('[data-testid="question-text"], .question-text, .question', { timeout: 15000 });
-        log('First question loaded');
+        // If there is a countdown confirm control, click it
+        const dtCountdown = page.locator('[data-testid="start-tournament-countdown"]');
+        if (await dtCountdown.count() > 0) {
+            await dtCountdown.click();
+            log('Clicked tournament countdown start');
+        }
 
+        // Fallback to any generic start button variant
+        const startButton = page.locator('button:has-text("Démarrer le tournoi"), button:has-text("Démarrer"), button:has-text("Start"), button:has-text("Commencer")').first();
+        if (await startButton.count() > 0) {
+            await startButton.click();
+            log('Clicked generic start button');
+        }
+
+        // Optional countdown indicator
+        const countdownDataTest = page.locator('[data-testid="tournament-countdown"]');
+        const countdownText = page.getByText(/^[1-5]$/);
+        if (await countdownDataTest.count() > 0) {
+            await countdownDataTest.first().waitFor({ timeout: 5000 }).catch(() => { });
+            log('Countdown data-testid visible, waiting...');
+            await page.waitForTimeout(6000);
+        } else if (await countdownText.count() > 0) {
+            await countdownText.first().waitFor({ timeout: 5000 }).catch(() => { });
+            log('Countdown numeric text visible, waiting...');
+            await page.waitForTimeout(6000);
+        }
+
+        // Wait for first question on the student page
+        const questionSelectors = [
+            '[data-testid="question-text"]',
+            '.question-text',
+            '.question',
+            '.tqcard-content',
+            '[data-testid^="question-"]',
+            'button.tqcard-answer, .btn-answer'
+        ];
+        let studentQuestionVisible = false;
+        for (const qs of questionSelectors) {
+            const loc = studentPage.locator(qs).first();
+            if (await loc.count() > 0) {
+                try { await loc.waitFor({ timeout: 10000 }); studentQuestionVisible = true; log(`Student sees question via: ${qs}`); break; } catch { }
+            }
+        }
+        if (!studentQuestionVisible) {
+            throw new Error('Question not visible after starting tournament (student view)');
+        }
         log('Tournament started successfully');
+        return { gameplayPage: studentPage, cleanup: () => studentContext.close().catch(() => { }) };
 
     } catch (error: any) {
         log('Failed to start tournament', { error: error.message });
@@ -243,7 +271,7 @@ async function testCompleteTournamentFlow(page: Page): Promise<void> {
 
         // 2. Try to click an answer and check for snackbar feedback
         log('2. Testing answer selection and snackbar feedback...');
-        const answerButtons = page.locator('button:has-text(/[A-D]|[0-9]/), .answer-choice, [data-testid="answer"]');
+        const answerButtons = page.locator('[data-testid^="answer-option-"], button:has-text(/[A-D]|[0-9]/), .answer-choice, [data-testid="answer"]');
 
         if (await answerButtons.count() > 0) {
             const firstAnswer = answerButtons.first();
@@ -265,7 +293,7 @@ async function testCompleteTournamentFlow(page: Page): Promise<void> {
         log('3. Waiting for timer to finish and checking correct answers...');
 
         try {
-            await page.waitForSelector('text=/Bonne réponse|Correct answer|Solution/', { timeout: 30000 });
+            await page.waitForSelector('text=/Bonne réponse|Correct answer|Solution|Solution correcte|Réponse correcte/', { timeout: 30000 });
             log('✅ Correct answers are being shown');
         } catch {
             log('⚠️  Correct answers display not detected');
@@ -287,8 +315,8 @@ async function testCompleteTournamentFlow(page: Page): Promise<void> {
         try {
             // Either next question appears or we go to leaderboard
             await Promise.race([
-                page.waitForSelector('[data-testid="question-text"], .question-text, text=/Question/', { timeout: 10000 }),
-                page.waitForURL('**/leaderboard/**', { timeout: 10000 })
+                page.waitForSelector('[data-testid="tournament-question"], [data-testid="question-text"], .question-text, text=/Question/', { timeout: 15000 }),
+                page.waitForURL('**/leaderboard/**', { timeout: 15000 })
             ]);
 
             if (page.url().includes('/leaderboard/')) {
@@ -316,7 +344,7 @@ test.describe('Tournament Full Flow E2E', () => {
         try {
             // Step 1: Authenticate user
             log('=== STEP 1: USER AUTHENTICATION ===');
-            await authenticateUser(page);
+            await authenticateTeacherUser(page);
 
             // Step 2: Create tournament via API
             log('=== STEP 2: CREATE TOURNAMENT ===');
@@ -324,10 +352,12 @@ test.describe('Tournament Full Flow E2E', () => {
 
             // Step 3: Start tournament and test all key elements
             log('=== STEP 3: START TOURNAMENT AND TEST KEY ELEMENTS ===');
-            await startTournament(page, tournamentData.accessCode);
+            const { gameplayPage, cleanup } = await startTournament(page, tournamentData.accessCode);
 
-            // Test all the key tournament elements
-            await testCompleteTournamentFlow(page);
+            // Test all the key tournament elements on the gameplay page (student view if returned)
+            await testCompleteTournamentFlow(gameplayPage);
+
+            if (cleanup) await cleanup();
 
             log('✅ Tournament flow completed successfully');
 
@@ -367,7 +397,7 @@ test.describe('Tournament Full Flow E2E', () => {
             });
 
             // Step 1: Authenticate
-            await authenticateUser(page);
+            await authenticateTeacherUser(page);
 
             // Step 2: Create tournament
             tournamentData = await createTournament(context, page);

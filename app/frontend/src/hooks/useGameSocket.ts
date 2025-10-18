@@ -226,8 +226,10 @@ export function useGameSocket(
             }
         });
 
-        // Connect the socket
-        newSocket.connect();
+        // Connect the socket (guard for test mocks that may omit .connect)
+        if (typeof (newSocket as any).connect === 'function') {
+            (newSocket as any).connect();
+        }
         setSocket(newSocket);
     }, [socket, gameId, role, config]);
 

@@ -201,12 +201,17 @@ describe('Dashboard Timer Synchronization', () => {
         mockSockets.forEach(socket => {
             // Only send to sockets that are in the dashboard room
             if (socket.rooms && socket.rooms.has(dashboardRoom)) {
-                const handler = socket.on.mock.calls.find(call => call[0] === 'dashboard_timer_updated')?.[1];
-                if (handler) {
+                // There can be multiple listeners registered for this event (e.g., wrapper + timer hook)
+                // Invoke all of them to simulate a real broadcast to every handler
+                const handlers = socket.on.mock.calls
+                    .filter(call => call[0] === 'dashboard_timer_updated')
+                    .map(call => call[1])
+                    .filter(Boolean);
+                handlers.forEach((h: any) => {
                     act(() => {
-                        handler(timerUpdate);
+                        h(timerUpdate);
                     });
-                }
+                });
             }
         });
     }

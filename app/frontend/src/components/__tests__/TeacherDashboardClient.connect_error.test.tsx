@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { render, waitFor, screen } from '@testing-library/react';
+import { render, waitFor, screen, act } from '@testing-library/react';
 import TeacherDashboardClient from '@/components/TeacherDashboardClient';
 import { AuthContext } from '@/components/AuthProvider';
 jest.mock('next/navigation', () => ({
@@ -51,7 +51,7 @@ describe('TeacherDashboardClient connect_error behavior (document current UX)', 
         jest.clearAllTimers();
     });
 
-    it('sets fatal error on connect_error (current behavior)', async () => {
+    it('shows reconnect overlay on connect_error (modern behavior)', async () => {
         const mockAuth = {
             // minimal AuthContext API for useAuthState utilities
             userState: 'teacher',
@@ -83,11 +83,14 @@ describe('TeacherDashboardClient connect_error behavior (document current UX)', 
         const socket = mockedIoFactory();
         const calls = (socket.on as jest.Mock).mock.calls as any[];
         const connectErrorHandlers = calls.filter(c => c[0] === 'connect_error').map(c => c[1]) as Function[];
-        connectErrorHandlers.forEach(cb => cb(new Error('network')));
-
-        // Expect the error text to appear
-        await waitFor(() => {
-            expect(screen.getByText(/Failed to connect to game server/i)).toBeInTheDocument();
+        await act(async () => {
+            connectErrorHandlers.forEach(cb => cb(new Error('network')));
         });
+
+        // Expect the reconnect overlay text to appear instead of fatal error
+        await waitFor(() => {
+            expect(screen.getByText(/Reconnexion au serveur/i)).toBeInTheDocument();
+        });
+        expect(screen.queryByText(/Failed to connect to game server/i)).toBeNull();
     });
 });
