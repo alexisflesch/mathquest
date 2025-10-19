@@ -137,7 +137,7 @@ const QuestionDisplay = React.memo(({
                 ) : (
                     <div
                         className={`w-full h-full flex flex-col items-start justify-start ${isNumericQuestion && showStats && currentStats?.type === 'numeric' && currentStats.values ? '' : 'overflow-y-auto'}`}
-                        style={{ position: 'relative', minHeight: 0 }}
+                        style={{ position: 'relative', minHeight: 0, overflowY: 'hidden' }}
                     >
                         <div
                             style={{

@@ -1,10 +1,10 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import QuestionCard from '@/components/QuestionCard';
+import QuestionCard from '../QuestionCard';
 
 // Mock MathJaxWrapper to simulate typical MathJax DOM wrappers without introducing inline overflow styles
-jest.mock('@/components/MathJaxWrapper', () => ({
+jest.mock('../MathJaxWrapper', () => ({
     __esModule: true,
     default: ({ children }: { children: React.ReactNode }) => (
         <div className="mjx-mock-root">
@@ -17,6 +17,15 @@ jest.mock('@/components/MathJaxWrapper', () => ({
             </div>
         </div>
     ),
+}));
+
+jest.mock('../../clientLogger', () => ({
+    createLogger: jest.fn(() => ({
+        info: jest.fn(),
+        debug: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+    })),
 }));
 
 type MCStudentPayload = {
@@ -50,6 +59,46 @@ const buildPayload = (overrides: Partial<MCStudentPayload> = {}): MCStudentPaylo
 });
 
 describe('QuestionCard horizontal scroll structure', () => {
+    it('ensures the live question text owns horizontal scroll without vertical scrollbars', () => {
+        const baseQuestion: any = {
+            uid: 'q-live',
+            text: 'Formule longue en affichage: \\[ \\underbrace{a_1 + a_2 + \\dots + a_n}_{n\\,termes} = S_n \\]'.repeat(2),
+            questionType: 'multiple_choice',
+            multipleChoiceQuestion: {
+                answerOptions: ['A', 'B', 'C', 'D'],
+                correctAnswers: [true, false, false, false],
+            },
+            numericQuestion: undefined,
+        };
+        const { container } = render(
+            <QuestionCard
+                currentQuestion={baseQuestion}
+                questionIndex={0}
+                totalQuestions={1}
+                isMultipleChoice={true}
+                selectedAnswer={null}
+                setSelectedAnswer={() => { }}
+                selectedAnswers={[]}
+                setSelectedAnswers={() => []}
+                handleSingleChoice={() => { }}
+                handleSubmitMultiple={() => { }}
+                answered={false}
+                isQuizMode={true}
+                readonly={false}
+                projectionMode={false}
+                zoomFactor={1}
+                correctAnswers={[]}
+                showStats={false}
+            />
+        );
+
+        const liveText = container.querySelector('.question-text-in-live-page') as HTMLElement;
+        expect(liveText).toBeInTheDocument();
+        expect(liveText.style.overflowX).toBe('auto');
+        // Now expect overflowY to be hidden to avoid fractional vertical scrollbars
+        expect(liveText.style.overflowY).toBe('hidden');
+    });
+
     it('keeps a single scrollable container per region across re-renders (no nested scrollbars)', async () => {
         const payload = buildPayload();
 

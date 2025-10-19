@@ -1501,7 +1501,8 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
   /* Keep vertical overflow visible (no vertical scrollbars) but allow horizontal
      scrolling when content (e.g. wide MathJax formulas) exceeds container width. */
   overflow-x: auto !important;
-  overflow-y: visible !important;
+  /* Prevent tiny fractional vertical scrollbars due to rounding */
+  overflow-y: hidden !important;
   max-height: none;
 }
 
@@ -1540,7 +1541,7 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
    while preserving horizontal scrolling. Narrow and documented to avoid regressions. */
 .card.w-full.max-w-2xl .tqcard-content>.question-text-in-live-page {
   overflow-x: auto !important;
-  overflow-y: visible !important;
+  overflow-y: hidden !important;
 }
 
 /* Additional narrow override: target the immediate content wrapper inside the
@@ -1549,8 +1550,8 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
    allow horizontal scroll while preventing a vertical scrollbar */
 .card.w-full.max-w-2xl .tqcard-content>.question-text-in-live-page>div {
   overflow-x: auto !important;
-  overflow-y: visible !important;
-  /* clip avoids showing a scrollbar while preserving layout */
+  overflow-y: hidden !important;
+  /* Ensure no unintended clipping of math; hidden only removes scrollbar, content height remains natural */
   max-height: none !important;
 }
 
@@ -1582,6 +1583,21 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
      controls scrolling. */
   overflow-y: visible !important;
   max-height: none !important;
+}
+
+/* Targeted fix: MathJax sets position: relative on its root container which can
+   interact with parent overflow to create a micro vertical scrollbar. Within
+   live/practice and dashboard question text blocks, neutralize that positioning
+   to static. Use both tag and class selectors for mjx-container variants. */
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-container,
+.question-text-in-live-page mjx-container,
+.question-text-in-live-page .mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-container,
+.question-text-in-dashboards mjx-container,
+.question-text-in-dashboards .mjx-container {
+  position: static !important;
 }
 
 /* Also apply same treatment to dashboard/tournament variants if present */

@@ -387,7 +387,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     {shouldShowTextInExpanded && (
                                         <li
                                             className="mb-2 font-medium text-base text-couleur-global-neutral-700 question-text-in-dashboards"
-                                            style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                            style={{
+                                                fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})`,
+                                                overflowX: 'auto',
+                                                overflowY: 'visible',
+                                                maxHeight: 'none'
+                                            }}
                                         >
                                             <MathJaxWrapper>{question.text}</MathJaxWrapper>
                                         </li>
@@ -474,7 +479,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     {shouldShowTextInExpanded && (
                                         <div
                                             className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2 question-text-in-dashboards"
-                                            style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                            style={{
+                                                fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})`,
+                                                overflowX: 'auto',
+                                                overflowY: 'visible',
+                                                maxHeight: 'none'
+                                            }}
                                         >
                                             <MathJaxWrapper>{question.text}</MathJaxWrapper>
                                         </div>
