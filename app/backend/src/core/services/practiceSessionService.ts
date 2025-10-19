@@ -721,7 +721,7 @@ export class PracticeSessionService {
                 include: {
                     questions: {
                         orderBy: { sequence: 'asc' },
-                        include: { 
+                        include: {
                             question: {
                                 select: {
                                     uid: true,
