@@ -82,7 +82,7 @@ export default function LiveGamePage() {
     const { code } = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { userState, userProfile, isLoading } = useAuth();
+    const { userState, userProfile, isLoading, logout } = useAuth();
 
     // Check if this is a differed session
     const isDiffered = searchParams?.get('differed') === '1';
@@ -612,6 +612,33 @@ export default function LiveGamePage() {
     }, [snackbarOpen]);
 
     // 🚨 IMPORTANT: Returns must come *after* hooks
+    // If auth is resolved and the user is not authenticated for gameplay, disconnect and redirect to login
+    const redirectOnceRef = useRef(false);
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (isLoading) return;
+
+        const accessCode = typeof code === 'string' ? code : Array.isArray(code) ? code[0] : '';
+        const missingProfile = !userProfile.username || !userProfile.avatar;
+        if ((userState === 'anonymous' || missingProfile) && !redirectOnceRef.current) {
+            redirectOnceRef.current = true;
+            (async () => {
+                try {
+                    // Ensure any stale auth cookies are cleared before redirecting
+                    await logout();
+                } catch (_) {
+                    // Ignore logout errors and proceed with redirect
+                } finally {
+                    try {
+                        router.replace(`/login?returnTo=${encodeURIComponent(`/live/${accessCode}`)}`);
+                    } catch (_) {
+                        // noop - tests may not have full router impl
+                    }
+                }
+            })();
+        }
+    }, [isLoading, userState, userProfile.username, userProfile.avatar, code, router, logout]);
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
