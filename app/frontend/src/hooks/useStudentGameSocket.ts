@@ -189,6 +189,8 @@ export function useStudentGameSocket({
         linkedQuizId: null,
         lastAnswerFeedback: null
     });
+    // Late-join recovery timer
+    const lateJoinRecoveryTimeoutRef = useRef<number | null>(null);
     // --- Leaderboard Update Handler ---
     useEffect(() => {
         if (!socket) return;
@@ -322,6 +324,32 @@ export function useStudentGameSocket({
                 gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting',
                 gameMode: payload.gameMode
             }));
+
+            // Late-join defensive replay: if game is active but no question arrives shortly,
+            // proactively re-emit join_game to ask the server to resend the current state.
+            if (payload.gameStatus === 'active') {
+                if (lateJoinRecoveryTimeoutRef.current) {
+                    window.clearTimeout(lateJoinRecoveryTimeoutRef.current);
+                }
+                lateJoinRecoveryTimeoutRef.current = window.setTimeout(() => {
+                    try {
+                        // If we still have no currentQuestion, ask again
+                        const stillNoQuestion = !gameState.currentQuestion;
+                        if (stillNoQuestion && socket && socket.connected && accessCode && userId && username) {
+                            logger.warn('⚠️ [LATE-JOIN-RECOVERY] Active game but no current question received; re-emitting join_game');
+                            const payload = {
+                                accessCode,
+                                userId,
+                                username,
+                                avatarEmoji: avatarEmoji || '🐼'
+                            } as any;
+                            socket.emit('join_game' as any, payload);
+                        }
+                    } catch (err) {
+                        logger.error('Late-join recovery error', err as any);
+                    }
+                }, 1200);
+            }
         }, isGameJoinedPayload, SOCKET_EVENTS.GAME.GAME_JOINED));
         socket.on(
             SOCKET_EVENTS.GAME.GAME_QUESTION as any,
@@ -551,6 +579,10 @@ export function useStudentGameSocket({
             socket.off(SOCKET_EVENTS.GAME.FEEDBACK as any);
             socket.off(SOCKET_EVENTS.GAME.GAME_ERROR as any);
             socket.off(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any);
+            if (lateJoinRecoveryTimeoutRef.current) {
+                window.clearTimeout(lateJoinRecoveryTimeoutRef.current);
+                lateJoinRecoveryTimeoutRef.current = null;
+            }
         };
     }, [socket]);
 

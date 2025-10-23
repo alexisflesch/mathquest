@@ -97,16 +97,12 @@ function AppContent({ children }: { children: React.ReactNode }) {
         }
     }, [isLoading, isPublicRoute, userState, userProfile?.username, userProfile?.avatar, pathname, searchParams, router, logout]);
 
-    if (isLoading) {
-        return <LoadingScreen />;
-    }
-
     return (
         <>
             <AuthErrorBanner />
             <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
             <main className={`min-h-screen transition-all ease-in-out pt-14 md:pt-0 ${sidebarCollapsed ? 'md:ml-12' : 'md:ml-64'}`} style={{ transitionDuration: '220ms' }}>
-                {children}
+                {isLoading ? <LoadingScreen /> : children}
             </main>
         </>
     );
