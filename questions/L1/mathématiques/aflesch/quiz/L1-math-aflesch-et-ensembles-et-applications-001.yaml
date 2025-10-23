@@ -13,9 +13,8 @@
   timeLimit: 120
   difficulty: 2
   gradeLevel: L1
-  excludedFrom:
-    - tournament
-    - practice
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \( \sqrt{2} \in \mathbb{Q} \)
     - \( \sqrt{2} \subset \mathbb{C} \)
@@ -23,7 +22,8 @@
     - \( \left\{ \sqrt{2}, \pi \right\} \subset \mathbb{C} \)
     - \( \left\{ \varnothing \right\} \in \mathcal{P}(\mathbb{R}) \)
     - \( \left\{ \varnothing \right\} \subset \mathcal{P}(\mathbb{R}) \)
-    - \( \left\{ \varnothing, \left\{ 2 \right\} \right\} \subset
+    - >-
+      \( \left\{ \varnothing, \left\{ 2 \right\} \right\} \subset
       \mathcal{P}(\mathbb{Q}) \)
     - \( \mathbb{Z} \subset \mathbb{C} \)
     - Aucune des réponses ci-dessus
@@ -32,7 +32,7 @@
     - false
     - false
     - true
-    - true
+    - false
     - true
     - true
     - true
@@ -58,11 +58,10 @@
     - surjection
     - bijection
   timeLimit: 60
-  excludedFrom:
-    - tournament
-    - practice
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \(f\) n'est ni injective ni surjective.
     - \(f\) est injective et non surjective
@@ -91,11 +90,10 @@
     - surjection
     - bijection
   timeLimit: 120
-  excludedFrom:
-    - tournament
-    - practice
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \(E=[0,1]\) et \(F=[0,1]\)
     - \(E=[-1,1]\) et \(F=[0,1]\)
@@ -122,11 +120,10 @@
     - surjection
     - bijection
   timeLimit: 120
-  excludedFrom:
-    - tournament
-    - practice
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \(f\) ne peut pas être injective
     - \(f\) ne peut pas être surjective
@@ -151,11 +148,10 @@
   tags:
     - parties
   timeLimit: 120
-  excludedFrom:
-    - tournament
-    - practice
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   correctAnswer: 4
 
 - uid: aflesch-mt1-ensembles-et-applications-005
@@ -172,11 +168,10 @@
     - inclusion
     - parties
   timeLimit: 60
-  excludedFrom:
-    - tournament
-    - practice
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - Vrai
     - Faux
@@ -203,6 +198,8 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \(A \cap \bar{B}\)
     - \(A \cup \bar{B}\)
@@ -230,11 +227,10 @@
     - appartenance
     - inclusion
   timeLimit: 60
-  excludedFrom:
-    - tournament
-    - practice
   difficulty: 2
   gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \( \{a\} \subset E \)
     - \( \{a\} \in E \)
