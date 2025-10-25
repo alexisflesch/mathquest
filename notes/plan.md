@@ -1,21 +1,33 @@
-# MathQuest Stability Plan (v1)
+# MathQuest Stability & Modernization Plan (v1.1)
 
-This plan focuses on stabilizing the existing app (no major new features). Work proceeds in narrow phases with explicit exit criteria. Each phase is safe to merge independently and increases reliability.
+This plan focuses on stabilizing the existing app (no major new features) while aligning with the repo’s modernization contract. Work proceeds in narrow phases with explicit exit criteria. Each phase is safe to merge independently and increases reliability.
 
 Owner: AI agent (automated). Human input: minimal, for approvals and environment toggles.
 
 ---
+
+## Modernization contract alignment
+- Zero backward-compatibility and no migration layers (rewrite cleanly when needed).
+- Use canonical shared types from `shared/` end-to-end; remove redundant/legacy fields.
+- Validate all external data with Zod schemas.
+- Consistent naming across backend, frontend, DB, and sockets.
+- Log all non-trivial additions in VuePress docs (APIs, socket events, components, shared types).
+- Phase-based execution with clear exit criteria; strict TDD for bugs/enhancements.
+
+Live tracking note: this file is a concise plan. Active task tracking uses the AI internal todo list; technical documentation lives in `vuepress/docs/`.
 
 ## Goals
 - Eliminate classes of crashes (renderer/page crash, stack overflow, memory churn).
 - Prevent event storms (duplicate socket emits, repeated payload processing).
 - Improve long-idle and backgrounding resilience.
 - Add lightweight observability to catch issues early (without heavy infra).
+ - Enforce contracts via shared types and Zod to prevent drift.
 
 Success criteria (global):
 - 0 page crashes during a 30‑minute soak across iPhone 12, Pixel 5, and desktop.
 - No duplicate join_game or repeated GAME_QUESTION storms in logs across reconnects.
 - Playwright “chaos” suite passes twice consecutively on main.
+ - TypeScript typecheck passes; all unit/integration tests green.
 
 ---
 
@@ -30,7 +42,12 @@ Exit criteria:
 - Backend logs show no repeated join_game from same socket without disconnect.
 - E2E long-idle/background test passes 2× without crash.
 
-Status: DONE (first two changes landed; verify with new logs).
+Artifacts to produce:
+- Code changes with unit tests for dedupe logic and timer cleanup.
+- Playwright scenario covering background/resume and duplicate payload drops.
+- VuePress docs: client dedupe behavior and diagnostics buffer usage.
+
+Status: Needs verification (landed items must be validated against current logs and E2E runs).
 
 ---
 
@@ -43,6 +60,10 @@ Work items:
 Exit criteria:
 - Contract test: 3 JOIN_GAME in <2s → only one full join flow executes.
 - Production logs: join/broadcast fan-out reduced >80% during reconnects.
+
+Artifacts to produce:
+- Unit test for idempotent join flow; integration test simulating bursts.
+- VuePress docs: env flag for socket debug logging; idempotency design and limits.
 
 ---
 
@@ -59,6 +80,10 @@ Exit criteria:
 - Nightly chaos suite green across 3 device profiles, twice in a row.
 - No counter budget violations under chaos scenarios.
 
+Artifacts to produce:
+- Playwright chaos suite and helper utilities; CI integration.
+- VuePress docs: chaos harness usage and counter budgets.
+
 ---
 
 ## Phase 4: Guardrails (lint + runtime invariants)
@@ -70,6 +95,10 @@ Work items:
 Exit criteria:
 - Codebase passes new lint rules.
 - Unit tests for invariants and listener leak detection.
+
+Artifacts to produce:
+- ESLint config updates with autofix where safe; example violations covered by tests.
+- VuePress docs: new lint rules and rationale.
 
 ---
 
@@ -84,13 +113,17 @@ Exit criteria:
 - Correlated logs for a full join→question→answer round-trip.
 - Visual check dashboards with storm alerts.
 
+Artifacts to produce:
+- Shared type updates for correlation fields; Zod schema for log envelopes.
+- VuePress runbooks for common investigations and playbooks.
+
 ---
 
 ## Rollout & Risk
 - Phases 1–2: low risk, incremental; canary on staging/prod.
 - Phases 3–5: test-only or dev/staging gates; production knobs off by default.
 
-Backout: feature flags for idempotency and onAny logging; revert rules if false positives.
+Backout: feature flags for idempotency and onAny logging; revert rules if false positives. No compatibility shims—prefer clean reverts.
 
 ---
 
@@ -102,6 +135,19 @@ Backout: feature flags for idempotency and onAny logging; revert rules if false 
 
 ---
 
+## Validation gates and commands (reference)
+- Typecheck: run TS checks across workspaces; block merges on failures.
+- Tests: run unit/integration and Playwright; chaos suite for nightly.
+- Build: only after checks and tests pass.
+
+CI hooks should enforce: typecheck PASS, tests PASS, docs updated for new contracts.
+
+---
+
 ## Appendices
 - Diagnostics usage: see `vuepress/docs/dev/diagnostics.md`.
 - Test inventory: `app/backend/tests/**`, `app/frontend/src/app/live/**`, `app/tests/e2e/**`.
+
+Documentation index:
+- APIs and socket events: `vuepress/docs/api/` and `vuepress/docs/sockets/`
+- Shared types: `vuepress/docs/shared-types/`
