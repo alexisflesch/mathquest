@@ -15,6 +15,7 @@ import practiceSessionsRouter from './practice/sessions'; // Import practiceSess
 // import gameSessionsRouter from './gameSessions';
 import { teacherAuth } from '@/middleware/auth';
 import validatePageAccessRouter from './validatePageAccess';
+import debugRouter from './debug';
 
 const router = express.Router();
 
@@ -59,6 +60,11 @@ router.use('/my-tournaments', myTournamentsRouter);
 
 // Mount the validate page access router
 router.use('/validate-page-access', validatePageAccessRouter);
+
+// Mount debug endpoints (dev/test only)
+if (process.env.NODE_ENV !== 'production') {
+    router.use('/debug', debugRouter);
+}
 
 // User management routes
 // router.use('/users', usersManagementRouter); // Commented out

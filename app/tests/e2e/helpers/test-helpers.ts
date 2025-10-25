@@ -43,38 +43,58 @@ export class TestDataHelper {
         lastName?: string;
     }): Promise<TestUser> {
         console.log(`🧑‍🏫 Creating test teacher: ${userData.username}`);
-
-        const response = await this.page.request.post('http://localhost:3007/api/v1/auth/register', {
-            data: {
-                username: userData.username,
-                email: userData.email,
-                password: userData.password,
-                role: 'TEACHER',
-                adminPassword: 'abc' // Use the actual admin password from backend .env
-            }
-        });
-
-        console.log(`📊 Registration response status: ${response.status()}`);
-        console.log(`📊 Registration response headers:`, response.headers());
-
-        if (!response.ok()) {
-            const errorBody = await response.text();
-            console.log(`❌ Registration failed with body: ${errorBody}`);
-            throw new Error(`Failed to create teacher: ${response.status()} - ${errorBody}`);
+        // Quick health probe to fail fast if backend is not ready
+        try {
+            const health = await this.page.request.get('http://localhost:3007/health', { timeout: 5000 });
+            console.log(`🩺 Backend health: ${health.status()} ${await health.text().catch(() => '')}`);
+        } catch (e) {
+            console.log(`⚠️ Backend health probe failed before registration: ${(e as Error).message}`);
         }
 
-        const responseBody = await response.json();
-        console.log(`✅ Registration successful, response:`, responseBody);
-
-        const result = await response.json();
-        console.log(`✅ Teacher created successfully: ${result.user?.id || result.user?.username || userData.username}`);
-
-        return {
-            ...userData,
-            id: result.user?.id || result.userId,
-            defaultMode: 'teacher',
-            avatarEmoji: '👩‍🏫'
+        // Primary path: universal register endpoint with simple retries (same logic as working tests)
+        const attemptRegister = async (timeoutMs: number) => {
+            const response = await this.page.request.post('http://localhost:3007/api/v1/auth/register', {
+                data: {
+                    username: userData.username,
+                    email: userData.email,
+                    password: userData.password,
+                    role: 'TEACHER',
+                    // Align with local backend .env ADMIN_PASSWORD (see app/backend/.env)
+                    adminPassword: 'abc'
+                },
+                timeout: timeoutMs
+            });
+            return response;
         };
+
+        let lastErr: Error | null = null;
+        for (const timeoutMs of [20000, 30000]) {
+            try {
+                const response = await attemptRegister(timeoutMs);
+                console.log(`📊 Registration response status: ${response.status()}`);
+                if (!response.ok()) {
+                    const errorBody = await response.text();
+                    console.log(`❌ Registration failed with body: ${errorBody}`);
+                    lastErr = new Error(`Failed to create teacher: ${response.status()} - ${errorBody}`);
+                    continue;
+                }
+                const result = await response.json();
+                console.log(`✅ Registration successful, response:`, result);
+                const teacherId = result.user?.id || result.userId;
+                console.log(`✅ Teacher created successfully: ${teacherId || userData.username}`);
+                return {
+                    ...userData,
+                    id: teacherId,
+                    defaultMode: 'teacher',
+                    avatarEmoji: '👩‍🏫'
+                };
+            } catch (e) {
+                lastErr = e as Error;
+                console.log(`⚠️ Registration attempt failed: ${lastErr.message}. Retrying...`);
+                await new Promise(res => setTimeout(res, 1000));
+            }
+        }
+        throw new Error(`Failed to create teacher after retries: ${lastErr?.message}`);
     }
 
     /**

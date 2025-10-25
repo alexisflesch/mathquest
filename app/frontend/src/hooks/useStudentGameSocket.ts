@@ -354,6 +354,31 @@ export function useStudentGameSocket({
         socket.on(
             SOCKET_EVENTS.GAME.GAME_QUESTION as any,
             createSafeEventHandler<QuestionDataForStudent>((payload) => {
+                // Cancel any pending late-join recovery re-join once a question arrives
+                try {
+                    if (lateJoinRecoveryTimeoutRef.current) {
+                        window.clearTimeout(lateJoinRecoveryTimeoutRef.current);
+                        lateJoinRecoveryTimeoutRef.current = null;
+                        logger.info('🧹 [LATE-JOIN-RECOVERY] Cancelled re-emit timer on GAME_QUESTION');
+                    }
+                } catch { }
+
+                // Drop duplicate GAME_QUESTION payloads for the same question to avoid heavy re-renders/MathJax re-typeset storms
+                try {
+                    const incomingIndex = payload.currentQuestionIndex ?? 0;
+                    if (
+                        gameState.currentQuestion?.uid === payload.uid &&
+                        gameState.questionIndex === incomingIndex &&
+                        gameState.totalQuestions === (payload.totalQuestions ?? gameState.totalQuestions)
+                    ) {
+                        logger.debug('🛑 [QUESTION UPDATE] Duplicate payload for same question detected — skipping state update', {
+                            uid: payload.uid,
+                            incomingIndex,
+                            totalQuestions: payload.totalQuestions
+                        });
+                        return;
+                    }
+                } catch { }
                 logger.info('🔄 [QUESTION UPDATE] Received game_question event', {
                     event: 'game_question',
                     socketId: socket.id,

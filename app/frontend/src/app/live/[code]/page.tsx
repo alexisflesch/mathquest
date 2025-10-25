@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from '@/components/AuthProvider';
 import Snackbar from '@/components/Snackbar';
 import { createLogger } from '@/clientLogger';
+import initDiagnostics from '@/diagnostics/initDiagnostics';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
 import QuestionCard from '@/components/QuestionCard';
@@ -78,6 +79,13 @@ export default function LiveGamePage() {
         logger.info(`🔄 Re-render #${renderCount.current} (${now - lastRenderTime.current}ms since last)`);
         lastRenderTime.current = now;
     });
+
+    // Opt-in diagnostics: enable with ?mqdebug=1
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try { initDiagnostics(); } catch { /* no-op */ }
+        }
+    }, []);
 
     const { code } = useParams();
     const router = useRouter();
