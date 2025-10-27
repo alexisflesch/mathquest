@@ -408,9 +408,11 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             logger.error({ err }, 'Error emitting initial showStats state to dashboard');
         }
 
-        // Add a global catch-all event logger for deep debugging
-        socket.onAny((event, ...args) => {
-            logger.info({ event, args }, 'Socket.IO onAny event received');
-        });
+        // Global event logger for deep debugging (gated by env flag)
+        if (process.env.SOCKET_DEBUG_EVENTS === 'true') {
+            socket.onAny((event, ...args) => {
+                logger.info({ event, args }, 'Socket.IO onAny event received (teacher dashboard)');
+            });
+        }
     };
 }

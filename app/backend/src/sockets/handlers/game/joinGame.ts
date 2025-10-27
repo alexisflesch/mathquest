@@ -32,6 +32,7 @@ import { broadcastLeaderboardToProjection } from '@/utils/projectionLeaderboardB
 import { joinGame as joinGameModular } from '@/core/services/gameParticipant/joinService';
 import { DifferedScoreService } from '@/core/services/gameParticipant/scoreService';
 import { emitParticipantList } from '../lobbyHandler';
+import { shouldAllowOperation } from '@/sockets/utils/idempotencyGuard';
 
 const logger = createLogger('JoinGameHandler');
 
@@ -50,6 +51,7 @@ export function joinGameHandler(
     // Update payload type
     return async (payload: JoinGamePayload) => {
         logger.debug({ payload }, 'Received join_game payload');
+
         // Zod validation for payload
         const parseResult = joinGamePayloadSchema.safeParse(payload);
         logger.debug({ parseResult }, 'Result of joinGamePayloadSchema.safeParse');
@@ -63,6 +65,18 @@ export function joinGameHandler(
             return;
         }
         const { accessCode, userId, username, avatarEmoji } = parseResult.data;
+
+        // IDEMPOTENCY GUARD: Prevent duplicate JOIN_GAME within 3-5s window
+        // Key format: JOIN_GAME:{socketId}:{accessCode}
+        const idempotencyKey = `JOIN_GAME:${socket.id}:${accessCode}`;
+        if (!shouldAllowOperation(idempotencyKey, 5000)) {
+            logger.warn(
+                { socketId: socket.id, accessCode, userId, username },
+                'Blocked duplicate JOIN_GAME within 5s window (idempotency)'
+            );
+            // Silently ignore - client will have received response from first attempt
+            return;
+        }
 
         // 🐛 DEBUG: Log username/cookieId to track leaderboard bug
         logger.info({
