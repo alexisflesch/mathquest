@@ -32,6 +32,10 @@ export default [
       '@typescript-eslint/no-unused-expressions': 'error',
       '@typescript-eslint/no-unsafe-function-type': 'error',
 
+      // Phase 4: Stability guardrails
+      // Enforce useEffect cleanup for socket listeners and timers
+      'react-hooks/exhaustive-deps': 'warn', // Re-enabled with warn level
+
       // Keep some warnings suppressed to reduce noise
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -44,7 +48,6 @@ export default [
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       'no-console': 'off',
-      'react-hooks/exhaustive-deps': 'off',
       'prefer-rest-params': 'off',
       'import/no-anonymous-default-export': 'off',
       'eslint-comments/no-unused-disable': 'off'

@@ -184,7 +184,9 @@ export function initDiagnostics(): void {
         try {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
                 e.preventDefault();
-                window.__mqDiag && window.__mqDiag.download && window.__mqDiag.download();
+                if (window.__mqDiag?.download) {
+                    window.__mqDiag.download();
+                }
             }
         } catch { }
     });
