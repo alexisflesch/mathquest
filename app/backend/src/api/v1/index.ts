@@ -12,6 +12,7 @@ import studentRouter from './student'; // Import studentRouter
 import usersRouter from './users'; // Import usersRouter
 import myTournamentsRouter from './myTournaments'; // Import myTournamentsRouter
 import practiceSessionsRouter from './practice/sessions'; // Import practiceSessionsRouter
+import metricsRouter from './metrics'; // Import metricsRouter (Phase 5: Observability)
 // import gameSessionsRouter from './gameSessions';
 import { teacherAuth } from '@/middleware/auth';
 import validatePageAccessRouter from './validatePageAccess';
@@ -64,6 +65,11 @@ router.use('/validate-page-access', validatePageAccessRouter);
 // Mount debug endpoints (dev/test only)
 if (process.env.NODE_ENV !== 'production') {
     router.use('/debug', debugRouter);
+}
+
+// Mount metrics endpoint (Phase 5: Observability - dev/staging only)
+if (process.env.ENABLE_METRICS === 'true') {
+    router.use('/metrics', metricsRouter);
 }
 
 // User management routes

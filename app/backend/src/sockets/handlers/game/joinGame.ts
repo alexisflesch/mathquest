@@ -33,6 +33,7 @@ import { joinGame as joinGameModular } from '@/core/services/gameParticipant/joi
 import { DifferedScoreService } from '@/core/services/gameParticipant/scoreService';
 import { emitParticipantList } from '../lobbyHandler';
 import { shouldAllowOperation } from '@/sockets/utils/idempotencyGuard';
+import { metricsCollector } from '@/metrics/metricsCollector';
 
 const logger = createLogger('JoinGameHandler');
 
@@ -50,17 +51,23 @@ export function joinGameHandler(
 ) {
     // Update payload type
     return async (payload: JoinGamePayload) => {
-        logger.debug({ payload }, 'Received join_game payload');
+        // Extract correlationId for tracing (Phase 5: Observability)
+        const correlationId = payload.correlationId;
+        
+        // Record metrics (Phase 5: Observability)
+        metricsCollector.recordJoinGame();
+        
+        logger.debug('Received join_game payload', { payload, correlationId });
 
         // Zod validation for payload
         const parseResult = joinGamePayloadSchema.safeParse(payload);
-        logger.debug({ parseResult }, 'Result of joinGamePayloadSchema.safeParse');
+        logger.debug('Result of joinGamePayloadSchema.safeParse', { parseResult, correlationId });
         if (!parseResult.success) {
             const errorPayload: ErrorPayload = {
                 message: 'Invalid join game payload',
                 code: 'INVALID_PAYLOAD',
             };
-            logger.warn({ errorPayload }, 'Emitting game_error due to invalid payload');
+            logger.warn('Emitting game_error due to invalid payload', { errorPayload, correlationId });
             socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
             return;
         }
@@ -71,27 +78,28 @@ export function joinGameHandler(
         const idempotencyKey = `JOIN_GAME:${socket.id}:${accessCode}`;
         if (!shouldAllowOperation(idempotencyKey, 5000)) {
             logger.warn(
-                { socketId: socket.id, accessCode, userId, username },
-                'Blocked duplicate JOIN_GAME within 5s window (idempotency)'
+                'Blocked duplicate JOIN_GAME within 5s window (idempotency)',
+                { socketId: socket.id, accessCode, userId, username, correlationId }
             );
             // Silently ignore - client will have received response from first attempt
             return;
         }
 
         // 🐛 DEBUG: Log username/cookieId to track leaderboard bug
-        logger.info({
+        logger.info('🐛 [USERNAME_DEBUG] Received join_game payload - tracking username vs cookieId issue', {
             accessCode,
             userId,
             username,
             avatarEmoji,
             socketId: socket.id,
             userAgent: socket.request.headers['user-agent'],
-            marker: '[USERNAME_DEBUG]'
-        }, '🐛 [USERNAME_DEBUG] Received join_game payload - tracking username vs cookieId issue');
+            marker: '[USERNAME_DEBUG]',
+            correlationId
+        });
 
         // Special handling for practice mode
         if (accessCode === 'PRACTICE') {
-            logger.info({ userId, username, avatarEmoji }, 'Joining practice mode');
+            logger.info('Joining practice mode', { userId, username, avatarEmoji, correlationId });
 
             // For practice mode, we don't need a database game instance
             // Join a practice-specific room for this user
@@ -115,13 +123,13 @@ export function joinGameHandler(
                 }
             };
 
-            logger.info({ gameJoinedPayload }, 'Emitting game_joined for practice mode');
+            logger.info('Emitting game_joined for practice mode', { gameJoinedPayload, correlationId });
             socket.emit(SOCKET_EVENTS.GAME.GAME_JOINED as any, gameJoinedPayload);
             return;
         }
 
         try {
-            logger.debug({ accessCode, userId, username, avatarEmoji }, 'Looking up gameInstance');
+            logger.debug('Looking up gameInstance', { accessCode, userId, username, avatarEmoji, correlationId });
             const gameInstance = await prisma.gameInstance.findUnique({
                 where: { accessCode },
                 select: {
@@ -345,7 +353,7 @@ export function joinGameHandler(
                 differedAvailableFrom: gameInstance.differedAvailableFrom?.toISOString(),
                 differedAvailableTo: gameInstance.differedAvailableTo?.toISOString(),
             };
-            logger.info({ gameJoinedPayload }, 'Emitting game_joined');
+            logger.info('Emitting game_joined', { gameJoinedPayload, correlationId });
             socket.emit(SOCKET_EVENTS.GAME.GAME_JOINED as any, gameJoinedPayload);
 
             // 🎯 LEADERBOARD ON JOIN: Send current leaderboard state to new joiners

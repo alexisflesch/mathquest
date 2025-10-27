@@ -6,19 +6,28 @@
  * - Visual differentiation between log types
  * - Contextual prefixes for easier log filtering
  * - Environment-based configuration
+ * - Correlation ID support for tracing (Phase 5: Observability)
  * 
  * Usage:
  *   import { createLogger } from './clientLogger';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
  *   const logger = createLogger('ComponentName');
  *   logger.debug('Detailed info for debugging');
- *   logger.info('Normal operation information');
+ *   logger.info('Normal operation information', { correlationId: 'client-123-abc' });
  *   logger.warn('Warning that might need attention');
  *   logger.error('Error condition', errorObject);
  */
 
+import type { CorrelationId } from '@shared/types/core/correlation';
+
 // Define log level type for type safety
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
+
+// Optional metadata for log entries (Phase 5)
+export interface LogMetadata {
+    correlationId?: CorrelationId;
+    [key: string]: unknown;
+}
 
 // Global diagnostics buffer type (augmented on window when enabled)
 declare global {
@@ -191,17 +200,30 @@ export function createLogger(context: string): Logger {
         const levelStyle = LOG_STYLES[level] || '';
         const contextStyle = LOG_STYLES.CONTEXT;
 
-        // Format: [Time] [LEVEL] [Context] Message
+        // Check if first argument is metadata with correlationId
+        const firstArg = args[0];
+        const isMetadata = firstArg && 
+            typeof firstArg === 'object' && 
+            !Array.isArray(firstArg) &&
+            'correlationId' in firstArg;
+        
+        const metadata = isMetadata ? (firstArg as LogMetadata) : undefined;
+
+        // Extract correlation ID if present
+        const correlationId = metadata?.correlationId;
+        const correlationStr = correlationId ? ` [CID:${correlationId.slice(-8)}]` : '';
+
+        // Format: [Time] [LEVEL] [Context] [CID:xxx] Message
         if (level === 'ERROR') {
             console.error(
-                `%c${timestamp}%c [${level}] %c[${context}]%c`,
+                `%c${timestamp}%c [${level}] %c[${context}]%c${correlationStr}`,
                 'color: gray;', levelStyle, contextStyle, '',
                 message,
                 ...args
             );
         } else {
             console.log(
-                `%c${timestamp}%c [${level}] %c[${context}]%c`,
+                `%c${timestamp}%c [${level}] %c[${context}]%c${correlationStr}`,
                 'color: gray;', levelStyle, contextStyle, '',
                 message,
                 ...args
@@ -213,7 +235,15 @@ export function createLogger(context: string): Logger {
             if (typeof window !== 'undefined') {
                 const buf = window.__mqDiag;
                 if (buf && buf.enabled && typeof buf.push === 'function') {
-                    buf.push({ ts: Date.now(), level, context, message, args });
+                    buf.push({ 
+                        ts: Date.now(), 
+                        level, 
+                        context, 
+                        message, 
+                        args,
+                        metadata,
+                        correlationId
+                    });
                 }
             }
         } catch {

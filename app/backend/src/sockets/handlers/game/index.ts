@@ -6,6 +6,7 @@ import { disconnectHandler } from './disconnect';
 import { requestNextQuestionHandler } from './requestNextQuestion';
 import { GAME_EVENTS } from '@shared/types/socket/events';
 import createLogger from '@/utils/logger';
+import { metricsCollector } from '@/metrics/metricsCollector';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import { startGamePayloadSchema } from '@shared/types/socketEvents.zod';
 import { toCanonicalTimer } from '@/core/services/toCanonicalTimer';
@@ -20,6 +21,9 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
 
     // Modernized GAME_ANSWER handler: resolve canonical context and pass to DRY handler
     socket.on(GAME_EVENTS.GAME_ANSWER, async (payload) => {
+        // Record metrics (Phase 5: Observability)
+        metricsCollector.recordSubmitAnswer();
+        
         console.log('[DEBUG] GAME_ANSWER handler triggered', { payload });
         // Extract accessCode, userId, questionUid from payload (validate with Zod if needed)
         let accessCode, userId, questionUid;

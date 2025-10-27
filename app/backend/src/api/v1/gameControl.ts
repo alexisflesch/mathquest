@@ -6,6 +6,7 @@ import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateSe
 import { getIO } from '@/sockets';
 import { prisma } from '@/db/prisma';
 import { gameTimerStateSchema, gameTimerUpdatePayloadSchema } from '@shared/types/socketEvents.zod';
+import { metricsCollector } from '@/metrics/metricsCollector';
 import type {
     GameControlStateResponse,
     QuestionSetResponse,
@@ -147,6 +148,10 @@ router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestio
                     totalQuestions: updatedGameState.questionUids.length,
                     questionState: 'active' as const
                 };
+                
+                // Record metrics (Phase 5: Observability)
+                metricsCollector.recordGameQuestion();
+                
                 io.to([liveRoom, projectionRoom]).emit('game_question', payload);
             }
             // [LEGACY-TIMER-MIGRATION] The following legacy emission is deprecated and commented out:

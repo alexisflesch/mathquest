@@ -22,7 +22,8 @@ import type {
     GameTimerUpdatePayload,
     TimerActionPayload,
     AnswerSubmissionPayload as GameAnswerPayload,
-    LeaderboardEntry
+    LeaderboardEntry,
+    CorrelationId
 } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
 import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload, JoinDashboardPayload } from './socket/dashboardPayloads';
@@ -46,6 +47,7 @@ export interface JoinGamePayload {
     username: string;
     avatarEmoji?: string;
     isDiffered?: boolean;
+    correlationId?: CorrelationId; // Phase 5: Observability
 }
 
 // ===== LEGACY EVENT PAYLOADS (DEPRECATED) =====

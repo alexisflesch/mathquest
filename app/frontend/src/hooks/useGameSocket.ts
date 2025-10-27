@@ -16,6 +16,7 @@ import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { STORAGE_KEYS } from '@/constants/auth';
+import { generateCorrelationId } from '@shared/types/core/correlation';
 import type {
     ClientToServerEvents,
     ServerToClientEvents,
@@ -292,9 +293,16 @@ export function useGameSocket(
             return;
         }
 
+        // Phase 5: Generate correlation ID for tracing
+        const payloadWithCorrelation: JoinGamePayload = {
+            ...payload,
+            correlationId: payload.correlationId || generateCorrelationId('client')
+        };
+
         // Validate payload before emitting
         try {
-            const validatedPayload = joinGamePayloadSchema.parse(payload);
+            const validatedPayload = joinGamePayloadSchema.parse(payloadWithCorrelation);
+            logger.info(`[${role.toUpperCase()}] Emitting join_game`, { correlationId: validatedPayload.correlationId });
             // TODO: Use SOCKET_EVENTS.GAME.JOIN_GAME when TypeScript types allow constants
             socket.emit('join_game', validatedPayload);
         } catch (error) {

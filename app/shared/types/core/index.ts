@@ -23,6 +23,9 @@ export * from './answer';
 // Core question types
 export * from './question';
 
+// Core correlation types
+export * from './correlation';
+
 // Re-export key types with clear names for easy importing
 export type {
     BaseParticipant,

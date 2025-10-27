@@ -35,7 +35,7 @@ export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEven
         // WARNING: This can be very verbose in production, use SOCKET_DEBUG_EVENTS=true only for debugging
         if (process.env.SOCKET_DEBUG_EVENTS === 'true') {
             socket.onAny((event, ...args) => {
-                logger.info('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);
+                logger.info(`[SOCKET DEBUG] onAny: ${event} socket: ${socket.id}`, { args });
             });
         } else {
             logger.debug('socket.onAny logging disabled (set SOCKET_DEBUG_EVENTS=true to enable)');
