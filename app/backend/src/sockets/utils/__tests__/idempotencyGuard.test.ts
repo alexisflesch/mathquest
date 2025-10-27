@@ -4,9 +4,11 @@
  * Tests the in-memory idempotency guard that prevents duplicate socket event processing
  */
 
-import {
-    shouldAllowOperation,
-    clearIdempotencyKey,
+// @ts-nocheck - Jest globals are available at runtime but not in editor with main tsconfig
+
+import { 
+    shouldAllowOperation, 
+    clearIdempotencyKey, 
     clearAllIdempotencyKeys,
     getIdempotencyCacheSize,
     stopCleanupInterval
