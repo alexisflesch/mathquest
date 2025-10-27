@@ -6,9 +6,9 @@
 
 // @ts-nocheck - Jest globals are available at runtime but not in editor with main tsconfig
 
-import { 
-    shouldAllowOperation, 
-    clearIdempotencyKey, 
+import {
+    shouldAllowOperation,
+    clearIdempotencyKey,
     clearAllIdempotencyKeys,
     getIdempotencyCacheSize,
     stopCleanupInterval

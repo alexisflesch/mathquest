@@ -33,332 +33,342 @@ import {
 } from '../helpers/chaos-helpers';
 
 test.describe('Chaos Suite: Network Resilience', () => {
-    let teacherPage: Page;
-    let studentPage: Page;
-    let teacherContext: BrowserContext;
-    let studentContext: BrowserContext;
+    // Each test gets its own fresh contexts to avoid pollution
 
-    test.beforeAll(async ({ browser }) => {
-        // Create separate contexts for teacher and student
-        teacherContext = await browser.newContext();
-        studentContext = await browser.newContext();
-        teacherPage = await teacherContext.newPage();
-        studentPage = await studentContext.newPage();
+    test('should survive single network flap without crashes', async ({ browser }) => {
+        test.setTimeout(120000); // 2 minutes
+
+        // Create fresh contexts for this test
+        const teacherContext = await browser.newContext();
+        const studentContext = await browser.newContext();
+        const teacherPage = await teacherContext.newPage();
+        const studentPage = await studentContext.newPage();
 
         // Inject monitoring
         await injectEventCounters(teacherPage);
         await injectEventCounters(studentPage);
         await injectCrashSentinels(teacherPage);
         await injectCrashSentinels(studentPage);
+
+        try {
+            const dataHelper = new TestDataHelper(teacherPage);
+            const loginHelper = new LoginHelper(teacherPage);
+            const seed = dataHelper.generateTestData('network_flap');
+
+            // Setup: Create teacher and game
+            await dataHelper.createTeacher({
+                username: seed.username,
+                email: seed.email,
+                password: seed.password
+            });
+
+            await loginHelper.loginAsTeacher({
+                email: seed.email,
+                password: seed.password
+            });
+
+            // Get questions
+            const questionsResponse = await teacherPage.request.get('/api/questions/list', {
+                params: { gradeLevel: 'CP', limit: '3' }
+            });
+            const questions = await questionsResponse.json();
+            const questionUids = questions.slice(0, 3);
+
+            // Create template
+            const templateResponse = await teacherPage.request.post('/api/game-templates', {
+                data: {
+                    name: seed.quizName,
+                    gradeLevel: 'CP',
+                    discipline: 'Mathématiques',
+                    themes: ['Calcul'],
+                    questionUids: questionUids,
+                    description: 'Chaos test template',
+                    defaultMode: 'quiz'
+                }
+            });
+
+            expect(templateResponse.ok()).toBeTruthy();
+            const templateData = await templateResponse.json();
+            expect(templateData.gameTemplate).toBeTruthy();
+            expect(templateData.gameTemplate.id).toBeTruthy();
+
+            // Create game
+            const gameResponse = await teacherPage.request.post('/api/games', {
+                data: {
+                    name: `Chaos Test ${Date.now()}`,
+                    gameTemplateId: templateData.gameTemplate.id,
+                    playMode: 'quiz',
+                    settings: {}
+                }
+            });
+
+            expect(gameResponse.ok()).toBeTruthy();
+            const gameData = await gameResponse.json();
+            expect(gameData.gameInstance).toBeTruthy();
+            const accessCode = gameData.gameInstance.accessCode;
+
+            // Student joins
+            const studentLogin = new LoginHelper(studentPage);
+            await studentLogin.loginAsGuestStudent({ username: 'ChaosStudent1' });
+
+            await resetEventCounters(studentPage);
+
+            // Navigate to game
+            await studentPage.goto(`http://localhost:3008/live/${accessCode}?e2e=1`);
+            await studentPage.waitForTimeout(2000); // Wait for join
+
+            // Record initial counters
+            await logEventCounters(studentPage, 'Before flap');
+            const beforeFlap = await getEventCounters(studentPage);
+
+            // CHAOS: Single network flap (2s offline)
+            console.log('🌩️ Simulating network flap...');
+            await simulateNetworkFlap(studentContext, 2000);
+
+            // Wait for reconnection and stability
+            await studentPage.waitForTimeout(3000);
+            await waitForStableConnection(studentPage, 2000);
+
+            // Record after counters
+            await logEventCounters(studentPage, 'After flap');
+            const afterFlap = await getEventCounters(studentPage);
+
+            // ASSERTIONS
+            // 1. No crashes
+            await assertNoCrashes(studentPage);
+            await assertNoCrashes(teacherPage);
+
+            // 2. JOIN_GAME should not have fired more than once during reconnect
+            // (idempotency guard should block duplicates)
+            const joinGameDelta = afterFlap.join_game - beforeFlap.join_game;
+            expect(joinGameDelta).toBeLessThanOrEqual(1);
+
+            // 3. GAME_QUESTION should not storm (max 2: initial + one after reconnect if needed)
+            await assertCounterBudget(studentPage, 'game_question', 2);
+
+            console.log('✅ Single network flap survived without issues');
+        } finally {
+            // Cleanup
+            await teacherContext.close();
+            await studentContext.close();
+        }
     });
 
-    test.afterAll(async () => {
-        await teacherContext?.close();
-        await studentContext?.close();
-    });
-
-    test('should survive single network flap without crashes', async () => {
-        test.setTimeout(120000); // 2 minutes
-
-        const dataHelper = new TestDataHelper(teacherPage);
-        const loginHelper = new LoginHelper(teacherPage);
-        const seed = dataHelper.generateTestData('network_flap');
-
-        // Setup: Create teacher and game
-        await dataHelper.createTeacher({
-            username: seed.username,
-            email: seed.email,
-            password: seed.password
-        });
-
-        await loginHelper.loginAsTeacher({
-            email: seed.email,
-            password: seed.password
-        });
-
-        // Get questions
-        const questionsResponse = await teacherPage.request.get('/api/questions/list', {
-            params: { gradeLevel: 'CP', limit: '3' }
-        });
-        const questions = await questionsResponse.json();
-        const questionUids = questions.slice(0, 3);
-
-        // Create template
-        const templateResponse = await teacherPage.request.post('/api/game-templates', {
-            data: {
-                name: seed.quizName,
-                gradeLevel: 'CP',
-                discipline: 'Mathématiques',
-                themes: ['Calcul'],
-                questionUids: questionUids,
-                description: 'Chaos test template',
-                defaultMode: 'quiz'
-            }
-        });
-        
-        expect(templateResponse.ok()).toBeTruthy();
-        const templateData = await templateResponse.json();
-        expect(templateData.gameTemplate).toBeTruthy();
-        expect(templateData.gameTemplate.id).toBeTruthy();
-
-        // Create game
-        const gameResponse = await teacherPage.request.post('/api/games', {
-            data: {
-                name: `Chaos Test ${Date.now()}`,
-                gameTemplateId: templateData.gameTemplate.id,
-                playMode: 'quiz',
-                settings: {}
-            }
-        });
-        
-        expect(gameResponse.ok()).toBeTruthy();
-        const gameData = await gameResponse.json();
-        expect(gameData.gameInstance).toBeTruthy();
-        const accessCode = gameData.gameInstance.accessCode;
-
-        // Student joins
-        const studentLogin = new LoginHelper(studentPage);
-        await studentLogin.loginAsGuestStudent({ username: 'ChaosStudent1' });
-        
-        await resetEventCounters(studentPage);
-        
-        // Navigate to game
-        await studentPage.goto(`http://localhost:3008/live/${accessCode}?e2e=1`);
-        await studentPage.waitForTimeout(2000); // Wait for join
-
-        // Record initial counters
-        await logEventCounters(studentPage, 'Before flap');
-        const beforeFlap = await getEventCounters(studentPage);
-
-        // CHAOS: Single network flap (2s offline)
-        console.log('🌩️ Simulating network flap...');
-        await simulateNetworkFlap(studentContext, 2000);
-
-        // Wait for reconnection and stability
-        await studentPage.waitForTimeout(3000);
-        await waitForStableConnection(studentPage, 2000);
-
-        // Record after counters
-        await logEventCounters(studentPage, 'After flap');
-        const afterFlap = await getEventCounters(studentPage);
-
-        // ASSERTIONS
-        // 1. No crashes
-        await assertNoCrashes(studentPage);
-        await assertNoCrashes(teacherPage);
-
-        // 2. JOIN_GAME should not have fired more than once during reconnect
-        // (idempotency guard should block duplicates)
-        const joinGameDelta = afterFlap.join_game - beforeFlap.join_game;
-        expect(joinGameDelta).toBeLessThanOrEqual(1);
-
-        // 3. GAME_QUESTION should not storm (max 2: initial + one after reconnect if needed)
-        await assertCounterBudget(studentPage, 'game_question', 2);
-
-        console.log('✅ Single network flap survived without issues');
-    });
-
-    test.skip('should survive multiple network flaps with jitter', async () => {
-        // SKIP: This test has context pollution issues when running after test 1
-        // TODO: Fix by creating fresh browser context instead of reusing studentPage
+    test('should survive multiple network flaps with jitter', async ({ browser }) => {
         test.setTimeout(180000); // 3 minutes
 
-        // Reset page state
-        await studentPage.goto('about:blank');
-        await studentPage.waitForTimeout(500);
-        
-        const dataHelper = new TestDataHelper(studentPage);
-        const seed = dataHelper.generateTestData('multi_flap');
+        // Create fresh contexts for this test
+        const studentContext = await browser.newContext();
+        const studentPage = await studentContext.newPage();
 
-        // Setup game (abbreviated for speed)
-        await resetEventCounters(studentPage);
-        
-        const studentLogin = new LoginHelper(studentPage);
-        
-        // Go to practice mode (simpler, no game creation needed)
-        await studentPage.goto('http://localhost:3008/live/PRACTICE?e2e=1');
-        await studentPage.waitForTimeout(2000); // Wait for page load
-        
-        await studentLogin.loginAsGuestStudent({ username: 'ChaosStudent2' });
-        await studentPage.waitForTimeout(2000); // Wait for connection
+        // Inject monitoring
+        await injectEventCounters(studentPage);
+        await injectCrashSentinels(studentPage);
 
-        await logEventCounters(studentPage, 'Before multi-flap');
+        try {
+            const dataHelper = new TestDataHelper(studentPage);
+            const seed = dataHelper.generateTestData('multi_flap');
 
-        // CHAOS: 3 network flaps with random durations
-        console.log('🌩️🌩️🌩️ Simulating multiple network flaps with jitter...');
-        await simulateNetworkFlapWithJitter(studentContext, 3, 1000, 3000);
+            // Setup game (abbreviated for speed)
+            await resetEventCounters(studentPage);
 
-        // Wait for full stabilization
-        await studentPage.waitForTimeout(5000);
-        await waitForStableConnection(studentPage, 3000);
+            const studentLogin = new LoginHelper(studentPage);
 
-        await logEventCounters(studentPage, 'After multi-flap');
+            // Go to practice mode (simpler, no game creation needed)
+            await studentPage.goto('http://localhost:3008/live/PRACTICE?e2e=1');
+            await studentPage.waitForTimeout(2000); // Wait for page load
 
-        // ASSERTIONS
-        await assertNoCrashes(studentPage);
-        
-        // Connection should have recovered
-        const crashReport = await getCrashReport(studentPage);
-        expect(crashReport.hasError).toBe(false);
+            await studentLogin.loginAsGuestStudent({ username: 'ChaosStudent2' });
+            await studentPage.waitForTimeout(2000); // Wait for connection
 
-        console.log('✅ Multiple network flaps survived');
+            await logEventCounters(studentPage, 'Before multi-flap');
+
+            // CHAOS: 3 network flaps with random durations
+            console.log('🌩️🌩️🌩️ Simulating multiple network flaps with jitter...');
+            await simulateNetworkFlapWithJitter(studentContext, 3, 1000, 3000);
+
+            // Wait for full stabilization
+            await studentPage.waitForTimeout(5000);
+            await waitForStableConnection(studentPage, 3000);
+
+            await logEventCounters(studentPage, 'After multi-flap');
+
+            // ASSERTIONS
+            await assertNoCrashes(studentPage);
+
+            console.log('✅ Multiple network flaps survived');
+        } finally {
+            // Cleanup
+            await studentContext.close();
+        }
     });
 
-    test.skip('should handle background/resume cycle (mobile simulation)', async () => {
-        // SKIP: Context pollution from shared studentPage across tests
-        // TODO: Refactor to use fresh browser contexts per test
+    test('should handle background/resume cycle (mobile simulation)', async ({ browser }) => {
         test.setTimeout(120000);
 
-        const studentLogin = new LoginHelper(studentPage);
-        
-        await studentPage.goto('http://localhost:3008/live/PRACTICE?e2e=1');
-        await studentPage.waitForTimeout(2000); // Wait for page load
-        
-        await studentLogin.loginAsGuestStudent({ username: 'ChaosStudent3' });
-        
-        await studentPage.waitForTimeout(3000); // Wait for socket connection
+        // Create fresh context for this test
+        const studentContext = await browser.newContext();
+        const studentPage = await studentContext.newPage();
 
-        await resetEventCounters(studentPage);
-        await logEventCounters(studentPage, 'Before background');
+        // Inject monitoring
+        await injectEventCounters(studentPage);
+        await injectCrashSentinels(studentPage);
 
-        // CHAOS: Simulate going to background for 5 seconds
-        console.log('📱 Simulating background/resume...');
-        await simulateBackgroundResume(studentPage, 5000);
+        try {
+            const studentLogin = new LoginHelper(studentPage);
 
-        await studentPage.waitForTimeout(2000);
-        await logEventCounters(studentPage, 'After resume');
+            await studentPage.goto('http://localhost:3008/live/PRACTICE?e2e=1');
+            await studentPage.waitForTimeout(2000); // Wait for page load
 
-        // ASSERTIONS
-        await assertNoCrashes(studentPage);
-        
-        // Should still be functional (no excessive reconnects)
-        const counters = await getEventCounters(studentPage);
-        expect(counters.socket_reconnect).toBeLessThanOrEqual(2);
+            await studentLogin.loginAsGuestStudent({ username: 'ChaosStudent3' });
 
-        console.log('✅ Background/resume cycle handled');
+            await studentPage.waitForTimeout(3000); // Wait for socket connection
+
+            await resetEventCounters(studentPage);
+            await logEventCounters(studentPage, 'Before background');
+
+            // CHAOS: Simulate going to background for 5 seconds
+            console.log('📱 Simulating background/resume...');
+            await simulateBackgroundResume(studentPage, 5000);
+
+            await studentPage.waitForTimeout(2000);
+            await logEventCounters(studentPage, 'After resume');
+
+            // ASSERTIONS
+            await assertNoCrashes(studentPage);
+
+            // Should still be functional (no excessive reconnects)
+            const counters = await getEventCounters(studentPage);
+            expect(counters.socket_reconnect).toBeLessThanOrEqual(2);
+
+            console.log('✅ Background/resume cycle handled');
+        } finally {
+            // Cleanup
+            await studentContext.close();
+        }
     });
 });
 
 test.describe('Chaos Suite: Duplicate Event Protection', () => {
-    let teacherPage: Page;
-    let studentPage: Page;
+    // Each test gets its own fresh contexts to avoid pollution
 
-    test.beforeAll(async ({ browser }) => {
+    test('should deduplicate GAME_QUESTION events after reconnect', async ({ browser }) => {
+        test.setTimeout(120000);
+
+        // Create fresh contexts for this test
         const teacherContext = await browser.newContext();
         const studentContext = await browser.newContext();
-        teacherPage = await teacherContext.newPage();
-        studentPage = await studentContext.newPage();
+        const teacherPage = await teacherContext.newPage();
+        const studentPage = await studentContext.newPage();
 
+        // Inject monitoring
         await injectEventCounters(teacherPage);
         await injectEventCounters(studentPage);
         await injectCrashSentinels(teacherPage);
         await injectCrashSentinels(studentPage);
-    });
 
-    test.afterAll(async () => {
-        await teacherPage?.context().close();
-        await studentPage?.context().close();
-    });
+        try {
+            // This test verifies that client-side dedupe logic prevents
+            // duplicate GAME_QUESTION processing after network disruption
 
-    test('should deduplicate GAME_QUESTION events after reconnect', async () => {
-        test.setTimeout(120000);
+            const dataHelper = new TestDataHelper(teacherPage);
+            const loginHelper = new LoginHelper(teacherPage);
+            const seed = dataHelper.generateTestData('dedupe_test');
 
-        // This test verifies that client-side dedupe logic prevents
-        // duplicate GAME_QUESTION processing after network disruption
+            // Create teacher and game
+            await dataHelper.createTeacher({
+                username: seed.username,
+                email: seed.email,
+                password: seed.password
+            });
 
-        const dataHelper = new TestDataHelper(teacherPage);
-        const loginHelper = new LoginHelper(teacherPage);
-        const seed = dataHelper.generateTestData('dedupe_test');
+            await loginHelper.loginAsTeacher({
+                email: seed.email,
+                password: seed.password
+            });
 
-        // Create teacher and game
-        await dataHelper.createTeacher({
-            username: seed.username,
-            email: seed.email,
-            password: seed.password
-        });
+            // Get questions
+            const questionsResponse = await teacherPage.request.get('/api/questions/list', {
+                params: { gradeLevel: 'CP', limit: '3' }
+            });
+            const questions = await questionsResponse.json();
 
-        await loginHelper.loginAsTeacher({
-            email: seed.email,
-            password: seed.password
-        });
+            // Create template and game
+            const templateResponse = await teacherPage.request.post('/api/game-templates', {
+                data: {
+                    name: seed.quizName,
+                    gradeLevel: 'CP',
+                    discipline: 'Mathématiques',
+                    themes: ['Calcul'],
+                    questionUids: questions.slice(0, 3),
+                    description: 'Dedupe test template',
+                    defaultMode: 'quiz'
+                }
+            });
 
-        // Get questions
-        const questionsResponse = await teacherPage.request.get('/api/questions/list', {
-            params: { gradeLevel: 'CP', limit: '3' }
-        });
-        const questions = await questionsResponse.json();
+            expect(templateResponse.ok()).toBeTruthy();
+            const templateData = await templateResponse.json();
+            expect(templateData.gameTemplate).toBeTruthy();
 
-        // Create template and game
-        const templateResponse = await teacherPage.request.post('/api/game-templates', {
-            data: {
-                name: seed.quizName,
-                gradeLevel: 'CP',
-                discipline: 'Mathématiques',
-                themes: ['Calcul'],
-                questionUids: questions.slice(0, 3),
-                description: 'Dedupe test template',
-                defaultMode: 'quiz'
+            const gameResponse = await teacherPage.request.post('/api/games', {
+                data: {
+                    name: `Dedupe Test ${Date.now()}`,
+                    gameTemplateId: templateData.gameTemplate.id,
+                    playMode: 'quiz',
+                    settings: {}
+                }
+            });
+
+            expect(gameResponse.ok()).toBeTruthy();
+            const gameData = await gameResponse.json();
+            expect(gameData.gameInstance).toBeTruthy();
+            const accessCode = gameData.gameInstance.accessCode;
+
+            // Student joins
+            const studentLogin = new LoginHelper(studentPage);
+            await studentLogin.loginAsGuestStudent({ username: 'DedupeStudent' });
+
+            await studentPage.goto(`http://localhost:3008/live/${accessCode}?e2e=1`);
+            await studentPage.waitForTimeout(2000);
+
+            // Teacher starts quiz
+            await teacherPage.goto(`http://localhost:3008/teacher/dashboard/${accessCode}?e2e=1`);
+            await teacherPage.waitForTimeout(2000);
+
+            // Click start button (if exists)
+            const startButton = teacherPage.locator('button:has-text("Démarrer")');
+            if (await startButton.count() > 0) {
+                await startButton.click();
+                await teacherPage.waitForTimeout(1000);
             }
-        });
-        
-        expect(templateResponse.ok()).toBeTruthy();
-        const templateData = await templateResponse.json();
-        expect(templateData.gameTemplate).toBeTruthy();
 
-        const gameResponse = await teacherPage.request.post('/api/games', {
-            data: {
-                name: `Dedupe Test ${Date.now()}`,
-                gameTemplateId: templateData.gameTemplate.id,
-                playMode: 'quiz',
-                settings: {}
-            }
-        });
-        
-        expect(gameResponse.ok()).toBeTruthy();
-        const gameData = await gameResponse.json();
-        expect(gameData.gameInstance).toBeTruthy();
-        const accessCode = gameData.gameInstance.accessCode;
+            // Reset counters right before flap
+            await resetEventCounters(studentPage);
 
-        // Student joins
-        const studentLogin = new LoginHelper(studentPage);
-        await studentLogin.loginAsGuestStudent({ username: 'DedupeStudent' });
-        
-        await studentPage.goto(`http://localhost:3008/live/${accessCode}?e2e=1`);
-        await studentPage.waitForTimeout(2000);
+            // Trigger network flap DURING active game
+            console.log('🌩️ Network flap during active game...');
+            await simulateNetworkFlap(await studentPage.context(), 2000);
 
-        // Teacher starts quiz
-        await teacherPage.goto(`http://localhost:3008/teacher/dashboard/${accessCode}?e2e=1`);
-        await teacherPage.waitForTimeout(2000);
+            // Wait for reconnection
+            await studentPage.waitForTimeout(5000);
 
-        // Click start button (if exists)
-        const startButton = teacherPage.locator('button:has-text("Démarrer")');
-        if (await startButton.count() > 0) {
-            await startButton.click();
-            await teacherPage.waitForTimeout(1000);
+            await logEventCounters(studentPage, 'After dedupe test');
+            const counters = await getEventCounters(studentPage);
+
+            // CRITICAL: Should receive at most 1 GAME_QUESTION after reconnect
+            // (dedupe logic should drop any duplicates)
+            expect(counters.game_question).toBeLessThanOrEqual(1);
+
+            // No crashes
+            await assertNoCrashes(studentPage);
+            await assertNoCrashes(teacherPage);
+
+            console.log('✅ Duplicate GAME_QUESTION protection verified');
+        } finally {
+            // Cleanup
+            await teacherContext.close();
+            await studentContext.close();
         }
-
-        // Reset counters right before flap
-        await resetEventCounters(studentPage);
-
-        // Trigger network flap DURING active game
-        console.log('🌩️ Network flap during active game...');
-        await simulateNetworkFlap(await studentPage.context(), 2000);
-
-        // Wait for reconnection
-        await studentPage.waitForTimeout(5000);
-
-        await logEventCounters(studentPage, 'After dedupe test');
-        const counters = await getEventCounters(studentPage);
-
-        // CRITICAL: Should receive at most 1 GAME_QUESTION after reconnect
-        // (dedupe logic should drop any duplicates)
-        expect(counters.game_question).toBeLessThanOrEqual(1);
-
-        // No crashes
-        await assertNoCrashes(studentPage);
-        await assertNoCrashes(teacherPage);
-
-        console.log('✅ Duplicate GAME_QUESTION protection verified');
     });
 });
 
@@ -373,10 +383,10 @@ test.describe('Chaos Suite: Extended Duration Stress', () => {
         await injectCrashSentinels(page);
 
         const loginHelper = new LoginHelper(page);
-        
+
         await page.goto('http://localhost:3008/live/PRACTICE?e2e=1');
         await page.waitForTimeout(1000);
-        
+
         await loginHelper.loginAsGuestStudent({ username: 'StressTestStudent' });
 
         await page.waitForTimeout(2000);
@@ -412,7 +422,7 @@ test.describe('Chaos Suite: Extended Duration Stress', () => {
 
         // Final assertions
         await assertNoCrashes(page);
-        
+
         // Should not have excessive reconnections (budget: 10 for 3 minutes with periodic flaps)
         await assertCounterBudget(page, 'socket_reconnect', 10);
 

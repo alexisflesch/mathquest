@@ -39,7 +39,7 @@ export async function injectEventCounters(page: Page): Promise<void> {
         // Track socket.io events when socket is available
         const originalEmit = (window as any).io?.Socket?.prototype?.emit;
         if (originalEmit) {
-            (window as any).io.Socket.prototype.emit = function(event: string, ...args: any[]) {
+            (window as any).io.Socket.prototype.emit = function (event: string, ...args: any[]) {
                 if ((window as any).__mqCounters[event] !== undefined) {
                     (window as any).__mqCounters[event]++;
                 }
@@ -84,7 +84,7 @@ export async function assertCounterBudget(
 ): Promise<void> {
     const counters = await getEventCounters(page);
     const actual = counters[event] || 0;
-    
+
     if (actual > maxAllowed) {
         throw new Error(
             `Event counter budget exceeded: ${event} fired ${actual} times (max: ${maxAllowed})`
@@ -180,10 +180,10 @@ export async function simulateNetworkFlap(
 ): Promise<void> {
     // Go offline
     await context.setOffline(true);
-    
+
     // Wait
     await new Promise(resolve => setTimeout(resolve, durationMs));
-    
+
     // Go back online
     await context.setOffline(false);
 }
@@ -203,7 +203,7 @@ export async function simulateNetworkFlapWithJitter(
     for (let i = 0; i < count; i++) {
         const durationMs = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
         await simulateNetworkFlap(context, durationMs);
-        
+
         // Add delay between flaps
         const delayMs = Math.floor(Math.random() * 2000) + 1000;
         await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -227,10 +227,10 @@ export async function simulateBackgroundResume(
             value: true
         });
     });
-    
+
     // Wait
     await new Promise(resolve => setTimeout(resolve, backgroundDurationMs));
-    
+
     // Simulate coming back to foreground
     await page.evaluate(() => {
         Object.defineProperty(document, 'hidden', {
@@ -254,7 +254,7 @@ export async function waitForStableConnection(
     const startCounters = await getEventCounters(page);
     await new Promise(resolve => setTimeout(resolve, stableDurationMs));
     const endCounters = await getEventCounters(page);
-    
+
     // Check if reconnection happened during wait
     if (endCounters.socket_reconnect > startCounters.socket_reconnect) {
         // Still reconnecting, wait more

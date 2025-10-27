@@ -123,19 +123,15 @@ Status: ✅ COMPLETE
     - Budget assertions (fail test if event count exceeds threshold)
   - Chaos test suite: `tests/e2e/suites/chaos.spec.ts`
     - ✅ Single network flap test (2s offline → reconnect)
+    - ✅ Multiple flaps with jitter (3 random flaps, 1-3s offline each)
+    - ✅ Background/resume cycle (5s background simulation)
     - ✅ Dedupe verification test (network flap during active game, no duplicate GAME_QUESTION)
     - ✅ 3-minute stress test (periodic random flaps, 30-60s intervals)
-    - ⏸️  Multiple flaps with jitter (skipped: context pollution issue)
-    - ⏸️  Background/resume cycle (skipped: context pollution issue)
-- Test results: 3/5 passing (2 skipped due to shared browser context pollution - documented for future refactor)
+- Test results: **5/5 passing**, verified twice consecutively
 - Event counters verified: All counter budgets respected, no event storms detected
 - Crash detection verified: React hydration warnings correctly ignored (non-fatal), no real crashes
 - Duration test: 3-minute stress test with 4-5 network flaps completed successfully
-
-Known issues:
-- Tests 2 & 3 skip due to shared `beforeAll` contexts polluting state
-- TODO: Refactor to use fresh browser contexts per test instead of shared `studentPage`
-- React hydration warnings appear but are harmless (React auto-recovers)
+- Architecture: Each test uses fresh browser contexts (no shared state pollution)
 
 Note: VuePress docs not needed - chaos testing is development/CI infrastructure, not a user-facing API or contract. Test code and comments provide sufficient documentation for maintainers.
 
