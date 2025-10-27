@@ -1,18 +1,20 @@
-import express, { Request, Response } from 'express';
+import express, { type RequestHandler } from 'express';
 import { getIO } from '@/sockets';
 
 const router = express.Router();
 
 // Simple Socket.IO room inspection endpoint for dev/test only
-router.get('/sockets/:accessCode', async (req: Request, res: Response) => {
+const socketsDebugHandler: RequestHandler = async (req, res) => {
     if (process.env.NODE_ENV === 'production') {
-        return res.status(404).json({ error: 'Not found' });
+        res.status(404).json({ error: 'Not found' });
+        return;
     }
     try {
-        const { accessCode } = req.params;
+        const { accessCode } = req.params as { accessCode: string };
         const io = getIO();
         if (!io) {
-            return res.status(503).json({ error: 'Socket.IO not initialized' });
+            res.status(503).json({ error: 'Socket.IO not initialized' });
+            return;
         }
         const gameRoom = `game_${accessCode}`;
         const lobbyRoom = `lobby_${accessCode}`;
@@ -36,6 +38,8 @@ router.get('/sockets/:accessCode', async (req: Request, res: Response) => {
     } catch (err: any) {
         res.status(500).json({ error: err?.message || 'Unknown error' });
     }
-});
+};
+
+router.get('/sockets/:accessCode', socketsDebugHandler);
 
 export default router;

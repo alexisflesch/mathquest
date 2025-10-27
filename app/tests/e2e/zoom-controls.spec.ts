@@ -1,28 +1,40 @@
 import { test, expect, Page } from '@playwright/test';
+import { LoginHelper, TestDataHelper } from './helpers/test-helpers';
 
 const TEST_CONFIG = {
     baseUrl: 'http://localhost:3008',
     backendUrl: 'http://localhost:3007',
 };
 
-async function loginAsTeacher(page: Page) {
-    const res = await page.request.post(`${TEST_CONFIG.backendUrl}/api/v1/auth`, {
-        data: { action: 'login', email: 'test-teacher@test-mathquest.com', password: 'testpassword123' }
-    });
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    await page.context().addCookies([{ name: 'teacherToken', value: body.token, domain: 'localhost', path: '/' }]);
-}
-
 test('projection zoom controls change scale on question container', async ({ page }) => {
-    await loginAsTeacher(page);
+    const dataHelper = new TestDataHelper(page);
+    const loginHelper = new LoginHelper(page);
 
-    // Create a small quiz via backend and get an access code using API (same flow as other tests)
-    const questionsRes = await page.request.get(`${TEST_CONFIG.backendUrl}/api/v1/questions/list`, { params: { limit: '3' } });
+    // Create teacher account and login
+    const teacherData = dataHelper.generateTestData('zoom_teacher');
+    await dataHelper.createTeacher({
+        username: teacherData.username,
+        email: teacherData.email,
+        password: teacherData.password
+    });
+
+    await loginHelper.loginAsTeacher({
+        email: teacherData.email,
+        password: teacherData.password
+    });
+
+    // Create a small quiz via backend and get an access code
+    const questionsRes = await page.request.get('/api/questions/list', {
+        params: {
+            gradeLevel: 'CP',
+            discipline: 'Mathématiques',
+            limit: '3'
+        }
+    });
     const questionUids = (await questionsRes.json()) || [];
     if (questionUids.length === 0) throw new Error('No questions available to create test game');
 
-    const templateRes = await page.request.post(`${TEST_CONFIG.backendUrl}/api/v1/game-templates`, {
+    const templateRes = await page.request.post('/api/game-templates', {
         data: {
             name: `zoom-test-template-${Date.now()}`,
             discipline: 'Mathématiques',
@@ -30,33 +42,69 @@ test('projection zoom controls change scale on question container', async ({ pag
             description: 'zoom test',
             defaultMode: 'quiz',
             themes: ['Calcul'],
-            questionUids: questionUids.slice(0, 3),
-            questions: questionUids.slice(0, 3).map((uid: string, i: number) => ({ questionUid: uid, sequence: i }))
+            questionUids: questionUids.slice(0, 3)
         }
     });
     const templateData = await templateRes.json();
     const templateId = templateData.gameTemplate?.id;
 
-    const gameRes = await page.request.post(`${TEST_CONFIG.backendUrl}/api/v1/games`, {
-        data: { gameTemplateId: templateId, name: `zoom-test-game-${Date.now()}`, playMode: 'quiz' }
+    const gameRes = await page.request.post('/api/games', {
+        data: { gameTemplateId: templateId, name: `zoom-test-game-${Date.now()}`, playMode: 'quiz', settings: {} }
     });
     const gameData = await gameRes.json();
     const accessCode = gameData.gameInstance?.accessCode || 'TEST';
 
-    // Go to teacher dashboard and start the quiz so projection will receive a question
+    // Go to teacher dashboard and start the first question
     await page.goto(`${TEST_CONFIG.baseUrl}/teacher/dashboard/${accessCode}`);
     await page.waitForLoadState('networkidle');
-    // Try to find a start button and click it
-    const startBtn = page.locator('button:has-text("Démarrer"), button:has-text("Start"), button[data-testid="start-quiz"]').first();
-    if (await startBtn.count() > 0) {
-        await startBtn.click();
+
+    // Wait for questions list to load
+    await page.waitForSelector('ul.draggable-questions-list', { timeout: 15000 }).catch(() => { });
+    await page.locator('ul.draggable-questions-list li').first().waitFor({ timeout: 10000 }).catch(() => { });
+
+    // Try to start the first question using various methods
+    const tryStart = async () => {
+        // Method 1: Look for canonical start button
+        const canonical = page.locator('[data-testid="start-question-button"]').first();
+        if (await canonical.count()) {
+            await canonical.click({ timeout: 6000 }).catch(() => { });
+            await page.waitForTimeout(500);
+            return true;
+        }
+        // Method 2: Look for play button in question list
+        const playInList = page.locator('ul.draggable-questions-list li .question-display [data-play-pause-btn]').first();
+        if (await playInList.count()) {
+            await playInList.click({ timeout: 6000 }).catch(() => { });
+            await page.waitForTimeout(500);
+            return true;
+        }
+        return false;
+    };
+
+    let started = await tryStart();
+    if (!started) {
+        // Click on question first to select it
+        const firstItem = page.locator('ul.draggable-questions-list li .question-display').first();
+        if (await firstItem.count()) {
+            await firstItem.click({ timeout: 5000 }).catch(() => { });
+            await page.waitForTimeout(200);
+        }
+        started = await tryStart();
     }
-    // Give backend/socket a moment to propagate the question to projection
-    await page.waitForTimeout(800);
+
+    if (!started) {
+        throw new Error('Could not start question from dashboard');
+    }
+
+    // Give backend/socket time to propagate the question to projection
+    await page.waitForTimeout(1500);
 
     // Open projection page
     await page.goto(`${TEST_CONFIG.baseUrl}/teacher/projection/${accessCode}`);
     await page.waitForLoadState('networkidle');
+
+    // Wait for socket connection and initial state
+    await page.waitForTimeout(2000);
 
     // Wait for projection to show a question (or related heading) after socket join
     const projectionQuestionLocator = page.locator('[data-testid="question"], .question, h2, h3');

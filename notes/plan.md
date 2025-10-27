@@ -47,7 +47,11 @@ Artifacts to produce:
 - Playwright scenario covering background/resume and duplicate payload drops.
 - VuePress docs: client dedupe behavior and diagnostics buffer usage.
 
-Status: Needs verification (landed items must be validated against current logs and E2E runs).
+Status: Partially verified
+- Sanity E2E passed: `quiz-flow.spec.ts` (template creation + instantiate).  
+  Mobile interaction E2E passed: `mobile-mc-live-freeze-repro.spec.ts` ("mobile multiple-choice live: tap answer and collect overlay diagnostics").
+- Observed single GAME_QUESTION receipt and no extra student socket events in that scenario (no storm).  
+- Next: add unit tests for dedupe and timer cleanup; run targeted background/resume scenario; confirm backend logs show no repeated join_game without disconnect.
 
 ---
 

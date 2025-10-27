@@ -37,10 +37,18 @@ describe('Middleware Route Protection', () => {
                 delete: jest.fn(),
                 clear: jest.fn()
             },
+            headers: {
+                get: jest.fn(() => null)
+            },
             nextUrl: {
                 pathname: '/',
-                origin: 'http://localhost:3000',
-                search: ''
+                origin: 'http://localhost:3008',
+                search: '',
+                searchParams: {
+                    get: jest.fn(() => null),
+                    set: jest.fn(),
+                    has: jest.fn(() => false)
+                }
             }
         };
     });
@@ -113,7 +121,7 @@ describe('Middleware Route Protection', () => {
             middleware(mockRequest as NextRequest);
 
             expect(NextResponse.redirect).toHaveBeenCalledWith(
-                new URL('http://localhost:3000/login?returnTo=%2Fprofile')
+                new URL('http://localhost:3008/login?returnTo=%2Fprofile')
             );
         });
 
@@ -123,7 +131,7 @@ describe('Middleware Route Protection', () => {
             middleware(mockRequest as NextRequest);
 
             expect(NextResponse.redirect).toHaveBeenCalledWith(
-                new URL('http://localhost:3000/')
+                new URL('http://localhost:3008/')
             );
         });
 
@@ -133,8 +141,44 @@ describe('Middleware Route Protection', () => {
             middleware(mockRequest as NextRequest);
 
             expect(NextResponse.redirect).toHaveBeenCalledWith(
-                new URL('http://localhost:3000/login?returnTo=%2Flive%2Fabc123')
+                new URL('http://localhost:3008/login?returnTo=%2Flive%2Fabc123')
             );
+        });
+
+        test('should allow access to protected routes when e2e query flag present', () => {
+            mockRequest.nextUrl!.pathname = '/live/abc123';
+            mockRequest.nextUrl!.search = '?e2e=1';
+            mockRequest.nextUrl!.searchParams.get = jest.fn((k: string) => (k === 'e2e' ? '1' : null));
+
+            middleware(mockRequest as NextRequest);
+
+            expect(NextResponse.next).toHaveBeenCalled();
+            expect(NextResponse.redirect).not.toHaveBeenCalled();
+        });
+
+        test('should allow access to protected routes when e2e cookie present', () => {
+            mockRequest.nextUrl!.pathname = '/live/xyz789';
+            // Return value based on cookie name
+            mockRequest.cookies.get = jest.fn((name: string) => {
+                if (name === 'e2e') return { value: '1' } as any;
+                return undefined;
+            });
+
+            middleware(mockRequest as NextRequest);
+
+            expect(NextResponse.next).toHaveBeenCalled();
+            expect(NextResponse.redirect).not.toHaveBeenCalled();
+        });
+
+        test('should allow access to protected routes when e2e header present', () => {
+            mockRequest.nextUrl!.pathname = '/live/xyz789';
+            mockRequest.headers.get = jest.fn((name: string) => (name === 'x-e2e' ? '1' : null));
+            mockRequest.nextUrl!.searchParams.get = jest.fn(() => null);
+
+            middleware(mockRequest as NextRequest);
+
+            expect(NextResponse.next).toHaveBeenCalled();
+            expect(NextResponse.redirect).not.toHaveBeenCalled();
         });
     });
 
@@ -170,7 +214,7 @@ describe('Middleware Route Protection', () => {
             middleware(mockRequest as NextRequest);
 
             expect(NextResponse.redirect).toHaveBeenCalledWith(
-                new URL('http://localhost:3000/')
+                new URL('http://localhost:3008/')
             );
         });
     });
@@ -226,7 +270,7 @@ describe('Middleware Route Protection', () => {
             middleware(mockRequest as NextRequest);
 
             expect(NextResponse.redirect).toHaveBeenCalledWith(
-                new URL('http://localhost:3000/login?returnTo=%2Fprofile%3Ftab%3Dsettings')
+                new URL('http://localhost:3008/login?returnTo=%2Fprofile%3Ftab%3Dsettings')
             );
         });
 
@@ -237,7 +281,7 @@ describe('Middleware Route Protection', () => {
             middleware(mockRequest as NextRequest);
 
             expect(NextResponse.redirect).toHaveBeenCalledWith(
-                new URL('http://localhost:3000/login?returnTo=%2Flive%2Fgame123%3Fmode%3Dpractice%26difficulty%3Dhard')
+                new URL('http://localhost:3008/login?returnTo=%2Flive%2Fgame123%3Fmode%3Dpractice%26difficulty%3Dhard')
             );
         });
     });

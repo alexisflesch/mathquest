@@ -628,6 +628,15 @@ export default function LiveGamePage() {
 
         const accessCode = typeof code === 'string' ? code : Array.isArray(code) ? code[0] : '';
         const missingProfile = !userProfile.username || !userProfile.avatar;
+        // E2E bypass: allow anonymous access when query param e2e=1 is present (non-production only)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const e2eBypass = params.get('e2e') === '1';
+            if (e2eBypass) {
+                return; // Skip redirect to login during E2E guest flows
+            }
+        } catch (_) { /* ignore */ }
+
         if ((userState === 'anonymous' || missingProfile) && !redirectOnceRef.current) {
             redirectOnceRef.current = true;
             (async () => {

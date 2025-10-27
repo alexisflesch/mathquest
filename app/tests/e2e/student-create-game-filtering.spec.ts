@@ -12,9 +12,8 @@ import { LoginHelper, TestDataHelper } from './helpers/test-helpers';
 test.describe('Student Create Game - Cross-Filter Compatibility', () => {
     test.beforeEach(async ({ page }) => {
         const dataHelper = new TestDataHelper(page);
-        const studentLogin = new LoginHelper(page);
 
-        // Step 1: Create student account and login
+        // Step 1: Create student account via API
         const studentData = dataHelper.generateTestData('filtering_student');
         await dataHelper.createStudent({
             username: studentData.username,
@@ -22,16 +21,40 @@ test.describe('Student Create Game - Cross-Filter Compatibility', () => {
             password: studentData.password
         });
 
-        await studentLogin.loginAsAuthenticatedStudent({
-            email: studentData.email,
-            password: studentData.password
+        // Step 2: Login via backend API and set cookie
+        const loginResp = await page.request.post('http://localhost:3007/api/v1/auth/login', {
+            data: {
+                email: studentData.email,
+                password: studentData.password,
+                role: 'STUDENT'
+            }
         });
+
+        if (!loginResp.ok()) {
+            throw new Error(`Student login failed: ${loginResp.status()}`);
+        }
+
+        const loginData = await loginResp.json();
+        const authToken = loginData.authToken || loginData.token;
+
+        await page.context().addCookies([{
+            name: 'authToken',
+            value: authToken,
+            domain: 'localhost',
+            path: '/',
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Lax'
+        }]);
 
         // Navigate to student create game page
         await page.goto('/student/create-game');
 
         // Wait for the page to load
         await page.waitForLoadState('networkidle');
+
+        // Wait for AuthProvider hydration
+        await page.waitForTimeout(2000);
     });
 
     test('should filter disciplines when grade level L2 is selected', async ({ page }) => {

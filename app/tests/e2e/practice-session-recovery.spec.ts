@@ -204,21 +204,41 @@ test.describe('Practice Session Recovery E2E', () => {
                 throw new Error('No access code received from game creation');
             }
 
-            // Step 3: Login student on frontend
-            console.log('🔑 Logging in student on frontend...');
-            const loginHelper = new LoginHelper(page);
-            await loginHelper.loginAsAuthenticatedStudent({
-                email: student.email!,
-                password: student.password!
+            // Step 3: Login student via backend API and set cookie
+            console.log('🔑 Logging in student via API...');
+            const loginResp = await page.request.post('http://localhost:3007/api/v1/auth/login', {
+                data: {
+                    email: student.email!,
+                    password: student.password!,
+                    role: 'STUDENT'
+                }
             });
-            console.log('✅ Frontend login successful');
+
+            if (!loginResp.ok()) {
+                throw new Error(`Student login failed: ${loginResp.status()}`);
+            }
+
+            const loginData = await loginResp.json();
+            const authToken = loginData.authToken || loginData.token;
+
+            await page.context().addCookies([{
+                name: 'authToken',
+                value: authToken,
+                domain: 'localhost',
+                path: '/',
+                httpOnly: true,
+                secure: false,
+                sameSite: 'Lax'
+            }]);
+
+            console.log('✅ Student authenticated via API');
 
             // Step 4: Navigate to practice game
             console.log('🎮 Starting practice session...');
             await page.goto(`http://localhost:3008/live/${accessCode}`);
             console.log('✅ Navigation to practice game completed');
 
-            // Step 4: Test answer button detection and session recovery
+            // Step 5: Test answer button detection and session recovery
             console.log('❓ Testing answer button detection...');
             await page.waitForTimeout(5000); // Wait longer for game to load
 

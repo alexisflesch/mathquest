@@ -18,9 +18,8 @@ test.describe('Practice Mode E2E', () => {
         test.setTimeout(45000); // 45 seconds for practice mode test
         try {
             const dataHelper = new TestDataHelper(studentPage);
-            const studentLogin = new LoginHelper(studentPage);
 
-            // Step 1: Create student account and login
+            // Step 1: Create student account via API
             const studentData = dataHelper.generateTestData('practice_student');
             const student = await dataHelper.createStudent({
                 username: studentData.username,
@@ -28,14 +27,37 @@ test.describe('Practice Mode E2E', () => {
                 password: studentData.password
             });
 
-            await studentLogin.loginAsAuthenticatedStudent({
-                email: studentData.email,
-                password: studentData.password
+            // Step 2: Login via backend API and set cookie
+            const loginResp = await studentPage.request.post('http://localhost:3007/api/v1/auth/login', {
+                data: {
+                    email: studentData.email,
+                    password: studentData.password,
+                    role: 'STUDENT'
+                }
             });
-            console.log(' Student login successful');
 
-            // Step 2: Navigate to practice mode (training)
-            console.log(' Navigating to practice mode...');
+            if (!loginResp.ok()) {
+                throw new Error(`Student login failed: ${loginResp.status()}`);
+            }
+
+            const loginData = await loginResp.json();
+            const authToken = loginData.authToken || loginData.token;
+
+            // Step 3: Set cookie
+            await studentPage.context().addCookies([{
+                name: 'authToken',
+                value: authToken,
+                domain: 'localhost',
+                path: '/',
+                httpOnly: true,
+                secure: false,
+                sameSite: 'Lax'
+            }]);
+
+            console.log('✅ Student authenticated via API');
+
+            // Step 4: Navigate to practice mode (training)
+            console.log('📚 Navigating to practice mode...');
             await studentPage.goto('/student/create-game?training=true');
             await studentPage.waitForLoadState('networkidle');
 

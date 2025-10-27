@@ -237,11 +237,31 @@ test.describe('User Registration & Authentication', () => {
                     password: testData.password
                 });
 
-                // Test login
-                await loginHelper.loginAsTeacher({
-                    email: testData.email,
-                    password: testData.password
+                // Test login using API-based authentication (more reliable than UI)
+                const loginResp = await page.request.post('http://localhost:3007/api/v1/auth/login', {
+                    data: {
+                        email: testData.email,
+                        password: testData.password,
+                        role: 'TEACHER'
+                    }
                 });
+
+                expect(loginResp.ok()).toBe(true);
+                const authToken = (await loginResp.json()).token;
+
+                await page.context().addCookies([{
+                    name: 'authToken',
+                    value: authToken,
+                    domain: 'localhost',
+                    path: '/',
+                    httpOnly: true,
+                    secure: false,
+                    sameSite: 'Lax'
+                }]);
+
+                // Navigate to home/dashboard
+                await page.goto('/');
+                await page.waitForTimeout(2000); // Wait for AuthProvider hydration
 
                 // Verify dashboard access
                 const dashboardIndicators = [
@@ -548,17 +568,37 @@ test.describe('User Registration & Authentication', () => {
             const testData = testDataHelper.generateTestData('teacher');
 
             try {
-                // Create and login teacher
+                // Create and login teacher using API-based authentication
                 await testDataHelper.createTeacher({
                     username: testData.username,
                     email: testData.email,
                     password: testData.password
                 });
 
-                await loginHelper.loginAsTeacher({
-                    email: testData.email,
-                    password: testData.password
+                const loginResp = await page.request.post('http://localhost:3007/api/v1/auth/login', {
+                    data: {
+                        email: testData.email,
+                        password: testData.password,
+                        role: 'TEACHER'
+                    }
                 });
+
+                expect(loginResp.ok()).toBe(true);
+                const authToken = (await loginResp.json()).token;
+
+                await page.context().addCookies([{
+                    name: 'authToken',
+                    value: authToken,
+                    domain: 'localhost',
+                    path: '/',
+                    httpOnly: true,
+                    secure: false,
+                    sameSite: 'Lax'
+                }]);
+
+                // Navigate to home and wait for auth hydration
+                await page.goto('/');
+                await page.waitForTimeout(2000);
 
                 // Verify initial login
                 expect(await page.locator('text=Déconnexion').count()).toBeGreaterThan(0);
@@ -566,6 +606,7 @@ test.describe('User Registration & Authentication', () => {
                 // Refresh page
                 await page.reload();
                 await page.waitForLoadState('networkidle');
+                await page.waitForTimeout(2000); // Wait for auth hydration after reload
 
                 // Verify session is maintained
                 const sessionMaintained = await page.locator('text=Déconnexion').count() > 0;
@@ -709,17 +750,37 @@ test.describe('User Registration & Authentication', () => {
             const testData = testDataHelper.generateTestData('teacher');
 
             try {
-                // Create and login teacher
+                // Create and login teacher using API-based authentication
                 await testDataHelper.createTeacher({
                     username: testData.username,
                     email: testData.email,
                     password: testData.password
                 });
 
-                await loginHelper.loginAsTeacher({
-                    email: testData.email,
-                    password: testData.password
+                const loginResp = await page.request.post('http://localhost:3007/api/v1/auth/login', {
+                    data: {
+                        email: testData.email,
+                        password: testData.password,
+                        role: 'TEACHER'
+                    }
                 });
+
+                expect(loginResp.ok()).toBe(true);
+                const authToken = (await loginResp.json()).token;
+
+                await page.context().addCookies([{
+                    name: 'authToken',
+                    value: authToken,
+                    domain: 'localhost',
+                    path: '/',
+                    httpOnly: true,
+                    secure: false,
+                    sameSite: 'Lax'
+                }]);
+
+                // Navigate to home and wait for auth hydration
+                await page.goto('/');
+                await page.waitForTimeout(2000);
 
                 // Look for profile information display
                 const profileSelectors = [

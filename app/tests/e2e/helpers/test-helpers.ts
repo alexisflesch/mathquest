@@ -305,8 +305,45 @@ export class LoginHelper {
     async loginAsTeacher(credentials: { email: string; password: string }): Promise<void> {
         console.log(`🧑‍🏫 Logging in teacher: ${credentials.email}`);
 
+        // Fast-path: try API login first to avoid brittle UI flows or email verification gates
+        try {
+            const apiResp = await this.page.request.post('http://localhost:3007/api/v1/auth/login', {
+                data: { email: credentials.email, password: credentials.password, role: 'TEACHER' },
+                timeout: 10000
+            });
+            if (apiResp.ok()) {
+                const body = await apiResp.json();
+                const teacherToken = body.teacherToken || body.token || body.accessToken;
+                const studentToken = body.authToken || body.token || body.accessToken;
+                if (teacherToken || studentToken) {
+                    await this.page.context().addCookies([
+                        teacherToken ? { name: 'teacherToken', value: String(teacherToken), domain: 'localhost', path: '/' } : undefined,
+                        studentToken ? { name: 'authToken', value: String(studentToken), domain: 'localhost', path: '/' } : undefined,
+                    ].filter(Boolean) as any);
+                    await this.page.goto('/');
+                    // Verify logged in by checking we are not on /login
+                    if (!this.page.url().includes('/login')) {
+                        console.log('✅ Teacher API-login successful (cookies set)');
+                        return;
+                    }
+                }
+            } else {
+                console.log(`ℹ️ API login returned ${apiResp.status()}`);
+            }
+        } catch (e) {
+            console.log(`ℹ️ API login path failed: ${(e as Error).message}. Falling back to UI login.`);
+        }
+
         await this.page.goto('/login');
         await this.page.waitForLoadState('networkidle');
+        // If the app auto-redirected (guest/student/teacher), force back to login in account mode
+        try {
+            await this.page.waitForURL(/\/login(\?.*)?$/, { timeout: 2000 });
+        } catch {
+            console.log('↩️ Not on /login after initial nav, forcing /login?mode=account');
+            await this.page.goto('/login?mode=account');
+            await this.page.waitForLoadState('domcontentloaded');
+        }
         console.log(`🔍 Current URL: ${this.page.url()}`);
         console.log(`🔍 Page title: ${await this.page.title()}`);
 
@@ -478,52 +515,81 @@ export class LoginHelper {
         await this.page.goto('/login');
         await this.page.waitForLoadState('networkidle');
 
-        // Check if already logged in (redirected away from login page)
-        const logoutButton = this.page.locator('button:has-text("Déconnexion")');
-        const isLoggedIn = await logoutButton.isVisible().catch(() => false);
-        if (isLoggedIn) {
-            console.log('✅ User is already logged in, skipping login process');
-            return;
-        }
+        // Always perform explicit student account login to avoid false positives
+        // from layout variations that might expose a "Déconnexion" control even on auth screens.
 
         // Wait for the page to be fully loaded
         console.log('⏳ Waiting for login page to stabilize...');
         await this.page.waitForTimeout(2000);
 
-        // Click the "Compte étudiant" button to switch to student account login mode
-        console.log('🔄 Clicking "Compte étudiant" button to switch to account mode...');
-        const compteButton = this.page.locator('button:has-text("Compte étudiant")').first();
-        await compteButton.waitFor({ timeout: 5000, state: 'visible' });
-        console.log('✅ Found "Compte étudiant" button, clicking...');
-        await compteButton.click();
-        console.log('✅ Clicked "Compte étudiant" button');
+        // Ensure we're in account login mode (some layouts have a guest/account toggle)
+        const accountEmailVisible = await this.page.locator('input[name="email"], input[type="email"]').isVisible().catch(() => false);
+        if (!accountEmailVisible) {
+            console.log('🔄 Switching to account login mode...');
+            const candidateSelectors = [
+                'button:has-text("Compte étudiant")',
+                'button:has-text("Compte enseignant")',
+                'button:has-text("Compte")',
+                'button:has-text("Account")',
+                '[data-testid="auth-toggle-account"]',
+                '[data-testid="auth-toggle-account-student"]'
+            ];
+            let toggled = false;
+            for (const sel of candidateSelectors) {
+                const btn = this.page.locator(sel).first();
+                if (await btn.isVisible().catch(() => false)) {
+                    console.log(`✅ Found account toggle (${sel}), clicking...`);
+                    await btn.click();
+                    toggled = true;
+                    break;
+                }
+                try {
+                    await btn.waitFor({ timeout: 1500, state: 'visible' });
+                    console.log(`✅ Found account toggle after wait (${sel}), clicking...`);
+                    await btn.click();
+                    toggled = true;
+                    break;
+                } catch { /* continue */ }
+            }
+            // As a last resort, directly navigate with mode query
+            if (!toggled) {
+                console.log('↪️ Navigating to /login?mode=account to force account view');
+                await this.page.goto('/login?mode=account');
+                await this.page.waitForLoadState('domcontentloaded');
+            }
+            if (!toggled) {
+                console.log('⚠️ Account toggle not found; proceeding assuming account mode');
+            }
+        } else {
+            console.log('✅ Already in account login mode');
+        }
 
         // Wait for the account form to appear
         console.log('⏳ Waiting for account form to load...');
         await this.page.waitForTimeout(2000);
 
         // Fill email field
-        console.log('� Filling email field...');
+        console.log('📧 Filling email field...');
         const emailInput = this.page.locator('input[name="email"], input[type="email"]').first();
-        await emailInput.waitFor({ timeout: 5000, state: 'visible' });
+        await emailInput.waitFor({ timeout: 7000, state: 'visible' });
         await emailInput.fill(credentials.email);
 
         // Fill password field
         console.log('🔑 Filling password field...');
         const passwordInput = this.page.locator('input[name="password"], input[type="password"]').first();
-        await passwordInput.waitFor({ timeout: 5000, state: 'visible' });
+        await passwordInput.waitFor({ timeout: 7000, state: 'visible' });
         await passwordInput.fill(credentials.password);
 
         // Click login button
         console.log('🚀 Clicking login button...');
-        const loginButton = this.page.locator('button[type="submit"], button:has-text("Se connecter"), button:has-text("Connexion")').first();
-        await loginButton.waitFor({ timeout: 3000 });
+        const loginButton = this.page.locator('button[type="submit"], button:has-text("Se connecter"), button:has-text("Connexion"), [data-testid="submit-login"]').first();
+        await loginButton.waitFor({ timeout: 5000 });
         await loginButton.click();
 
         // Wait for successful login (redirect to home)
         const result = await Promise.race([
-            this.page.waitForURL('/', { timeout: 10000 }).then(() => 'home'),
-            this.page.waitForTimeout(10000).then(() => 'timeout')
+            this.page.waitForURL(/\/?$/, { timeout: 15000 }).then(() => 'home'),
+            this.page.waitForTimeout(15000).then(() => 'timeout')
         ]);
 
         if (result === 'timeout') {
@@ -535,6 +601,7 @@ export class LoginHelper {
 
     /**
      * Login as guest student with username only
+     * WORKING PATTERN from live-quiz-flow.spec.ts and comprehensive-full-flow.spec.ts
      */
     async loginAsGuestStudent(credentials: { username: string }): Promise<void> {
         console.log(`👨‍🎓 Logging in guest student: ${credentials.username}`);
@@ -542,20 +609,69 @@ export class LoginHelper {
         await this.page.goto('/login');
         await this.page.waitForLoadState('networkidle');
 
-        await this.page.fill('[data-testid="username-input"]', credentials.username);
-        await this.page.click('.avatar-option:first-child');
-        await this.page.click('button[type="submit"]');
+        // Fill username using the UsernameSelector (autocomplete component)
+        const usernameInput = this.page.locator('input[placeholder*="chercher"], input[placeholder*="prénom"], input[placeholder*="pseudo"]').first();
+        await usernameInput.waitFor({ timeout: 5000 });
+        await usernameInput.fill(credentials.username.substring(0, 3)); // Type first few letters
+        await this.page.waitForTimeout(500); // Wait for dropdown
 
-        const result = await Promise.race([
-            this.page.waitForURL('/', { timeout: 5000 }).then(() => 'home'),
-            this.page.waitForTimeout(5000).then(() => 'timeout')
-        ]);
-
-        if (result === 'timeout') {
-            throw new Error('Login failed: Timeout waiting for redirect after guest login');
+        // Select first matching name from dropdown
+        const dropdownOption = this.page.locator('ul li').first();
+        if (await dropdownOption.count() > 0) {
+            await dropdownOption.click();
+            console.log('Selected username from dropdown');
+        } else {
+            // If no dropdown, try pressing Enter
+            await usernameInput.press('Enter');
+            console.log('Pressed Enter on username');
         }
 
+        // Select avatar
+        const avatarButton = this.page.locator('button.emoji-avatar').first();
+        await avatarButton.click();
+
+        // Click submit button
+        const submitButton = this.page.locator('button[type="submit"], button:has-text("Connexion"), button:has-text("Se connecter"), button:has-text("Login"), button:has-text("Commencer")');
+        await submitButton.click();
+
+        // Wait for authentication to complete
+        await this.page.waitForSelector('[data-testid="user-profile"], .user-profile, nav, header', { timeout: 15000 });
         console.log('✅ Guest student login successful');
+    }
+
+    /**
+     * Login as guest teacher (same as guest student, just different name)
+     * WORKING PATTERN from live-quiz-flow.spec.ts
+     */
+    async loginAsGuestTeacher(credentials: { username: string }): Promise<void> {
+        console.log(`🧑‍🏫 Logging in guest teacher: ${credentials.username}`);
+
+        await this.page.goto('/login');
+        await this.page.waitForLoadState('networkidle');
+
+        // Use guest login (same pattern as student)
+        const usernameInput = this.page.locator('input[placeholder*="name"], input[name="username"], input[id="username"]');
+        await usernameInput.waitFor({ timeout: 5000 });
+
+        await usernameInput.fill(credentials.username);
+        console.log(`Filled username: ${credentials.username}`);
+
+        // Wait for dropdown and click outside to close it
+        await this.page.waitForTimeout(1000);
+        await this.page.locator('body').click({ position: { x: 10, y: 10 } });
+        await this.page.waitForTimeout(500);
+
+        // Select avatar
+        const avatarButton = this.page.locator('button.emoji-avatar').first();
+        await avatarButton.click();
+
+        // Click submit button
+        const submitButton = this.page.locator('button[type="submit"], button:has-text("Connexion"), button:has-text("Se connecter"), button:has-text("Login"), button:has-text("Commencer")');
+        await submitButton.click();
+
+        // Wait for authentication to complete
+        await this.page.waitForSelector('[data-testid="user-profile"], .user-profile, nav, header', { timeout: 15000 });
+        console.log('✅ Guest teacher login successful');
     }
 
     /**
