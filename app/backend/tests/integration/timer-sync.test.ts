@@ -130,7 +130,7 @@ describe('Timer Synchronization Tests', () => {
 
         // Cleanup Redis
         await redisClient.del(`mathquest:game:${accessCode}`);
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach((done: (error?: any) => void) => {

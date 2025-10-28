@@ -61,7 +61,7 @@ describe('Integration: Automatic Leaderboard Update Bug Tests', () => {
         }
 
         // Close Redis connection to prevent open handles
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

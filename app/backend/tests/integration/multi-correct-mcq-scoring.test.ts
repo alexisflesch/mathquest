@@ -24,7 +24,7 @@ describe('Multi-correct MCQ Scoring Rules', () => {
     });
 
     afterAll(async () => {
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

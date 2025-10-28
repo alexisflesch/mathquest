@@ -24,7 +24,7 @@ describe('Numeric Input Locale/Tolerance Boundaries', () => {
     });
 
     afterAll(async () => {
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

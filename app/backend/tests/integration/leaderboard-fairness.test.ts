@@ -28,7 +28,7 @@ describe('Leaderboard Fairness & Determinism', () => {
         if (io) {
             io.close();
         }
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {
