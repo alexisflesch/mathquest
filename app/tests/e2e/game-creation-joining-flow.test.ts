@@ -52,9 +52,10 @@ async function authenticateUser(page: Page): Promise<void> {
     await usernameInput.fill('Pierre');
     log('Filled username: Pierre');
 
-    // Wait for dropdown and click outside to close it
-    await page.waitForTimeout(1000);
-    await page.locator('body').click({ position: { x: 10, y: 10 } });
+    // Trigger blur to auto-select the name (onBlur handler will find exact match)
+    await usernameInput.blur();
+
+    // Wait for the selection to complete
     await page.waitForTimeout(500);
 
     // Select avatar

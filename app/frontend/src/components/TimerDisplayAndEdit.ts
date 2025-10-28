@@ -9,7 +9,7 @@ type TimerFieldProps = {
 export function TimerField({ valueMs, onChange }: TimerFieldProps) {
     // Debug logs only when ?mqdebug=1
     React.useEffect(() => {
-        if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
             // eslint-disable-next-line no-console
             console.debug('[TimerField] valueMs prop:', valueMs);
         }
@@ -204,7 +204,7 @@ export function TimerField({ valueMs, onChange }: TimerFieldProps) {
             ]
             : [
                 // Only log in debug mode (?mqdebug=1)
-                (() => { if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) { /* eslint-disable-next-line no-console */ console.debug('[TimerField] readOnly display:', formatTime(valueMs), '(', valueMs, 'ms )'); } return null; })(),
+                (() => { if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) { /* eslint-disable-next-line no-console */ console.debug('[TimerField] readOnly display:', formatTime(valueMs), '(', valueMs, 'ms )'); } return null; })(),
                 React.createElement("input", {
                     key: "input",
                     ref: inputRef,

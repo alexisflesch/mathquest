@@ -53,12 +53,14 @@ export function middleware(request: NextRequest) {
     if (
         pathname === '/sw.js' ||
         /^\/(workbox|fallback)-.+\.js$/i.test(pathname) ||
+        /^\/worker-.+\.js$/i.test(pathname) ||
         pathname.startsWith('/_next') ||
         pathname.startsWith('/static') ||
         pathname.startsWith('/api') ||
         pathname === '/favicon.ico' ||
         pathname.startsWith('/favicon') ||
         pathname === '/manifest.json' ||
+        pathname === '/offline.html' ||
         pathname === '/site.webmanifest' ||
         pathname === '/robots.txt' ||
         pathname === '/sitemap.xml' ||

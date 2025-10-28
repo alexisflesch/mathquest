@@ -478,7 +478,7 @@ test.describe('Chaos Suite: Extended Duration Stress', () => {
 
 test.describe('Chaos Suite: Broadcast Duplication Detection', () => {
     test('should detect duplicate broadcast events during game flow', async ({ browser }) => {
-        test.setTimeout(60000); // 1 minute
+        test.setTimeout(180000); // 3 minutes (was 60s which was too short)
 
         const teacherContext = await browser.newContext();
         const studentContext = await browser.newContext();

@@ -101,43 +101,6 @@ test.describe('Background/Resume dedupe smoke', () => {
     const accessCode = gameData.gameInstance.accessCode;
     console.log(`✅ Quiz template created and game instantiated successfully with code: ${accessCode}`);
 
-    // Student: Create student account and login via API (same pattern as teacher)
-    const studentDataHelper = new TestDataHelper(studentPage);
-    const studentSeed = studentDataHelper.generateTestData('student');
-
-    const student = await studentDataHelper.createStudent({
-      username: studentSeed.username,
-      email: studentSeed.email,
-      password: studentSeed.password
-    });
-
-    // Login student via backend API and set cookie
-    const studentLoginResp = await studentPage.request.post('http://localhost:3007/api/v1/auth/login', {
-      data: {
-        email: student.email!,
-        password: student.password!,
-        role: 'STUDENT'
-      }
-    });
-
-    if (!studentLoginResp.ok()) {
-      throw new Error(`Student login failed: ${studentLoginResp.status()}`);
-    }
-
-    const studentLoginData = await studentLoginResp.json();
-    const authToken = studentLoginData.authToken || studentLoginData.token;
-
-    // Set cookie (same pattern as LoginHelper.loginAsTeacher)
-    await studentPage.context().addCookies([{
-      name: 'authToken',
-      value: authToken,
-      domain: 'localhost',
-      path: '/',
-      httpOnly: true,
-      secure: false,
-      sameSite: 'Lax'
-    }]);
-
     // **Set up console listener BEFORE any navigation/events**
     let beforeFlapGameQuestionCount = 0;
     let afterFlapGameQuestionCount = 0;
@@ -151,15 +114,41 @@ test.describe('Background/Resume dedupe smoke', () => {
       }
     });
 
-    // Navigate to live page with e2e bypass
-    await studentPage.goto(`${CFG.baseUrl}/live/${accessCode}?e2e=1`);
+    // Student: Use UI-based guest login (same pattern as game-creation-joining-flow)
+    const studentUsername = 'Lucas'; // Use a valid prenom from prenoms.json
+    
+    console.log(`👨‍🎓 Logging in student via UI: ${studentUsername}`);
+    
+    // Navigate to login page
+    await studentPage.goto(`${CFG.baseUrl}/login`);
+    await studentPage.waitForLoadState('networkidle');
+    
+    // Fill in username
+    const usernameInput = studentPage.locator('input[name="username"]');
+    await usernameInput.waitFor({ state: 'visible', timeout: 10000 });
+    await usernameInput.fill(studentUsername);
+    
+    // Trigger blur to auto-select exact match
+    await usernameInput.blur();
+    await studentPage.waitForTimeout(500);
+    
+    // Select avatar
+    const avatarButton = studentPage.locator('button.emoji-avatar').first();
+    await avatarButton.click();
+    
+    // Click submit button
+    const submitButton = studentPage.locator('button[type="submit"]');
+    await submitButton.click();
+    await studentPage.waitForLoadState('networkidle');
+    
+    console.log(`✅ Student logged in via UI`);
+    
+    // Navigate to live game page
+    await studentPage.goto(`${CFG.baseUrl}/live/${accessCode}`);
     await studentPage.waitForLoadState('networkidle');
 
-    // Wait for AuthProvider hydration
-    await studentPage.waitForTimeout(2000);
-
     // Wait for lobby to render
-    await studentPage.waitForSelector('text=Participants connectés', { timeout: 10000 });
+    await studentPage.waitForSelector('text=Participants connectés', { timeout: 15000 });
 
     // Teacher: open dashboard and start first question
     await teacherPage.goto(`${CFG.baseUrl}/teacher/dashboard/${accessCode}`, { waitUntil: 'networkidle' });

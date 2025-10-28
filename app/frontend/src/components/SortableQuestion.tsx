@@ -364,7 +364,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 <TimerField
                     valueMs={(parseInt(editTimerValue, 10) || 0) * 1000}
                     onChange={(newValueMs) => {
-                        if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+                        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
                             // eslint-disable-next-line no-console
                             console.debug('[SortableQuestion] TimerField onChange called with', newValueMs, 'ms');
                         }

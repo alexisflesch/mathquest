@@ -82,7 +82,7 @@ export default React.memo(function DraggableQuestionsList(props: DraggableQuesti
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
 
-        if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
             logger.info(`🔄 [QUESTIONS-LIST-RERENDER] DraggableQuestionsList re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
         }
     });

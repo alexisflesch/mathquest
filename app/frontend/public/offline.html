@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hors ligne - Kutsum</title>
+    <style>
+        /* Theme variables matching globals.css */
+        :root {
+            --background: #ebf0f5;
+            --navbar: #153B50;
+            --foreground: #23272f;
+            --primary: #5fbcd3;
+            --primary-foreground: #fff;
+            --secondary: #FF8C42;
+            --card: #fff;
+            --muted-foreground: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        /* Dark theme */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #23272f;
+                --navbar: #153B50;
+                --foreground: #f3f4f6;
+                --primary: #5fbcd3;
+                --primary-foreground: #23272f;
+                --secondary: #FF8C42;
+                --card: #2d3340;
+                --muted-foreground: #9ca3af;
+                --border: #374151;
+            }
+        }
+
+        /* Support explicit theme attribute (set by app) */
+        html[data-theme="dark"] {
+            --background: #23272f;
+            --navbar: #153B50;
+            --foreground: #f3f4f6;
+            --primary: #5fbcd3;
+            --primary-foreground: #23272f;
+            --secondary: #FF8C42;
+            --card: #2d3340;
+            --muted-foreground: #9ca3af;
+            --border: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--foreground);
+            font-size: 28px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        p {
+            color: var(--muted-foreground);
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .retry-button {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .retry-button:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .retry-button:active {
+            transform: translateY(0);
+        }
+
+        /* Apply theme from localStorage if available */
+        .theme-loading {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .theme-loaded {
+            opacity: 1;
+        }
+    </style>
+    <script>
+        // Apply theme immediately to avoid flash
+        (function () {
+            try {
+                const stored = localStorage.getItem('theme');
+                const theme = stored || 'system';
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const appliedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+                document.documentElement.setAttribute('data-theme', appliedTheme);
+            } catch (e) {
+                // Fallback to system theme
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', systemDark ? 'dark' : 'light');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="icon">📡</div>
+        <h1>Vous êtes hors ligne</h1>
+        <p>
+            Impossible de se connecter à Kutsum.
+            Vérifiez votre connexion internet et réessayez.
+        </p>
+        <button class="retry-button" onclick="window.location.reload()">
+            Réessayer
+        </button>
+    </div>
+</body>
+
+</html>

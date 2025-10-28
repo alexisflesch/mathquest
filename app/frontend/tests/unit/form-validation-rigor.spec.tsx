@@ -183,14 +183,16 @@ describe('Form and Validation Rigor', () => {
             // Use a valid prenom that exists in the list (ALICE exists in real prenoms.json)
             fireEvent.change(input, { target: { value: 'Alice' } });
 
-            // Press Enter to select the firstname
+            // Navigate down to highlight the first item, then press Enter to select
+            fireEvent.keyDown(input, { key: 'ArrowDown' });
             fireEvent.keyDown(input, { key: 'Enter' });
 
             // Wait for the selection to complete and input to become readonly
             await waitFor(() => {
-                const selectedInput = screen.getByDisplayValue(/Alice/i);
-                expect(selectedInput).toBeInTheDocument();
-                expect(selectedInput).toHaveAttribute('readonly');
+                // After selection, the component switches to a different input with readOnly
+                const readonlyInput = screen.getByDisplayValue(/Alice/i);
+                expect(readonlyInput).toBeInTheDocument();
+                expect(readonlyInput).toHaveAttribute('readonly');
             });
 
             // Now the suffix input should be enabled and work

@@ -150,25 +150,23 @@ export default function ClientLayout({
         return () => window.removeEventListener('keydown', toggleDebugMode);
     }, []);
 
+    // Apply theme on mount to avoid hydration mismatch
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('theme');
+            const theme = stored || 'system';
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const appliedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+            document.documentElement.setAttribute('data-theme', appliedTheme);
+        } catch (e) {
+            // Fallback if localStorage is not available
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', systemDark ? 'dark' : 'light');
+        }
+    }, []);
+
     return (
         <>
-            <script dangerouslySetInnerHTML={{
-                __html: `
-          (function() {
-            try {
-              const stored = localStorage.getItem('theme');
-              const theme = stored || 'system';
-              const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              const appliedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
-              document.documentElement.setAttribute('data-theme', appliedTheme);
-            } catch (e) {
-              // Fallback if localStorage is not available
-              const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              document.documentElement.setAttribute('data-theme', systemDark ? 'dark' : 'light');
-            }
-          })();
-        `
-            }} />
             <MathJaxContext config={{
                 loader: { load: ["[tex]/ams"] },
                 tex: { packages: { '[+]': ["ams"] } }

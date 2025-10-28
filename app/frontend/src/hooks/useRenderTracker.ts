@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 // Check if debug mode is enabled (?mqdebug=1 in URL)
-const isDebugMode = () => typeof window !== 'undefined' && window.location.search.includes('mqdebug=1');
+const isDebugMode = () => typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1');
 
 /**
  * Custom hook to track what causes component re-renders

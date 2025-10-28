@@ -36,7 +36,7 @@ const LobbyDisplay = React.memo(({
     const [showQrModal, setShowQrModal] = useState(false);
 
     // Debug logging (only in debug mode)
-    if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+    if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
         logger.info('[LOBBY] Rendering lobby with unified participant model', {
             participantCount: lobbyState.participants.length,
             creator: lobbyState.creator?.username

@@ -236,7 +236,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     // };
 
     // DEBUG: Log className and question.uid for each render (only in debug mode)
-    if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+    if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
         logger.info(`[QuestionDisplay] Render: question.uid=${question.uid} className=${className}`);
     }
     return (

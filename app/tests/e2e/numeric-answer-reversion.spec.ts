@@ -58,8 +58,11 @@ async function authenticateAsGuest(page: Page, userConfig: { username: string; a
     await usernameInput.fill(userConfig.username);
     log(`Filled username: ${userConfig.username}`);
 
-    // Wait a bit for avatars to load
-    await page.waitForTimeout(1000);
+    // Trigger blur to auto-select the name (onBlur handler will find exact match)
+    await usernameInput.blur();
+
+    // Wait for the selection to complete
+    await page.waitForTimeout(500);
 
     // Select first available avatar (with timeout protection)
     const avatarSelector = '[data-testid="avatar-option"], .avatar-option, img[alt*="avatar"], button:has(img)';

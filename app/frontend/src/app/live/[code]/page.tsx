@@ -76,7 +76,7 @@ export default function LiveGamePage() {
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
-        if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
             logger.info(`🔄 Re-render #${renderCount.current} (${now - lastRenderTime.current}ms since last)`);
         }
         lastRenderTime.current = now;
