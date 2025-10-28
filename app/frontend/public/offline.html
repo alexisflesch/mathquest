@@ -34,7 +34,19 @@
             }
         }
 
-        /* Support explicit theme attribute (set by app) */
+        /* Support explicit theme attribute (set by app) - these override media queries */
+        html[data-theme="light"] {
+            --background: #ebf0f5;
+            --navbar: #153B50;
+            --foreground: #23272f;
+            --primary: #5fbcd3;
+            --primary-foreground: #fff;
+            --secondary: #FF8C42;
+            --card: #fff;
+            --muted-foreground: #6b7280;
+            --border: #e5e7eb;
+        }
+
         html[data-theme="dark"] {
             --background: #23272f;
             --navbar: #153B50;
