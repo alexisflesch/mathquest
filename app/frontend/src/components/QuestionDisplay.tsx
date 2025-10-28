@@ -11,20 +11,13 @@ const logger = createLogger('QuestionDisplay');
 
 // Helper function to convert modern question format to display format
 function getAnswersForDisplay(question: any): any[] {
-    console.log('[getAnswersForDisplay] Input question:', question);
-    console.log('[getAnswersForDisplay] question.numericQuestion:', question.numericQuestion);
-    console.log('[getAnswersForDisplay] question.numericQuestion type:', typeof question.numericQuestion);
-    console.log('[getAnswersForDisplay] question.numericQuestion truthiness:', !!question.numericQuestion);
-
     // Handle polymorphic questions
     if (question.numericQuestion) {
-        console.log('[getAnswersForDisplay] Processing numeric question:', question.numericQuestion);
         const correctAnswer = question.numericQuestion.correctAnswer;
         const unit = question.numericQuestion.unit;
         const answerText = unit ? `${correctAnswer} ${unit}` : String(correctAnswer);
         return [{ text: answerText, correct: true }];
     } else if (question.multipleChoiceQuestion) {
-        console.log('[getAnswersForDisplay] Processing multiple choice question:', question.multipleChoiceQuestion);
         const answerOptions = question.multipleChoiceQuestion.answerOptions || [];
         const correctAnswers = question.multipleChoiceQuestion.correctAnswers || [];
         return answerOptions.map((option: string, index: number) => ({
@@ -32,7 +25,6 @@ function getAnswersForDisplay(question: any): any[] {
             correct: correctAnswers[index] === true
         }));
     } else {
-        console.log('[getAnswersForDisplay] No polymorphic question data found');
         return [];
     }
 }// Helper function to get answer options from polymorphic question
@@ -243,8 +235,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     //     });
     // };
 
-    // DEBUG: Log className and question.uid for each render
-    logger.info(`[QuestionDisplay] Render: question.uid=${question.uid} className=${className}`);
+    // DEBUG: Log className and question.uid for each render (only in debug mode)
+    if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+        logger.info(`[QuestionDisplay] Render: question.uid=${question.uid} className=${className}`);
+    }
     return (
         <div
             className={`question-display flex flex-col select-none transition-all duration-150 ease-in-out ${disabled ? 'opacity-50 pointer-events-none' : ''}`}

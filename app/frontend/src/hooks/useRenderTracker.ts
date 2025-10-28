@@ -1,8 +1,12 @@
 import { useEffect, useRef } from 'react';
 
+// Check if debug mode is enabled (?mqdebug=1 in URL)
+const isDebugMode = () => typeof window !== 'undefined' && window.location.search.includes('mqdebug=1');
+
 /**
  * Custom hook to track what causes component re-renders
  * Logs whenever a component re-renders and shows which props/dependencies changed
+ * Only logs if ?mqdebug=1 is in URL
  */
 export function useRenderTracker(componentName: string, props: Record<string, any>) {
     const prevProps = useRef<Record<string, any>>(props);
@@ -10,6 +14,11 @@ export function useRenderTracker(componentName: string, props: Record<string, an
 
     useEffect(() => {
         renderCount.current += 1;
+
+        if (!isDebugMode()) {
+            prevProps.current = props;
+            return;
+        }
 
         const changedProps: Record<string, { prev: any; current: any }> = {};
 
@@ -44,11 +53,17 @@ export function useRenderTracker(componentName: string, props: Record<string, an
 
 /**
  * Hook to track dependency changes in useEffect/useMemo/useCallback
+ * Only logs if ?mqdebug=1 is in URL
  */
 export function useDependencyTracker(hookName: string, dependencies: any[]) {
     const prevDeps = useRef<any[]>(dependencies);
 
     useEffect(() => {
+        if (!isDebugMode()) {
+            prevDeps.current = dependencies;
+            return;
+        }
+
         const changedDeps: Array<{ index: number; prev: any; current: any }> = [];
 
         dependencies.forEach((dep, index) => {

@@ -31,7 +31,20 @@ import {
     waitForStableConnection,
     logEventCounters,
     assertNoDuplicateBroadcasts,
-    logEventStatistics
+    logEventStatistics,
+    getDuplicateEventCounts,
+    // Render tracking
+    injectRenderCounters,
+    getRenderCounts,
+    resetRenderCounters,
+    logRenderStatistics,
+    assertRenderBudgets,
+    // Log tracking
+    injectLogCounters,
+    getLogCounts,
+    resetLogCounters,
+    logConsoleStatistics,
+    assertLogBudget
 } from '../helpers/chaos-helpers';
 
 test.describe('Chaos Suite: Network Resilience', () => {
@@ -268,6 +281,12 @@ test.describe('Chaos Suite: Duplicate Event Protection', () => {
         await injectEventCounters(studentPage);
         await injectCrashSentinels(teacherPage);
         await injectCrashSentinels(studentPage);
+        // Add render tracking
+        await injectRenderCounters(studentPage);
+        await injectRenderCounters(teacherPage);
+        // Add log tracking
+        await injectLogCounters(studentPage);
+        await injectLogCounters(teacherPage);
 
         try {
             // This test verifies that client-side dedupe logic prevents
@@ -357,9 +376,32 @@ test.describe('Chaos Suite: Duplicate Event Protection', () => {
             await logEventCounters(studentPage, 'After dedupe test');
             const counters = await getEventCounters(studentPage);
 
+            // Log duplicate broadcast statistics
+            console.log('\n📊 Checking for duplicate broadcasts...');
+            await logEventStatistics(studentPage, 'Network Flap Test');
+            const duplicates = await getDuplicateEventCounts(studentPage);
+            console.log('📊 Duplicate events detected:', duplicates);
+
             // CRITICAL: Should receive at most 1 GAME_QUESTION after reconnect
             // (dedupe logic should drop any duplicates)
             expect(counters.game_question).toBeLessThanOrEqual(1);
+
+            // Also check for any duplicate broadcasts
+            const totalDuplicates = Object.values(duplicates).reduce((sum: number, count: number) => sum + count, 0);
+            console.log(`📊 Total duplicate broadcasts: ${totalDuplicates}`);
+            if (totalDuplicates > 0) {
+                console.warn('⚠️  Duplicate broadcasts detected - this may indicate unnecessary network traffic');
+            }
+
+            // Log render statistics
+            console.log('\n🎨 Checking React render counts...');
+            await logRenderStatistics(studentPage, 'Student Page');
+            await logRenderStatistics(teacherPage, 'Teacher Page');
+
+            // Log console statistics
+            console.log('\n📋 Checking console log counts...');
+            await logConsoleStatistics(studentPage, 'Student Page');
+            await logConsoleStatistics(teacherPage, 'Teacher Page');
 
             // No crashes
             await assertNoCrashes(studentPage);
@@ -477,24 +519,54 @@ test.describe('Chaos Suite: Broadcast Duplication Detection', () => {
                 data: {
                     name: seed.quizName,
                     gradeLevel: 'CP',
+                    discipline: 'sciences', // Required field  
                     questionUids,
-                    defaultMode: 'live'
+                    themes: ['addition'], // Required field
+                    defaultMode: 'quiz' // Changed from 'live' to 'quiz'
                 }
             });
+
+            if (!templateResponse.ok()) {
+                const errorText = await templateResponse.text();
+                throw new Error(`Failed to create game template: ${templateResponse.status()} ${errorText}`);
+            }
+
             const template = await templateResponse.json();
 
             // Create game instance
-            const instanceResponse = await teacherPage.request.post(`/api/game-templates/${template.id}/instances`, {
-                data: { playMode: 'live' }
-            });
-            const instance = await instanceResponse.json();
+            const gamePayload = {
+                name: `Test Quiz Game ${Date.now()}`,
+                playMode: 'quiz' as const,
+                gameTemplateId: template.gameTemplate?.id || template.id,
+                gradeLevel: 'CP',
+                discipline: 'sciences',
+                themes: ['addition'],
+                nbOfQuestions: 3,
+                settings: {
+                    defaultMode: 'direct',
+                    avatar: '🧑‍🏫',
+                    username: seed.username
+                }
+            };
 
-            // Navigate to dashboard
-            await teacherPage.goto(`/teacher/${instance.accessCode}`);
-            await teacherPage.waitForSelector('[data-testid="teacher-dashboard"]', { timeout: 10000 });
+            const instanceResponse = await teacherPage.request.post('/api/games', {
+                data: gamePayload
+            });
+
+            if (!instanceResponse.ok()) {
+                const errorText = await instanceResponse.text();
+                throw new Error(`Failed to create game instance: ${instanceResponse.status()} ${errorText}`);
+            }
+
+            const instance = await instanceResponse.json();
+            const accessCode = instance.gameInstance?.accessCode || instance.accessCode;
+
+            // Teacher navigates to dashboard
+            await teacherPage.goto(`/teacher/dashboard/${accessCode}`, { waitUntil: 'networkidle' });
+            await teacherPage.waitForTimeout(2000);
 
             // Student joins
-            await studentPage.goto(`/play/${instance.accessCode}`);
+            await studentPage.goto(`/live/${accessCode}`);
             await studentPage.fill('input[type="text"]', 'TestStudent');
             await studentPage.click('button:has-text("Rejoindre")');
             await studentPage.waitForSelector('[data-testid="waiting-room"]', { timeout: 10000 });

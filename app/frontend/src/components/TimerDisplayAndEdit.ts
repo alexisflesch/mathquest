@@ -7,9 +7,9 @@ type TimerFieldProps = {
 };
 
 export function TimerField({ valueMs, onChange }: TimerFieldProps) {
-    // Avoid noisy logs during typing; keep logs only in development.
+    // Debug logs only when ?mqdebug=1
     React.useEffect(() => {
-        if (process.env.NODE_ENV === 'development') {
+        if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
             // eslint-disable-next-line no-console
             console.debug('[TimerField] valueMs prop:', valueMs);
         }
@@ -203,8 +203,8 @@ export function TimerField({ valueMs, onChange }: TimerFieldProps) {
                 ),
             ]
             : [
-                // Only log in development to avoid spamming console during typing
-                (() => { if (process.env.NODE_ENV === 'development') { /* eslint-disable-next-line no-console */ console.debug('[TimerField] readOnly display:', formatTime(valueMs), '(', valueMs, 'ms )'); } return null; })(),
+                // Only log in debug mode (?mqdebug=1)
+                (() => { if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) { /* eslint-disable-next-line no-console */ console.debug('[TimerField] readOnly display:', formatTime(valueMs), '(', valueMs, 'ms )'); } return null; })(),
                 React.createElement("input", {
                     key: "input",
                     ref: inputRef,

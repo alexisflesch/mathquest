@@ -73,7 +73,7 @@ export async function injectEventCounters(page: Page): Promise<void> {
             const now = Date.now();
 
             // Check if this exact payload was sent recently (within 1 second)
-            const recent = history[event].find((item: any) => 
+            const recent = history[event].find((item: any) =>
                 item.payload === payloadStr && (now - item.timestamp) < 1000
             );
 
@@ -81,7 +81,7 @@ export async function injectEventCounters(page: Page): Promise<void> {
                 // Duplicate found!
                 recent.count++;
                 (window as any).__mqDuplicates = (window as any).__mqDuplicates || {};
-                (window as any).__mqDuplicates[event] = 
+                (window as any).__mqDuplicates[event] =
                     ((window as any).__mqDuplicates[event] || 0) + 1;
             } else {
                 // New payload
@@ -411,4 +411,364 @@ export async function waitForStableConnection(
 export async function logEventCounters(page: Page, label: string): Promise<void> {
     const counters = await getEventCounters(page);
     console.log(`[${label}] Event Counters:`, JSON.stringify(counters, null, 2));
+}
+
+/**
+ * Inject React render counter tracking into the page
+ * Exposes window.__mqRenderCounts for monitoring component render frequency
+ */
+export async function injectRenderCounters(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+        // Initialize render counters
+        (window as any).__mqRenderCounts = {};
+        (window as any).__mqRenderHistory = [];
+
+        // Helper to track a render
+        (window as any).__mqTrackRender = (componentName: string, reason?: string) => {
+            if (!(window as any).__mqRenderCounts) {
+                (window as any).__mqRenderCounts = {};
+            }
+            if (!(window as any).__mqRenderHistory) {
+                (window as any).__mqRenderHistory = [];
+            }
+
+            // Increment counter
+            (window as any).__mqRenderCounts[componentName] =
+                ((window as any).__mqRenderCounts[componentName] || 0) + 1;
+
+            // Track in history with timestamp
+            (window as any).__mqRenderHistory.push({
+                component: componentName,
+                timestamp: Date.now(),
+                count: (window as any).__mqRenderCounts[componentName],
+                reason: reason || 'unknown'
+            });
+
+            // Keep history size manageable (last 1000 renders)
+            if ((window as any).__mqRenderHistory.length > 1000) {
+                (window as any).__mqRenderHistory.shift();
+            }
+        };
+    });
+}
+
+/**
+ * Get current render counts
+ */
+export async function getRenderCounts(page: Page): Promise<Record<string, number>> {
+    return await page.evaluate(() => {
+        return (window as any).__mqRenderCounts || {};
+    });
+}
+
+/**
+ * Reset render counters
+ */
+export async function resetRenderCounters(page: Page): Promise<void> {
+    await page.evaluate(() => {
+        (window as any).__mqRenderCounts = {};
+        (window as any).__mqRenderHistory = [];
+    });
+}
+
+/**
+ * Get render history with timestamps
+ */
+export async function getRenderHistory(page: Page): Promise<Array<{
+    component: string;
+    timestamp: number;
+    count: number;
+    reason: string;
+}>> {
+    return await page.evaluate(() => {
+        return (window as any).__mqRenderHistory || [];
+    });
+}
+
+/**
+ * Log render statistics
+ */
+export async function logRenderStatistics(page: Page, label: string): Promise<void> {
+    const counts = await getRenderCounts(page);
+    const history = await getRenderHistory(page);
+
+    const totalRenders = Object.values(counts).reduce((sum: number, count: number) => sum + count, 0);
+
+    console.log(`\n[${label}] Render Statistics:`);
+    console.log(`  Total Renders: ${totalRenders}`);
+    console.log(`  Component Breakdown:`, JSON.stringify(counts, null, 2));
+
+    if (history.length > 0) {
+        const recentRenders = history.slice(-10);
+        console.log(`  Recent Renders (last 10):`, recentRenders.map(r =>
+            `${r.component} (${r.count}) - ${r.reason}`
+        ).join('\n    '));
+    }
+}
+
+/**
+ * Assert render budgets are not exceeded
+ * @param page - Playwright page
+ * @param budgets - Component render budgets { componentName: maxRenders }
+ */
+export async function assertRenderBudgets(
+    page: Page,
+    budgets: Record<string, number>
+): Promise<void> {
+    const counts = await getRenderCounts(page);
+    const violations: string[] = [];
+
+    for (const [component, budget] of Object.entries(budgets)) {
+        const actual = counts[component] || 0;
+        if (actual > budget) {
+            violations.push(
+                `${component}: ${actual} renders (budget: ${budget}, exceeded by ${actual - budget})`
+            );
+        }
+    }
+
+    if (violations.length > 0) {
+        console.error('❌ Render budget violations:', violations);
+        throw new Error(
+            `Render budgets exceeded:\n${violations.join('\n')}`
+        );
+    }
+}
+
+/**
+ * Calculate render rate (renders per second) over a time window
+ */
+export async function getRenderRate(page: Page, windowMs: number = 5000): Promise<Record<string, number>> {
+    const history = await getRenderHistory(page);
+    const now = Date.now();
+    const cutoff = now - windowMs;
+
+    const recentRenders = history.filter(r => r.timestamp >= cutoff);
+    const rates: Record<string, number> = {};
+
+    for (const render of recentRenders) {
+        rates[render.component] = (rates[render.component] || 0) + 1;
+    }
+
+    // Convert to renders per second
+    const windowSeconds = windowMs / 1000;
+    for (const component in rates) {
+        rates[component] = rates[component] / windowSeconds;
+    }
+
+    return rates;
+}
+
+/**
+ * Console log tracking interface
+ */
+export interface ConsoleLogCounts {
+    log: number;
+    warn: number;
+    error: number;
+    info: number;
+    debug: number;
+    total: number;
+}
+
+/**
+ * Inject console log tracking into the page
+ * Exposes window.__mqLogCounts for monitoring console spam
+ */
+export async function injectLogCounters(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+        // Initialize log counters
+        (window as any).__mqLogCounts = {
+            log: 0,
+            warn: 0,
+            error: 0,
+            info: 0,
+            debug: 0,
+            total: 0
+        };
+
+        (window as any).__mqLogHistory = [];
+
+        // Wrap console methods to track calls
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        const originalInfo = console.info;
+        const originalDebug = console.debug;
+
+        console.log = function (...args: any[]) {
+            (window as any).__mqLogCounts.log++;
+            (window as any).__mqLogCounts.total++;
+            (window as any).__mqLogHistory.push({
+                level: 'log',
+                timestamp: Date.now(),
+                message: args.map(a => String(a)).join(' ').substring(0, 200)
+            });
+            // Keep history manageable
+            if ((window as any).__mqLogHistory.length > 500) {
+                (window as any).__mqLogHistory.shift();
+            }
+            return originalLog.apply(console, args);
+        };
+
+        console.warn = function (...args: any[]) {
+            (window as any).__mqLogCounts.warn++;
+            (window as any).__mqLogCounts.total++;
+            (window as any).__mqLogHistory.push({
+                level: 'warn',
+                timestamp: Date.now(),
+                message: args.map(a => String(a)).join(' ').substring(0, 200)
+            });
+            if ((window as any).__mqLogHistory.length > 500) {
+                (window as any).__mqLogHistory.shift();
+            }
+            return originalWarn.apply(console, args);
+        };
+
+        console.error = function (...args: any[]) {
+            (window as any).__mqLogCounts.error++;
+            (window as any).__mqLogCounts.total++;
+            (window as any).__mqLogHistory.push({
+                level: 'error',
+                timestamp: Date.now(),
+                message: args.map(a => String(a)).join(' ').substring(0, 200)
+            });
+            if ((window as any).__mqLogHistory.length > 500) {
+                (window as any).__mqLogHistory.shift();
+            }
+            return originalError.apply(console, args);
+        };
+
+        console.info = function (...args: any[]) {
+            (window as any).__mqLogCounts.info++;
+            (window as any).__mqLogCounts.total++;
+            (window as any).__mqLogHistory.push({
+                level: 'info',
+                timestamp: Date.now(),
+                message: args.map(a => String(a)).join(' ').substring(0, 200)
+            });
+            if ((window as any).__mqLogHistory.length > 500) {
+                (window as any).__mqLogHistory.shift();
+            }
+            return originalInfo.apply(console, args);
+        };
+
+        console.debug = function (...args: any[]) {
+            (window as any).__mqLogCounts.debug++;
+            (window as any).__mqLogCounts.total++;
+            (window as any).__mqLogHistory.push({
+                level: 'debug',
+                timestamp: Date.now(),
+                message: args.map(a => String(a)).join(' ').substring(0, 200)
+            });
+            if ((window as any).__mqLogHistory.length > 500) {
+                (window as any).__mqLogHistory.shift();
+            }
+            return originalDebug.apply(console, args);
+        };
+    });
+}
+
+/**
+ * Get current log counts
+ */
+export async function getLogCounts(page: Page): Promise<ConsoleLogCounts> {
+    return await page.evaluate(() => {
+        return (window as any).__mqLogCounts || {
+            log: 0, warn: 0, error: 0, info: 0, debug: 0, total: 0
+        };
+    });
+}
+
+/**
+ * Reset log counters
+ */
+export async function resetLogCounters(page: Page): Promise<void> {
+    await page.evaluate(() => {
+        (window as any).__mqLogCounts = {
+            log: 0, warn: 0, error: 0, info: 0, debug: 0, total: 0
+        };
+        (window as any).__mqLogHistory = [];
+    });
+}
+
+/**
+ * Get log history
+ */
+export async function getLogHistory(page: Page): Promise<Array<{
+    level: string;
+    timestamp: number;
+    message: string;
+}>> {
+    return await page.evaluate(() => {
+        return (window as any).__mqLogHistory || [];
+    });
+}
+
+/**
+ * Log console statistics
+ */
+export async function logConsoleStatistics(page: Page, label: string): Promise<void> {
+    const counts = await getLogCounts(page);
+    const history = await getLogHistory(page);
+
+    console.log(`\n[${label}] Console Log Statistics:`);
+    console.log(`  Total Logs: ${counts.total}`);
+    console.log(`  Breakdown:`, JSON.stringify({
+        log: counts.log,
+        warn: counts.warn,
+        error: counts.error,
+        info: counts.info,
+        debug: counts.debug
+    }, null, 2));
+
+    if (history.length > 0) {
+        const recentLogs = history.slice(-5);
+        console.log(`  Recent Logs (last 5):`);
+        recentLogs.forEach(log => {
+            console.log(`    [${log.level}] ${log.message}`);
+        });
+    }
+
+    // Highlight if there's spam
+    if (counts.total > 100) {
+        console.warn(`⚠️  High log count: ${counts.total} logs detected - potential log spam`);
+    }
+}
+
+/**
+ * Assert log budgets are not exceeded
+ * @param page - Playwright page
+ * @param budget - Maximum total logs allowed
+ */
+export async function assertLogBudget(page: Page, budget: number): Promise<void> {
+    const counts = await getLogCounts(page);
+
+    if (counts.total > budget) {
+        const history = await getLogHistory(page);
+        const topMessages = history
+            .reduce((acc: any[], log) => {
+                const existing = acc.find(l => l.message === log.message);
+                if (existing) {
+                    existing.count++;
+                } else {
+                    acc.push({ message: log.message, count: 1, level: log.level });
+                }
+                return acc;
+            }, [])
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+
+        console.error('❌ Log budget exceeded:', {
+            actual: counts.total,
+            budget,
+            exceeded: counts.total - budget,
+            topRepeated: topMessages
+        });
+
+        throw new Error(
+            `Log budget exceeded: ${counts.total} logs (budget: ${budget}, exceeded by ${counts.total - budget})\n` +
+            `Top repeated messages:\n${topMessages.map(m => `  [${m.level}] ${m.message} (x${m.count})`).join('\n')}`
+        );
+    }
 }

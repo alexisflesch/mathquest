@@ -41,7 +41,9 @@ const LeaderboardFAB = React.memo(({
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
 
-        logger.info(`🔄 [FAB-RERENDER] LeaderboardFAB re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+        if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+            logger.info(`🔄 [FAB-RERENDER] LeaderboardFAB re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+        }
     });
 
     if (!userId || leaderboardLength === 0) {

@@ -13,12 +13,16 @@ import usersRouter from './users'; // Import usersRouter
 import myTournamentsRouter from './myTournaments'; // Import myTournamentsRouter
 import practiceSessionsRouter from './practice/sessions'; // Import practiceSessionsRouter
 import metricsRouter from './metrics'; // Import metricsRouter (Phase 5: Observability)
+import healthRouter from './health'; // Import healthRouter for resource monitoring
 // import gameSessionsRouter from './gameSessions';
 import { teacherAuth } from '@/middleware/auth';
 import validatePageAccessRouter from './validatePageAccess';
 import debugRouter from './debug';
 
 const router = express.Router();
+
+// Mount health check endpoints (always available)
+router.use('/health', healthRouter);
 
 // Mount the auth router
 router.use('/auth', authRouter);

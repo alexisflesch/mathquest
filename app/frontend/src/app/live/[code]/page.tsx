@@ -69,14 +69,16 @@ type PendingAnswer = {
 };
 
 export default function LiveGamePage() {
-    // Debug render count
+    // Debug render count (only log if ?mqdebug=1)
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
 
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
-        logger.info(`🔄 Re-render #${renderCount.current} (${now - lastRenderTime.current}ms since last)`);
+        if (typeof window !== 'undefined' && window.location.search.includes('mqdebug=1')) {
+            logger.info(`🔄 Re-render #${renderCount.current} (${now - lastRenderTime.current}ms since last)`);
+        }
         lastRenderTime.current = now;
     });
 

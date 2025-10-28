@@ -168,7 +168,7 @@ export default function HomePageClient() {
                             <div className="md:hidden p-3 w-full max-w-md mx-auto mt-2">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <span className="p-3 border border-base-200 rounded-md w-full inline-flex items-center gap-3 text-sm leading-normal">
-                                        <Link href="/student/practice" className="inline-flex items-center gap-2 text-primary hover:underline">
+                                        <Link href="/student/create-game?training=true" className="inline-flex items-center gap-2 text-primary hover:underline">
                                             <BookOpen className="w-4 h-4" aria-hidden="true" />{'\u00A0'}
                                             <span className="text-sm leading-normal">Entraînement libre</span>
                                         </Link>
