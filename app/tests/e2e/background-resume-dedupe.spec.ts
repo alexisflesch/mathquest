@@ -116,33 +116,33 @@ test.describe('Background/Resume dedupe smoke', () => {
 
     // Student: Use UI-based guest login (same pattern as game-creation-joining-flow)
     const studentUsername = 'Lucas'; // Use a valid prenom from prenoms.json
-    
+
     console.log(`👨‍🎓 Logging in student via UI: ${studentUsername}`);
-    
+
     // Navigate to login page
     await studentPage.goto(`${CFG.baseUrl}/login`);
     await studentPage.waitForLoadState('networkidle');
-    
+
     // Fill in username
     const usernameInput = studentPage.locator('input[name="username"]');
     await usernameInput.waitFor({ state: 'visible', timeout: 10000 });
     await usernameInput.fill(studentUsername);
-    
+
     // Trigger blur to auto-select exact match
     await usernameInput.blur();
     await studentPage.waitForTimeout(500);
-    
+
     // Select avatar
     const avatarButton = studentPage.locator('button.emoji-avatar').first();
     await avatarButton.click();
-    
+
     // Click submit button
     const submitButton = studentPage.locator('button[type="submit"]');
     await submitButton.click();
     await studentPage.waitForLoadState('networkidle');
-    
+
     console.log(`✅ Student logged in via UI`);
-    
+
     // Navigate to live game page
     await studentPage.goto(`${CFG.baseUrl}/live/${accessCode}`);
     await studentPage.waitForLoadState('networkidle');
