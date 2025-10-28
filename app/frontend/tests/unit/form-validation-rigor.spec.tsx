@@ -169,7 +169,7 @@ describe('Form and Validation Rigor', () => {
             expect(mockOnChange).toHaveBeenCalledWith('Alice');
         });
 
-        it('should limit username length to 20 characters', () => {
+        it('should limit username length to 20 characters', async () => {
             render(
                 <UsernameSelector
                     value=""
@@ -180,12 +180,23 @@ describe('Form and Validation Rigor', () => {
 
             const input = screen.getByPlaceholderText('Tapez les premières lettres pour chercher...');
 
-            // Use a valid prenom that exists in the list
+            // Use a valid prenom that exists in the list (ALICE exists in real prenoms.json)
             fireEvent.change(input, { target: { value: 'Alice' } });
-            expect(input).toHaveValue('Alice');
 
-            // When combined with suffix, it should work correctly
+            // Press Enter to select the firstname
+            fireEvent.keyDown(input, { key: 'Enter' });
+
+            // Wait for the selection to complete and input to become readonly
+            await waitFor(() => {
+                const selectedInput = screen.getByDisplayValue(/Alice/i);
+                expect(selectedInput).toBeInTheDocument();
+                expect(selectedInput).toHaveAttribute('readonly');
+            });
+
+            // Now the suffix input should be enabled and work
             const suffixInput = screen.getByPlaceholderText('Suffixe');
+            expect(suffixInput).not.toBeDisabled();
+
             fireEvent.change(suffixInput, { target: { value: 'X' } });
 
             expect(mockOnChange).toHaveBeenCalledWith('Alice X');

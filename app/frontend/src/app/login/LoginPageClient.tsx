@@ -354,8 +354,17 @@ function LoginPageInnerComponent() {
                                 <div className="flex justify-end">
                                     <button
                                         type="submit"
-                                        disabled={isLoading || (studentAuthMode === 'signup' && !selectedAvatar)}
+                                        disabled={
+                                            isLoading ||
+                                            (studentAuthMode === 'signup' && !selectedAvatar) ||
+                                            (studentAuthMode === 'signup' && accountUsername.trim().length < 2)
+                                        }
                                         className="btn btn-primary btn-lg"
+                                        title={
+                                            studentAuthMode === 'signup' && accountUsername.trim().length < 2
+                                                ? "Le prénom doit contenir au moins 2 caractères"
+                                                : undefined
+                                        }
                                     >
                                         {isLoading
                                             ? (studentAuthMode === 'login' ? 'Connexion...' : 'Création...')
