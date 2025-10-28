@@ -23,7 +23,7 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
     socket.on(GAME_EVENTS.GAME_ANSWER, async (payload) => {
         // Record metrics (Phase 5: Observability)
         metricsCollector.recordSubmitAnswer();
-        
+
         console.log('[DEBUG] GAME_ANSWER handler triggered', { payload });
         // Extract accessCode, userId, questionUid from payload (validate with Zod if needed)
         let accessCode, userId, questionUid;

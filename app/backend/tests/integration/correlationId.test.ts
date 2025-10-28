@@ -15,10 +15,10 @@ describe('Correlation ID System', () => {
     describe('generateCorrelationId', () => {
         it('should generate valid correlation IDs with client prefix', () => {
             const correlationId = generateCorrelationId('client');
-            
+
             // Verify format: client-timestamp-random
             expect(correlationId).toMatch(/^client-\d{13}-[a-z0-9]{8}$/);
-            
+
             // Verify Zod validation passes
             const parseResult = correlationIdSchema.safeParse(correlationId);
             expect(parseResult.success).toBe(true);
@@ -26,10 +26,10 @@ describe('Correlation ID System', () => {
 
         it('should generate valid correlation IDs with server prefix', () => {
             const correlationId = generateCorrelationId('server');
-            
+
             // Verify format: server-timestamp-random
             expect(correlationId).toMatch(/^server-\d{13}-[a-z0-9]{8}$/);
-            
+
             // Verify Zod validation passes
             const parseResult = correlationIdSchema.safeParse(correlationId);
             expect(parseResult.success).toBe(true);
@@ -38,7 +38,7 @@ describe('Correlation ID System', () => {
         it('should generate unique correlation IDs', () => {
             const id1 = generateCorrelationId('client');
             const id2 = generateCorrelationId('client');
-            
+
             expect(id1).not.toBe(id2);
         });
     });
@@ -47,7 +47,7 @@ describe('Correlation ID System', () => {
         it('should parse correlation ID components correctly', () => {
             const correlationId = generateCorrelationId('client');
             const parsed = parseCorrelationId(correlationId);
-            
+
             expect(parsed).toBeDefined();
             expect(parsed?.prefix).toBe('client');
             expect(parsed?.timestamp).toBeGreaterThan(0);
@@ -104,7 +104,7 @@ describe('Correlation ID System', () => {
                 }
                 expect(parseResult.success).toBe(false);
             });
-            
+
             // Test non-string types separately
             expect(correlationIdSchema.safeParse(null).success).toBe(false);
             expect(correlationIdSchema.safeParse(undefined).success).toBe(false);
@@ -115,14 +115,14 @@ describe('Correlation ID System', () => {
     describe('Correlation ID Tracing', () => {
         it('should maintain correlation ID format through serialization', () => {
             const correlationId = generateCorrelationId('client');
-            
+
             // Simulate JSON serialization (as would happen in socket payload)
             const serialized = JSON.stringify({ correlationId });
             const deserialized = JSON.parse(serialized);
-            
+
             // Verify correlation ID survives serialization
             expect(deserialized.correlationId).toBe(correlationId);
-            
+
             // Verify it's still valid
             const parseResult = correlationIdSchema.safeParse(deserialized.correlationId);
             expect(parseResult.success).toBe(true);
@@ -131,7 +131,7 @@ describe('Correlation ID System', () => {
         it('should extract short ID for logging (last 8 characters)', () => {
             const correlationId = 'client-1730000000000-abc12345';
             const shortId = correlationId.slice(-8);
-            
+
             expect(shortId).toBe('abc12345');
             expect(shortId).toHaveLength(8);
         });
@@ -144,21 +144,21 @@ describe('Correlation ID System', () => {
                 username: 'Test User',
                 correlationId: generateCorrelationId('client')
             };
-            
+
             expect(payloadWithCid.correlationId).toBeDefined();
-            
+
             // Test without correlationId (optional)
-            const payloadWithoutCid: { 
-                accessCode: string; 
-                userId: string; 
-                username: string; 
+            const payloadWithoutCid: {
+                accessCode: string;
+                userId: string;
+                username: string;
                 correlationId?: string;
             } = {
                 accessCode: 'TEST123',
                 userId: 'user1',
                 username: 'Test User'
             };
-            
+
             expect(payloadWithoutCid.correlationId).toBeUndefined();
         });
     });

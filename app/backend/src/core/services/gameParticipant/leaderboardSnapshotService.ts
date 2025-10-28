@@ -3,7 +3,9 @@ import type { LeaderboardEntry, ParticipationType } from '@shared/types/core';
 import { prisma } from '@/db/prisma';
 import { ProjectionLeaderboardUpdatePayloadSchema, type ProjectionLeaderboardUpdatePayload } from '@shared/types/socket/projectionLeaderboardUpdatePayload';
 import { calculateLeaderboard } from '@/sockets/handlers/sharedLeaderboard';
-import { logger } from '@/utils/logger';
+import createLogger from '@/utils/logger';
+
+const logger = createLogger('LeaderboardSnapshotService');
 
 const LEADERBOARD_SNAPSHOT_PREFIX = 'leaderboard:snapshot:';
 

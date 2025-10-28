@@ -53,10 +53,10 @@ export function joinGameHandler(
     return async (payload: JoinGamePayload) => {
         // Extract correlationId for tracing (Phase 5: Observability)
         const correlationId = payload.correlationId;
-        
+
         // Record metrics (Phase 5: Observability)
         metricsCollector.recordJoinGame();
-        
+
         logger.debug('Received join_game payload', { payload, correlationId });
 
         // Zod validation for payload

@@ -202,11 +202,11 @@ export function createLogger(context: string): Logger {
 
         // Check if first argument is metadata with correlationId
         const firstArg = args[0];
-        const isMetadata = firstArg && 
-            typeof firstArg === 'object' && 
+        const isMetadata = firstArg &&
+            typeof firstArg === 'object' &&
             !Array.isArray(firstArg) &&
             'correlationId' in firstArg;
-        
+
         const metadata = isMetadata ? (firstArg as LogMetadata) : undefined;
 
         // Extract correlation ID if present
@@ -235,11 +235,11 @@ export function createLogger(context: string): Logger {
             if (typeof window !== 'undefined') {
                 const buf = window.__mqDiag;
                 if (buf && buf.enabled && typeof buf.push === 'function') {
-                    buf.push({ 
-                        ts: Date.now(), 
-                        level, 
-                        context, 
-                        message, 
+                    buf.push({
+                        ts: Date.now(),
+                        level,
+                        context,
+                        message,
                         args,
                         metadata,
                         correlationId

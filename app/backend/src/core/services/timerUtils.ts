@@ -4,8 +4,10 @@
  */
 
 import { GameTimerState } from '@shared/types/core/timer';
-import { logger } from '../../utils/logger';
+import createLogger from '../../utils/logger';
 import { computeTimerTimes } from './timerHelpers';
+
+const logger = createLogger('TimerUtils');
 
 /**
  * Calculate timer state for late joiners or projections

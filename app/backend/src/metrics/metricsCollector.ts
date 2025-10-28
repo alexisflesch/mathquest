@@ -60,7 +60,7 @@ class MetricsCollector {
 
     constructor() {
         this.currentBucket = this.createBucket();
-        
+
         if (METRICS_ENABLED) {
             logger.info('Metrics collection enabled - starting 1-minute bucket rotation');
             // Rotate buckets every minute
@@ -84,7 +84,7 @@ class MetricsCollector {
     private rotateBucket(): void {
         // Push current bucket to history
         this.buckets.push(this.currentBucket);
-        
+
         // Keep only last MAX_BUCKETS
         if (this.buckets.length > MAX_BUCKETS) {
             this.buckets.shift();
@@ -215,7 +215,7 @@ class MetricsCollector {
      */
     public getHistory(minutes: number = 10): MetricBucket[] {
         if (!METRICS_ENABLED) return [];
-        
+
         const limit = Math.min(minutes, MAX_BUCKETS);
         return this.buckets.slice(-limit);
     }

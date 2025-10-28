@@ -55,8 +55,8 @@ transports.push(
             winston.format.printf(({ timestamp, level, message, component, correlationId, ...meta }) => {
                 const componentStr = component ? `[${component}] ` : '';
                 // Ensure correlationId is string before calling slice
-                const correlationStr = correlationId && typeof correlationId === 'string' 
-                    ? ` [CID:${correlationId.slice(-8)}]` 
+                const correlationStr = correlationId && typeof correlationId === 'string'
+                    ? ` [CID:${correlationId.slice(-8)}]`
                     : '';
                 const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta, null, 2)}` : '';
                 return `${timestamp} ${level} ${componentStr}${correlationStr}${message}${metaStr}`;

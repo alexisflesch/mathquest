@@ -29,9 +29,9 @@ router.get('/', (req: Request, res: Response): void => {
         return;
     }
 
-    logger.debug('Metrics snapshot requested', { 
+    logger.debug('Metrics snapshot requested', {
         alerts: snapshot.alerts.length,
-        timestamp: snapshot.timestamp 
+        timestamp: snapshot.timestamp
     });
 
     res.status(200).json(snapshot);
@@ -43,7 +43,7 @@ router.get('/', (req: Request, res: Response): void => {
  */
 router.get('/history', (req: Request, res: Response): void => {
     const minutes = parseInt(req.query.minutes as string) || 10;
-    
+
     if (minutes < 1 || minutes > 60) {
         res.status(400).json({
             error: 'Invalid minutes parameter',
