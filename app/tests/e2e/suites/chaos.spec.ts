@@ -29,7 +29,9 @@ import {
     simulateNetworkFlapWithJitter,
     simulateBackgroundResume,
     waitForStableConnection,
-    logEventCounters
+    logEventCounters,
+    assertNoDuplicateBroadcasts,
+    logEventStatistics
 } from '../helpers/chaos-helpers';
 
 test.describe('Chaos Suite: Network Resilience', () => {
@@ -429,5 +431,118 @@ test.describe('Chaos Suite: Extended Duration Stress', () => {
         await context.close();
 
         console.log('✅ 3-minute stress test completed successfully');
+    });
+});
+
+test.describe('Chaos Suite: Broadcast Duplication Detection', () => {
+    test('should detect duplicate broadcast events during game flow', async ({ browser }) => {
+        test.setTimeout(60000); // 1 minute
+
+        const teacherContext = await browser.newContext();
+        const studentContext = await browser.newContext();
+        const teacherPage = await teacherContext.newPage();
+        const studentPage = await studentContext.newPage();
+
+        // Inject monitoring with duplicate detection
+        await injectEventCounters(teacherPage);
+        await injectEventCounters(studentPage);
+        await injectCrashSentinels(studentPage);
+
+        try {
+            const dataHelper = new TestDataHelper(teacherPage);
+            const loginHelper = new LoginHelper(teacherPage);
+            const seed = dataHelper.generateTestData('duplicate_check');
+
+            // Setup: Create teacher and game
+            await dataHelper.createTeacher({
+                username: seed.username,
+                email: seed.email,
+                password: seed.password
+            });
+
+            await loginHelper.loginAsTeacher({
+                email: seed.email,
+                password: seed.password
+            });
+
+            // Get questions
+            const questionsResponse = await teacherPage.request.get('/api/questions/list', {
+                params: { gradeLevel: 'CP', limit: '5' }
+            });
+            const questions = await questionsResponse.json();
+            const questionUids = questions.slice(0, 5);
+
+            // Create template
+            const templateResponse = await teacherPage.request.post('/api/game-templates', {
+                data: {
+                    name: seed.quizName,
+                    gradeLevel: 'CP',
+                    questionUids,
+                    defaultMode: 'live'
+                }
+            });
+            const template = await templateResponse.json();
+
+            // Create game instance
+            const instanceResponse = await teacherPage.request.post(`/api/game-templates/${template.id}/instances`, {
+                data: { playMode: 'live' }
+            });
+            const instance = await instanceResponse.json();
+
+            // Navigate to dashboard
+            await teacherPage.goto(`/teacher/${instance.accessCode}`);
+            await teacherPage.waitForSelector('[data-testid="teacher-dashboard"]', { timeout: 10000 });
+
+            // Student joins
+            await studentPage.goto(`/play/${instance.accessCode}`);
+            await studentPage.fill('input[type="text"]', 'TestStudent');
+            await studentPage.click('button:has-text("Rejoindre")');
+            await studentPage.waitForSelector('[data-testid="waiting-room"]', { timeout: 10000 });
+
+            console.log('📊 Reset counters before game starts');
+            await resetEventCounters(studentPage);
+
+            // Teacher starts game and advances through questions
+            for (let i = 0; i < Math.min(3, questionUids.length); i++) {
+                console.log(`\n📝 Question ${i + 1}/${questionUids.length}`);
+
+                if (i === 0) {
+                    await teacherPage.click('button:has-text("Démarrer")');
+                } else {
+                    await teacherPage.click('button:has-text("Question suivante")');
+                }
+
+                await studentPage.waitForSelector('[data-testid="question-display"]', { timeout: 10000 });
+
+                // Log statistics after each question
+                await logEventStatistics(studentPage, `After Question ${i + 1}`);
+
+                // Check for duplicates so far
+                const statsCheck = await studentPage.evaluate(() => {
+                    return {
+                        duplicates: (window as any).__mqDuplicates || {},
+                        counters: (window as any).__mqCounters || {}
+                    };
+                });
+
+                if (Object.keys(statsCheck.duplicates).length > 0) {
+                    console.warn(`⚠️  Duplicates detected at Question ${i + 1}:`, statsCheck.duplicates);
+                }
+
+                // Wait a bit before next question
+                await studentPage.waitForTimeout(1000);
+            }
+
+            // Final check for duplicates
+            console.log('\n📊 Final duplicate check...');
+            await logEventStatistics(studentPage, 'End of Game');
+            await assertNoDuplicateBroadcasts(studentPage);
+
+            console.log('✅ No duplicate broadcasts detected');
+
+        } finally {
+            await teacherContext.close();
+            await studentContext.close();
+        }
     });
 });

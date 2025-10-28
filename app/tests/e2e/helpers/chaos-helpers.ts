@@ -15,12 +15,29 @@ export interface EventCounters {
     game_question: number;
     player_joined_game: number;
     game_error: number;
+    // Additional broadcast events to track
+    participant_list: number;
+    leaderboard_update: number;
+    timer_update: number;
+    question_data_for_student: number;
     [key: string]: number;
+}
+
+/**
+ * Payload tracking for duplicate detection
+ */
+export interface PayloadHistory {
+    [event: string]: Array<{
+        payload: any;
+        timestamp: number;
+        count: number;
+    }>;
 }
 
 /**
  * Inject event counter tracking into the page
  * Exposes window.__mqCounters for monitoring critical socket events
+ * Also tracks payload history for duplicate detection
  */
 export async function injectEventCounters(page: Page): Promise<void> {
     await page.addInitScript(() => {
@@ -33,7 +50,52 @@ export async function injectEventCounters(page: Page): Promise<void> {
             game_error: 0,
             socket_connect: 0,
             socket_disconnect: 0,
-            socket_reconnect: 0
+            socket_reconnect: 0,
+            // Broadcast events
+            participant_list: 0,
+            leaderboard_update: 0,
+            timer_update: 0,
+            question_data_for_student: 0
+        };
+
+        // Payload history for duplicate detection (last 10 of each event type)
+        (window as any).__mqPayloadHistory = {};
+
+        // Helper to track payload
+        const trackPayload = (event: string, payload: any) => {
+            const history = (window as any).__mqPayloadHistory;
+            if (!history[event]) {
+                history[event] = [];
+            }
+
+            // Create a hash of the payload for comparison
+            const payloadStr = JSON.stringify(payload);
+            const now = Date.now();
+
+            // Check if this exact payload was sent recently (within 1 second)
+            const recent = history[event].find((item: any) => 
+                item.payload === payloadStr && (now - item.timestamp) < 1000
+            );
+
+            if (recent) {
+                // Duplicate found!
+                recent.count++;
+                (window as any).__mqDuplicates = (window as any).__mqDuplicates || {};
+                (window as any).__mqDuplicates[event] = 
+                    ((window as any).__mqDuplicates[event] || 0) + 1;
+            } else {
+                // New payload
+                history[event].push({
+                    payload: payloadStr,
+                    timestamp: now,
+                    count: 1
+                });
+
+                // Keep only last 10 payloads per event
+                if (history[event].length > 10) {
+                    history[event].shift();
+                }
+            }
         };
 
         // Track socket.io events when socket is available
@@ -43,7 +105,24 @@ export async function injectEventCounters(page: Page): Promise<void> {
                 if ((window as any).__mqCounters[event] !== undefined) {
                     (window as any).__mqCounters[event]++;
                 }
+                trackPayload(event, args[0]); // Track first argument as payload
                 return originalEmit.apply(this, [event, ...args]);
+            };
+        }
+
+        // Track incoming socket events (broadcasts from server)
+        const originalOn = (window as any).io?.Socket?.prototype?.on;
+        if (originalOn) {
+            (window as any).io.Socket.prototype.on = function (event: string, handler: Function) {
+                const wrappedHandler = (...args: any[]) => {
+                    // Increment counter for incoming events
+                    if ((window as any).__mqCounters[event] !== undefined) {
+                        (window as any).__mqCounters[event]++;
+                    }
+                    trackPayload(event, args[0]); // Track first argument as payload
+                    return handler.apply(this, args);
+                };
+                return originalOn.call(this, event, wrappedHandler);
             };
         }
     });
@@ -89,6 +168,70 @@ export async function assertCounterBudget(
         throw new Error(
             `Event counter budget exceeded: ${event} fired ${actual} times (max: ${maxAllowed})`
         );
+    }
+}
+
+/**
+ * Get duplicate event counts
+ * Returns number of duplicate broadcasts detected per event type
+ */
+export async function getDuplicateEventCounts(page: Page): Promise<Record<string, number>> {
+    const duplicates = await page.evaluate(() => {
+        return (window as any).__mqDuplicates || {};
+    });
+    return duplicates;
+}
+
+/**
+ * Assert no duplicate broadcasts occurred
+ * @throws Error if duplicates detected
+ */
+export async function assertNoDuplicateBroadcasts(page: Page): Promise<void> {
+    const duplicates = await getDuplicateEventCounts(page);
+    const eventNames = Object.keys(duplicates);
+
+    if (eventNames.length > 0) {
+        const summary = eventNames.map(event => `${event}: ${duplicates[event]}`).join(', ');
+        throw new Error(
+            `Duplicate broadcasts detected: ${summary}`
+        );
+    }
+}
+
+/**
+ * Get detailed event statistics including duplicates
+ */
+export async function getEventStatistics(page: Page): Promise<{
+    counters: EventCounters;
+    duplicates: Record<string, number>;
+    totalEvents: number;
+    totalDuplicates: number;
+}> {
+    const counters = await getEventCounters(page);
+    const duplicates = await getDuplicateEventCounts(page);
+
+    const totalEvents = Object.values(counters).reduce((sum, count) => sum + count, 0);
+    const totalDuplicates = Object.values(duplicates).reduce((sum, count) => sum + count, 0);
+
+    return {
+        counters,
+        duplicates,
+        totalEvents,
+        totalDuplicates
+    };
+}
+
+/**
+ * Log event statistics including duplicates
+ */
+export async function logEventStatistics(page: Page, label: string): Promise<void> {
+    const stats = await getEventStatistics(page);
+    console.log(`\n[${label}] Event Statistics:`);
+    console.log(`  Total Events: ${stats.totalEvents}`);
+    console.log(`  Total Duplicates: ${stats.totalDuplicates}`);
+    console.log(`  Counters:`, JSON.stringify(stats.counters, null, 2));
+    if (stats.totalDuplicates > 0) {
+        console.log(`  ⚠️  Duplicates:`, JSON.stringify(stats.duplicates, null, 2));
     }
 }
 
