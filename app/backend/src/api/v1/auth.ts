@@ -6,6 +6,7 @@ import { UserRole } from '@/db/generated/client';
 import { validateAvatar, getRandomAvatar, AllowedAvatar, isValidAvatar } from '@/utils/avatarUtils';
 import { validateUsername } from '@/utils/usernameValidator';
 import createLogger from '@/utils/logger';
+import { AUTH_COOKIE_OPTIONS } from '../../config/auth.constants';
 import type {
     LoginResponse,
     RegisterResponse,
@@ -155,12 +156,7 @@ async function handleUniversalLogin(req: Request, res: Response<LoginResponse | 
 
         if (result.user.role === UserRole.TEACHER) {
             // Set teacher token cookie for middleware
-            res.cookie('teacherToken', result.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
+            res.cookie('teacherToken', result.token, AUTH_COOKIE_OPTIONS);
 
             // Teacher response format for frontend compatibility
             res.status(200).json({
@@ -177,12 +173,7 @@ async function handleUniversalLogin(req: Request, res: Response<LoginResponse | 
             });
         } else if (result.user.role === UserRole.STUDENT) {
             // Set auth token cookie for middleware
-            res.cookie('authToken', result.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
+            res.cookie('authToken', result.token, AUTH_COOKIE_OPTIONS);
 
             // Student response format
             res.status(200).json({
@@ -199,12 +190,7 @@ async function handleUniversalLogin(req: Request, res: Response<LoginResponse | 
             });
         } else {
             // Generic response for other roles - default to student cookie
-            res.cookie('authToken', result.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
+            res.cookie('authToken', result.token, AUTH_COOKIE_OPTIONS);
 
             res.status(200).json({
                 success: true,
@@ -270,12 +256,7 @@ async function handleTeacherLogin(req: Request, res: Response): Promise<void> {
         }
 
         // Set teacher token cookie for middleware
-        res.cookie('teacherToken', result.token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        res.cookie('teacherToken', result.token, AUTH_COOKIE_OPTIONS);
 
         // Return in the format expected by frontend
         res.status(200).json({
@@ -559,20 +540,10 @@ router.post('/register', validateRequestBody(RegisterRequestSchema), async (req:
         // For guest users (no email) - set cookies as before
         // Set appropriate cookie based on user role
         if (result.user.role === UserRole.TEACHER) {
-            res.cookie('teacherToken', result.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
+            res.cookie('teacherToken', result.token, AUTH_COOKIE_OPTIONS);
         } else {
             // Default to student cookie for STUDENT and other roles
-            res.cookie('authToken', result.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
+            res.cookie('authToken', result.token, AUTH_COOKIE_OPTIONS);
         }
 
         res.status(201).json({
@@ -714,20 +685,10 @@ router.post('/upgrade', validateRequestBody(UpgradeAccountRequestSchema), async 
 
         // Set appropriate cookie based on user role
         if (result.user.role === UserRole.TEACHER) {
-            res.cookie('teacherToken', result.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
+            res.cookie('teacherToken', result.token, AUTH_COOKIE_OPTIONS);
         } else {
             // Default to student cookie for STUDENT and other roles
-            res.cookie('authToken', result.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
+            res.cookie('authToken', result.token, AUTH_COOKIE_OPTIONS);
         }
 
         res.status(200).json({
@@ -904,19 +865,9 @@ router.post('/verify-email', validateRequestBody(VerifyEmailRequestSchema), asyn
             if (user && result.token) {
                 // Set appropriate cookie based on user role
                 if (user.role === 'TEACHER') {
-                    res.cookie('teacherToken', result.token, {
-                        httpOnly: true,
-                        secure: process.env.NODE_ENV === 'production',
-                        sameSite: 'lax',
-                        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-                    });
+                    res.cookie('teacherToken', result.token, AUTH_COOKIE_OPTIONS);
                 } else {
-                    res.cookie('authToken', result.token, {
-                        httpOnly: true,
-                        secure: process.env.NODE_ENV === 'production',
-                        sameSite: 'lax',
-                        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-                    });
+                    res.cookie('authToken', result.token, AUTH_COOKIE_OPTIONS);
                 }
 
                 logger.info('Authentication cookies set after email verification', {
@@ -1173,14 +1124,7 @@ router.post('/upgrade-to-teacher', optionalAuth, validateRequestBody(TeacherUpgr
         }
 
         // Set teacher token cookie
-        const cookieOptions = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax' as const,
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        };
-
-        res.cookie('teacherToken', result.token, cookieOptions);
+        res.cookie('teacherToken', result.token, AUTH_COOKIE_OPTIONS);
         // Clear any existing auth token since they're now a teacher
         res.clearCookie('authToken');
 

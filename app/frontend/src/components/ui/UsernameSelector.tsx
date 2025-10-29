@@ -65,28 +65,30 @@ export default function UsernameSelector({ value = '', onChange, suffix, onSuffi
         setOpen(true);
         setHighlight(-1);
 
-        // Removed auto-selection of exact matches to allow full typing
-        // Users can select from dropdown or press Enter when ready
+        // Don't auto-select while typing - let user finish typing
+        // Auto-selection happens on blur or Enter key
     };
 
     const handleSuffix = (v: string) => {
         // allow only one char, uppercase letter or digit
         const s = v.toUpperCase().slice(0, 1);
         if (s && !/^[A-Z0-9]$/.test(s)) return;
+
+        // FIX: Prevent suffix entry without valid firstname
+        // Don't allow suffix if no firstname is selected
+        if (!input) {
+            // If user tries to add suffix without firstname, just update suffix state
+            // but don't call onChange with invalid username
+            if (onSuffixChange) onSuffixChange(s);
+            setInternalSuffix(s);
+            return; // Don't call onChange
+        }
+
         if (onSuffixChange) onSuffixChange(s);
         setInternalSuffix(s);
 
-        // Use input if available, otherwise use searchTerm if it's a valid prenom
-        let baseName = input;
-        if (!baseName && searchTerm) {
-            const exactMatch = prenoms.find(p => p.toLowerCase() === searchTerm.toLowerCase());
-            if (exactMatch) {
-                baseName = formatName(exactMatch);
-                setInput(baseName); // Set the input to the formatted name
-            }
-        }
-
-        onChange(joinName(baseName, s));
+        // Use input as baseName (we know it exists from check above)
+        onChange(joinName(input, s));
     };
 
     const clearSelection = () => {
@@ -214,8 +216,10 @@ export default function UsernameSelector({ value = '', onChange, suffix, onSuffi
                         onChange={e => handleSuffix(e.target.value)}
                         placeholder="Suffixe"
                         maxLength={1}
-                        className="input input-bordered input-lg w-full text-center"
+                        disabled={!input} // Disable suffix input until firstname is selected
+                        className="input input-bordered input-lg w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Suffixe (lettre majuscule ou chiffre)"
+                        title={!input ? "Sélectionnez d'abord un prénom" : "Suffixe optionnel (lettre ou chiffre)"}
                     />
                 </div>
             </div>

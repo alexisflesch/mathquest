@@ -25,3 +25,11 @@ node_modules
 # Python
 __pycache__/
 *.pyc
+
+# Test results
+# Test results
+/home/aflesch/mathquest/app/tests/e2e/results
+
+# Playwright reports and test results
+playwright-report/
+test-results/

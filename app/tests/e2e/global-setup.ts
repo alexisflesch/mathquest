@@ -27,6 +27,28 @@ async function globalSetup(config: FullConfig) {
         throw new Error('Backend failed to start within 30 seconds');
     }
 
+    // Extra readiness: ensure auth POST endpoints respond (not necessarily 200, but no timeout)
+    let backendPostReady = false;
+    for (let i = 0; i < 30; i++) {
+        try {
+            const resp = await page.request.post('http://localhost:3007/api/v1/auth', {
+                data: { action: 'login', email: 'probe@test-mathquest.com', password: 'x' },
+                timeout: 3000
+            });
+            // Any response status means the route is responsive
+            console.log(`ℹ️ Auth POST probe status: ${resp.status()}`);
+            backendPostReady = true;
+            break;
+        } catch (error) {
+            // Likely not ready yet or timed out
+        }
+        await page.waitForTimeout(1000);
+    }
+
+    if (!backendPostReady) {
+        throw new Error('Backend auth POST endpoints did not become responsive within 30 seconds');
+    }
+
     // Wait for frontend to be ready
     let frontendReady = false;
     for (let i = 0; i < 30; i++) {

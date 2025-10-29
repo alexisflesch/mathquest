@@ -10,7 +10,6 @@
   tags: ["convergence", "absolue convergence"]
   title: "Série simple"
   questionType: "multiple_choice"
-  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -30,7 +29,6 @@
   tags: ["convergence", "équivalence"]
   title: "Série téléscopique"
   questionType: "multiple_choice"
-  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -53,7 +51,6 @@
   tags: ["Riemann"]
   title: "Condition suffisante série de Riemann"
   questionType: "multiple_choice"
-  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
@@ -76,11 +73,10 @@
   themes: ["Séries numériques"]
   title: "Conditions nécessaires de convergence"
   questionType: "multiple_choice"
-  excludedFrom: ["practice", "tournament"]
   timeLimit: 30
   difficulty: 1
   text: |
-        Si \(\displaystyle\sum_n u_n\) converge alors:
+    Si \(\displaystyle\sum_n u_n\) converge alors:
   answerOptions:
     - \(u_n\leqslant 1/n\) au voisinage de \(+\infty\)
     - \(u_n\rightarrow 0\)

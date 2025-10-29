@@ -237,14 +237,23 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                             {/* AvatarEmoji only, bigger, no background */}
                             <div className="mb-2 flex items-center justify-center overflow-hidden">
                                 {user.avatarEmoji ? (
-                                    <span className="text-5xl">{user.avatarEmoji}</span>
+                                    // Scale avatar emoji with zoomFactor so it grows/shrinks with classement zoom
+                                    <span style={{ fontSize: `calc(3rem * ${zoomFactor})` }}>{user.avatarEmoji}</span>
                                 ) : (
-                                    <span className="text-2xl font-bold text-gray-700">{(user.name || 'UP').slice(0, 2).toUpperCase()}</span>
+                                    <span style={{ fontSize: `calc(1.5rem * ${zoomFactor})`, fontWeight: 700, color: '#4b5563' }}>{(user.name || 'UP').slice(0, 2).toUpperCase()}</span>
                                 )}
                             </div>
                             <span
-                                className="font-semibold text-center truncate max-w-[100px]"
-                                style={{ fontSize: `calc(1.125rem * ${zoomFactor})` }}
+                                className="font-semibold text-center truncate"
+                                style={{
+                                    fontSize: `calc(1.125rem * ${zoomFactor})`,
+                                    // Increase max width proportionally to zoom so names don't get truncated when zooming in
+                                    maxWidth: `${100 * (zoomFactor || 1)}px`,
+                                    display: 'block',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}
                             >
                                 {user.name || 'Unknown Player'}
                             </span>
@@ -290,8 +299,8 @@ function ClassementPodium({ leaderboard, zoomFactor = 1, correctAnswers }: Class
                             >
                                 {/* Rank. avatarEmoji username */}
                                 <span className="font-mono w-8 text-center text-sm">{idx + 4}.</span>
-                                <span className="text-2xl mr-2">{user.avatarEmoji}</span>
-                                <span className="flex-1 text-left truncate mx-2">{user.name || 'Unknown Player'}</span>
+                                <span style={{ fontSize: `calc(1.5rem * ${zoomFactor})` }} className="mr-2">{user.avatarEmoji}</span>
+                                <span className="flex-1 text-left truncate mx-2" style={{ fontSize: `calc(1rem * ${zoomFactor})` }}>{user.name || 'Unknown Player'}</span>
                                 <ScoreAnimate score={user.score} zoomFactor={zoomFactor} animateScore={animateScore} />
                             </motion.div>
                         );

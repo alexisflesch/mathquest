@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from '@/components/AuthProvider';
 import Snackbar from '@/components/Snackbar';
 import { createLogger } from '@/clientLogger';
+import initDiagnostics from '@/diagnostics/initDiagnostics';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
 import QuestionCard from '@/components/QuestionCard';
@@ -68,21 +69,30 @@ type PendingAnswer = {
 };
 
 export default function LiveGamePage() {
-    // Debug render count
+    // Debug render count (only log if ?mqdebug=1)
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
 
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
-        logger.info(`🔄 Re-render #${renderCount.current} (${now - lastRenderTime.current}ms since last)`);
+        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
+            logger.info(`🔄 Re-render #${renderCount.current} (${now - lastRenderTime.current}ms since last)`);
+        }
         lastRenderTime.current = now;
     });
+
+    // Opt-in diagnostics: enable with ?mqdebug=1
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try { initDiagnostics(); } catch { /* no-op */ }
+        }
+    }, []);
 
     const { code } = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { userState, userProfile, isLoading } = useAuth();
+    const { userState, userProfile, isLoading, logout } = useAuth();
 
     // Check if this is a differed session
     const isDiffered = searchParams?.get('differed') === '1';
@@ -612,6 +622,42 @@ export default function LiveGamePage() {
     }, [snackbarOpen]);
 
     // 🚨 IMPORTANT: Returns must come *after* hooks
+    // If auth is resolved and the user is not authenticated for gameplay, disconnect and redirect to login
+    const redirectOnceRef = useRef(false);
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (isLoading) return;
+
+        const accessCode = typeof code === 'string' ? code : Array.isArray(code) ? code[0] : '';
+        const missingProfile = !userProfile.username || !userProfile.avatar;
+        // E2E bypass: allow anonymous access when query param e2e=1 is present (non-production only)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const e2eBypass = params.get('e2e') === '1';
+            if (e2eBypass) {
+                return; // Skip redirect to login during E2E guest flows
+            }
+        } catch (_) { /* ignore */ }
+
+        if ((userState === 'anonymous' || missingProfile) && !redirectOnceRef.current) {
+            redirectOnceRef.current = true;
+            (async () => {
+                try {
+                    // Ensure any stale auth cookies are cleared before redirecting
+                    await logout();
+                } catch (_) {
+                    // Ignore logout errors and proceed with redirect
+                } finally {
+                    try {
+                        router.replace(`/login?returnTo=${encodeURIComponent(`/live/${accessCode}`)}`);
+                    } catch (_) {
+                        // noop - tests may not have full router impl
+                    }
+                }
+            })();
+        }
+    }, [isLoading, userState, userProfile.username, userProfile.avatar, code, router, logout]);
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">

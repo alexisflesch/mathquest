@@ -3,11 +3,5 @@
     "include": [
         "**/*.ts",
         "**/*.tsx"
-    ],
-    "compilerOptions": {
-        "types": [
-            "jest",
-            "node"
-        ]
-    }
+    ]
 }

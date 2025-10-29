@@ -16,8 +16,8 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { gameControlStatePayloadSchema, type GameControlStatePayload } from '@shared/types/socketEvents.zod.dashboard';
-import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
-import { io, Socket } from 'socket.io-client';
+import type { ConnectedCountPayload, EndGamePayload } from '@shared/types/socket/dashboardPayloads';
+import type { Socket } from 'socket.io-client';
 import '@/app/question-cards.css';
 
 // Answer stats can be legacy format or new format with type discrimination
@@ -30,10 +30,10 @@ type AnswerStats = Record<string, number> | {
     values: number[];
     totalAnswers: number;
 };
-import { SOCKET_CONFIG } from '@/config';
 import { computeTimeLeftMs } from '../utils/computeTimeLeftMs';
 import { makeApiRequest } from '@/config/api';
 import { showCorrectAnswersPayloadSchema, type ShowCorrectAnswersPayload } from '@shared/types/socketEvents.zod.dashboard';
+import { useTeacherDashboardSocket } from '@/hooks/useTeacherDashboardSocket';
 
 // Derive type from Zod schema for type safety
 // type ConnectedCountPayload = z.infer<typeof connectedCountPayloadSchema>;
@@ -85,310 +85,117 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Track if the last stats toggle was teacher-initiated
     const lastStatsToggleInitiatedByTeacher = useRef(false);
 
-    // Re-render logging for performance monitoring
-    const renderCount = useRef(0);
-    const lastRenderTime = useRef(Date.now());
-
-    useEffect(() => {
-        renderCount.current++;
-        const now = Date.now();
-        const timeSinceLastRender = now - lastRenderTime.current;
-        lastRenderTime.current = now;
-
-        logger.info(`🔄 [DASHBOARD-RERENDER] TeacherDashboard re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
-    });
-    // --- Canonical timer sync: update per-question durationMs after every timer update ---
-    const lastTimerQuestionUidRef = useRef<string | null>(null);
-    const lastTimerDurationMsRef = useRef<number | null>(null);
-
-    // Authentication and access control (following established pattern)
-    const { isTeacher, isAuthenticated, isLoading: authLoading, userState, userProfile } = useAuthState();
-    useAccessGuard({ requireMinimum: 'teacher', redirectTo: '/login' });
-
-    // Basic state
+    // Basic state (restored if lost during merge)
     const [questions, setQuestions] = useState<Question[]>([]);
-
-    // Ref to always have the latest questions state (for timer actions)
     const questionsRef = useRef<Question[]>([]);
     useEffect(() => { questionsRef.current = questions; }, [questions]);
-
-    // Modernization: Store both templateName and gameInstanceName for dashboard title
     const [quizName, setQuizName] = useState<string>("");
     const [gameInstanceName, setGameInstanceName] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    // UI state
+    const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null);
     const [expandedUids, setExpandedUids] = useState<Set<string>>(new Set());
     type SnackbarState = { message: string; type?: "success" | "error" } | string | null;
     const [snackbarMessage, setSnackbarMessage] = useState<SnackbarState>(null);
-    const [showStats, setShowStats] = useState<boolean>(false); // global stats toggle
-    const [showTrophy, setShowTrophy] = useState<boolean>(false); // trophy toggle state
-    // Suppression flags for initial backend event
+    const [showStats, setShowStats] = useState<boolean>(false);
+    const [showTrophy, setShowTrophy] = useState<boolean>(false);
     const hasReceivedInitialStats = useRef(false);
     const hasReceivedInitialTrophy = useRef(false);
-
-    // Confirmation dialogs
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingPlayIdx, setPendingPlayIdx] = useState<number | null>(null);
     const [showFinishedModal, setShowFinishedModal] = useState(false);
     const [pendingFinishedPlayIdx, setPendingFinishedPlayIdx] = useState<number | null>(null);
     const [showEndQuizConfirm, setShowEndQuizConfirm] = useState(false);
-
-    // Restore missing handlers for end quiz (move above return)
-    function handleEndQuiz() { setShowEndQuizConfirm(true); }
-    function confirmEndQuiz() {
-        setShowEndQuizConfirm(false);
-        if (quizSocket && code) {
-            const payload: EndGamePayload = { accessCode: code };
-            try {
-                // endGamePayloadSchema.parse(payload);
-                quizSocket.emit(SOCKET_EVENTS.TEACHER.END_GAME, payload);
-            } catch (error) {
-                logger.error('Invalid end_game payload:', error);
-            }
-        }
-    }
-    function cancelEndQuiz() { setShowEndQuizConfirm(false); }
-
-    // Socket and quiz state
     const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
     const [quizState, setQuizState] = useState<any>(null);
     const [connectedCount, setConnectedCount] = useState(0);
     const [answerStats, setAnswerStats] = useState<Record<string, AnswerStats>>({});
 
-    // Fetch game data
-    useEffect(() => {
-        if (authLoading || !isAuthenticated || !isTeacher) {
-            logger.info('Waiting for authentication:', {
-                authLoading,
-                isAuthenticated,
-                isTeacher,
-                code,
-                userState,
-                userProfile
-            });
-            return;
-        }
-        if (!code) {
-            logger.warn('No game code provided');
-            setError('No game code provided');
-            setLoading(false);
-            return;
-        }
-        logger.info('Setting up socket connection for game code:', code);
-        // Keep loading=true until socket data arrives
-    }, [code, authLoading, isAuthenticated, isTeacher]);
+    // Auth and access guard
+    const { userProfile, isLoading: authLoading } = useAuthState();
+    useAccessGuard();
 
-    useEffect(() => {
-        if (!isAuthenticated || !isTeacher || !code) {
-            logger.debug('Skipping socket initialization - waiting for auth:', { isAuthenticated, isTeacher, hasCode: !!code });
-            return;
-        }
-        logger.info('Initializing socket connection');
-        // Attach JWT from sessionStorage to socket handshake for production auth
-        const jwtToken = typeof window !== 'undefined' ? sessionStorage.getItem('mathquest_jwt_token') : null;
-        const socket = io(SOCKET_CONFIG.url, {
-            ...SOCKET_CONFIG,
-            autoConnect: true,
-            auth: jwtToken ? { token: jwtToken } : undefined,
-        });
-        socket.on(SOCKET_EVENTS.CONNECT, () => {
-            logger.info('Socket connected:', socket.id);
-            logger.info('Joining dashboard with accessCode:', code);
-            const payload: JoinDashboardPayload = { accessCode: code };
-            try {
-                // joinDashboardPayloadSchema.parse(payload);
-                socket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, payload);
-            } catch (error) {
-                logger.error('Invalid join_dashboard payload:', error);
-            }
-            logger.info('📡 Dashboard attempting to join rooms via JOIN_DASHBOARD event');
-        });
-        socket.onAny((eventName, ...args) => {
-            if (eventName !== 'timer_updated' && eventName !== 'dashboard_timer_updated') {
-                logger.debug('Socket event:', eventName, ...args);
-            }
-        });
-        // Listen for backend confirmation of showStats state (projection_show_stats is canonical)
-        // Listen for backend-confirmed showStats state (projection_show_stats is canonical)
-        socket.on(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, (payload: { show: boolean }) => {
-            if (typeof payload?.show === 'boolean') {
-                setShowStats(payload.show);
-                logger.info('[DASHBOARD] Received showStats state from backend (projection_show_stats):', payload.show);
-                // Only show snackbar if teacher initiated the toggle
-                if (lastStatsToggleInitiatedByTeacher.current) {
-                    setSnackbarMessage(payload.show ? 'Statistiques affichées' : 'Statistiques masquées');
-                    setTimeout(() => setSnackbarMessage(null), 2500);
-                    lastStatsToggleInitiatedByTeacher.current = false;
+    // Hook wiring and event forwarding
+    const { socket: teacherSocket, state: socketView } = useTeacherDashboardSocket({
+        accessCode: code,
+        gameId,
+        handlers: {
+            onGameControlState: (canonicalState) => {
+                if (canonicalState.templateName) setQuizName(canonicalState.templateName);
+                if (canonicalState.gameInstanceName) setGameInstanceName(canonicalState.gameInstanceName);
+                if (canonicalState.questions) {
+                    const processedQuestions = canonicalState.questions.map(mapToCanonicalQuestion);
+                    setQuestions(processedQuestions);
                 }
-                // Always set suppression flag for initial state
-                if (!hasReceivedInitialStats.current) {
-                    hasReceivedInitialStats.current = true;
+                if (canonicalState.currentQuestionUid) setQuestionActiveUid(canonicalState.currentQuestionUid);
+                if (
+                    canonicalState.currentQuestionUid &&
+                    canonicalState.answerStats &&
+                    typeof canonicalState.answerStats === 'object'
+                ) {
+                    setAnswerStats(prev => ({
+                        ...prev,
+                        [String(canonicalState.currentQuestionUid)]: canonicalState.answerStats as Record<string, number>
+                    }));
                 }
-            }
-        });
-        // Listen for backend confirmation of showCorrectAnswers state (trophy)
-        socket.on(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, (payload: ShowCorrectAnswersPayload) => {
-            const parsed = showCorrectAnswersPayloadSchema.safeParse(payload);
-            if (!parsed.success) {
-                logger.error('Invalid SHOW_CORRECT_ANSWERS payload', parsed.error);
-                return;
-            }
-            const { show, terminatedQuestions } = parsed.data;
-            if (typeof show === 'boolean') {
-                if (show) {
-                    setShowTrophy(true);
-                    logger.info('[DASHBOARD] Received showTrophy state from backend (show_correct_answers):', show);
-                    setSnackbarMessage('Classement affiché');
-                    setTimeout(() => setSnackbarMessage(null), 2500);
-                    hasReceivedInitialTrophy.current = true;
-                } else {
-                    setShowTrophy(false);
-                    logger.info('[DASHBOARD] Trophy reset to hidden by backend (show_correct_answers):', show);
-                }
-            }
-            setQuizState((prev: any) => ({
-                ...prev,
-                terminatedQuestions
-            }));
-            logger.info('[DASHBOARD] Updated terminatedQuestions from SHOW_CORRECT_ANSWERS:', terminatedQuestions);
-        });
-        // Listen for initial showStats state from backend (toggle_projection_stats)
-        socket.on(SOCKET_EVENTS.TEACHER.TOGGLE_PROJECTION_STATS, (payload: { show: boolean }) => {
-            if (typeof payload?.show === 'boolean') {
-                setShowStats(payload.show);
-                logger.info('[DASHBOARD] Received initial showStats state from backend (toggle_projection_stats):', payload.show);
-                // Set suppression flag so snackbar works on first user toggle
-                hasReceivedInitialStats.current = true;
-                // No snackbar here: only show snackbar on real-time toggle, not initial state
-            }
-        });
-        socket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, (state: any) => {
-            // Validate and strongly type the payload
-            const parsed = gameControlStatePayloadSchema.safeParse(state);
-            if (!parsed.success) {
-                logger.error('Invalid GAME_CONTROL_STATE payload', parsed.error);
-                return;
-            }
-            const canonicalState: GameControlStatePayload = parsed.data;
-
-            logger.info('Dashboard state received:', canonicalState);
-            if (canonicalState.gameId) {
-                logger.info(`📍 Dashboard should be listening for stats in room: dashboard_${canonicalState.gameId}`);
-                logger.info(`📍 Alternative room format (if quiz mode): teacher_<userId>_${code}`);
-                logger.info(`📍 Current accessCode: ${code}`);
-            }
-            // Modernization: Store both templateName and gameInstanceName for dashboard title
-            if (canonicalState.templateName) {
-                setQuizName(canonicalState.templateName);
-            }
-            if (canonicalState.gameInstanceName) {
-                setGameInstanceName(canonicalState.gameInstanceName);
-            }
-            if (canonicalState.questions) {
-                const processedQuestions = canonicalState.questions.map(mapToCanonicalQuestion);
-                setQuestions(processedQuestions);
-                logger.info('Questions loaded:', processedQuestions.length);
-            }
-            if (canonicalState.currentQuestionUid) {
-                setQuestionActiveUid(canonicalState.currentQuestionUid);
-                logger.info('Setting current question from initial state:', canonicalState.currentQuestionUid);
-            }
-            if (
-                canonicalState.currentQuestionUid &&
-                canonicalState.answerStats &&
-                typeof canonicalState.answerStats === "object"
-            ) {
-                setAnswerStats(prev => ({
-                    ...prev,
-                    [String(canonicalState.currentQuestionUid)]: canonicalState.answerStats as Record<string, number>
-                }));
-                logger.info('✅ Loaded initial answer stats for question:', canonicalState.currentQuestionUid, canonicalState.answerStats);
-            }
-            let computedTimeLeftMs: number | undefined = undefined;
-            if (canonicalState.timer) {
-                logger.info('📡 Received initial timer state from backend:', canonicalState.timer);
-                logger.info('📡 Backend should emit dashboard_timer_updated event separately');
-                if (typeof canonicalState.timer.timerEndDateMs === 'number') {
+                let computedTimeLeftMs: number | undefined = undefined;
+                if (canonicalState.timer && typeof canonicalState.timer.timerEndDateMs === 'number') {
                     computedTimeLeftMs = computeTimeLeftMs(canonicalState.timer.timerEndDateMs);
                 }
-            }
-            setQuizState({ ...canonicalState, computedTimeLeftMs });
+                setQuizState({ ...canonicalState, computedTimeLeftMs });
+                setLoading(false);
+            },
+            onDashboardTimerUpdated: () => { },
+            onConnectedCount: ({ count }) => setConnectedCount(count),
+            onToggleProjectionStats: ({ show }) => {
+                setShowStats(show);
+                hasReceivedInitialStats.current = true;
+            },
+            onShowCorrectAnswers: (payload) => {
+                const parsed = showCorrectAnswersPayloadSchema.safeParse(payload);
+                if (!parsed.success) return;
+                const { show, terminatedQuestions } = parsed.data;
+                setShowTrophy(!!show);
+                setQuizState((prev: any) => ({ ...prev, terminatedQuestions }));
+            },
+            onAnswerStatsUpdate: (payload) => {
+                if (payload.stats && payload.questionUid) {
+                    setAnswerStats(prev => ({ ...prev, [payload.questionUid]: payload.stats }));
+                }
+            },
+            onQuestionChanged: (payload) => {
+                if (payload.questionUid) setQuestionActiveUid(payload.questionUid);
+            },
+        },
+    });
+
+    // Mirror hook state into local UI flags
+    useEffect(() => {
+        setIsReconnecting(socketView.reconnecting);
+        if (socketView.connected) {
+            setError(null);
+        } else if (!socketView.reconnecting && socketView.error) {
+            setError('Failed to connect to game server');
             setLoading(false);
-        });
-        socket.on('quiz_connected_count', (data: ConnectedCountPayload) => {
-            // const validation = connectedCountPayloadSchema.safeParse(data);
-            // if (!validation.success) {
-            //     logger.error('quiz_connected_count validation failed:', validation.error);
-            //     return;
-            // }
-            setConnectedCount(data.count);
-        });
-        socket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_ANSWER_STATS_UPDATE, (payload: DashboardAnswerStatsUpdatePayload) => {
-            logger.info('🎯 RECEIVED answer stats update:', payload);
-            if (payload.stats && payload.questionUid) {
-                setAnswerStats(prev => ({
-                    ...prev,
-                    [payload.questionUid]: payload.stats
-                }));
-                logger.info('✅ Answer stats updated for question:', payload.questionUid, payload.stats);
-            }
-        });
-        socket.on(SOCKET_EVENTS.TEACHER.ANSWER_STATS_UPDATE, (payload: DashboardAnswerStatsUpdatePayload) => {
-            logger.info('🎯 RECEIVED alternative answer stats update:', payload);
-            if (payload.stats && payload.questionUid) {
-                setAnswerStats(prev => ({
-                    ...prev,
-                    [payload.questionUid]: payload.stats
-                }));
-                logger.info('✅ Answer stats updated via alternative event:', payload.questionUid, payload.stats);
-            }
-        });
+        }
+    }, [socketView.reconnecting, socketView.error, socketView.connected]);
+
+    // Optional: periodic debug logs
+    useEffect(() => {
         const statsCheckInterval = setInterval(() => {
             logger.debug('📊 Current answer stats state:', answerStats);
             logger.debug('📊 Current gameId:', gameId);
             logger.debug('📊 Current questions:', questions.map(q => q.uid));
-            logger.debug('📊 Socket connected:', socket.connected);
-            if (gameId) {
-                logger.debug(`📊 Expected dashboard room: dashboard_${gameId}`);
-                logger.debug(`📊 Expected quiz mode room: teacher_<userId>_${code}`);
-            }
-            const hasAnyStats = Object.keys(answerStats).length > 0;
-            logger.debug('📊 Has any answer stats:', hasAnyStats);
-            if (!hasAnyStats && questions.length > 0) {
-                logger.warn('⚠️ No answer stats received yet, but questions are loaded. Possible room mismatch?');
-            }
+            logger.debug('📊 Socket connected:', !!teacherSocket?.connected);
         }, 10000);
-        socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
-            logger.error('Socket connection error:', error);
-            setError('Failed to connect to game server');
-            setLoading(false);
-        });
-        socket.on(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, (error: any) => {
-            // Log dashboard errors as warnings for user-triggered actions (not errors)
-            logger.warn('Dashboard error:', error);
-            // Always show user-facing dashboard errors as a snackbar (2s), never as a fatal error
-            if (error && error.message) {
-                setSnackbarMessage({ message: error.message, type: 'error' });
-                setTimeout(() => setSnackbarMessage(null), 2000);
-            } else if (error && typeof error === 'string') {
-                setSnackbarMessage({ message: String(error), type: 'error' });
-                setTimeout(() => setSnackbarMessage(null), 2000);
-            } else {
-                setSnackbarMessage({ message: 'Erreur inconnue du dashboard', type: 'error' });
-                setTimeout(() => setSnackbarMessage(null), 2000);
-            }
-            // Do NOT setError or setLoading(false) for recoverable dashboard errors; keep loading and allow partial data.
-        });
-        setQuizSocket(socket);
-        return () => {
-            logger.info('Disconnecting socket');
-            clearInterval(statsCheckInterval);
-            socket.disconnect();
-        };
-    }, [isAuthenticated, isTeacher, code]);
+        return () => clearInterval(statsCheckInterval);
+    }, [teacherSocket, answerStats, questions, gameId]);
+
+    // Keep local quizSocket in sync with the teacher socket from the hook
+    useEffect(() => {
+        setQuizSocket(teacherSocket);
+    }, [teacherSocket]);
 
     // --- Canonical timer state: use per-question timer state from useSimpleTimer ---
     const {
@@ -693,6 +500,20 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         setShowTrophy(false);
     }, [questionActiveUid]);
 
+    // End quiz confirm flow
+    const handleEndQuiz = useCallback(() => {
+        setShowEndQuizConfirm(true);
+    }, []);
+    const cancelEndQuiz = useCallback(() => {
+        setShowEndQuizConfirm(false);
+    }, []);
+    const confirmEndQuiz = useCallback(() => {
+        if (!quizSocket) return;
+        const payload: EndGamePayload = { accessCode: code, gameId, teacherId: userProfile?.userId } as EndGamePayload;
+        quizSocket.emit(SOCKET_EVENTS.TEACHER.END_GAME, payload);
+        setShowEndQuizConfirm(false);
+    }, [quizSocket, code, gameId, userProfile?.userId]);
+
     // Memoize frequently changing props to prevent unnecessary re-renders
     const isDisabled = useMemo(() => {
         return !quizSocket || !quizSocket.connected || quizState?.ended || quizState?.status === 'completed';
@@ -702,6 +523,18 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Remove legacy fetchQuizName effect: all naming now comes from socket payload
 
     if (authLoading) return <LoadingScreen message="Vérification de l&apos;authentification..." />;
+    // Reconnection overlay takes precedence over loading/error to provide UX feedback during transient drops
+    if (isReconnecting) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[color:var(--background)]">
+                <div className="text-center">
+                    <div className="flex justify-center mb-8"><InfinitySpin /></div>
+                    <h2 className="text-3xl font-bold mb-2 text-[color:var(--foreground)]">🧮 Kutsum</h2>
+                    <p className="text-lg text-[color:var(--muted-foreground)]">Reconnexion au serveur...</p>
+                </div>
+            </div>
+        );
+    }
     if (loading) return <LoadingScreen message="Chargement du tableau de bord..." />;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
     if (!code) return <div className="p-8 text-orange-600">Aucun code d&apos;accès fourni.</div>;
@@ -785,6 +618,17 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                         <p className="text-sm text-muted-foreground flex items-center gap-2">
                             <UsersRound className="w-4 h-4" />
                             {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}
+                        </p>
+                        <p className="text-sm">
+                            <a
+                                href={projectionUrl}
+                                className="text-primary hover:text-primary/80 underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Ouvrir la page de projection"
+                            >
+                                Ouvrir la vue projection
+                            </a>
                         </p>
                     </div>
                 </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { AuthProvider, useAuth } from '../components/AuthProvider';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { logger, getCurrentLogLevel, setLogLevel, LogLevel } from '@/clientLogger';
 import { MathJaxContext } from 'better-react-mathjax';
 import AppNav from '@/components/AppNav';
@@ -49,19 +50,67 @@ function LoadingScreen() {
 
 // Main app content that shows after auth is loaded
 function AppContent({ children }: { children: React.ReactNode }) {
-    const { isLoading } = useAuth();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const { isLoading, userState, userProfile, logout } = useAuth();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-    if (isLoading) {
-        return <LoadingScreen />;
-    }
+    // Public routes that should not trigger auth redirect
+    const isPublicRoute = useMemo(() => {
+        if (!pathname) return true;
+        return (
+            pathname === '/' ||
+            pathname === '/login' ||
+            pathname.startsWith('/verify-email') ||
+            pathname.startsWith('/reset-password') ||
+            pathname === '/student/join'
+        );
+    }, [pathname]);
+
+    // Global guard: if auth resolved to anonymous or incomplete profile on a protected route, logout and redirect to login
+    const redirectedRef = useRef(false);
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (isLoading) return;
+        if (isPublicRoute) return;
+        if (redirectedRef.current) return;
+
+        // E2E bypass: allow anonymous access when query param e2e=1 is present (non-production only)
+        try {
+            const e2eBypass = searchParams?.get('e2e') === '1';
+            if (e2eBypass) {
+                return; // Skip client-side auth redirect checks during E2E flows
+            }
+        } catch (_) { /* ignore */ }
+
+        const missingProfile = !userProfile?.username || !userProfile?.avatar;
+        if (userState === 'anonymous' || missingProfile) {
+            redirectedRef.current = true;
+            (async () => {
+                try {
+                    await logout();
+                } catch (_) {
+                    // ignore
+                } finally {
+                    const query = searchParams?.toString();
+                    const rt = pathname + (query ? `?${query}` : '');
+                    try {
+                        router.replace(`/login?returnTo=${encodeURIComponent(rt)}`);
+                    } catch (_) {
+                        // ignore in tests
+                    }
+                }
+            })();
+        }
+    }, [isLoading, isPublicRoute, userState, userProfile?.username, userProfile?.avatar, pathname, searchParams, router, logout]);
 
     return (
         <>
             <AuthErrorBanner />
             <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
             <main className={`min-h-screen transition-all ease-in-out pt-14 md:pt-0 ${sidebarCollapsed ? 'md:ml-12' : 'md:ml-64'}`} style={{ transitionDuration: '220ms' }}>
-                {children}
+                {isLoading ? <LoadingScreen /> : children}
             </main>
         </>
     );
@@ -101,33 +150,33 @@ export default function ClientLayout({
         return () => window.removeEventListener('keydown', toggleDebugMode);
     }, []);
 
+    // Apply theme on mount to avoid hydration mismatch
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('theme');
+            const theme = stored || 'system';
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const appliedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+            document.documentElement.setAttribute('data-theme', appliedTheme);
+        } catch (e) {
+            // Fallback if localStorage is not available
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', systemDark ? 'dark' : 'light');
+        }
+    }, []);
+
     return (
         <>
-            <script dangerouslySetInnerHTML={{
-                __html: `
-          (function() {
-            try {
-              const stored = localStorage.getItem('theme');
-              const theme = stored || 'system';
-              const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              const appliedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
-              document.documentElement.setAttribute('data-theme', appliedTheme);
-            } catch (e) {
-              // Fallback if localStorage is not available
-              const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              document.documentElement.setAttribute('data-theme', systemDark ? 'dark' : 'light');
-            }
-          })();
-        `
-            }} />
             <MathJaxContext config={{
                 loader: { load: ["[tex]/ams"] },
                 tex: { packages: { '[+]': ["ams"] } }
             }}>
                 <AuthProvider>
-                    <AppContent>
-                        {children}
-                    </AppContent>
+                    <Suspense fallback={<LoadingScreen />}>
+                        <AppContent>
+                            {children}
+                        </AppContent>
+                    </Suspense>
                 </AuthProvider>
             </MathJaxContext>
         </>

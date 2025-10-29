@@ -22,9 +22,16 @@ export default function GuestForm({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (username.trim() && selectedAvatar) {
+        const trimmedUsername = username.trim();
+
+        // Validate: username must be at least 2 characters and not just a suffix
+        // (prevent single letter/digit usernames that are likely just suffixes)
+        const isValidUsername = trimmedUsername.length >= 2 ||
+            (trimmedUsername.length === 1 && !/^[A-Z0-9]$/.test(trimmedUsername));
+
+        if (isValidUsername && selectedAvatar) {
             onSubmit({
-                username: username.trim(),
+                username: trimmedUsername,
                 avatar: selectedAvatar
             });
         }
@@ -57,8 +64,14 @@ export default function GuestForm({
             <div className="flex justify-end">
                 <button
                     type="submit"
-                    disabled={!username.trim() || !selectedAvatar || isLoading}
+                    disabled={
+                        !username.trim() ||
+                        username.trim().length < 2 || // Require at least 2 characters
+                        !selectedAvatar ||
+                        isLoading
+                    }
                     className="btn btn-primary"
+                    title={username.trim().length < 2 ? "Le prénom doit contenir au moins 2 caractères" : undefined}
                 >
                     {isLoading ? 'Connexion...' : 'Commencer à jouer'}
                 </button>

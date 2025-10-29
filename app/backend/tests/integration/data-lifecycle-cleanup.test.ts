@@ -87,11 +87,26 @@ describe('Data Lifecycle and Cleanup', () => {
     beforeEach(async () => {
         // Clean up Redis before each test
         await redisClient.flushall();
+
+        // Wait longer to ensure any pending async operations from previous tests complete
+        // This prevents race conditions where previous tests write to Redis after flushall
+        await new Promise(resolve => setTimeout(resolve, 100));
+    });
+
+    afterEach(async () => {
+        // Additional cleanup: ensure all keys created in this test are removed
+        // Use a conservative approach - flush everything again
+        try {
+            await redisClient.flushall();
+        } catch (err) {
+            // Ignore errors in cleanup
+        }
     });
 
     describe('Session expiration cleanup', () => {
         it('should automatically clean up expired practice sessions', async () => {
-            const sessionId = `practice_expired_${Date.now()}`;
+            // Use more unique sessionId to avoid collision with other tests
+            const sessionId = `practice_expired_lifecycle_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             const expiredSession = {
                 sessionId,
                 userId: testUserId,
@@ -142,7 +157,8 @@ describe('Data Lifecycle and Cleanup', () => {
         });
 
         it('should clean up expired game state data', async () => {
-            const gameStateId = `game_expired_${Date.now()}`;
+            // Use more unique gameStateId to avoid collision with other tests
+            const gameStateId = `game_expired_lifecycle_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             const expiredGameState = {
                 gameInstanceId: gameStateId,
                 status: 'completed',
@@ -180,7 +196,8 @@ describe('Data Lifecycle and Cleanup', () => {
         });
 
         it('should handle session expiration with active participants', async () => {
-            const sessionId = `practice_active_${Date.now()}`;
+            // Use more unique sessionId to avoid collision with other tests
+            const sessionId = `practice_active_lifecycle_${Date.now()}_${Math.random().toString(36).substring(7)}`;
             const activeSession = {
                 sessionId,
                 userId: testUserId,

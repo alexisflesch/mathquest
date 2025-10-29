@@ -159,6 +159,8 @@ export function usePracticeSession({
 
     // Ref to track current session state for event handlers
     const sessionRef = useRef<PracticeSession | null>(null);
+    // Recovery guard to prevent autoStart from starting a new session while we try to recover
+    const recoveringRef = useRef<{ inProgress: boolean; timer?: any }>({ inProgress: false });
 
     // Update state helper
     const updateState = useCallback((updates: Partial<PracticeSessionState>) => {
@@ -201,39 +203,39 @@ export function usePracticeSession({
 
     // Session recovery function
     const recoverSession = useCallback(async (sessionId: string) => {
-        if (!socketRef.current?.connected) {
-            logger.warn('Cannot recover session: socket not connected');
-            return;
-        }
-
         try {
             logger.info('Attempting to recover practice session', { sessionId });
 
+            // Mark recovery in progress to block autoStart
+            recoveringRef.current.inProgress = true;
+
             // Request session state from backend using existing GET_PRACTICE_SESSION_STATE event
-            const payload: GetPracticeSessionStatePayload = {
-                sessionId
-            };
+            const payload: GetPracticeSessionStatePayload = { sessionId };
+            socketRef.current?.emit('GET_PRACTICE_SESSION_STATE', payload);
 
-            socketRef.current.emit('GET_PRACTICE_SESSION_STATE', payload);
-
-            // Set a timeout for recovery response
+            // Set a timeout for recovery response: if it times out, clear recovery and stored id
             const recoveryTimeout = setTimeout(() => {
                 logger.warn('Session recovery timed out', { sessionId });
                 clearStoredSessionId(); // Clear invalid session ID
+                recoveringRef.current.inProgress = false;
             }, 5000);
+            recoveringRef.current.timer = recoveryTimeout;
 
-            // Listen for session state response (handled by existing PRACTICE_SESSION_STATE event)
+            // Clear recovery guard on successful response (handled in state handler too)
             const handleRecoveryResponse = () => {
                 clearTimeout(recoveryTimeout);
+                recoveringRef.current.inProgress = false;
+                recoveringRef.current.timer = undefined;
                 logger.info('Session recovery successful', { sessionId });
             };
-
-            // Set up one-time listener for recovery response
-            socketRef.current.once(PRACTICE_EVENTS.PRACTICE_SESSION_STATE, handleRecoveryResponse);
+            if (socketRef.current) {
+                socketRef.current.once(PRACTICE_EVENTS.PRACTICE_SESSION_STATE, handleRecoveryResponse);
+            }
 
         } catch (error) {
             logger.error('Failed to recover session', { sessionId, error });
             clearStoredSessionId();
+            recoveringRef.current.inProgress = false;
         }
     }, [clearStoredSessionId]);
 
@@ -328,14 +330,25 @@ export function usePracticeSession({
     }, [updateState, clearStoredSessionId]);
 
     const handleSessionError = useCallback((payload: PracticeSessionErrorPayload) => {
-        logger.error('Practice session error', payload);
-
-        // Clear stored session ID if session was not found (allows starting new session)
+        // 'session_not_found' is a common, non-fatal condition during session recovery
+        // (for example when a stored session expired in Redis). Treat it as INFO
+        // so it doesn't spam the console as an ERROR while still clearing the
+        // stale stored session id.
         if (payload.errorType === 'session_not_found') {
+            logger.info('Practice session not found during recovery', payload);
             clearStoredSessionId();
             logger.info('Cleared stored session ID due to session_not_found error');
+
+            // Do not surface this as a user-visible error; just stop connecting
+            updateState({
+                connecting: false,
+                error: null
+            });
+            return;
         }
 
+        // Other error types are unexpected and should be surfaced as errors
+        logger.error('Practice session error', payload);
         updateState({
             error: payload.message,
             connecting: false
@@ -728,10 +741,13 @@ export function usePracticeSession({
     }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
-        if (autoStart && state.connected && !state.session) {
+        // Only auto-start when connected, no active session, not recovering,
+        // and there is no stored session id to attempt recovery with.
+        const storedId = getStoredSessionId();
+        if (autoStart && state.connected && !state.session && !recoveringRef.current.inProgress && !storedId) {
             startSession();
         }
-    }, [autoStart, state.connected, state.session, startSession]);
+    }, [autoStart, state.connected, state.session, startSession, getStoredSessionId]);
 
     return {
         state,

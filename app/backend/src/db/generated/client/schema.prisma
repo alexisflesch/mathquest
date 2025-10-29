@@ -156,6 +156,18 @@ model GameParticipant {
   @@map("game_participants")
 }
 
+// Taxonomy stores the canonical grade-level metadata (disciplines / themes / tags)
+// This table is populated by a manual import script and read-only for the app.
+model Taxonomy {
+  id          String   @id @default(uuid())
+  gradeLevel  String   @unique @map("grade_level")
+  content     Json     @map("content")
+  contentHash String?  @map("content_hash")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("taxonomy")
+}
+
 enum UserRole {
   STUDENT
   TEACHER

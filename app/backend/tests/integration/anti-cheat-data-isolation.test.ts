@@ -26,7 +26,7 @@ describe('Anti-Cheat Data Isolation', () => {
         if (io) {
             io.close();
         }
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

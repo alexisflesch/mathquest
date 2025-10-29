@@ -228,6 +228,14 @@ exports.Prisma.GameParticipantScalarFieldEnum = {
   completedAt: 'completedAt'
 };
 
+exports.Prisma.TaxonomyScalarFieldEnum = {
+  id: 'id',
+  gradeLevel: 'gradeLevel',
+  content: 'content',
+  contentHash: 'contentHash',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -235,6 +243,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -282,7 +294,8 @@ exports.Prisma.ModelName = {
   GameTemplate: 'GameTemplate',
   QuestionsInGameTemplate: 'QuestionsInGameTemplate',
   GameInstance: 'GameInstance',
-  GameParticipant: 'GameParticipant'
+  GameParticipant: 'GameParticipant',
+  Taxonomy: 'Taxonomy'
 };
 
 /**

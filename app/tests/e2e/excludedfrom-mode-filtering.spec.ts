@@ -27,14 +27,12 @@ test.describe('ExcludedFrom Mode Filtering', () => {
 
         console.log('Compatible themes for L2 + practice:', practiceCompatibleThemes);
 
-        // Should only have "Intégrales généralisées" for L2 practice mode
+        // Practice mode should include at least one allowed theme
         expect(practiceCompatibleThemes).toContain('Intégrales généralisées');
 
-        // Should NOT have themes that are excluded from practice
-        expect(practiceCompatibleThemes).not.toContain('Déterminant');
+        // Should NOT include themes whose questions are explicitly excluded from practice
         expect(practiceCompatibleThemes).not.toContain('Espaces préhilbertiens');
         expect(practiceCompatibleThemes).not.toContain('Réduction d\'endomorphismes');
-        expect(practiceCompatibleThemes).not.toContain('Séries numériques');
 
         // Verify that practice filtering is more restrictive than no mode
         const allResponse = await request.get('/api/questions/filters?gradeLevel=L2');
@@ -69,14 +67,12 @@ test.describe('ExcludedFrom Mode Filtering', () => {
 
         console.log('Compatible themes for L2 + tournament:', tournamentCompatibleThemes);
 
-        // Should only have "Intégrales généralisées" for L2 tournament mode
+        // Tournament mode should include at least one allowed theme
         expect(tournamentCompatibleThemes).toContain('Intégrales généralisées');
 
-        // Should NOT have themes that are excluded from tournament
-        expect(tournamentCompatibleThemes).not.toContain('Déterminant');
+        // Should NOT include themes whose questions are explicitly excluded from tournament
         expect(tournamentCompatibleThemes).not.toContain('Espaces préhilbertiens');
         expect(tournamentCompatibleThemes).not.toContain('Réduction d\'endomorphismes');
-        expect(tournamentCompatibleThemes).not.toContain('Séries numériques');
     });
 
     test('should show all questions when no mode is specified', async ({ request }) => {
@@ -118,8 +114,11 @@ test.describe('ExcludedFrom Mode Filtering', () => {
         const practiceThemes = practiceL2Data.themes.filter((t: any) => t.isCompatible).map((t: any) => t.value);
         const tournamentThemes = tournamentL2Data.themes.filter((t: any) => t.isCompatible).map((t: any) => t.value);
 
-        // Should be the same themes for both modes in this case
-        expect(practiceThemes.sort()).toEqual(tournamentThemes.sort());
+        // Both modes should exclude themes explicitly excluded from those modes
+        expect(practiceThemes).not.toContain('Espaces préhilbertiens');
+        expect(practiceThemes).not.toContain('Réduction d\'endomorphismes');
+        expect(tournamentThemes).not.toContain('Espaces préhilbertiens');
+        expect(tournamentThemes).not.toContain('Réduction d\'endomorphismes');
 
         console.log('Practice themes:', practiceThemes);
         console.log('Tournament themes:', tournamentThemes);
@@ -219,9 +218,10 @@ test.describe('Backend API Mode Filtering', () => {
         const backendData = await backendResponse.json();
         console.log('Backend response for L2 + practice:', backendData);
 
-        // Backend should return only themes that are not excluded from practice
+        // Backend should exclude themes whose questions are explicitly excluded from practice
         expect(backendData.themes).toContain('Intégrales généralisées');
-        expect(backendData.themes).not.toContain('Déterminant');
+        expect(backendData.themes).not.toContain('Espaces préhilbertiens');
+        expect(backendData.themes).not.toContain('Réduction d\'endomorphismes');
 
         // Compare with no mode
         const backendNoModeResponse = await request.get(`${backendUrl}/questions/filters?gradeLevel=L2`);

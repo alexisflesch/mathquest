@@ -175,4 +175,72 @@ describe('UsernameSelector', () => {
             expect(mockOnChange).not.toHaveBeenCalled();
         });
     });
+
+    it('BUG REPRODUCTION: should prevent suffix entry without valid firstname selection', async () => {
+        render(
+            <UsernameSelector
+                value=""
+                onChange={mockOnChange}
+                onSuffixChange={mockOnSuffixChange}
+            />
+        );
+
+        const searchInput = screen.getByPlaceholderText('Tapez les premières lettres pour chercher...');
+
+        // Step 1: Type partial name (not exact match)
+        fireEvent.change(searchInput, { target: { value: 'Lou' } });
+
+        // Step 2: Click outside WITHOUT selecting from dropdown
+        fireEvent.blur(searchInput);
+
+        // Wait for blur to complete
+        await waitFor(() => {
+            expect(screen.queryByPlaceholderText('Tapez les premières lettres pour chercher...')).toBeInTheDocument();
+        });
+
+        // Step 3: Try to add suffix without valid firstname
+        const suffixInput = screen.getByPlaceholderText('Suffixe');
+        fireEvent.change(suffixInput, { target: { value: 'A' } });
+
+        // BUG: Currently onChange is called with invalid username like " A"
+        // After fix: onChange should either:
+        // 1. Not be called at all, OR
+        // 2. Be called with empty string only
+        const calls = mockOnChange.mock.calls;
+        const invalidCalls = calls.filter(([username]) => {
+            const trimmed = username.trim();
+            // Invalid if it's just a single letter/digit (the suffix alone)
+            return trimmed.length === 1 && /^[A-Z0-9]$/.test(trimmed);
+        });
+
+        // This test documents the bug and will PASS after we fix it
+        expect(invalidCalls.length).toBe(0);
+    });
+
+    it('should disable suffix input when no firstname is selected', () => {
+        render(
+            <UsernameSelector
+                value=""
+                onChange={mockOnChange}
+                onSuffixChange={mockOnSuffixChange}
+            />
+        );
+
+        // Suffix input should be disabled or not allow meaningful input
+        // when no firstname is selected
+        const suffixInput = screen.getByPlaceholderText('Suffixe');
+
+        // Try to add suffix
+        fireEvent.change(suffixInput, { target: { value: 'A' } });
+
+        // onChange should not produce a valid single-letter username
+        if (mockOnChange.mock.calls.length > 0) {
+            const lastCall = mockOnChange.mock.calls[mockOnChange.mock.calls.length - 1];
+            const username = lastCall[0];
+            const trimmed = username.trim();
+
+            // Should NOT be just a suffix letter
+            expect(trimmed).not.toMatch(/^[A-Z0-9]$/);
+        }
+    });
 });

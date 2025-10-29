@@ -6,19 +6,43 @@
  * - Visual differentiation between log types
  * - Contextual prefixes for easier log filtering
  * - Environment-based configuration
+ * - Correlation ID support for tracing (Phase 5: Observability)
  * 
  * Usage:
  *   import { createLogger } from './clientLogger';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
  *   const logger = createLogger('ComponentName');
  *   logger.debug('Detailed info for debugging');
- *   logger.info('Normal operation information');
+ *   logger.info('Normal operation information', { correlationId: 'client-123-abc' });
  *   logger.warn('Warning that might need attention');
  *   logger.error('Error condition', errorObject);
  */
 
+import type { CorrelationId } from '@shared/types/core/correlation';
+
 // Define log level type for type safety
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
+
+// Optional metadata for log entries (Phase 5)
+export interface LogMetadata {
+    correlationId?: CorrelationId;
+    [key: string]: unknown;
+}
+
+// Global diagnostics buffer type (augmented on window when enabled)
+declare global {
+    interface Window {
+        __mqDiag?: {
+            enabled: boolean;
+            // Use a permissive type to allow non-logger diagnostic entries
+            events: any[];
+            push: (entry: any) => void;
+            download?: () => void;
+            export?: () => any[];
+            clear?: () => void;
+        }
+    }
+}
 
 // Log levels and their priorities
 export const LOG_LEVELS: Record<LogLevel, number> = {
@@ -76,6 +100,34 @@ const LOG_STYLES: Record<LogLevel | 'CONTEXT', string> = {
     CONTEXT: 'color: #9370DB; font-weight: bold;' // Purple for context
 };
 
+function ensureDiagBuffer(): void {
+    if (typeof window === 'undefined') return;
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    const urlFlag = search && /(?:[?&])mqdebug=1(?:&|$)/.test(search);
+    const lsFlag = (() => {
+        try { return localStorage.getItem('MQ_DEBUG_CAPTURE') === '1'; } catch { return false; }
+    })();
+    const enabled = urlFlag || lsFlag;
+    if (!window.__mqDiag) {
+        window.__mqDiag = {
+            enabled,
+            events: [],
+            push(entry) {
+                // Cap at 5000 entries to avoid unbounded growth
+                if (this.events.length > 5000) this.events.shift();
+                this.events.push(entry);
+            }
+        };
+    } else {
+        // Keep existing buffer, just sync enabled flag
+        window.__mqDiag.enabled = enabled || window.__mqDiag.enabled;
+    }
+    // Persist flag if url param present
+    if (enabled) {
+        try { localStorage.setItem('MQ_DEBUG_CAPTURE', '1'); } catch { }
+    }
+}
+
 /**
  * Format the current timestamp
  * @returns {string} Formatted timestamp [HH:MM:SS.mmm]
@@ -128,6 +180,10 @@ export interface Logger {
  * @returns Logger object with methods for each log level
  */
 export function createLogger(context: string): Logger {
+    // Initialize diagnostics buffer once in browser
+    if (typeof window !== 'undefined') {
+        ensureDiagBuffer();
+    }
     // Common logging function
     const log = (level: LogLevel, message: unknown, ...args: unknown[]): void => {
         // Skip logging if disabled or below minimum level
@@ -144,21 +200,54 @@ export function createLogger(context: string): Logger {
         const levelStyle = LOG_STYLES[level] || '';
         const contextStyle = LOG_STYLES.CONTEXT;
 
-        // Format: [Time] [LEVEL] [Context] Message
+        // Check if first argument is metadata with correlationId
+        const firstArg = args[0];
+        const isMetadata = firstArg &&
+            typeof firstArg === 'object' &&
+            !Array.isArray(firstArg) &&
+            'correlationId' in firstArg;
+
+        const metadata = isMetadata ? (firstArg as LogMetadata) : undefined;
+
+        // Extract correlation ID if present
+        const correlationId = metadata?.correlationId;
+        const correlationStr = correlationId ? ` [CID:${correlationId.slice(-8)}]` : '';
+
+        // Format: [Time] [LEVEL] [Context] [CID:xxx] Message
         if (level === 'ERROR') {
             console.error(
-                `%c${timestamp}%c [${level}] %c[${context}]%c`,
+                `%c${timestamp}%c [${level}] %c[${context}]%c${correlationStr}`,
                 'color: gray;', levelStyle, contextStyle, '',
                 message,
                 ...args
             );
         } else {
             console.log(
-                `%c${timestamp}%c [${level}] %c[${context}]%c`,
+                `%c${timestamp}%c [${level}] %c[${context}]%c${correlationStr}`,
                 'color: gray;', levelStyle, contextStyle, '',
                 message,
                 ...args
             );
+        }
+
+        // Also push to diagnostics buffer if enabled
+        try {
+            if (typeof window !== 'undefined') {
+                const buf = window.__mqDiag;
+                if (buf && buf.enabled && typeof buf.push === 'function') {
+                    buf.push({
+                        ts: Date.now(),
+                        level,
+                        context,
+                        message,
+                        args,
+                        metadata,
+                        correlationId
+                    });
+                }
+            }
+        } catch {
+            // ignore diagnostics push errors
         }
     };
 

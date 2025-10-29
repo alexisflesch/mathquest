@@ -4,7 +4,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodError } from 'zod';
-import { logger } from '../utils/logger';
+import createLogger from '../utils/logger';
+
+const logger = createLogger('ValidationMiddleware');
 
 /**
  * Middleware to validate request body using a Zod schema

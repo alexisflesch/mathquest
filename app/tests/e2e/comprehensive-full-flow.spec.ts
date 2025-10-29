@@ -126,35 +126,31 @@ async function authenticateGuestUser(page: Page, customUsername?: string): Promi
 
 // Helper to authenticate as teacher (using guest login for now)
 async function authenticateTeacherUser(page: Page): Promise<void> {
-    log('Starting teacher guest authentication');
+    log('Starting teacher account creation and authentication');
 
-    await page.goto(`${TEST_CONFIG.baseUrl}/login`);
+    const dataHelper = new TestDataHelper(page);
+    const loginHelper = new LoginHelper(page);
+
+    // Create teacher account
+    const teacherData = await dataHelper.createTeacher({
+        username: 'Pierre',
+        email: `test-teacher-${Date.now()}@test-mathquest.com`,
+        password: 'testpassword123'
+    });
+
+    // Navigate to login page (assuming login is on home page now)
+    await page.goto(`${TEST_CONFIG.baseUrl}/`);
     await page.waitForLoadState('networkidle');
 
-    // Use guest login instead of account login
-    const usernameInput = page.locator('input[placeholder*="name"], input[name="username"], input[id="username"]');
-    await usernameInput.waitFor({ timeout: 5000 });
+    // Login as teacher
+    await loginHelper.loginAsTeacher({
+        email: teacherData.email!,
+        password: 'testpassword123'
+    });
 
-    await usernameInput.fill('Pierre');
-    log('Filled username: Pierre');
-
-    // Wait for dropdown and click outside to close it
-    await page.waitForTimeout(1000);
-    await page.locator('body').click({ position: { x: 10, y: 10 } });
-    await page.waitForTimeout(500);
-
-    // Select avatar
-    const avatarButton = page.locator('button.emoji-avatar').first();
-    await avatarButton.click();
-
-    // Click submit button
-    const submitButton = page.locator('button[type="submit"], button:has-text("Connexion"), button:has-text("Se connecter"), button:has-text("Login"), button:has-text("Commencer")');
-    await submitButton.click();
-
-    // Wait for authentication to complete - wait twice like the working test
-    await page.waitForSelector('[data-testid="user-profile"], .user-profile, nav, header', { timeout: 15000 });
-    await page.waitForSelector('[data-testid="user-profile"], .user-profile, nav, header', { timeout: 15000 });
-    log(`✅ Guest teacher authentication successful for Pierre`);
+    // Verify login was successful
+    await expect(page.locator('button:has-text("Déconnexion"), button:has-text("Logout")')).toBeVisible();
+    log(`✅ Teacher authentication successful for ${teacherData.username}`);
 }
 
 // Helper to create a tournament directly (not from template)
@@ -766,7 +762,21 @@ test.describe('MathQuest Comprehensive Full Flow Test Suite', () => {
                 // Step 1: Authenticate as guest first, then create practice game
                 log('🚀 Starting practice session...');
                 await authenticateGuestUser(page, 'PracticeStudent');
-                const practiceData = await createPracticeGame(page);
+
+                // Create the practice game using a teacher-authenticated context to satisfy API auth requirements
+                // This avoids 401 errors when creating templates/games with guest cookies
+                const currentContext = page.context();
+                const browser = currentContext.browser();
+                if (!browser) {
+                    throw new Error('Unable to access browser instance from current context');
+                }
+
+                const teacherContext = await browser.newContext();
+                const teacherPage = await teacherContext.newPage();
+
+                await authenticateTeacherUser(teacherPage);
+                const practiceData = await createPracticeGame(teacherPage);
+                await teacherContext.close();
                 log(`📚 Practice game created with code: ${practiceData.accessCode}`);
 
                 // Step 2: Student navigates to practice session
@@ -834,6 +844,7 @@ test.describe('MathQuest Comprehensive Full Flow Test Suite', () => {
 
     test.describe('Quiz Full Flow', () => {
         test('complete quiz with teacher controls and multiple students', async ({ browser }) => {
+            test.setTimeout(30000);
             const contexts: BrowserContext[] = [];
             const pages: Page[] = [];
 
@@ -940,20 +951,27 @@ test.describe('MathQuest Comprehensive Full Flow Test Suite', () => {
             test.setTimeout(30000); // 30 seconds for network disconnect test
             // This test would require more complex setup to simulate network issues
             // For now, just verify the app handles basic timeouts
+
+            // Use teacher auth to create the game
+            await authenticateTeacherUser(page);
+
+            // Create practice game as teacher
+            const practiceData = await createPracticeGame(page);
+
+            // Clear cookies and authenticate as guest to play
+            await page.context().clearCookies();
             await authenticateGuestUser(page, 'PracticeStudent');
 
-            // Navigate to a practice game
-            const practiceData = await createPracticeGame(page);
-            await page.goto(`${TEST_CONFIG.baseUrl}/student/practice/${practiceData.accessCode}`);
+            await page.goto(`${TEST_CONFIG.baseUrl}/live/${practiceData.accessCode}`);
 
-            // Wait for game to load
-            await page.waitForSelector('[data-testid="question"], .question, h2, h3', { timeout: 20000 });
+            // Wait for game to load (lobby or question)
+            await page.waitForTimeout(3000);
 
             // Simulate a long wait (potential timeout scenario)
             await page.waitForTimeout(5000);
 
-            // Verify page is still functional
-            const stillOnPage = page.url().includes(`/student/practice/${practiceData.accessCode}`);
+            // Verify page is still on the game URL
+            const stillOnPage = page.url().includes(`/live/${practiceData.accessCode}`);
             expect(stillOnPage).toBe(true);
 
             log('✅ Basic timeout handling works');

@@ -105,6 +105,27 @@ global.Request = class MockRequest {
     }
 };
 
+// Polyfill ResizeObserver for jsdom environment
+if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
+    class MockResizeObserver {
+        constructor(callback) {
+            this._callback = typeof callback === 'function' ? callback : () => { };
+        }
+        observe() {
+            // Immediately invoke the callback once with empty entries to simulate initial observation
+            try {
+                this._callback([], this);
+            } catch (e) {
+                // ignore
+            }
+        }
+        unobserve() { }
+        disconnect() { }
+    }
+    window.ResizeObserver = MockResizeObserver;
+    global.ResizeObserver = MockResizeObserver;
+}
+
 // Mock Response for Next.js API route testing
 global.Response = class MockResponse {
     constructor(body, options = {}) {
@@ -190,3 +211,146 @@ if (typeof window !== 'undefined' && !window.StorageEvent) {
         storageArea;
     };
 }
+
+// Global mock for @monaco-editor/react to ensure tests get a stable, synchronous
+// mock editor instead of the real loader which renders a Loading placeholder in jsdom.
+// This mirrors the small in-test mock used by some unit tests but centralizes it so
+// all tests benefit and behave consistently.
+try {
+    // Only apply when running under Jest
+    if (typeof jest !== 'undefined') {
+        jest.mock('@monaco-editor/react', () => {
+            const React = require('react');
+
+            const MockMonacoEditor = (props) => {
+                const { onMount, value, onChange } = props || {};
+                React.useEffect(() => {
+                    if (onMount) {
+                        let content = value || '';
+
+                        const modelChangeCallbacks = [];
+                        const selectionCallbacks = [];
+
+                        const model = {
+                            getValue: () => content,
+                            setValue: (v) => {
+                                content = v;
+                                if (onChange) onChange(v);
+                                modelChangeCallbacks.forEach((cb) => cb());
+                                selectionCallbacks.forEach((cb) => cb());
+                            },
+                            getValueInRange: () => '',
+                            getWordUntilPosition: () => ({ word: '', startColumn: 1, endColumn: 1 }),
+                            getOffsetAt: () => 0,
+                        };
+
+                        const mockEditor = {
+                            getModel: () => model,
+                            setValue: model.setValue,
+                            focus: () => { },
+                            setPosition: () => { },
+                            revealPositionInCenter: () => { },
+                            onDidChangeModelContent: (cb) => { modelChangeCallbacks.push(cb); return { dispose: () => { } }; },
+                            onDidChangeCursorSelection: (cb) => { selectionCallbacks.push(cb); return { dispose: () => { } }; },
+                            getPosition: () => ({ lineNumber: 1, column: 1 }),
+                        };
+
+                        const mockMonaco = {
+                            languages: { registerCompletionItemProvider: () => ({ dispose: () => { } }) },
+                            editor: { setModelMarkers: () => { }, setTheme: () => { } },
+                            MarkerSeverity: { Error: 8, Warning: 4, Info: 2, Hint: 1 },
+                        };
+
+                        if (typeof window !== 'undefined') window.__mockMonacoEditor = mockEditor;
+
+                        // Call the onMount hook to simulate real Monaco mounting
+                        try {
+                            onMount(mockEditor, mockMonaco);
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                }, [onMount, value, onChange]);
+
+                return React.createElement('div', { 'data-testid': 'monaco-editor' }, value || '');
+            };
+
+            return { __esModule: true, default: MockMonacoEditor };
+        });
+    }
+} catch (e) {
+    // If mocking fails for any reason (non-Jest environment), silently ignore.
+}
+
+// Global mock for next/navigation hooks in jsdom tests
+// Export jest.fn() so individual tests can override with mockReturnValue
+try {
+    if (typeof jest !== 'undefined') {
+        const defaultRouter = () => ({
+            push: jest.fn(),
+            replace: jest.fn(),
+            prefetch: jest.fn(),
+            back: jest.fn(),
+        });
+        const defaultSearchParams = () => ({ get: jest.fn() });
+        const defaultPathname = () => '/';
+        const defaultParams = () => ({});
+
+        const useRouter = jest.fn(defaultRouter);
+        const useSearchParams = jest.fn(defaultSearchParams);
+        const usePathname = jest.fn(defaultPathname);
+        const useParams = jest.fn(defaultParams);
+
+        jest.mock('next/navigation', () => ({
+            useRouter,
+            useSearchParams,
+            usePathname,
+            useParams,
+        }));
+    }
+} catch (_) { }
+
+// Global hard mock for socket.io-client to avoid real network in unit tests
+try {
+    if (typeof jest !== 'undefined') {
+        jest.mock('socket.io-client', () => {
+            const handlers = {};
+            const socket = {
+                id: 'test-socket',
+                connected: false,
+                on: jest.fn((event, cb) => {
+                    handlers[event] = handlers[event] || [];
+                    handlers[event].push(cb);
+                    return socket;
+                }),
+                off: jest.fn((event, cb) => {
+                    if (!event) return socket;
+                    if (!handlers[event]) return socket;
+                    if (!cb) { handlers[event] = []; return socket; }
+                    handlers[event] = handlers[event].filter(fn => fn !== cb);
+                    return socket;
+                }),
+                emit: jest.fn(),
+                onAny: jest.fn((cb) => {
+                    handlers['*'] = handlers['*'] || [];
+                    handlers['*'].push(cb);
+                    return socket;
+                }),
+                connect: jest.fn(() => {
+                    socket.connected = true;
+                    (handlers['connect'] || []).forEach(fn => fn());
+                    // Fire onAny subscriptions for 'connect'
+                    (handlers['*'] || []).forEach(fn => fn('connect'));
+                    return socket;
+                }),
+                disconnect: jest.fn(() => {
+                    socket.connected = false;
+                    (handlers['disconnect'] || []).forEach(fn => fn('io server disconnect'));
+                    (handlers['*'] || []).forEach(fn => fn('disconnect', 'io server disconnect'));
+                    return socket;
+                })
+            };
+            return { io: jest.fn(() => socket) };
+        });
+    }
+} catch (_) { }

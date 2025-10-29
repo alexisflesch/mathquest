@@ -292,13 +292,42 @@ test.describe('Multiple Choice Answer Reversion', () => {
 
             log('✅ Student authenticated as guest');
 
-            // Join the quiz
-            await studentPage.goto('/student/join');
-            await studentPage.fill('input[type="tel"], input[placeholder*="Code"]', quizData.accessCode);
-            log('Filled access code:', quizData.accessCode);
+            // Join the quiz - try direct access first
+            log('Attempting to join quiz directly...');
+            await studentPage.goto(`/live/${quizData.accessCode}`);
+            await studentPage.waitForTimeout(2000);
 
-            await studentPage.click('button:has-text("Rejoindre")');
-            log('Clicked join button');
+            // Check if we're already on the live page or need to authenticate
+            const currentUrl = studentPage.url();
+            if (currentUrl.includes('/live/')) {
+                log('✅ Student joined quiz directly - already authenticated');
+            } else {
+                // If not on live page, we need to authenticate and join
+                log('Student not on live page, trying join flow...');
+                await studentPage.goto('/student/join');
+
+                // Re-check authentication state
+                const authCheckAfterNavigate = await studentPage.evaluate(() => {
+                    const token = localStorage.getItem('studentToken') || sessionStorage.getItem('studentToken');
+                    const user = localStorage.getItem('userProfile') || sessionStorage.getItem('userProfile');
+                    return { hasToken: !!token, hasUser: !!user };
+                });
+                log(`Student auth state after navigate: token=${authCheckAfterNavigate.hasToken}, user=${authCheckAfterNavigate.hasUser}`);
+
+                if (!authCheckAfterNavigate.hasToken || !authCheckAfterNavigate.hasUser) {
+                    log('❌ Student lost authentication, re-authenticating...');
+                    await authenticateAsGuest(studentPage, {
+                        username: studentData.username,
+                        avatar: 'first'
+                    });
+                    log('✅ Student re-authenticated as guest');
+                }
+
+                await studentPage.fill('input[type="tel"], input[placeholder*="Code"]', quizData.accessCode);
+                log('Filled access code:', quizData.accessCode);
+                await studentPage.click('button:has-text("Rejoindre")');
+                log('Clicked join button');
+            }
 
             // Verify student is on the live quiz page
             await studentPage.waitForURL(`**/live/${quizData.accessCode}`, { timeout: 15000 });

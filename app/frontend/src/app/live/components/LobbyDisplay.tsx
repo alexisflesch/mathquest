@@ -35,10 +35,13 @@ const LobbyDisplay = React.memo(({
 }: LobbyDisplayProps) => {
     const [showQrModal, setShowQrModal] = useState(false);
 
-    logger.info('[LOBBY] Rendering lobby with unified participant model', {
-        participantCount: lobbyState.participants.length,
-        creator: lobbyState.creator?.username
-    });
+    // Debug logging (only in debug mode)
+    if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
+        logger.info('[LOBBY] Rendering lobby with unified participant model', {
+            participantCount: lobbyState.participants.length,
+            creator: lobbyState.creator?.username
+        });
+    }
 
     // Determine if current user is the creator
     const isCreator = lobbyState.creator && lobbyState.creator.userId === userId;

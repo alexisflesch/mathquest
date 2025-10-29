@@ -35,7 +35,7 @@ describe('Out-of-order and Stale Event Handling', () => {
         if (io) {
             io.close();
         }
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

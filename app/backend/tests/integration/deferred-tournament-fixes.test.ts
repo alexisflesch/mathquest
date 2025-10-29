@@ -62,8 +62,7 @@ describe('Integration: Deferred Tournament Fixes', () => {
             io.close();
         }
 
-        // Close Redis connection to prevent open handles
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     describe('Issue 1: Attempt Count Fixes', () => {

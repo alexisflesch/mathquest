@@ -7,9 +7,12 @@ type TimerFieldProps = {
 };
 
 export function TimerField({ valueMs, onChange }: TimerFieldProps) {
-    // Debug: Log initial valueMs prop
+    // Debug logs only when ?mqdebug=1
     React.useEffect(() => {
-        console.debug('[TimerField] valueMs prop:', valueMs);
+        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
+            // eslint-disable-next-line no-console
+            console.debug('[TimerField] valueMs prop:', valueMs);
+        }
     }, [valueMs]);
     const [editing, setEditing] = React.useState(false);
     const [text, setText] = React.useState(formatTime(valueMs));
@@ -89,7 +92,10 @@ export function TimerField({ valueMs, onChange }: TimerFieldProps) {
         const ss = parseInt(ssStr, 10);
         if (isValid && !isNaN(mm) && !isNaN(ss) && mm <= 59 && ss <= 59) {
             const ms = (mm * 60 + ss) * 1000;
-            console.debug('[TimerField] confirmEdit: mm:ss', mm, ss, '-> ms', ms);
+            if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.debug('[TimerField] confirmEdit: mm:ss', mm, ss, '-> ms', ms);
+            }
             onChange(ms);
             setText(formatTime(ms));
         } else {
@@ -135,8 +141,8 @@ export function TimerField({ valueMs, onChange }: TimerFieldProps) {
         },
         editing
             ? [
-                // Debug: Log displayed text and ms value
-                (() => { console.debug('[TimerField] editing display:', text, '(', (parseInt(text.split(':')[0] || '0', 10) * 60 + parseInt(text.split(':')[1] || '0', 10)) * 1000, 'ms )'); return null; })(),
+                // Only log in development to avoid spamming console during typing
+                (() => { if (process.env.NODE_ENV === 'development') { /* eslint-disable-next-line no-console */ console.debug('[TimerField] editing display:', text, '(', (parseInt(text.split(':')[0] || '0', 10) * 60 + parseInt(text.split(':')[1] || '0', 10)) * 1000, 'ms )'); } return null; })(),
                 React.createElement("input", {
                     key: "input",
                     ref: inputRef,
@@ -197,8 +203,8 @@ export function TimerField({ valueMs, onChange }: TimerFieldProps) {
                 ),
             ]
             : [
-                // Debug: Log displayed value in readOnly mode
-                (() => { console.debug('[TimerField] readOnly display:', formatTime(valueMs), '(', valueMs, 'ms )'); return null; })(),
+                // Only log in debug mode (?mqdebug=1)
+                (() => { if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) { /* eslint-disable-next-line no-console */ console.debug('[TimerField] readOnly display:', formatTime(valueMs), '(', valueMs, 'ms )'); } return null; })(),
                 React.createElement("input", {
                     key: "input",
                     ref: inputRef,

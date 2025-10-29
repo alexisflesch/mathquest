@@ -58,8 +58,11 @@ async function authenticateAsGuest(page: Page, userConfig: { username: string; a
     await usernameInput.fill(userConfig.username);
     log(`Filled username: ${userConfig.username}`);
 
-    // Wait a bit for avatars to load
-    await page.waitForTimeout(1000);
+    // Trigger blur to auto-select the name (onBlur handler will find exact match)
+    await usernameInput.blur();
+
+    // Wait for the selection to complete
+    await page.waitForTimeout(500);
 
     // Select first available avatar (with timeout protection)
     const avatarSelector = '[data-testid="avatar-option"], .avatar-option, img[alt*="avatar"], button:has(img)';
@@ -69,6 +72,7 @@ async function authenticateAsGuest(page: Page, userConfig: { username: string; a
     log(`Found ${avatarCount} avatars to choose from`);
 
     if (avatarCount > 0) {
+        log('Attempting to click first avatar...');
         await avatars.first().click();
         log('Selected first available avatar');
 
@@ -77,9 +81,8 @@ async function authenticateAsGuest(page: Page, userConfig: { username: string; a
         const postAvatarContent = await page.textContent('body');
         log(`Page content after avatar selection (first 500 chars): ${postAvatarContent?.substring(0, 500)}`);
     } else {
-        // Fallback: try clicking anywhere that might select an avatar
-        await page.click('body');
-        log('Clicked body as avatar fallback');
+        log('❌ No avatars found to select');
+        throw new Error('No avatars available for selection');
     }
 
     // Wait a moment after avatar selection
@@ -282,13 +285,42 @@ test.describe('Numeric Answer Reversion', () => {
 
             log('✅ Student authenticated as guest');
 
-            // Join the quiz
-            await studentPage.goto('/student/join');
-            await studentPage.fill('input[type="tel"], input[placeholder*="Code"]', quizData.accessCode);
-            log('Filled access code:', quizData.accessCode);
+            // Join the quiz - try direct access first
+            log('Attempting to join quiz directly...');
+            await studentPage.goto(`/live/${quizData.accessCode}`);
+            await studentPage.waitForTimeout(2000);
 
-            await studentPage.click('button:has-text("Rejoindre")');
-            log('Clicked join button');
+            // Check if we're already on the live page or need to authenticate
+            const currentUrl = studentPage.url();
+            if (currentUrl.includes('/live/')) {
+                log('✅ Student joined quiz directly - already authenticated');
+            } else {
+                // If not on live page, we need to authenticate and join
+                log('Student not on live page, trying join flow...');
+                await studentPage.goto('/student/join');
+
+                // Re-check authentication state
+                const authCheckAfterNavigate = await studentPage.evaluate(() => {
+                    const token = localStorage.getItem('studentToken') || sessionStorage.getItem('studentToken');
+                    const user = localStorage.getItem('userProfile') || sessionStorage.getItem('userProfile');
+                    return { hasToken: !!token, hasUser: !!user };
+                });
+                log(`Student auth state after navigate: token=${authCheckAfterNavigate.hasToken}, user=${authCheckAfterNavigate.hasUser}`);
+
+                if (!authCheckAfterNavigate.hasToken || !authCheckAfterNavigate.hasUser) {
+                    log('❌ Student lost authentication, re-authenticating...');
+                    await authenticateAsGuest(studentPage, {
+                        username: studentData.username,
+                        avatar: 'first'
+                    });
+                    log('✅ Student re-authenticated as guest');
+                }
+
+                await studentPage.fill('input[type="tel"], input[placeholder*="Code"]', quizData.accessCode);
+                log('Filled access code:', quizData.accessCode);
+                await studentPage.click('button:has-text("Rejoindre")');
+                log('Clicked join button');
+            }
 
             // Verify student is on the live quiz page
             await studentPage.waitForURL(`**/live/${quizData.accessCode}`, { timeout: 15000 });

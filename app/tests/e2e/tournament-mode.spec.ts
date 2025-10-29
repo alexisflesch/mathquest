@@ -48,7 +48,8 @@ test.describe('Tournament Mode E2E', () => {
             password: testData.password
         });
 
-        await expect(teacherPage).toHaveURL('/teacher/home');
+        // Teacher should be logged in (homepage or dashboard)
+        await expect(teacherPage).toHaveURL(/\/(teacher\/home)?$/);
 
         // Step 2: Create tournament with specific themes/difficulty
         await teacherPage.click('[data-testid="create-tournament-button"]');

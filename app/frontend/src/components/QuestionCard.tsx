@@ -167,8 +167,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
             )}
             {/* Question text */}
-            <div className={`text-xl font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}>
-                <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
+            <div
+                className={`font-semibold text-center w-full question-text-in-live-page ${projectionMode && isNumericQuestion ? 'mb-1' : 'mb-4'}`}
+                // Inline style: allow the MathJax container to expand vertically while preserving horizontal scrolling.
+                // alignSelf/stretch and minHeight:0 help avoid flexbox compression from ancestors.
+                style={{ display: 'block', alignSelf: 'stretch', minHeight: 0 as any, overflowX: 'auto', overflowY: 'hidden' }}
+            >
+                <MathJaxWrapper zoomFactor={zoomFactor}>{questionTextToDisplay}</MathJaxWrapper>
             </div>
 
             {/* Conditional rendering based on question type */}
@@ -270,7 +275,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             ) : (
                 // Multiple choice questions
                 <>
-                    <ul className="flex flex-col w-full">
+                    <ul className="flex flex-col w-full min-w-0">
                         {answersToDisplay.map((answerText: string, idx: number) => {
                             const isSelected = effectiveIsMultipleChoice
                                 ? selectedAnswers.includes(idx)
@@ -284,10 +289,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                             } else {
                                 statPercent = null;
                             }
+                            // Detect display-mode LaTeX (\[ ... \] or \begin{...}) in the answer text.
+                            const hasDisplayMath = typeof answerText === 'string' && (/\\\[|\\begin\{/).test(answerText);
+
                             return (
                                 <li
                                     key={idx}
-                                    className={idx !== answersToDisplay.length - 1 ? "mb-2" : ""}
+                                    className={(idx !== answersToDisplay.length - 1 ? "mb-2 " : "") + "min-w-0"}
                                     style={{ position: 'relative' }}
                                 >
                                     <button
@@ -311,7 +319,19 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                         disabled={false}
                                         aria-disabled={readonly}
                                         tabIndex={readonly ? -1 : 0}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'auto' }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: hasDisplayMath ? 'flex-start' : 'center',
+                                            justifyContent: 'space-between',
+                                            position: 'relative',
+                                            // Let inner content manage horizontal scroll; avoid nested scrollbars on button itself
+                                            overflowX: 'visible',
+                                            overflowY: 'visible',
+                                            // Relax minHeight for answers containing display math so the button can grow
+                                            minHeight: hasDisplayMath ? 'auto' : undefined,
+                                            paddingTop: hasDisplayMath ? '0.75rem' : undefined,
+                                            paddingBottom: hasDisplayMath ? '0.75rem' : undefined,
+                                        }}
                                     >
                                         {/* Histogram bar as background */}
                                         {showStats && statPercent !== null && (
@@ -332,26 +352,32 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                                             />
                                         )}
                                         {/* Button content above the bar */}
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                                            <MathJaxWrapper>{answerText}</MathJaxWrapper>
-                                        </span>
-                                        {/* Right-aligned percentage and icon */}
-                                        <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1 }}>
-                                            {showStats && statPercent !== null && (
-                                                <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
-                                                    {statPercent.toFixed(1)}%
-                                                </span>
-                                            )}
-                                            {showGood && (
-                                                <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                                    <GoodAnswer size={18} iconColor="currentColor" />
-                                                </span>
-                                            )}
-                                            {showWrong && (
-                                                <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                                    <WrongAnswer size={18} iconColor="currentColor" />
-                                                </span>
-                                            )}
+                                        {/* Badge strip above content (shown when readonly and correct/wrong) */}
+                                        {/* Right-side container: percentage and icons appear here visually but are absolutely positioned so the text can use full width */}
+                                        {(showStats && statPercent !== null) || showGood || showWrong ? (
+                                            <div className="answer-side-container" style={{ zIndex: 2 }}>
+                                                {showStats && statPercent !== null && (
+                                                    <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
+                                                        {statPercent.toFixed(1)}%
+                                                    </span>
+                                                )}
+                                                {showGood && (
+                                                    <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0, marginLeft: showStats ? 8 : 0 }}>
+                                                        <GoodAnswer size={18} iconColor="currentColor" />
+                                                    </span>
+                                                )}
+                                                {showWrong && (
+                                                    <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0, marginLeft: showStats ? 8 : 0 }}>
+                                                        <WrongAnswer size={18} iconColor="currentColor" />
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : null}
+
+                                        {/* Left content: allow shrink, do NOT own horizontal scrollbars. Text can use full width now. */}
+                                        <span style={{ display: 'block', alignItems: 'flex-start', position: 'relative', zIndex: 1, width: '100%', minWidth: 0, overflowX: 'visible', overflowY: 'visible' }}>
+                                            {/* Ensure answers scale with the same zoomFactor as the question text */}
+                                            <MathJaxWrapper zoomFactor={zoomFactor}>{answerText}</MathJaxWrapper>
                                         </span>
                                     </button>
                                 </li>

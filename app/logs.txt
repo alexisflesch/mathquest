@@ -1,0 +1,1477 @@
+
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ],
+[B]   "recipientSockets": 1,
+[B]   "eventEmitted": "projection_leaderboard_update"
+[B] } ✅ [PROJECTION-BROADCAST] Successfully broadcasted leaderboard update to projection room
+[B] 2025-10-25 09:29:17.686 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence"
+[B] } Broadcasted leaderboard update to projection room after student join
+[B] 2025-10-25 09:29:17.688 info [ParticipantCountUtils] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "lobbyCount": 1,
+[B]   "gameCount": 1,
+[B]   "totalSocketCount": 1,
+[B]   "uniqueUserCount": 1,
+[B]   "userIds": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099"
+[B]   ]
+[B] } Emitting unique participant count to dashboard
+[B] 2025-10-25 09:29:17.689 info [LobbyHandler] {
+[B]   "accessCode": "4122"
+[B] } [PARTICIPANT_LIST] Starting to emit participant list
+[B] 2025-10-25 09:29:17.691 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "participants": [
+[B]     {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "status": "ACTIVE"
+[B]     }
+[B]   ]
+[B] } [PARTICIPANT_LIST] Found participants in database
+[B] 2025-10-25 09:29:17.694 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "creatorId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "creatorUsername": "Clémence",
+[B]   "isCreatorInParticipants": true
+[B] } [PARTICIPANT_LIST] Creator info loaded from database
+[B] 2025-10-25 09:29:17.694 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "lobbyPayload": {
+[B]     "participants": [
+[B]       {
+[B]         "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]         "username": "Clémence",
+[B]         "avatarEmoji": "🦄"
+[B]       }
+[B]     ],
+[B]     "creator": {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "avatarEmoji": "🦄"
+[B]     }
+[B]   }
+[B] } [PARTICIPANT_LIST] Emitting lobby-compatible participant list
+[B] 2025-10-25 09:29:17.695 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "roomNames": [
+[B]     "lobby_4122",
+[B]     "game_4122"
+[B]   ]
+[B] } [PARTICIPANT_LIST] Emitted participant list to rooms
+[B] 2025-10-25 09:29:17.698 info [JoinGameHandler] {
+[B]   "participantCount": 1,
+[B]   "room": "game_4122"
+[B] } Emitting participant_count_update to room
+[B] 2025-10-25 09:29:18.695 info [ConnectionHandlers] [SOCKET DEBUG] onAny: join_game [
+[B]   {
+[B]     "accessCode": "4122",
+[B]     "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "username": "Clémence",
+[B]     "avatarEmoji": "🦄"
+[B]   }
+[B] ] socket: -s8OghTn7zPaR-X3AAAb
+[B] 2025-10-25 09:29:18.696 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence",
+[B]   "avatarEmoji": "🦄",
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+[B]   "marker": "[USERNAME_DEBUG]"
+[B] } 🐛 [USERNAME_DEBUG] Received join_game payload - tracking username vs cookieId issue
+[B] 2025-10-25 09:29:18.700 info [JoinGameHandler] [joinGame] Player joined room: {
+[B]   "roomName": "game_4122",
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "joinedRoomSocketIds": [
+[B]     "-s8OghTn7zPaR-X3AAAb"
+[B]   ]
+[B] }
+[B] 2025-10-25 09:29:18.700 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "username": "Clémence",
+[B]   "avatarEmoji": "🦄",
+[B]   "logPoint": "JOIN_GAME_UNIFIED_ENTRY"
+[B] } [LOG] Unified joinGame called
+[B] 2025-10-25 09:29:18.714 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "participantId": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]   "status": "ACTIVE"
+[B] } Updated existing participant status
+[B] 2025-10-25 09:29:18.717 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "isDeferred": false,
+[B]   "participantStatus": "ACTIVE",
+[B]   "gameInstanceStatus": "active",
+[B]   "joinBonusCondition": true,
+[B]   "logPoint": "JOIN_BONUS_CONDITION_CHECK"
+[B] } [DEBUG] Join bonus condition check
+[B] 2025-10-25 09:29:18.718 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "logPoint": "JOIN_BONUS_CONDITION_MET"
+[B] } [DEBUG] Join bonus condition met, calling assignJoinOrderBonus
+[B] 2025-10-25 09:29:18.718 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:18.719 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:18.719 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "joinOrderBonus": 0,
+[B]   "joinOrderBonusType": "number",
+[B]   "logPoint": "JOIN_BONUS_ASSIGNED"
+[B] } [DEBUG] assignJoinOrderBonus returned
+[B] 2025-10-25 09:29:18.719 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:18.719 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:18.720 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence",
+[B]   "existingScore": 203.94,
+[B]   "trigger": "rejoin_preserve_score"
+[B] } 🔄 [REJOIN] Preserved existing Redis score for rejoining participant
+[B] 2025-10-25 09:29:18.720 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "usernameFromPayload": "Clémence",
+[B]   "usernameInParticipantData": "Clémence",
+[B]   "participantDataForRedis": {
+[B]     "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]     "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "username": "Clémence",
+[B]     "score": 203.94,
+[B]     "avatarEmoji": "🦄",
+[B]     "joinedAt": "2025-10-24T18:26:26.615Z",
+[B]     "online": true,
+[B]     "socketId": "-s8OghTn7zPaR-X3AAAb"
+[B]   },
+[B]   "marker": "[PARTICIPANT_REDIS_DEBUG]"
+[B] } 🐛 [PARTICIPANT_REDIS_DEBUG] About to store participant data in Redis - tracking username vs cookieId issue
+[B] 2025-10-25 09:29:18.720 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:18.721 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:18.722 warn [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "existingScore": "203.94",
+[B]   "attemptedScore": 203.94,
+[B]   "leaderboardKey": "mathquest:game:leaderboard:4122",
+[B]   "action": "preserved_existing_score"
+[B] } [LEADERBOARD] Preserved existing Redis leaderboard score - did not overwrite
+[B] 2025-10-25 09:29:18.723 info [JoinGameHandler] {
+[B]   "gameJoinedPayload": {
+[B]     "accessCode": "4122",
+[B]     "participant": {
+[B]       "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "score": 203.94,
+[B]       "avatarEmoji": "🦄",
+[B]       "joinedAt": "2025-10-24T18:26:26.615Z",
+[B]       "online": true
+[B]     },
+[B]     "gameStatus": "active",
+[B]     "gameMode": "quiz"
+[B]   }
+[B] } Emitting game_joined
+[B] 2025-10-25 09:29:18.723 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "trigger": "late_joiner_skip_sync"
+[B] } [JOIN-LEADERBOARD] Skipping snapshot sync for late joiner in active game
+[B] 2025-10-25 09:29:18.723 info [Server] {
+[B]   "accessCode": "4122",
+[B]   "context": "late_joiner_broadcast",
+[B]   "targetRooms": [
+[B]     "game_4122",
+[B]     "lobby_4122"
+[B]   ],
+[B]   "leaderboardCount": 1,
+[B]   "event": "leaderboard_update"
+[B] } [SNAPSHOT] Emitted leaderboard from snapshot to target rooms
+[B] 2025-10-25 09:29:18.723 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "gameStatus": "active",
+[B]   "targetRooms": [
+[B]     "game_4122",
+[B]     "lobby_4122"
+[B]   ],
+[B]   "broadcastToAll": true,
+[B]   "trigger": "late_joiner_broadcast",
+[B]   "dataSource": "leaderboard_snapshot"
+[B] } [JOIN-LEADERBOARD] Emitted leaderboard snapshot - late joiners will appear with join bonus
+[B] 2025-10-25 09:29:18.723 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "playMode": "quiz"
+[B] } Live game is active, sending current state to late joiner
+[B] 2025-10-25 09:29:18.724 info [GameStateService] {
+[B]   "accessCode": "4122",
+[B]   "participantsHashKeys": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099"
+[B]   ],
+[B]   "participantsCount": 1,
+[B]   "participants": [
+[B]     {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "avatarEmoji": "🦄"
+[B]     }
+[B]   ]
+[B] } 🔍 [DEBUG-FULLGAMESTATE] Participants loaded in getFullGameState
+[B] 2025-10-25 09:29:18.726 info [GameStateService] {
+[B]   "accessCode": "4122",
+[B]   "leaderboardRawLength": 2,
+[B]   "leaderboardRaw": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "203.94"
+[B]   ]
+[B] } 🔍 [DEBUG-FULLGAMESTATE] Raw leaderboard data in getFullGameState
+[B] [DIAGNOSTIC] filterQuestionForClient called for question aflesch-mt1-ensembles-et-applications-001: {
+[B]   uid: 'aflesch-mt1-ensembles-et-applications-001',
+[B]   questionType: 'multipleChoice',
+[B]   hasMultipleChoiceQuestion: true,
+[B]   hasNumericQuestion: false,
+[B]   multipleChoiceQuestionData: {
+[B]     questionUid: 'aflesch-mt1-ensembles-et-applications-001',
+[B]     answerOptions: [
+[B]       '\\( \\sqrt{2} \\in \\mathbb{Q} \\)',
+[B]       '\\( \\sqrt{2} \\subset \\mathbb{C} \\)',
+[B]       '\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\in \\mathbb{R} \\)',
+[B]       '\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\subset \\mathbb{C} \\)',
+[B]       '\\( \\left\\{ \\varnothing \\right\\} \\in \\mathcal{P}(\\mathbb{R}) \\)',
+[B]       '\\( \\left\\{ \\varnothing \\right\\} \\subset \\mathcal{P}(\\mathbb{R}) \\)',
+[B]       '\\( \\left\\{ \\varnothing, \\left\\{ 2 \\right\\} \\right\\} \\subset \\mathcal{P}(\\mathbb{Q}) \\)',
+[B]       '\\( \\mathbb{Z} \\subset \\mathbb{C} \\)',
+[B]       'Aucune des réponses ci-dessus'
+[B]     ],
+[B]     correctAnswers: [
+[B]       false, false, false,
+[B]       true,  false, true,
+[B]       true,  true,  false
+[B]     ]
+[B]   },
+[B]   numericQuestionData: null,
+[B]   fullQuestionObject: '{\n' +
+[B]     '  "uid": "aflesch-mt1-ensembles-et-applications-001",\n' +
+[B]     '  "title": "Appartenance et inclusion",\n' +
+[B]     '  "text": "Parmi ces assertions, lesquelles sont vraies ?\\n",\n' +
+[B]     '  "questionType": "multipleChoice",\n' +
+[B]     '  "discipline": "Mathématiques",\n' +
+[B]     '  "themes": [\n' +
+[B]     '    "Ensembles et applications"\n' +
+[B]     '  ],\n' +
+[B]     '  "difficulty": 2,\n' +
+[B]     '  "gradeLevel": "L1",\n' +
+[B]     '  "author": "aflesch",\n' +
+[B]     '  "explanation": "",\n' +
+[B]     '  "tags": [\n' +
+[B]     '    "appartenance",\n' +
+[B]     '    "inclusion"\n' +
+[B]     '  ],\n' +
+[B]     '  "timeLimit": 120,\n' +
+[B]     '  "excludedFrom": [],\n' +
+[B]     '  "createdAt": "2025-09-22T18:50:28.030Z",\n' +
+[B]     '  "updatedAt": "2025-10-23T16:19:29.282Z",\n' +
+[B]     '  "feedbackWaitTime": null,\n' +
+[B]     '  "isHidden": false,\n' +
+[B]     '  "multipleChoiceQuestion": {\n' +
+[B]     '    "questionUid": "aflesch-mt1-ensembles-et-applications-001",\n' +
+[B]     '    "answerOptions": [\n' +
+[B]     '      "\\\\( \\\\sqrt{2} \\\\in \\\\mathbb{Q} \\\\)",\n' +
+[B]     '      "\\\\( \\\\sqrt{2} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\sqrt{2}, \\\\pi \\\\right\\\\} \\\\in \\\\mathbb{R} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\sqrt{2}, \\\\pi \\\\right\\\\} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing \\\\right\\\\} \\\\in \\\\mathcal{P}(\\\\mathbb{R}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing \\\\right\\\\} \\\\subset \\\\mathcal{P}(\\\\mathbb{R}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing, \\\\left\\\\{ 2 \\\\right\\\\} \\\\right\\\\} \\\\subset \\\\mathcal{P}(\\\\mathbb{Q}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\mathbb{Z} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "Aucune des réponses ci-dessus"\n' +
+[B]     '    ],\n' +
+[B]     '    "correctAnswers": [\n' +
+[B]     '      false,\n' +
+[B]     '      false,\n' +
+[B]     '      false,\n' +
+[B]     '      true,\n' +
+[B]     '      false,\n' +
+[B]     '      true,\n' +
+[B]     '      true,\n' +
+[B]     '      true,\n' +
+[B]     '      false\n' +
+[B]     '    ]\n' +
+[B]     '  },\n' +
+[B]     '  "numericQuestion": null\n' +
+[B]     '}'
+[B] }
+[B] 2025-10-25 09:29:18.730 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "playMode": "quiz",
+[B]   "questionIndex": 0,
+[B]   "payload": {
+[B]     "uid": "aflesch-mt1-ensembles-et-applications-001",
+[B]     "questionType": "multipleChoice",
+[B]     "text": "Parmi ces assertions, lesquelles sont vraies ?\n",
+[B]     "timeLimit": 120,
+[B]     "gradeLevel": "L1",
+[B]     "difficulty": 2,
+[B]     "themes": [
+[B]       "Ensembles et applications"
+[B]     ],
+[B]     "multipleChoiceQuestion": {
+[B]       "answerOptions": [
+[B]         "\\( \\sqrt{2} \\in \\mathbb{Q} \\)",
+[B]         "\\( \\sqrt{2} \\subset \\mathbb{C} \\)",
+[B]         "\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\in \\mathbb{R} \\)",
+[B]         "\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\subset \\mathbb{C} \\)",
+[B]         "\\( \\left\\{ \\varnothing \\right\\} \\in \\mathcal{P}(\\mathbb{R}) \\)",
+[B]         "\\( \\left\\{ \\varnothing \\right\\} \\subset \\mathcal{P}(\\mathbb{R}) \\)",
+[B]         "\\( \\left\\{ \\varnothing, \\left\\{ 2 \\right\\} \\right\\} \\subset \\mathcal{P}(\\mathbb{Q}) \\)",
+[B]         "\\( \\mathbb{Z} \\subset \\mathbb{C} \\)",
+[B]         "Aucune des réponses ci-dessus"
+[B]       ]
+[B]     },
+[B]     "currentQuestionIndex": 0,
+[B]     "totalQuestions": 1
+[B]   }
+[B] } [MODERNIZATION] Sending current question to late joiner (schema-compliant)
+[B] 2025-10-25 09:29:18.731 info [CanonicalTimerService] {
+[B]   "accessCode": "4122",
+[B]   "questionUid": "aflesch-mt1-ensembles-et-applications-001",
+[B]   "playMode": "quiz",
+[B]   "isDiffered": false,
+[B]   "canonicalDurationMs": 120000,
+[B]   "now": 1761377358731,
+[B]   "timer": {
+[B]     "questionUid": "aflesch-mt1-ensembles-et-applications-001",
+[B]     "status": "stop",
+[B]     "startedAt": 1761330402973,
+[B]     "totalPlayTimeMs": 0,
+[B]     "lastStateChange": 1761330402973,
+[B]     "durationMs": 0,
+[B]     "timeLeftMs": 0,
+[B]     "timerEndDateMs": 0
+[B]   },
+[B]   "status": "stop",
+[B]   "elapsed": 0,
+[B]   "timeLeftMs": 120000,
+[B]   "timerEndDateMs": 0
+[B] } [CANONICAL_TIMER][getTimer] Returning canonical timer state
+[B] 2025-10-25 09:29:18.731 info [JoinGameHandler] {
+[B]   "playerJoinedPayload": {
+[B]     "participant": {
+[B]       "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "score": 203.94,
+[B]       "avatarEmoji": "🦄",
+[B]       "online": true
+[B]     }
+[B]   },
+[B]   "room": "game_4122"
+[B] } Emitting player_joined_game to room
+[B] 2025-10-25 09:29:18.731 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7"
+[B] } 🎯 [PROJECTION-BROADCAST] Starting leaderboard broadcast to projection room
+[B] 2025-10-25 09:29:18.732 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ],
+[B]   "dataSource": "snapshot"
+[B] } 📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard from snapshot (secure)
+[B] 2025-10-25 09:29:18.732 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ]
+[B] } 📊 [PROJECTION-BROADCAST] Leaderboard calculated
+[B] 2025-10-25 09:29:18.732 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "projectionRoom": "projection_c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "socketCount": 1,
+[B]   "socketIds": [
+[B]     "0El_DZGO2nMm2lkxAAAZ"
+[B]   ]
+[B] } 🎪 [PROJECTION-BROADCAST] Projection room status
+[B] 2025-10-25 09:29:18.732 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "projectionRoom": "projection_c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ],
+[B]   "recipientSockets": 1,
+[B]   "eventEmitted": "projection_leaderboard_update"
+[B] } ✅ [PROJECTION-BROADCAST] Successfully broadcasted leaderboard update to projection room
+[B] 2025-10-25 09:29:18.732 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence"
+[B] } Broadcasted leaderboard update to projection room after student join
+[B] 2025-10-25 09:29:18.734 info [ParticipantCountUtils] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "lobbyCount": 1,
+[B]   "gameCount": 1,
+[B]   "totalSocketCount": 1,
+[B]   "uniqueUserCount": 1,
+[B]   "userIds": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099"
+[B]   ]
+[B] } Emitting unique participant count to dashboard
+[B] 2025-10-25 09:29:18.735 info [LobbyHandler] {
+[B]   "accessCode": "4122"
+[B] } [PARTICIPANT_LIST] Starting to emit participant list
+[B] 2025-10-25 09:29:18.738 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "participants": [
+[B]     {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "status": "ACTIVE"
+[B]     }
+[B]   ]
+[B] } [PARTICIPANT_LIST] Found participants in database
+[B] 2025-10-25 09:29:18.740 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "creatorId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "creatorUsername": "Clémence",
+[B]   "isCreatorInParticipants": true
+[B] } [PARTICIPANT_LIST] Creator info loaded from database
+[B] 2025-10-25 09:29:18.740 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "lobbyPayload": {
+[B]     "participants": [
+[B]       {
+[B]         "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]         "username": "Clémence",
+[B]         "avatarEmoji": "🦄"
+[B]       }
+[B]     ],
+[B]     "creator": {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "avatarEmoji": "🦄"
+[B]     }
+[B]   }
+[B] } [PARTICIPANT_LIST] Emitting lobby-compatible participant list
+[B] 2025-10-25 09:29:18.741 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "roomNames": [
+[B]     "lobby_4122",
+[B]     "game_4122"
+[B]   ]
+[B] } [PARTICIPANT_LIST] Emitted participant list to rooms
+[B] 2025-10-25 09:29:18.743 info [JoinGameHandler] {
+[B]   "participantCount": 1,
+[B]   "room": "game_4122"
+[B] } Emitting participant_count_update to room
+[B] 2025-10-25 09:29:20.750 info [ConnectionHandlers] [SOCKET DEBUG] onAny:
+
+
+later
+
+
+[B]   "participantCount": 1,
+[B]   "room": "game_4122"
+[B] } Emitting participant_count_update to room
+[B] 2025-10-25 09:29:33.302 info [ConnectionHandlers] [SOCKET DEBUG] onAny: join_game [
+[B]   {
+[B]     "accessCode": "4122",
+[B]     "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "username": "Clémence",
+[B]     "avatarEmoji": "🦄"
+[B]   }
+[B] ] socket: -s8OghTn7zPaR-X3AAAb
+[B] 2025-10-25 09:29:33.303 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence",
+[B]   "avatarEmoji": "🦄",
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+[B]   "marker": "[USERNAME_DEBUG]"
+[B] } 🐛 [USERNAME_DEBUG] Received join_game payload - tracking username vs cookieId issue
+[B] 2025-10-25 09:29:33.308 info [JoinGameHandler] [joinGame] Player joined room: {
+[B]   "roomName": "game_4122",
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "joinedRoomSocketIds": [
+[B]     "-s8OghTn7zPaR-X3AAAb"
+[B]   ]
+[B] }
+[B] 2025-10-25 09:29:33.308 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "username": "Clémence",
+[B]   "avatarEmoji": "🦄",
+[B]   "logPoint": "JOIN_GAME_UNIFIED_ENTRY"
+[B] } [LOG] Unified joinGame called
+[B] 2025-10-25 09:29:33.335 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "participantId": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]   "status": "ACTIVE"
+[B] } Updated existing participant status
+[B] 2025-10-25 09:29:33.343 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "isDeferred": false,
+[B]   "participantStatus": "ACTIVE",
+[B]   "gameInstanceStatus": "active",
+[B]   "joinBonusCondition": true,
+[B]   "logPoint": "JOIN_BONUS_CONDITION_CHECK"
+[B] } [DEBUG] Join bonus condition check
+[B] 2025-10-25 09:29:33.343 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "logPoint": "JOIN_BONUS_CONDITION_MET"
+[B] } [DEBUG] Join bonus condition met, calling assignJoinOrderBonus
+[B] 2025-10-25 09:29:33.343 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:33.344 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:33.344 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "joinOrderBonus": 0,
+[B]   "joinOrderBonusType": "number",
+[B]   "logPoint": "JOIN_BONUS_ASSIGNED"
+[B] } [DEBUG] assignJoinOrderBonus returned
+[B] 2025-10-25 09:29:33.344 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:33.344 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:33.345 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence",
+[B]   "existingScore": 203.94,
+[B]   "trigger": "rejoin_preserve_score"
+[B] } 🔄 [REJOIN] Preserved existing Redis score for rejoining participant
+[B] 2025-10-25 09:29:33.346 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "usernameFromPayload": "Clémence",
+[B]   "usernameInParticipantData": "Clémence",
+[B]   "participantDataForRedis": {
+[B]     "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]     "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "username": "Clémence",
+[B]     "score": 203.94,
+[B]     "avatarEmoji": "🦄",
+[B]     "joinedAt": "2025-10-24T18:26:26.615Z",
+[B]     "online": true,
+[B]     "socketId": "-s8OghTn7zPaR-X3AAAb"
+[B]   },
+[B]   "marker": "[PARTICIPANT_REDIS_DEBUG]"
+[B] } 🐛 [PARTICIPANT_REDIS_DEBUG] About to store participant data in Redis - tracking username vs cookieId issue
+[B] 2025-10-25 09:29:33.346 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:33.348 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:33.349 warn [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "existingScore": "203.94",
+[B]   "attemptedScore": 203.94,
+[B]   "leaderboardKey": "mathquest:game:leaderboard:4122",
+[B]   "action": "preserved_existing_score"
+[B] } [LEADERBOARD] Preserved existing Redis leaderboard score - did not overwrite
+[B] 2025-10-25 09:29:33.350 info [JoinGameHandler] {
+[B]   "gameJoinedPayload": {
+[B]     "accessCode": "4122",
+[B]     "participant": {
+[B]       "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "score": 203.94,
+[B]       "avatarEmoji": "🦄",
+[B]       "joinedAt": "2025-10-24T18:26:26.615Z",
+[B]       "online": true
+[B]     },
+[B]     "gameStatus": "active",
+[B]     "gameMode": "quiz"
+[B]   }
+[B] } Emitting game_joined
+[B] 2025-10-25 09:29:33.351 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "trigger": "late_joiner_skip_sync"
+[B] } [JOIN-LEADERBOARD] Skipping snapshot sync for late joiner in active game
+[B] 2025-10-25 09:29:33.352 info [Server] {
+[B]   "accessCode": "4122",
+[B]   "context": "late_joiner_broadcast",
+[B]   "targetRooms": [
+[B]     "game_4122",
+[B]     "lobby_4122"
+[B]   ],
+[B]   "leaderboardCount": 1,
+[B]   "event": "leaderboard_update"
+[B] } [SNAPSHOT] Emitted leaderboard from snapshot to target rooms
+[B] 2025-10-25 09:29:33.353 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "gameStatus": "active",
+[B]   "targetRooms": [
+[B]     "game_4122",
+[B]     "lobby_4122"
+[B]   ],
+[B]   "broadcastToAll": true,
+[B]   "trigger": "late_joiner_broadcast",
+[B]   "dataSource": "leaderboard_snapshot"
+[B] } [JOIN-LEADERBOARD] Emitted leaderboard snapshot - late joiners will appear with join bonus
+[B] 2025-10-25 09:29:33.353 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "playMode": "quiz"
+[B] } Live game is active, sending current state to late joiner
+[B] 2025-10-25 09:29:33.354 info [GameStateService] {
+[B]   "accessCode": "4122",
+[B]   "participantsHashKeys": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099"
+[B]   ],
+[B]   "participantsCount": 1,
+[B]   "participants": [
+[B]     {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "avatarEmoji": "🦄"
+[B]     }
+[B]   ]
+[B] } 🔍 [DEBUG-FULLGAMESTATE] Participants loaded in getFullGameState
+[B] 2025-10-25 09:29:33.358 info [GameStateService] {
+[B]   "accessCode": "4122",
+[B]   "leaderboardRawLength": 2,
+[B]   "leaderboardRaw": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "203.94"
+[B]   ]
+[B] } 🔍 [DEBUG-FULLGAMESTATE] Raw leaderboard data in getFullGameState
+[B] [DIAGNOSTIC] filterQuestionForClient called for question aflesch-mt1-ensembles-et-applications-001: {
+[B]   uid: 'aflesch-mt1-ensembles-et-applications-001',
+[B]   questionType: 'multipleChoice',
+[B]   hasMultipleChoiceQuestion: true,
+[B]   hasNumericQuestion: false,
+[B]   multipleChoiceQuestionData: {
+[B]     questionUid: 'aflesch-mt1-ensembles-et-applications-001',
+[B]     answerOptions: [
+[B]       '\\( \\sqrt{2} \\in \\mathbb{Q} \\)',
+[B]       '\\( \\sqrt{2} \\subset \\mathbb{C} \\)',
+[B]       '\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\in \\mathbb{R} \\)',
+[B]       '\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\subset \\mathbb{C} \\)',
+[B]       '\\( \\left\\{ \\varnothing \\right\\} \\in \\mathcal{P}(\\mathbb{R}) \\)',
+[B]       '\\( \\left\\{ \\varnothing \\right\\} \\subset \\mathcal{P}(\\mathbb{R}) \\)',
+[B]       '\\( \\left\\{ \\varnothing, \\left\\{ 2 \\right\\} \\right\\} \\subset \\mathcal{P}(\\mathbb{Q}) \\)',
+[B]       '\\( \\mathbb{Z} \\subset \\mathbb{C} \\)',
+[B]       'Aucune des réponses ci-dessus'
+[B]     ],
+[B]     correctAnswers: [
+[B]       false, false, false,
+[B]       true,  false, true,
+[B]       true,  true,  false
+[B]     ]
+[B]   },
+[B]   numericQuestionData: null,
+[B]   fullQuestionObject: '{\n' +
+[B]     '  "uid": "aflesch-mt1-ensembles-et-applications-001",\n' +
+[B]     '  "title": "Appartenance et inclusion",\n' +
+[B]     '  "text": "Parmi ces assertions, lesquelles sont vraies ?\\n",\n' +
+[B]     '  "questionType": "multipleChoice",\n' +
+[B]     '  "discipline": "Mathématiques",\n' +
+[B]     '  "themes": [\n' +
+[B]     '    "Ensembles et applications"\n' +
+[B]     '  ],\n' +
+[B]     '  "difficulty": 2,\n' +
+[B]     '  "gradeLevel": "L1",\n' +
+[B]     '  "author": "aflesch",\n' +
+[B]     '  "explanation": "",\n' +
+[B]     '  "tags": [\n' +
+[B]     '    "appartenance",\n' +
+[B]     '    "inclusion"\n' +
+[B]     '  ],\n' +
+[B]     '  "timeLimit": 120,\n' +
+[B]     '  "excludedFrom": [],\n' +
+[B]     '  "createdAt": "2025-09-22T18:50:28.030Z",\n' +
+[B]     '  "updatedAt": "2025-10-23T16:19:29.282Z",\n' +
+[B]     '  "feedbackWaitTime": null,\n' +
+[B]     '  "isHidden": false,\n' +
+[B]     '  "multipleChoiceQuestion": {\n' +
+[B]     '    "questionUid": "aflesch-mt1-ensembles-et-applications-001",\n' +
+[B]     '    "answerOptions": [\n' +
+[B]     '      "\\\\( \\\\sqrt{2} \\\\in \\\\mathbb{Q} \\\\)",\n' +
+[B]     '      "\\\\( \\\\sqrt{2} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\sqrt{2}, \\\\pi \\\\right\\\\} \\\\in \\\\mathbb{R} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\sqrt{2}, \\\\pi \\\\right\\\\} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing \\\\right\\\\} \\\\in \\\\mathcal{P}(\\\\mathbb{R}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing \\\\right\\\\} \\\\subset \\\\mathcal{P}(\\\\mathbb{R}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing, \\\\left\\\\{ 2 \\\\right\\\\} \\\\right\\\\} \\\\subset \\\\mathcal{P}(\\\\mathbb{Q}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\mathbb{Z} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "Aucune des réponses ci-dessus"\n' +
+[B]     '    ],\n' +
+[B]     '    "correctAnswers": [\n' +
+[B]     '      false,\n' +
+[B]     '      false,\n' +
+[B]     '      false,\n' +
+[B]     '      true,\n' +
+[B]     '      false,\n' +
+[B]     '      true,\n' +
+[B]     '      true,\n' +
+[B]     '      true,\n' +
+[B]     '      false\n' +
+[B]     '    ]\n' +
+[B]     '  },\n' +
+[B]     '  "numericQuestion": null\n' +
+[B]     '}'
+[B] }
+[B] 2025-10-25 09:29:33.367 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "playMode": "quiz",
+[B]   "questionIndex": 0,
+[B]   "payload": {
+[B]     "uid": "aflesch-mt1-ensembles-et-applications-001",
+[B]     "questionType": "multipleChoice",
+[B]     "text": "Parmi ces assertions, lesquelles sont vraies ?\n",
+[B]     "timeLimit": 120,
+[B]     "gradeLevel": "L1",
+[B]     "difficulty": 2,
+[B]     "themes": [
+[B]       "Ensembles et applications"
+[B]     ],
+[B]     "multipleChoiceQuestion": {
+[B]       "answerOptions": [
+[B]         "\\( \\sqrt{2} \\in \\mathbb{Q} \\)",
+[B]         "\\( \\sqrt{2} \\subset \\mathbb{C} \\)",
+[B]         "\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\in \\mathbb{R} \\)",
+[B]         "\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\subset \\mathbb{C} \\)",
+[B]         "\\( \\left\\{ \\varnothing \\right\\} \\in \\mathcal{P}(\\mathbb{R}) \\)",
+[B]         "\\( \\left\\{ \\varnothing \\right\\} \\subset \\mathcal{P}(\\mathbb{R}) \\)",
+[B]         "\\( \\left\\{ \\varnothing, \\left\\{ 2 \\right\\} \\right\\} \\subset \\mathcal{P}(\\mathbb{Q}) \\)",
+[B]         "\\( \\mathbb{Z} \\subset \\mathbb{C} \\)",
+[B]         "Aucune des réponses ci-dessus"
+[B]       ]
+[B]     },
+[B]     "currentQuestionIndex": 0,
+[B]     "totalQuestions": 1
+[B]   }
+[B] } [MODERNIZATION] Sending current question to late joiner (schema-compliant)
+[B] 2025-10-25 09:29:33.368 info [CanonicalTimerService] {
+[B]   "accessCode": "4122",
+[B]   "questionUid": "aflesch-mt1-ensembles-et-applications-001",
+[B]   "playMode": "quiz",
+[B]   "isDiffered": false,
+[B]   "canonicalDurationMs": 120000,
+[B]   "now": 1761377373368,
+[B]   "timer": {
+[B]     "questionUid": "aflesch-mt1-ensembles-et-applications-001",
+[B]     "status": "stop",
+[B]     "startedAt": 1761330402973,
+[B]     "totalPlayTimeMs": 0,
+[B]     "lastStateChange": 1761330402973,
+[B]     "durationMs": 0,
+[B]     "timeLeftMs": 0,
+[B]     "timerEndDateMs": 0
+[B]   },
+[B]   "status": "stop",
+[B]   "elapsed": 0,
+[B]   "timeLeftMs": 120000,
+[B]   "timerEndDateMs": 0
+[B] } [CANONICAL_TIMER][getTimer] Returning canonical timer state
+[B] 2025-10-25 09:29:33.369 info [JoinGameHandler] {
+[B]   "playerJoinedPayload": {
+[B]     "participant": {
+[B]       "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "score": 203.94,
+[B]       "avatarEmoji": "🦄",
+[B]       "online": true
+[B]     }
+[B]   },
+[B]   "room": "game_4122"
+[B] } Emitting player_joined_game to room
+[B] 2025-10-25 09:29:33.369 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7"
+[B] } 🎯 [PROJECTION-BROADCAST] Starting leaderboard broadcast to projection room
+[B] 2025-10-25 09:29:33.372 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ],
+[B]   "dataSource": "snapshot"
+[B] } 📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard from snapshot (secure)
+[B] 2025-10-25 09:29:33.372 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ]
+[B] } 📊 [PROJECTION-BROADCAST] Leaderboard calculated
+[B] 2025-10-25 09:29:33.372 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "projectionRoom": "projection_c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "socketCount": 1,
+[B]   "socketIds": [
+[B]     "0El_DZGO2nMm2lkxAAAZ"
+[B]   ]
+[B] } 🎪 [PROJECTION-BROADCAST] Projection room status
+[B] 2025-10-25 09:29:33.372 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "projectionRoom": "projection_c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ],
+[B]   "recipientSockets": 1,
+[B]   "eventEmitted": "projection_leaderboard_update"
+[B] } ✅ [PROJECTION-BROADCAST] Successfully broadcasted leaderboard update to projection room
+[B] 2025-10-25 09:29:33.372 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence"
+[B] } Broadcasted leaderboard update to projection room after student join
+[B] 2025-10-25 09:29:33.374 info [ParticipantCountUtils] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "lobbyCount": 1,
+[B]   "gameCount": 1,
+[B]   "totalSocketCount": 1,
+[B]   "uniqueUserCount": 1,
+[B]   "userIds": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099"
+[B]   ]
+[B] } Emitting unique participant count to dashboard
+[B] 2025-10-25 09:29:33.375 info [LobbyHandler] {
+[B]   "accessCode": "4122"
+[B] } [PARTICIPANT_LIST] Starting to emit participant list
+[B] 2025-10-25 09:29:33.379 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "participants": [
+[B]     {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "status": "ACTIVE"
+[B]     }
+[B]   ]
+[B] } [PARTICIPANT_LIST] Found participants in database
+[B] 2025-10-25 09:29:33.381 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "creatorId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "creatorUsername": "Clémence",
+[B]   "isCreatorInParticipants": true
+[B] } [PARTICIPANT_LIST] Creator info loaded from database
+[B] 2025-10-25 09:29:33.381 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "lobbyPayload": {
+[B]     "participants": [
+[B]       {
+[B]         "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]         "username": "Clémence",
+[B]         "avatarEmoji": "🦄"
+[B]       }
+[B]     ],
+[B]     "creator": {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "avatarEmoji": "🦄"
+[B]     }
+[B]   }
+[B] } [PARTICIPANT_LIST] Emitting lobby-compatible participant list
+[B] 2025-10-25 09:29:33.383 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "roomNames": [
+[B]     "lobby_4122",
+[B]     "game_4122"
+[B]   ]
+[B] } [PARTICIPANT_LIST] Emitted participant list to rooms
+[B] 2025-10-25 09:29:33.386 info [JoinGameHandler] {
+[B]   "participantCount": 1,
+[B]   "room": "game_4122"
+[B] } Emitting participant_count_update to room
+[B] 2025-10-25 09:29:35.436 info [ConnectionHandlers] [SOCKET DEBUG] onAny: join_game [
+[B]   {
+[B]     "accessCode": "4122",
+[B]     "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "username": "Clémence",
+[B]     "avatarEmoji": "🦄"
+[B]   }
+[B] ] socket: -s8OghTn7zPaR-X3AAAb
+[B] 2025-10-25 09:29:35.437 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence",
+[B]   "avatarEmoji": "🦄",
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+[B]   "marker": "[USERNAME_DEBUG]"
+[B] } 🐛 [USERNAME_DEBUG] Received join_game payload - tracking username vs cookieId issue
+[B] 2025-10-25 09:29:35.441 info [JoinGameHandler] [joinGame] Player joined room: {
+[B]   "roomName": "game_4122",
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "joinedRoomSocketIds": [
+[B]     "-s8OghTn7zPaR-X3AAAb"
+[B]   ]
+[B] }
+[B] 2025-10-25 09:29:35.441 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "username": "Clémence",
+[B]   "avatarEmoji": "🦄",
+[B]   "logPoint": "JOIN_GAME_UNIFIED_ENTRY"
+[B] } [LOG] Unified joinGame called
+[B] 2025-10-25 09:29:35.454 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "participantId": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]   "status": "ACTIVE"
+[B] } Updated existing participant status
+[B] 2025-10-25 09:29:35.463 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "isDeferred": false,
+[B]   "participantStatus": "ACTIVE",
+[B]   "gameInstanceStatus": "active",
+[B]   "joinBonusCondition": true,
+[B]   "logPoint": "JOIN_BONUS_CONDITION_CHECK"
+[B] } [DEBUG] Join bonus condition check
+[B] 2025-10-25 09:29:35.463 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "logPoint": "JOIN_BONUS_CONDITION_MET"
+[B] } [DEBUG] Join bonus condition met, calling assignJoinOrderBonus
+[B] 2025-10-25 09:29:35.463 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:35.466 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:35.466 info [GameParticipantJoinService] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "joinOrderBonus": 0,
+[B]   "joinOrderBonusType": "number",
+[B]   "logPoint": "JOIN_BONUS_ASSIGNED"
+[B] } [DEBUG] assignJoinOrderBonus returned
+[B] 2025-10-25 09:29:35.467 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:35.467 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:35.468 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence",
+[B]   "existingScore": 203.94,
+[B]   "trigger": "rejoin_preserve_score"
+[B] } 🔄 [REJOIN] Preserved existing Redis score for rejoining participant
+[B] 2025-10-25 09:29:35.468 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "usernameFromPayload": "Clémence",
+[B]   "usernameInParticipantData": "Clémence",
+[B]   "participantDataForRedis": {
+[B]     "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]     "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "username": "Clémence",
+[B]     "score": 203.94,
+[B]     "avatarEmoji": "🦄",
+[B]     "joinedAt": "2025-10-24T18:26:26.615Z",
+[B]     "online": true,
+[B]     "socketId": "-s8OghTn7zPaR-X3AAAb"
+[B]   },
+[B]   "marker": "[PARTICIPANT_REDIS_DEBUG]"
+[B] } 🐛 [PARTICIPANT_REDIS_DEBUG] About to store participant data in Redis - tracking username vs cookieId issue
+[B] 2025-10-25 09:29:35.468 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099"
+[B] } 🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment
+[B] 2025-10-25 09:29:35.468 info [JoinOrderBonus] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "returnValue": 0
+[B] } ✅ [JOIN-ORDER-BONUS] Returning 0 for duplicate user
+[B] 2025-10-25 09:29:35.470 warn [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "existingScore": "203.94",
+[B]   "attemptedScore": 203.94,
+[B]   "leaderboardKey": "mathquest:game:leaderboard:4122",
+[B]   "action": "preserved_existing_score"
+[B] } [LEADERBOARD] Preserved existing Redis leaderboard score - did not overwrite
+[B] 2025-10-25 09:29:35.471 info [JoinGameHandler] {
+[B]   "gameJoinedPayload": {
+[B]     "accessCode": "4122",
+[B]     "participant": {
+[B]       "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "score": 203.94,
+[B]       "avatarEmoji": "🦄",
+[B]       "joinedAt": "2025-10-24T18:26:26.615Z",
+[B]       "online": true
+[B]     },
+[B]     "gameStatus": "active",
+[B]     "gameMode": "quiz"
+[B]   }
+[B] } Emitting game_joined
+[B] 2025-10-25 09:29:35.471 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "trigger": "late_joiner_skip_sync"
+[B] } [JOIN-LEADERBOARD] Skipping snapshot sync for late joiner in active game
+[B] 2025-10-25 09:29:35.472 info [Server] {
+[B]   "accessCode": "4122",
+[B]   "context": "late_joiner_broadcast",
+[B]   "targetRooms": [
+[B]     "game_4122",
+[B]     "lobby_4122"
+[B]   ],
+[B]   "leaderboardCount": 1,
+[B]   "event": "leaderboard_update"
+[B] } [SNAPSHOT] Emitted leaderboard from snapshot to target rooms
+[B] 2025-10-25 09:29:35.472 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "gameStatus": "active",
+[B]   "targetRooms": [
+[B]     "game_4122",
+[B]     "lobby_4122"
+[B]   ],
+[B]   "broadcastToAll": true,
+[B]   "trigger": "late_joiner_broadcast",
+[B]   "dataSource": "leaderboard_snapshot"
+[B] } [JOIN-LEADERBOARD] Emitted leaderboard snapshot - late joiners will appear with join bonus
+[B] 2025-10-25 09:29:35.472 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "playMode": "quiz"
+[B] } Live game is active, sending current state to late joiner
+[B] 2025-10-25 09:29:35.472 info [GameStateService] {
+[B]   "accessCode": "4122",
+[B]   "participantsHashKeys": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099"
+[B]   ],
+[B]   "participantsCount": 1,
+[B]   "participants": [
+[B]     {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "avatarEmoji": "🦄"
+[B]     }
+[B]   ]
+[B] } 🔍 [DEBUG-FULLGAMESTATE] Participants loaded in getFullGameState
+[B] 2025-10-25 09:29:35.473 info [GameStateService] {
+[B]   "accessCode": "4122",
+[B]   "leaderboardRawLength": 2,
+[B]   "leaderboardRaw": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099",
+[B]     "203.94"
+[B]   ]
+[B] } 🔍 [DEBUG-FULLGAMESTATE] Raw leaderboard data in getFullGameState
+[B] [DIAGNOSTIC] filterQuestionForClient called for question aflesch-mt1-ensembles-et-applications-001: {
+[B]   uid: 'aflesch-mt1-ensembles-et-applications-001',
+[B]   questionType: 'multipleChoice',
+[B]   hasMultipleChoiceQuestion: true,
+[B]   hasNumericQuestion: false,
+[B]   multipleChoiceQuestionData: {
+[B]     questionUid: 'aflesch-mt1-ensembles-et-applications-001',
+[B]     answerOptions: [
+[B]       '\\( \\sqrt{2} \\in \\mathbb{Q} \\)',
+[B]       '\\( \\sqrt{2} \\subset \\mathbb{C} \\)',
+[B]       '\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\in \\mathbb{R} \\)',
+[B]       '\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\subset \\mathbb{C} \\)',
+[B]       '\\( \\left\\{ \\varnothing \\right\\} \\in \\mathcal{P}(\\mathbb{R}) \\)',
+[B]       '\\( \\left\\{ \\varnothing \\right\\} \\subset \\mathcal{P}(\\mathbb{R}) \\)',
+[B]       '\\( \\left\\{ \\varnothing, \\left\\{ 2 \\right\\} \\right\\} \\subset \\mathcal{P}(\\mathbb{Q}) \\)',
+[B]       '\\( \\mathbb{Z} \\subset \\mathbb{C} \\)',
+[B]       'Aucune des réponses ci-dessus'
+[B]     ],
+[B]     correctAnswers: [
+[B]       false, false, false,
+[B]       true,  false, true,
+[B]       true,  true,  false
+[B]     ]
+[B]   },
+[B]   numericQuestionData: null,
+[B]   fullQuestionObject: '{\n' +
+[B]     '  "uid": "aflesch-mt1-ensembles-et-applications-001",\n' +
+[B]     '  "title": "Appartenance et inclusion",\n' +
+[B]     '  "text": "Parmi ces assertions, lesquelles sont vraies ?\\n",\n' +
+[B]     '  "questionType": "multipleChoice",\n' +
+[B]     '  "discipline": "Mathématiques",\n' +
+[B]     '  "themes": [\n' +
+[B]     '    "Ensembles et applications"\n' +
+[B]     '  ],\n' +
+[B]     '  "difficulty": 2,\n' +
+[B]     '  "gradeLevel": "L1",\n' +
+[B]     '  "author": "aflesch",\n' +
+[B]     '  "explanation": "",\n' +
+[B]     '  "tags": [\n' +
+[B]     '    "appartenance",\n' +
+[B]     '    "inclusion"\n' +
+[B]     '  ],\n' +
+[B]     '  "timeLimit": 120,\n' +
+[B]     '  "excludedFrom": [],\n' +
+[B]     '  "createdAt": "2025-09-22T18:50:28.030Z",\n' +
+[B]     '  "updatedAt": "2025-10-23T16:19:29.282Z",\n' +
+[B]     '  "feedbackWaitTime": null,\n' +
+[B]     '  "isHidden": false,\n' +
+[B]     '  "multipleChoiceQuestion": {\n' +
+[B]     '    "questionUid": "aflesch-mt1-ensembles-et-applications-001",\n' +
+[B]     '    "answerOptions": [\n' +
+[B]     '      "\\\\( \\\\sqrt{2} \\\\in \\\\mathbb{Q} \\\\)",\n' +
+[B]     '      "\\\\( \\\\sqrt{2} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\sqrt{2}, \\\\pi \\\\right\\\\} \\\\in \\\\mathbb{R} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\sqrt{2}, \\\\pi \\\\right\\\\} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing \\\\right\\\\} \\\\in \\\\mathcal{P}(\\\\mathbb{R}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing \\\\right\\\\} \\\\subset \\\\mathcal{P}(\\\\mathbb{R}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\left\\\\{ \\\\varnothing, \\\\left\\\\{ 2 \\\\right\\\\} \\\\right\\\\} \\\\subset \\\\mathcal{P}(\\\\mathbb{Q}) \\\\)",\n' +
+[B]     '      "\\\\( \\\\mathbb{Z} \\\\subset \\\\mathbb{C} \\\\)",\n' +
+[B]     '      "Aucune des réponses ci-dessus"\n' +
+[B]     '    ],\n' +
+[B]     '    "correctAnswers": [\n' +
+[B]     '      false,\n' +
+[B]     '      false,\n' +
+[B]     '      false,\n' +
+[B]     '      true,\n' +
+[B]     '      false,\n' +
+[B]     '      true,\n' +
+[B]     '      true,\n' +
+[B]     '      true,\n' +
+[B]     '      false\n' +
+[B]     '    ]\n' +
+[B]     '  },\n' +
+[B]     '  "numericQuestion": null\n' +
+[B]     '}'
+[B] }
+[B] 2025-10-25 09:29:35.479 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "playMode": "quiz",
+[B]   "questionIndex": 0,
+[B]   "payload": {
+[B]     "uid": "aflesch-mt1-ensembles-et-applications-001",
+[B]     "questionType": "multipleChoice",
+[B]     "text": "Parmi ces assertions, lesquelles sont vraies ?\n",
+[B]     "timeLimit": 120,
+[B]     "gradeLevel": "L1",
+[B]     "difficulty": 2,
+[B]     "themes": [
+[B]       "Ensembles et applications"
+[B]     ],
+[B]     "multipleChoiceQuestion": {
+[B]       "answerOptions": [
+[B]         "\\( \\sqrt{2} \\in \\mathbb{Q} \\)",
+[B]         "\\( \\sqrt{2} \\subset \\mathbb{C} \\)",
+[B]         "\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\in \\mathbb{R} \\)",
+[B]         "\\( \\left\\{ \\sqrt{2}, \\pi \\right\\} \\subset \\mathbb{C} \\)",
+[B]         "\\( \\left\\{ \\varnothing \\right\\} \\in \\mathcal{P}(\\mathbb{R}) \\)",
+[B]         "\\( \\left\\{ \\varnothing \\right\\} \\subset \\mathcal{P}(\\mathbb{R}) \\)",
+[B]         "\\( \\left\\{ \\varnothing, \\left\\{ 2 \\right\\} \\right\\} \\subset \\mathcal{P}(\\mathbb{Q}) \\)",
+[B]         "\\( \\mathbb{Z} \\subset \\mathbb{C} \\)",
+[B]         "Aucune des réponses ci-dessus"
+[B]       ]
+[B]     },
+[B]     "currentQuestionIndex": 0,
+[B]     "totalQuestions": 1
+[B]   }
+[B] } [MODERNIZATION] Sending current question to late joiner (schema-compliant)
+[B] 2025-10-25 09:29:35.480 info [CanonicalTimerService] {
+[B]   "accessCode": "4122",
+[B]   "questionUid": "aflesch-mt1-ensembles-et-applications-001",
+[B]   "playMode": "quiz",
+[B]   "isDiffered": false,
+[B]   "canonicalDurationMs": 120000,
+[B]   "now": 1761377375480,
+[B]   "timer": {
+[B]     "questionUid": "aflesch-mt1-ensembles-et-applications-001",
+[B]     "status": "stop",
+[B]     "startedAt": 1761330402973,
+[B]     "totalPlayTimeMs": 0,
+[B]     "lastStateChange": 1761330402973,
+[B]     "durationMs": 0,
+[B]     "timeLeftMs": 0,
+[B]     "timerEndDateMs": 0
+[B]   },
+[B]   "status": "stop",
+[B]   "elapsed": 0,
+[B]   "timeLeftMs": 120000,
+[B]   "timerEndDateMs": 0
+[B] } [CANONICAL_TIMER][getTimer] Returning canonical timer state
+[B] 2025-10-25 09:29:35.480 info [JoinGameHandler] {
+[B]   "playerJoinedPayload": {
+[B]     "participant": {
+[B]       "id": "3eea65df-2b89-4073-ae66-a1173f6890ba",
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "score": 203.94,
+[B]       "avatarEmoji": "🦄",
+[B]       "online": true
+[B]     }
+[B]   },
+[B]   "room": "game_4122"
+[B] } Emitting player_joined_game to room
+[B] 2025-10-25 09:29:35.480 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7"
+[B] } 🎯 [PROJECTION-BROADCAST] Starting leaderboard broadcast to projection room
+[B] 2025-10-25 09:29:35.481 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ],
+[B]   "dataSource": "snapshot"
+[B] } 📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard from snapshot (secure)
+[B] 2025-10-25 09:29:35.481 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ]
+[B] } 📊 [PROJECTION-BROADCAST] Leaderboard calculated
+[B] 2025-10-25 09:29:35.481 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "projectionRoom": "projection_c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "socketCount": 1,
+[B]   "socketIds": [
+[B]     "0El_DZGO2nMm2lkxAAAZ"
+[B]   ]
+[B] } 🎪 [PROJECTION-BROADCAST] Projection room status
+[B] 2025-10-25 09:29:35.481 info [ProjectionLeaderboardBroadcast] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "projectionRoom": "projection_c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "leaderboardCount": 1,
+[B]   "topPlayers": [
+[B]     {
+[B]       "username": "Clémence",
+[B]       "score": 0
+[B]     }
+[B]   ],
+[B]   "recipientSockets": 1,
+[B]   "eventEmitted": "projection_leaderboard_update"
+[B] } ✅ [PROJECTION-BROADCAST] Successfully broadcasted leaderboard update to projection room
+[B] 2025-10-25 09:29:35.481 info [JoinGameHandler] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "username": "Clémence"
+[B] } Broadcasted leaderboard update to projection room after student join
+[B] 2025-10-25 09:29:35.485 info [ParticipantCountUtils] {
+[B]   "accessCode": "4122",
+[B]   "gameId": "c636cd95-39d3-4f73-80c4-d27b0e04eae7",
+[B]   "lobbyCount": 1,
+[B]   "gameCount": 1,
+[B]   "totalSocketCount": 1,
+[B]   "uniqueUserCount": 1,
+[B]   "userIds": [
+[B]     "278e5993-3951-4aaf-b919-f645cde81099"
+[B]   ]
+[B] } Emitting unique participant count to dashboard
+[B] 2025-10-25 09:29:35.486 info [LobbyHandler] {
+[B]   "accessCode": "4122"
+[B] } [PARTICIPANT_LIST] Starting to emit participant list
+[B] 2025-10-25 09:29:35.491 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "participants": [
+[B]     {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "status": "ACTIVE"
+[B]     }
+[B]   ]
+[B] } [PARTICIPANT_LIST] Found participants in database
+[B] 2025-10-25 09:29:35.493 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "creatorId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "creatorUsername": "Clémence",
+[B]   "isCreatorInParticipants": true
+[B] } [PARTICIPANT_LIST] Creator info loaded from database
+[B] 2025-10-25 09:29:35.493 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "participantCount": 1,
+[B]   "lobbyPayload": {
+[B]     "participants": [
+[B]       {
+[B]         "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]         "username": "Clémence",
+[B]         "avatarEmoji": "🦄"
+[B]       }
+[B]     ],
+[B]     "creator": {
+[B]       "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]       "username": "Clémence",
+[B]       "avatarEmoji": "🦄"
+[B]     }
+[B]   }
+[B] } [PARTICIPANT_LIST] Emitting lobby-compatible participant list
+[B] 2025-10-25 09:29:35.493 info [LobbyHandler] {
+[B]   "accessCode": "4122",
+[B]   "roomNames": [
+[B]     "lobby_4122",
+[B]     "game_4122"
+[B]   ]
+[B] } [PARTICIPANT_LIST] Emitted participant list to rooms
+[B] 2025-10-25 09:29:35.495 info [JoinGameHandler] {
+[B]   "participantCount": 1,
+[B]   "room": "game_4122"
+[B] } Emitting participant_count_update to room
+[B] 2025-10-25 09:29:40.538 info [ConnectionHandlers] {
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "reason": "transport close"
+[B] } Socket disconnecting - starting cleanup
+[B] 2025-10-25 09:29:40.538 info [DisconnectHandler] {
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb"
+[B] } [DISCONNECT] User disconnected
+[B] 2025-10-25 09:29:40.539 info [DisconnectHandler] {
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122"
+[B] } [DISCONNECT] Found userId for disconnected socket
+[B] 2025-10-25 09:29:40.541 info [DisconnectHandler] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "stillConnected": false,
+[B]   "remainingSockets": []
+[B] } [DISCONNECT] Checked for remaining sockets in this game
+[B] 2025-10-25 09:29:40.541 info [DisconnectHandler] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122"
+[B] } [DISCONNECT] No remaining sockets for this user in this game
+[B] 2025-10-25 09:29:40.545 info [DisconnectHandler] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "participantStatus": "ACTIVE"
+[B] } [DISCONNECT] Found participant with status
+[B] 2025-10-25 09:29:40.545 info [DisconnectHandler] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "userScore": "203.94",
+[B]   "participantStatus": "ACTIVE",
+[B]   "note": "LEADERBOARD-PRESERVATION: User has score, preserving regardless of status"
+[B] } [DISCONNECT] User with leaderboard score - preserving participant data
+[B] 2025-10-25 09:29:40.546 info [DisconnectHandler] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "note": "LEADERBOARD-PRESERVATION: Participant with score marked offline but preserved"
+[B] } [DISCONNECT] Participant with leaderboard score preserved
+[B] 2025-10-25 09:29:40.547 info [DisconnectHandler] {
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "reason": "transport close"
+[B] } Client disconnected
+[B] 2025-10-25 09:29:40.548 info [DisconnectHandler] {
+[B]   "userId": "278e5993-3951-4aaf-b919-f645cde81099",
+[B]   "accessCode": "4122",
+[B]   "disconnectedSocketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "currentActiveSocketId": null
+[B] } Disconnected socket was not the last known active socket for the user. No "offline" status change needed based on this disconnect.
+[B] 2025-10-25 09:29:40.548 info [ConnectionHandlers] {
+[B]   "socketId": "-s8OghTn7zPaR-X3AAAb",
+[B]   "reason": "transport close"
+[B] } Socket disconnect cleanup completed

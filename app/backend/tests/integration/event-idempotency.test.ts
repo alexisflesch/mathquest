@@ -37,7 +37,7 @@ describe('Event Idempotency and Deduplication', () => {
         if (io) {
             io.close();
         }
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

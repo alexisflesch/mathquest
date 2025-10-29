@@ -26,7 +26,7 @@ describe('Projection/Teacher State Persistence', () => {
     });
 
     afterAll(async () => {
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

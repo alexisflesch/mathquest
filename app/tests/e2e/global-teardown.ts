@@ -3,8 +3,8 @@ import { FullConfig } from '@playwright/test';
 async function globalTeardown(config: FullConfig) {
     console.log('🧹 Starting E2E test teardown...');
 
-    // Clean up test data if needed
-    // This could include clearing test database, Redis cache, etc.
+    // Note: Database cleanup requires backend API endpoints that don't exist yet
+    // Test data persists between runs, which may cause conflicts
 
     console.log('✅ E2E test teardown complete');
 }

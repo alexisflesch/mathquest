@@ -32,7 +32,7 @@ describe('Answer Locking Enforcement', () => {
         if (io) {
             io.close();
         }
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(async () => {

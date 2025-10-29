@@ -63,7 +63,7 @@ const QuestionDisplay = React.memo(({
     handleNumericSubmit,
     numericCorrectAnswer
 }: QuestionDisplayProps) => {
-    // Re-render logging for QuestionDisplay
+    // Re-render logging for QuestionDisplay (only in debug mode)
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
 
@@ -73,7 +73,9 @@ const QuestionDisplay = React.memo(({
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
 
-        logger.info(`🔄 [QUESTION-RERENDER] QuestionDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
+            logger.info(`🔄 [QUESTION-RERENDER] QuestionDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+        }
     });
 
     if (currentQuestion) {

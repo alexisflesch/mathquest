@@ -334,3 +334,148 @@ Les tests d'intégration valident les interactions entre services :
 - **Déconnexions** : Récupération après perte de connexion
 
 Cette architecture modulaire assure la maintenabilité, l'évolutivité et la fiabilité du système de gestion des quiz de MathQuest.
+
+## Événements Socket.IO
+
+MathQuest utilise Socket.IO pour la communication temps réel bidirectionnelle entre le frontend et le backend. Tous les événements sont définis dans `shared/types/socket/events.ts` pour assurer la cohérence.
+
+### Événements Enseignant (TEACHER_EVENTS)
+
+#### Connexion et état
+- `JOIN_DASHBOARD` : Rejoindre le tableau de bord enseignant
+- `GET_GAME_STATE` : Récupérer l'état actuel du jeu
+
+#### Contrôle des questions
+- `SET_QUESTION` : Définir la question active
+
+#### Contrôle du timer
+- `TIMER_ACTION` : Action générale sur le timer
+- `START_TIMER` : Démarrer le timer
+- `PAUSE_TIMER` : Mettre en pause le timer
+- `TIMER_SET_DURATION` : Définir la durée du timer
+
+#### Contrôle du jeu
+- `LOCK_ANSWERS` : Verrouiller les réponses
+- `END_GAME` : Terminer le jeu
+
+#### Actions déclenchées par l'enseignant
+- `SHOW_CORRECT_ANSWERS` : Afficher les bonnes réponses
+- `TOGGLE_PROJECTION_STATS` : Basculer les statistiques sur la projection
+- `REVEAL_LEADERBOARD` : Révéler le classement
+
+#### Événements de diffusion (serveur → client)
+- `GAME_CONTROL_STATE` : État du contrôle du jeu
+- `DASHBOARD_JOINED` : Confirmation de connexion au dashboard
+- `TIMER_UPDATE` : Mise à jour du timer
+- `CONNECTED_COUNT` : Nombre de connexions
+
+#### Événements spécifiques au dashboard
+- `DASHBOARD_QUESTION_CHANGED` : Question changée
+- `DASHBOARD_TIMER_UPDATED` : Timer mis à jour
+- `DASHBOARD_ANSWERS_LOCK_CHANGED` : Verrouillage des réponses changé
+- `DASHBOARD_GAME_STATUS_CHANGED` : Statut du jeu changé
+- `DASHBOARD_ANSWER_STATS_UPDATE` : Statistiques des réponses mises à jour
+
+### Événements Tournoi (TOURNAMENT_EVENTS)
+
+#### Actions des joueurs
+- `START_TOURNAMENT` : Démarrer un tournoi
+- `JOIN_TOURNAMENT` : Rejoindre un tournoi
+- `TOURNAMENT_ANSWER` : Soumettre une réponse au tournoi
+
+#### Réponses du serveur
+- `TOURNAMENT_STARTED` : Tournoi démarré
+- `TOURNAMENT_JOINED` : Joueur rejoint le tournoi
+- `TOURNAMENT_PLAYER_JOINED` : Nouveau joueur rejoint
+- `TOURNAMENT_STATE_UPDATE` : Mise à jour de l'état du tournoi
+- `TOURNAMENT_ANSWER_RESULT` : Résultat de la réponse
+- `TOURNAMENT_QUESTION_UPDATE` : Question mise à jour
+- `TOURNAMENT_QUESTION_STATE_UPDATE` : État de la question mis à jour
+- `TOURNAMENT_LEADERBOARD_UPDATE` : Classement mis à jour
+- `TOURNAMENT_ENDED` : Tournoi terminé
+- `TOURNAMENT_TIMER_UPDATE` : Timer mis à jour
+
+### Événements de Projection (PROJECTOR_EVENTS)
+
+#### Actions de projection
+- `JOIN_PROJECTION` : Rejoindre la projection
+- `LEAVE_PROJECTION` : Quitter la projection
+
+#### Réponses du serveur
+- `PROJECTION_JOINED` : Projection rejointe
+- `PROJECTION_LEFT` : Projection quittée
+- `PROJECTION_ERROR` : Erreur de projection
+- `PROJECTION_QUESTION_CHANGED` : Question changée sur la projection
+- `PROJECTION_CONNECTED_COUNT` : Nombre de connexions à la projection
+- `PROJECTION_STATE` : État de la projection
+- `PROJECTION_LEADERBOARD_UPDATE` : Classement mis à jour sur la projection
+
+#### Contrôles d'affichage
+- `PROJECTION_SHOW_STATS` : Afficher les statistiques
+- `PROJECTION_HIDE_STATS` : Masquer les statistiques
+- `PROJECTION_CORRECT_ANSWERS` : Afficher les bonnes réponses
+- `PROJECTION_STATS_STATE` : État canonique des statistiques
+
+### Événements de Jeu/Quiz (GAME_EVENTS)
+
+#### Actions des joueurs - Flux de connexion unifié
+- `JOIN_GAME` : Rejoindre un jeu (remplace JOIN_LOBBY)
+- `LEAVE_GAME` : Quitter un jeu (remplace LEAVE_LOBBY)
+- `GAME_ANSWER` : Soumettre une réponse
+- `REQUEST_PARTICIPANTS` : Demander la liste des participants
+- `REQUEST_NEXT_QUESTION` : Demander la question suivante
+- `START_GAME` : Démarrer le jeu
+
+#### Réponses du serveur
+- `GAME_JOINED` : Jeu rejoint
+- `PLAYER_JOINED_GAME` : Nouveau joueur rejoint le jeu
+- `PLAYER_LEFT_GAME` : Joueur a quitté le jeu
+- `GAME_PARTICIPANTS` : Liste des participants
+- `GAME_QUESTION` : Question du jeu
+- `ANSWER_RECEIVED` : Réponse reçue
+- `ANSWER_FEEDBACK` : Feedback de la réponse
+- `GAME_ENDED` : Jeu terminé
+- `GAME_ERROR` : Erreur de jeu
+- `GAME_ANSWERS_LOCK_CHANGED` : Verrouillage des réponses changé
+- `LEADERBOARD_UPDATE` : Mise à jour du classement
+
+#### Événements du timer
+- `GAME_TIMER_UPDATED` : Timer mis à jour (événement primaire)
+- `TIMER_UPDATE` : Mise à jour du timer
+- `GAME_UPDATE` : Mise à jour du jeu
+- `TIMER_SET` : Timer défini
+
+#### Événements d'état du jeu
+- `GAME_STATE_UPDATE` : Mise à jour de l'état du jeu
+- `CORRECT_ANSWERS` : Bonnes réponses
+- `GAME_ALREADY_PLAYED` : Jeu déjà joué
+- `GAME_REDIRECT_TO_LOBBY` : Redirection vers le lobby
+- `GAME_CODE_UPDATED` : Code du jeu mis à jour
+- `GAME_FINISHED_REDIRECT` : Redirection après fin du jeu
+
+#### Événements supplémentaires
+- `EXPLICATION` : Explication
+- `FEEDBACK` : Feedback
+- `LIVE_QUESTION` : Question en direct
+
+### Gestion des rooms Socket.IO
+
+Chaque partie utilise une "room" Socket.IO isolée pour la communication :
+
+```typescript
+// Rejoindre la room d'une partie
+socket.join(accessCode);
+
+// Émettre uniquement aux participants de cette partie
+io.to(accessCode).emit('event', data);
+
+// Quitter la room
+socket.leave(accessCode);
+```
+
+### Événements de connexion
+
+- `CONNECT` : Connexion établie
+- `DISCONNECT` : Déconnexion
+- `CONNECT_ERROR` : Erreur de connexion
+- `CONNECTION_ESTABLISHED` : Connexion confirmée

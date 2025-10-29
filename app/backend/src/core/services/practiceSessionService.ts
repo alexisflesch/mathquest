@@ -40,12 +40,40 @@ export class PracticeSessionService {
 
             if (settings.gameTemplateId) {
                 // Use pre-selected questions from GameTemplate
-                questionPool = await this.getGameTemplateQuestions(settings.gameTemplateId);
+                const templateUids = await this.getGameTemplateQuestions(settings.gameTemplateId);
+
+                // Defensive filter: ensure excludedFrom practice questions are removed even if template wasn't pre-filtered
+                // We'll also apply requested randomization and fallback fill-up logic here.
+                const filteredTemplate = Array.from(new Set(templateUids));
+
+                // If template provides fewer than requested, backfill from generated pool
+                let finalPool: string[] = filteredTemplate;
+
+                if (finalPool.length < settings.questionCount) {
+                    const generated = await this.generateQuestionPool(settings);
+                    for (const uid of generated) {
+                        if (!finalPool.includes(uid)) {
+                            finalPool.push(uid);
+                        }
+                        if (finalPool.length >= settings.questionCount) break;
+                    }
+                }
+
+                // Apply randomization if requested
+                if (settings.randomizeQuestions) {
+                    finalPool = this.shuffleArray(finalPool);
+                }
+
+                questionPool = finalPool;
+
                 logger.info({
                     sessionId,
                     gameTemplateId: settings.gameTemplateId,
-                    questionCount: questionPool.length
-                }, 'Using GameTemplate questions for practice session');
+                    templateProvided: templateUids.length,
+                    afterFilterAndFill: questionPool.length,
+                    requestedCount: settings.questionCount,
+                    usedUids: questionPool
+                }, 'Using GameTemplate questions for practice session (filtered + fallback)');
             } else {
                 // Generate new questions based on criteria (original behavior)
                 questionPool = await this.generateQuestionPool(settings);
@@ -363,6 +391,13 @@ export class PracticeSessionService {
                     hasSome: settings.themes
                 };
             }
+
+            // Exclude questions that are excluded from practice mode
+            whereConditions.NOT = {
+                excludedFrom: {
+                    has: 'practice'
+                }
+            };
 
             logger.info({
                 settings,
@@ -686,7 +721,14 @@ export class PracticeSessionService {
                 include: {
                     questions: {
                         orderBy: { sequence: 'asc' },
-                        include: { question: true }
+                        include: {
+                            question: {
+                                select: {
+                                    uid: true,
+                                    excludedFrom: true
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -695,16 +737,23 @@ export class PracticeSessionService {
                 throw new Error(`GameTemplate not found: ${gameTemplateId}`);
             }
 
-            // Extract question UIDs in correct sequence order
-            const questionUids = gameTemplate.questions.map(qtq => qtq.questionUid);
+            // Extract question UIDs in correct sequence order, filtering out questions excluded from practice
+            const questionUids = gameTemplate.questions
+                .filter(qtq => !qtq.question.excludedFrom.includes('practice'))
+                .map(qtq => qtq.questionUid);
+
+            // Deduplicate in case the template contains duplicates
+            const uniqueUids = Array.from(new Set(questionUids));
 
             logger.info({
                 gameTemplateId,
-                questionCount: questionUids.length,
-                questionUids
-            }, 'Retrieved questions from GameTemplate');
+                totalQuestionsInTemplate: gameTemplate.questions.length,
+                excludedFromPractice: gameTemplate.questions.filter(qtq => qtq.question.excludedFrom.includes('practice')).map(qtq => qtq.questionUid),
+                finalQuestionCount: uniqueUids.length,
+                questionUids: uniqueUids
+            }, 'Retrieved and filtered questions from GameTemplate');
 
-            return questionUids;
+            return uniqueUids;
         } catch (error) {
             logger.error({ gameTemplateId, error }, 'Failed to get GameTemplate questions');
             throw error;

@@ -1,0 +1,186 @@
+- uid: aflesch-mt1-espaces-vectoriels-001
+  author: aflesch
+  discipline: Mathématiques
+  title: Base et famille
+  text: >
+    On considère deux vecteurs \(u\) et \(v\) non colinéaires de
+    \(\mathbb{R}^2\).
+
+    Laquelle des affirmations suivantes est correctement formulée ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - base
+    - famille libre
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - \(\text{Vect}(u,v)\) est une base de \(\mathbb{R}^2\).
+    - \((u,v)\) est une base de \(\text{Vect}(u,v)\).
+    - \(\{u,v\}\) est une base de \(\mathbb{R}^2\).
+    - \(\text{Vect}(u,v)\) est une famille libre.
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-002
+  author: aflesch
+  discipline: Mathématiques
+  title: Sous-espace vectoriel
+  text: >
+    Soient \(e_1\) et \(e_2\) deux vecteurs de \(\mathbb{R}^n\). Laquelle des
+    expressions suivantes désigne un sous-espace vectoriel de \(\mathbb{R}^n\)?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - sous-espace vectoriel
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - \((e_1,e_2)\)
+    - \(\{e_1,e_2\}\)
+    - \(\text{Vect}(e_1,e_2)\)
+    - \(\text{rg}(e_1,e_2)\)
+  correctAnswers:
+    - false
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-003
+  author: aflesch
+  discipline: Mathématiques
+  title: Famille vs espace
+  text: >
+    Si \(u\) et \(v\) sont deux vecteurs non colinéaires de \(\mathbb{R}^2\),
+    alors \(\text{Vect}(u,v)\) est une base de \(\mathbb{R}^2\).
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - base
+    - famille libre
+  timeLimit: 90
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers:
+    - false
+    - true
+
+- uid: aflesch-mt1-espaces-vectoriels-004
+  author: aflesch
+  discipline: Mathématiques
+  title: Familles de vecteurs dans \(\mathbb{R}^2\)
+  text: >
+    Soit \(u=(1,0)\), \(v=(0,1)\) et \(w=(1,1)\). Parmi les affirmations
+    suivantes, laquelle est correcte ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - base
+    - dimension
+  timeLimit: 45
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - \((u,v,w)\) est une base de \(\mathbb{R}^2\).
+    - \(\text{Vect}(u,v,w)\) est une famille libre.
+    - \(\dim\left(\text{Vect}(u,v,w)\right)=3\).
+    - \((u,v)\) est une base de \(\text{Vect}(u,v,w)\).
+  correctAnswers:
+    - false
+    - false
+    - false
+    - true
+
+- uid: aflesch-mt1-espaces-vectoriels-005
+  author: aflesch
+  discipline: Mathématiques
+  title: Dimension d'un sous-espace engendré
+  text: >
+    Soient \(u\), \(v\) et \(w\) trois vecteurs de \(\mathbb{R}^5\) linéairement
+    indépendants. Quelle est la dimension de \(\text{Vect}(u,v,w)\) ?
+  questionType: numeric
+  themes:
+    - Espaces vectoriels
+  tags:
+    - dimension
+    - combinaison linéaire
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  correctAnswer: 3
+
+- uid: aflesch-mt1-espaces-vectoriels-006
+  author: aflesch
+  discipline: Mathématiques
+  title: Piège de vocabulaire
+  text: |
+    Laquelle de ces affirmations est nécessairement fausse ?
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - famille liée
+  timeLimit: 60
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Une famille de 4 vecteurs dans \(\mathbb{R}^3\) peut être libre
+    - Une famille contenant le vecteur nul est libre
+    - >-
+      Une famille de 2 vecteurs non colinéaires dans \(\mathbb{R}^2\) est une
+      base
+    - \(\text{Vect}(u)\) est une droite vectorielle
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-007
+  author: aflesch
+  discipline: Mathématiques
+  title: Génératrice et base
+  text: >
+    Si \((u,v)\) est une famille génératrice de \(E\) et que \(u\) et \(v\) ne
+    sont pas colinéaires, alors \((u,v)\) est une base de \(E\).
+  questionType: single_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - base
+    - famille génératrice
+  timeLimit: 45
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers:
+    - true
+    - false

@@ -1,86 +1,294 @@
-# Questions de Mathématiques niveau L2 pour MathQuest
-# Thème : Déterminant
-# Auteur : Alexis Flesch
-
-- uid: "aflesch-mt3-determinant-001"
-  author: "aflesch"
-  gradeLevel: "L2"
-  discipline: "Mathématiques"
-  themes: ["Déterminant"]
-  title: "Déterminant anti-diagonal"
-  questionType: "numeric"
-  timeLimit: 30
-  difficulty: 1
-  excludedFrom: ["practice", "tournament"]
+- uid: aflesch-mt3-determinant-001
+  author: aflesch
+  discipline: Mathématiques
+  title: Déterminant anti-diagonal
   text: |
     Quelle est la valeur du déterminant ci-dessous?
     \[\begin{vmatrix}
         0 & 0 & 4 \\
-        0 & 3 & 3 \\
+        0 & -3 & 3 \\
         2 & 2 & 2
     \end{vmatrix}\]
-  correctAnswer: -24
-
-
-- uid: "aflesch-mt3-determinant-002"
-  author: "aflesch"
-  gradeLevel: "L2"
-  discipline: "Mathématiques"
-  themes: ["Déterminant"]
-  title: "Cours déterminant"
-  questionType: "single_choice"
+  questionType: numeric
+  themes:
+    - Déterminant
+  tags: []
   timeLimit: 30
   difficulty: 1
-  excludedFrom: ["practice", "tournament"]
-  text: |
-      En dimension finie, le déterminant d'un endomorphisme dépend de la base choisie
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  correctAnswer: 24
+
+- uid: aflesch-mt3-determinant-002
+  author: aflesch
+  discipline: Mathématiques
+  title: Cours déterminant
+  text: >
+    En dimension finie, le déterminant d'un endomorphisme dépend de la base
+    choisie
+  questionType: single_choice
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - Vrai
-    - Faux  
-  correctAnswers: [false, true]
+    - Faux
+  correctAnswers:
+    - false
+    - true
 
-
-- uid: "aflesch-mt3-determinant-003"
-  author: "aflesch"
-  gradeLevel: "L2"
-  discipline: "Mathématiques"
-  themes: ["Déterminant"]
-  tags: ["règles de calcul"]
-  title: "Propriétés du déterminant"
-  questionType: "multiple_choice"
-  timeLimit: 60
-  difficulty: 1
-  excludedFrom: ["practice", "tournament"]
+- uid: aflesch-mt3-determinant-003
+  author: aflesch
+  discipline: Mathématiques
+  title: Propriétés du déterminant
   text: |
     Soit \(A\in \mathcal{M}_n(\mathbb{R})\) où \(n\in \mathbb{N}^\star\).
     Parmi ces affirmations, lesquelles sont vraies?
+  questionType: multiple_choice
+  themes:
+    - Déterminant
+  tags:
+    - règles de calcul
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - Échanger deux lignes de \(A\) ne modifie pas son déterminant
-    - Échanger deux colonnes de \(A\) multiplie son déterminant par \((-1)^n\)
+    - Échanger deux colonnes de \(A\) multiplie son déterminant par \(-1\)
     - Transposer \(A\) ne modifie pas son déterminant
     - Si deux lignes de \(A\) sont égales alors son déterminant est nul
     - Aucune des assertions ci-dessus n'est vraie
-  correctAnswers: [false, true, true, true, false]
+  correctAnswers:
+    - false
+    - true
+    - true
+    - true
+    - false
 
-
-- uid: "aflesch-mt3-determinant-004"
-  author: "aflesch"
-  gradeLevel: "L2"
-  discipline: "Mathématiques"
-  themes: ["Déterminant"]
-  tags: ["règles de calcul"]
-  title: "Propriétés du déterminant"
-  questionType: "multiple_choice"
+- uid: aflesch-mt3-determinant-004
+  author: aflesch
+  discipline: Mathématiques
+  title: Propriétés du déterminant
+  text: >
+    Soient \(A\) une matrice carrée de taille \(n\times n\) et \(\lambda\) un
+    nombre complexe. Alors:
+  questionType: multiple_choice
+  themes:
+    - Déterminant
+  tags:
+    - règles de calcul
   timeLimit: 60
   difficulty: 1
-  excludedFrom: ["practice", "tournament"]
-  text: |
-      Soient \(A\) une matrice carrée de taille \(n\times n\) et \(\lambda\) un nombre complexe. Alors:
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
   answerOptions:
     - \(\mathrm{det}(\lambda A) = \lambda \mathrm{det}(A)\)
     - \(\mathrm{det}(\lambda A) = \lambda^n \mathrm{det}(A)\)
     - \(\mathrm{det}(\lambda A) = (-1)^n\lambda^n \mathrm{det}(A)\)
     - \(\mathrm{det}(\lambda A) =  \mathrm{det}(A)\)
     - Aucune des réponses ci-dessus n'est vraie
-  correctAnswers: [false, true, false, false, false]
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+    - false
 
+- uid: aflesch-mt3-determinant-005
+  author: aflesch
+  discipline: Mathématiques
+  title: Calcul de déterminant 2x2
+  text: >
+    Soit \(A=\begin{pmatrix}2 & 2\\ 3 & 4\end{pmatrix}\). Calculer le
+    déterminant de \(A\).
+  questionType: numeric
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  correctAnswer: 2
+
+- uid: aflesch-mt3-determinant-007
+  author: aflesch
+  discipline: Mathématiques
+  title: Propriétés fondamentales
+  text: |
+    Parmi les affirmations suivantes, lesquelles sont vraies ?
+  questionType: multiple_choice
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Si le déterminant d’une matrice est nul, la matrice n’est pas inversible
+    - Si le déterminant est non nul, la matrice est inversible
+    - Une matrice inversible a toujours un déterminant positif
+    - Si deux lignes sont égales, le déterminant est nul
+    - Aucune des réponses ci-dessus
+  correctAnswers:
+    - true
+    - true
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt3-determinant-008
+  author: aflesch
+  discipline: Mathématiques
+  title: Calcul de déterminant 3x3 diagonal
+  text: >
+    Soit \(B=\begin{pmatrix}2 & 0 & 0\\ 1 & 3 & 0\\ 0 & 0 & 4\end{pmatrix}\).
+    Calculer \(\det(B)\).
+  questionType: numeric
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  correctAnswer: 24
+
+- uid: aflesch-mt3-determinant-009
+  author: aflesch
+  discipline: Mathématiques
+  title: Multiplication des lignes 3x3
+  text: >
+    On multiplie toutes les lignes d’une matrice 3x3 par 2. Par quoi son
+    déterminant est-il alors multiplié?
+  questionType: numeric
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  correctAnswer: 0
+
+- uid: aflesch-mt3-determinant-010
+  author: aflesch
+  discipline: Mathématiques
+  title: Égalités de déterminant
+  text: |
+    Parmi les égalités suivantes, lesquelles sont toujours vraies ?
+  questionType: multiple_choice
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - \(\det(AB) = \det(A) × \det(B)\)
+    - \(\det({}^tA) = \det(A)\)
+    - \(\det(A + B) = \det(A) + \det(B)\)
+    - \(\det(A^{-1}) = 1 / \det(A)\)
+    - Elles sont toutes fausses
+  correctAnswers:
+    - true
+    - true
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt3-determinant-011
+  author: aflesch
+  discipline: Mathématiques
+  title: Colonnes multiples
+  text: |
+    Si une matrice carrée a une colonne qui est un multiple d’une autre, alors :
+  questionType: single_choice
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Son déterminant vaut 0
+    - Son déterminant est négatif
+    - Son déterminant est égal au produit des coefficients diagonaux
+    - Son déterminant ne change pas
+  correctAnswers:
+    - true
+    - false
+    - false
+    - false
+
+- uid: aflesch-mt3-determinant-013
+  author: aflesch
+  discipline: Mathématiques
+  title: Lien inversibilité et déterminant
+  text: |
+    Laquelle des affirmations suivantes est vraie ?
+  questionType: single_choice
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Une matrice non inversible peut avoir un déterminant non nul
+    - Une matrice inversible a un déterminant nul
+    - Une matrice non inversible a un déterminant nul
+    - Une matrice carrée a toujours un déterminant égal à 1
+  correctAnswers:
+    - false
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt3-determinant-014
+  author: aflesch
+  discipline: Mathématiques
+  title: Conditions annulant le déterminant
+  text: |
+    Pour une matrice 3x3, le déterminant est nul si :
+  questionType: multiple_choice
+  themes:
+    - Déterminant
+  tags: []
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: L2
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Une ligne est combinaison linéaire des autres
+    - Deux colonnes sont égales
+    - Les trois lignes sont orthogonales
+    - Une ligne est nulle
+    - Aucune des réponses ci-dessus
+  correctAnswers:
+    - true
+    - true
+    - false
+    - true
+    - false

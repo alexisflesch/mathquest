@@ -1,0 +1,64 @@
+- uid: aflesch-mt1-espaces-vectoriels-011
+  author: aflesch
+  discipline: Mathématiques
+  title: Dépendance linéaire simple
+  text: >
+    Soient \(u\), \(v\) et \(w\) des vecteurs de \(\mathbb{R}^3\) tels que
+    \(w=u+v\).
+
+    Que peut-on dire de la famille \((u,v,w)\) ?
+  questionType: multiple_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - famille liée
+    - combinaison linéaire
+  timeLimit: 60
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Elle est libre
+    - Elle est liée
+    - Elle est génératrice de \(\mathbb{R}^3\)
+    - Elle contient le vecteur nul
+    - Elle n'est pas génératrice de  \(\mathbb{R}^3\)
+    - Aucune des réponses ci-dessus
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt1-espaces-vectoriels-012
+  author: aflesch
+  discipline: Mathématiques
+  title: Vérifier une base
+  text: |
+    Soit \(E\) un espace vectoriel de dimension 3 et \((e_1,e_2,e_3)\) une
+    famille de \(E\). Pour montrer que cette famille est une base, il suffit de
+    prouver que :
+  questionType: multiple_choice
+  themes:
+    - Espaces vectoriels
+  tags:
+    - base
+    - dimension
+  timeLimit: 45
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - La famille est libre.
+    - La famille est génératrice.
+    - La famille est libre et génératrice.
+    - La famille contient trois éléments.
+  correctAnswers:
+    - true
+    - true
+    - true
+    - false

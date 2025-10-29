@@ -117,7 +117,7 @@ const EnhancedMultiSelectDropdown: React.FC<EnhancedMultiSelectDropdownProps> = 
                 </button>
 
                 <div
-                    className="absolute z-10 bg-dropdown text-dropdown-foreground border border-dropdown-border shadow-lg mt-1 max-h-60 overflow-y-auto"
+                    className="absolute z-50 bg-dropdown text-dropdown-foreground border border-dropdown-border shadow-lg mt-1 max-h-60 overflow-y-auto"
                     style={{
                         display: open ? 'block' : 'none',
                         left: '0',

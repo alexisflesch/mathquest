@@ -48,7 +48,7 @@ describe('Integration: Real Redis & Socket Handler Tests', () => {
         }
 
         // Close Redis connection to prevent open handles
-        await redisClient.quit();
+        // Redis cleanup handled by globalTeardown.ts
     });
 
     beforeEach(() => {

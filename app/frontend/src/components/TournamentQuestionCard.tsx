@@ -137,7 +137,10 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
         userSelect: 'none' as const,    // Prevents text selection
     } : {};
 
-    console.debug('[TournamentQuestionCard] Rendering with questionText:', questionTextToDisplay, 'answersToDisplay:', answersToDisplay, 'currentQuestion prop:', currentQuestion);
+    if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.debug('[TournamentQuestionCard] Rendering with questionText:', questionTextToDisplay, 'answersToDisplay:', answersToDisplay, 'currentQuestion prop:', currentQuestion);
+    }
 
     return (
         <div className="tqcard-content w-full flex flex-col gap-6 items-center" style={readonlyStyle}>
@@ -146,7 +149,10 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                 <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
             )}
             {/* Question text */}
-            <div className="mb-4 text-xl font-semibold text-center w-full">
+            <div
+                className="mb-4 text-xl font-semibold text-center w-full"
+                style={{ overflowX: 'auto', overflowY: 'visible' }}
+            >
                 <MathJaxWrapper>{questionTextToDisplay}</MathJaxWrapper>
             </div>
             <ul className="flex flex-col w-full">
@@ -188,7 +194,7 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                                 disabled={false}
                                 aria-disabled={readonly}
                                 tabIndex={readonly ? -1 : 0}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'auto' }}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflowX: 'auto', overflowY: 'visible' }}
                             >
                                 {/* Histogram bar as background */}
                                 {showStats && statPercent !== null && (

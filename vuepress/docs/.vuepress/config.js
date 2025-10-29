@@ -24,6 +24,7 @@ export default defineUserConfig({
       { text: "Écriture de questions", link: "/questions-yaml/" },
       { text: "Installation", link: "/installation/" },
       { text: "Détails techniques", link: "/details-techniques/" },
+      { text: "Dev", link: "/dev/" },
     ],
 
     sidebar: {
@@ -71,6 +72,16 @@ export default defineUserConfig({
             '/details-techniques/security.md',
             '/details-techniques/performance-monitoring.md',
             '/details-techniques/troubleshooting.md',
+            '/details-techniques/question-editor.md',
+            '/details-techniques/landing-page.md',
+          ],
+        },
+      ],
+      '/dev/': [
+        {
+          text: 'Developer Documentation',
+          children: [
+            '/dev/observability.md',
           ],
         },
       ],

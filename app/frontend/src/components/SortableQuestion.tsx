@@ -269,7 +269,10 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         if (!isNaN(newTime) && newTime >= 0) {
             logger.info(`Validating timer edit for question ${q.uid}: ${newTime}s`);
             const ms = newTime * 1000;
-            console.debug('[SortableQuestion] validateEditHandler: onEditTimer called with', ms, 'ms');
+            if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.debug('[SortableQuestion] validateEditHandler: onEditTimer called with', ms, 'ms');
+            }
             onEditTimer(ms);
             setPendingTimeValue(ms);
             logger.debug(`Pending time value set to ${ms}ms for question ${q.uid}`);
@@ -301,7 +304,10 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         } else {
             timeToUse = durationMs ?? 0;
         }
-        console.debug('[SortableQuestion] handlePlayWithCurrentTime: onPlay called with', timeToUse, 'ms');
+        if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.debug('[SortableQuestion] handlePlayWithCurrentTime: onPlay called with', timeToUse, 'ms');
+        }
         onPlay(q.uid, timeToUse);
     };
 
@@ -358,7 +364,10 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 <TimerField
                     valueMs={(parseInt(editTimerValue, 10) || 0) * 1000}
                     onChange={(newValueMs) => {
-                        console.debug('[SortableQuestion] TimerField onChange called with', newValueMs, 'ms');
+                        if (typeof window !== 'undefined' && window.location.search?.includes('mqdebug=1')) {
+                            // eslint-disable-next-line no-console
+                            console.debug('[SortableQuestion] TimerField onChange called with', newValueMs, 'ms');
+                        }
                         if (!isNaN(newValueMs) && newValueMs >= 0) {
                             onEditTimer(newValueMs); // propagate up in ms, triggers backend
                             setEditingTimer(false); // close edit mode, just like play/pause

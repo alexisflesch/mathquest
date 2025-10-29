@@ -88,9 +88,15 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
                     };
                 }
             }
-            // Emit to projection room
+            // Emit to projection room (canonical payload)
             io.to(`projection_${gameInstance.id}`).emit(PROJECTOR_EVENTS.PROJECTION_SHOW_STATS, projectionStatsPayload);
-            logger.info({ projectionStatsPayload }, 'Emitted global projection stats toggle');
+            logger.info({ projectionStatsPayload }, 'Emitted global projection stats toggle to projection');
+
+            // IMPORTANT: Also emit confirmation to dashboard room so the teacher UI reflects the canonical state
+            // Source of truth is backend; dashboard should update only on this confirmation
+            const dashboardRoom = `dashboard_${gameInstance.id}`;
+            io.to(dashboardRoom).emit(SOCKET_EVENTS.TEACHER.TOGGLE_PROJECTION_STATS, { show });
+            logger.info({ dashboardRoom, show }, 'Emitted showStats confirmation to dashboard room');
         } catch (error) {
             logger.error({ socketId: socket.id, payload, error }, 'Error in toggle projection stats handler');
             socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {

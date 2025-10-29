@@ -10,6 +10,10 @@ import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketDa
 import { socketDataSchema, connectionEstablishedPayloadSchema } from '@shared/types/socketEvents.zod';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { z } from 'zod';
+// Import disconnect handlers at module level to avoid async import issues during Jest teardown
+import { disconnectHandler as gameDisconnectHandler } from './game/disconnect';
+import { disconnectHandler as teacherDisconnectHandler } from './teacherControl/disconnect';
+import { disconnectHandler as mainDisconnectHandler } from './disconnectHandler';
 
 // Derive types from Zod schemas
 type ConnectionEstablishedPayload = z.infer<typeof connectionEstablishedPayloadSchema>;
@@ -31,10 +35,15 @@ export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEven
             query: socket.handshake.query
         });
 
-        // TOP-LEVEL: Log all events received by any socket for deep debugging
-        socket.onAny((event, ...args) => {
-            logger.info('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);
-        });
+        // TOP-LEVEL: Log all events received by any socket (gated by env flag)
+        // WARNING: This can be very verbose in production, use SOCKET_DEBUG_EVENTS=true only for debugging
+        if (process.env.SOCKET_DEBUG_EVENTS === 'true') {
+            socket.onAny((event, ...args) => {
+                logger.info(`[SOCKET DEBUG] onAny: ${event} socket: ${socket.id}`, { args });
+            });
+        } else {
+            logger.debug('socket.onAny logging disabled (set SOCKET_DEBUG_EVENTS=true to enable)');
+        }
 
         handleConnection(socket);
 
@@ -46,15 +55,12 @@ export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEven
             handlePracticeSessionDisconnect(io, socket);
 
             // Handle game-specific disconnect logic
-            const { disconnectHandler: gameDisconnectHandler } = await import('./game/disconnect');
             await gameDisconnectHandler(io, socket)();
 
             // Handle teacher dashboard disconnect logic
-            const { disconnectHandler: teacherDisconnectHandler } = await import('./teacherControl/disconnect');
             await teacherDisconnectHandler(io, socket)();
 
             // Handle main disconnect logic (for general participant tracking)
-            const { disconnectHandler: mainDisconnectHandler } = await import('./disconnectHandler');
             await mainDisconnectHandler(io, socket)(reason);
 
             logger.info({ socketId: socket.id, reason }, 'Socket disconnect cleanup completed');

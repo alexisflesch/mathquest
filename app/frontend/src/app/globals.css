@@ -619,7 +619,7 @@ textarea {
   background: var(--dropdown);
   border: 1.5px solid var(--input);
   border-radius: var(--radius);
-  padding: 0.75rem 1rem;
+  padding: 1.1rem 1rem 0.75rem;
   font-size: 1rem;
   color: var(--foreground);
   transition: border 0.15s, box-shadow 0.15s;
@@ -1018,6 +1018,22 @@ textarea:focus {
   /* Always show a border */
   color: var(--foreground);
   cursor: pointer;
+}
+
+/* removed top badge strip; side container retained below */
+
+/* Container used to show percentage and icons at the right without reserving layout space */
+.answer-side-container {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  /* visual only */
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .tqcard-answer-selected {
@@ -1482,12 +1498,119 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 .question-text-in-live-page {
   white-space: pre-line;
   text-align: left;
-  overflow-y: auto;
-  max-height: 200px;
-  /* Adjust as needed for your layout */
+  /* Keep vertical overflow visible (no vertical scrollbars) but allow horizontal
+     scrolling when content (e.g. wide MathJax formulas) exceeds container width. */
+  overflow-x: auto !important;
+  /* Prevent tiny fractional vertical scrollbars due to rounding */
+  overflow-y: hidden !important;
+  max-height: none;
 }
 
 
 .question-text-in-dashboards {
   white-space: pre-line;
 }
+
+/* Prevent unnecessary vertical scrollbars on MathJax formulas inside question displays.
+   Use specific descendant selectors (valid CSS) so only MathJax elements inside
+   question text containers are affected. */
+
+.question-text-in-dashboards .mjx-container,
+.question-text-in-dashboards .mjx-chtml,
+.question-text-in-dashboards .MathJax {
+  /* Allow horizontal scrolling for wide formulas in dashboards, keep vertical visible */
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Also ensure MathJax elements inside the live question text do not produce
+   internal scrollbars — scoped narrowly to avoid changing other layouts. */
+.question-text-in-live-page .mjx-container,
+.question-text-in-live-page .mjx-chtml,
+.question-text-in-live-page .MathJax {
+  /* Allow MathJax to scroll horizontally when necessary, and never vertically */
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Very specific override: some runtime or injected inline styles (MathJax or scripts)
+   can set overflow on the question text container. The DevTools trace shows the
+   .question-text-in-live-page element inside the card sometimes computes
+   overflow-y: auto despite author rules. This selector targets the common
+   card wrapper + tqcard-content tree and force-ensures no vertical scrollbar
+   while preserving horizontal scrolling. Narrow and documented to avoid regressions. */
+.card.w-full.max-w-2xl .tqcard-content>.question-text-in-live-page {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Additional narrow override: target the immediate content wrapper inside the
+   question text container. Some MathJax CHTML nodes insert a DIV/span that can
+   be a few pixels taller due to font-size/line-height; force no max-height and
+   allow horizontal scroll while preventing a vertical scrollbar */
+.card.w-full.max-w-2xl .tqcard-content>.question-text-in-live-page>div {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  /* Ensure no unintended clipping of math; hidden only removes scrollbar, content height remains natural */
+  max-height: none !important;
+}
+
+/* Prevent any vertical scrollbars inside question cards (question text and answers).
+   Avoid applying to every descendant (no "*") because MathJax creates many
+   internal boxes that rely on computed overflow for correct rendering. Instead
+   target only the outer .tqcard-content container so inner MathJax nodes can
+   keep their native layout. This prevents nested scrollbars without breaking
+   MathJax's internal measurement. */
+.tqcard-content {
+  overflow-y: visible !important;
+}
+
+/* Fix: clip vertical overflow for MathJax display-mode (\[ ... \]) inside question cards
+   MathJax display math sometimes inserts block-level wrappers (e.g. .MathJax_Display, mjx-container, .mjx-block)
+   which can be a few pixels taller due to subpixel rounding and cause a vertical scrollbar on the card.
+   This rule ensures display-mode math won't create a vertical scrollbar, while preserving horizontal scrolling
+   for long formulas. Keep this narrowly scoped to question displays to avoid global side-effects. */
+
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .MathJax_Display,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-block,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-chtml,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .MathJax {
+  overflow-x: auto !important;
+  /* Use visible rather than clip: clip can hide parts of MathJax rendered
+     elements and interfere with their internal sizing (causes missing parts
+     or cut brackets). visible keeps the content intact while outer container
+     controls scrolling. */
+  overflow-y: visible !important;
+  max-height: none !important;
+}
+
+/* Targeted fix: MathJax sets position: relative on its root container which can
+   interact with parent overflow to create a micro vertical scrollbar. Within
+   live/practice and dashboard question text blocks, neutralize that positioning
+   to static. Use both tag and class selectors for mjx-container variants. */
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-live-page .mjx-container,
+.question-text-in-live-page mjx-container,
+.question-text-in-live-page .mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-container,
+.question-text-in-dashboards mjx-container,
+.question-text-in-dashboards .mjx-container {
+  position: static !important;
+}
+
+/* Also apply same treatment to dashboard/tournament variants if present */
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .MathJax_Display,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-block,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards mjx-container,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .mjx-chtml,
+.card.w-full.max-w-2xl .tqcard-content .question-text-in-dashboards .MathJax {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  max-height: none !important;
+}
+
+/* Import MathJax-specific overrides in a separate file to keep globals.css smaller
+   and to make future MathJax-targeted changes easier to find. */
+/* @import './mathjax-overrides.css'; */
