@@ -167,6 +167,70 @@ Le script `scripts/yaml2latex.py` permet de transformer les fichiers YAML des do
 
 ⚠️ Selon la politique de sécurité de votre lecteur PDF, vous devrez peut-être autoriser explicitement l'ouverture des liens `file://`.
 
+## Types partagés (Shared Types)
+
+MathQuest utilise un système de types partagés centralisés dans `shared/types/` pour assurer la cohérence entre frontend et backend.
+
+### Structure des types partagés
+
+```
+shared/types/
+├── index.ts              # Point d'entrée principal
+├── question.ts           # Types de base des questions
+├── quiz/                 # Types liés aux quiz
+│   ├── question.ts       # Types étendus des questions
+│   ├── state.ts          # États des quiz
+│   └── liveQuestion.ts   # Questions en direct
+├── socket/               # Types liés aux sockets
+│   ├── events.ts         # Constantes des événements socket
+│   └── payloads.ts       # Payloads des événements socket
+├── tournament/           # Types liés aux tournois
+│   ├── participant.ts    # Types des participants
+│   └── state.ts          # États des tournois
+├── util/                 # Utilitaires de types
+│   ├── logger.ts         # Interface des loggers
+│   ├── typeGuards.ts     # Guards de types
+│   ├── typeErrors.ts     # Gestion des erreurs
+│   ├── typeMapping.ts    # Conversions de types
+│   ├── schemaValidation.ts # Validation des schémas
+│   └── schemaDefinitions.ts # Définitions des schémas
+└── examples/             # Exemples d'utilisation
+```
+
+### Utilisation des types partagés
+
+Importez les types partagés avec l'alias `@shared/types` :
+
+```typescript
+import { 
+  Question, 
+  Answer, 
+  GAME_EVENTS, 
+  isQuestion,
+  mapToStandardQuestion 
+} from '@shared/types';
+```
+
+### Outils de validation des types
+
+Les types partagés incluent plusieurs outils pour la validation runtime :
+
+- **Type Guards** : Fonctions comme `isQuestion` pour la vérification basique des types
+- **Type Mapping** : Fonctions comme `mapToStandardQuestion` pour convertir entre formats
+- **Schema Validation** : Utilitaires de validation pour les exigences complexes
+
+### Événements Socket.IO canoniques
+
+Tous les événements Socket.IO sont définis dans `shared/types/socket/events.ts` :
+
+- **TEACHER_EVENTS** : Événements du tableau de bord enseignant
+- **GAME_EVENTS** : Événements de jeu/quiz (flux unifié)
+- **TOURNAMENT_EVENTS** : Événements spécifiques aux tournois
+- **PROJECTOR_EVENTS** : Événements de projection
+- **LOBBY_EVENTS** : Événements de lobby (dépréciés)
+
+Voir la section "Événements Socket.IO" dans `backend-services.md` pour la documentation complète.
+
 ## Flux de données typique
 
 ### Création d'un quiz

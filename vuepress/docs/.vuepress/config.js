@@ -72,6 +72,7 @@ export default defineUserConfig({
             '/details-techniques/security.md',
             '/details-techniques/performance-monitoring.md',
             '/details-techniques/troubleshooting.md',
+            '/technical/question-editor.md',
           ],
         },
       ],

@@ -31,7 +31,7 @@ Source: `app/frontend/src/components/AuthProvider.tsx`
 
 2) Guest & Student
 - Slogan: "Keep Up The Speed, Unleash Mastery !"
-- Greeting: "Bonjour <username>, ..."
+- Greeting: "Bonjour {username}, ..."
 - Quick links:
   - Rejoindre une activité → `/student/join`
   - Mes activités → `/my-tournaments`
@@ -40,7 +40,7 @@ Source: `app/frontend/src/components/AuthProvider.tsx`
 
 3) Teacher
 - Slogan: "Keep Up The Speed, Unleash Mastery !" (same as students)
-- Greeting: "Bonjour <username>, ..."
+- Greeting: "Bonjour {username}, ..."
 - Quick links:
   - Créer une activité → `/teacher/games/new`
   - Gérer mes activités → `/teacher/games`

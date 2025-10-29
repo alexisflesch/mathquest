@@ -43,9 +43,6 @@ L'éditeur de questions est une nouvelle page accessible aux enseignants via `/t
 - Mock de localStorage et Monaco Editor
 - Tests de non-régression sur le mode YAML (`QuestionEditor.yaml-mode.test.tsx`) pour garantir qu'aucune normalisation automatique ne réécrit le YAML pendant la saisie
 
-### Correctifs récents
-- 2025-10-03 : désactivation de la normalisation automatique des métadonnées lorsque l'éditeur est en mode YAML afin d'éviter que la saisie manuelle (ex. mise à jour du champ `discipline`) ne réécrive tout le document. Voir `QuestionEditor.yaml-mode.test.tsx` pour le test de reproduction et `QuestionEditor.tsx` pour la mise à jour des garde-fous.
-
 ## Utilisation
 
 1. Accéder à `/teacher/questions/edit`
