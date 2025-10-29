@@ -5,12 +5,12 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { UserRole, UserRegistrationData, UserLoginData, UserUpgradeData, AuthResponse } from '@shared/types/core';
 import { EmailService } from './emailService';
+import { JWT_EXPIRES_IN, RESET_TOKEN_EXPIRES_IN, EMAIL_VERIFICATION_TOKEN_EXPIRES_IN } from '../../config/auth.constants';
 
 const logger = createLogger('UserService');
 const emailService = new EmailService();
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
-const JWT_EXPIRES_IN = '24h';
 
 export class UserService {
     /**
@@ -254,7 +254,7 @@ export class UserService {
             }
 
             const resetToken = crypto.randomBytes(32).toString('hex');
-            const resetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+            const resetTokenExpiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRES_IN);
 
             await prisma.user.update({
                 where: { email },
@@ -545,7 +545,7 @@ export class UserService {
             }
 
             const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-            const emailVerificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+            const emailVerificationTokenExpiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_EXPIRES_IN);
 
             await prisma.user.update({
                 where: { email },
@@ -672,7 +672,7 @@ export class UserService {
             }
 
             const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-            const emailVerificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+            const emailVerificationTokenExpiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_EXPIRES_IN);
 
             await prisma.user.update({
                 where: { email },
@@ -703,7 +703,7 @@ export class UserService {
             }
 
             const resetToken = crypto.randomBytes(32).toString('hex');
-            const resetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+            const resetTokenExpiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRES_IN);
 
             await prisma.user.update({
                 where: { email },
