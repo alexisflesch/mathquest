@@ -188,8 +188,8 @@ model GameParticipant {
   id             String            @id @default(uuid())
   gameInstanceId String            @map("game_instance_id")
   userId         String            @map("user_id")
-  liveScore      Int               @default(0) @map("live_score")
-  deferredScore  Int               @default(0) @map("deferred_score")
+  liveScore      Float             @default(0) @map("live_score")
+  deferredScore  Float             @default(0) @map("deferred_score")
   nbAttempts     Int               @default(0) @map("nb_attempts")
   status         ParticipantStatus @default(PENDING) @map("status")
   joinedAt       DateTime          @default(now()) @map("joined_at")
@@ -205,6 +205,20 @@ model GameParticipant {
 - `ACTIVE` : Actif dans la partie
 - `COMPLETED` : A terminé la partie
 - `LEFT` : A quitté la partie
+
+### Taxonomy (Taxonomie)
+
+```sql
+model Taxonomy {
+  id          String   @id @default(uuid())
+  gradeLevel  String   @unique @map("grade_level")
+  content     Json     @map("content")
+  contentHash String?  @map("content_hash")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+}
+```
+
+**Description :** Stocke les métadonnées canoniques des niveaux scolaires (disciplines/thèmes/tags). Rempli par un script d'import manuel et en lecture seule pour l'application.
 
 ## Relations entre les entités
 

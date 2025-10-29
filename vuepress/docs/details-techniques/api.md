@@ -73,7 +73,7 @@ Déconnexion de l'utilisateur.
 }
 ```
 
-### POST /api/v1/auth/upgrade-account
+### POST /api/v1/auth/upgrade
 
 Mise à niveau d'un compte invité vers un compte permanent.
 
@@ -87,7 +87,7 @@ Mise à niveau d'un compte invité vers un compte permanent.
 }
 ```
 
-### POST /api/v1/auth/password-reset
+### POST /api/v1/auth/reset-password
 
 Demande de réinitialisation de mot de passe.
 
@@ -97,7 +97,7 @@ Demande de réinitialisation de mot de passe.
 }
 ```
 
-### POST /api/v1/auth/password-reset-confirm
+### POST /api/v1/auth/reset-password/confirm
 
 Confirmation de réinitialisation avec nouveau mot de passe.
 
@@ -151,6 +151,60 @@ Vérification du statut d'authentification.
     "username": "prof_math",
     "role": "TEACHER"
   }
+}
+```
+
+### POST /api/v1/auth/register
+
+Création d'un nouveau compte utilisateur.
+
+**Authentification :** Non requise
+
+```json
+{
+  "username": "eleve123",
+  "email": "student@school.com",
+  "password": "password123",
+  "role": "STUDENT",
+  "avatar": "🐼"
+}
+```
+
+### POST /api/v1/auth/login
+
+Connexion utilisateur.
+
+**Authentification :** Non requise
+
+```json
+{
+  "email": "student@school.com",
+  "password": "password123"
+}
+```
+
+### PUT /api/v1/auth/profile
+
+Mise à jour du profil utilisateur.
+
+**Authentification :** Requise
+
+```json
+{
+  "username": "nouveau_nom",
+  "avatar": "🎭"
+}
+```
+
+### POST /api/v1/auth/upgrade-to-teacher
+
+Mise à niveau d'un élève vers enseignant.
+
+**Authentification :** Requise (élève)
+
+```json
+{
+  "adminPassword": "admin_secret"
 }
 ```
 

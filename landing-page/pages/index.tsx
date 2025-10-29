@@ -130,7 +130,7 @@ export default function Home() {
                         {/* header kept minimal; slogan moved below the main section title for SEO */}
                         <p className="hero-subtitle">Kutsum propose des quiz interactifs en classe, façon Kahoot, pour dynamiser les cours. Grâce à une base de données partagée, les élèves peuvent aussi s&apos;entraîner chez eux en toute autonomie. Gratuit, open source, et accessible sur ordinateur comme sur mobile.</p>
                         <div className="hero-cta">
-                            <a href="https://app.kutsum.org" className="btn btn-primary btn-lg">Essayer gratuitement</a>
+                            <a href="https://app.kutsum.org" className="btn btn-primary btn-lg">Essayer l&apos;application</a>
                             <a href="https://docs.kutsum.org" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-lg">Documentation</a>
                         </div>
                         <p className="hero-note">✓ Sans inscription pour les élèves · ✓ Du CP au post-bac · ✓ Support LaTeX</p>
