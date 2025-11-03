@@ -31,5 +31,5 @@ __pycache__/
 /home/aflesch/mathquest/app/tests/e2e/results
 
 # Playwright reports and test results
-playwright-report/
+**/playwright-report/
 test-results/

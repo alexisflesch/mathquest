@@ -56,8 +56,8 @@
 
 ## 📊 Métriques de qualité
 
-- **🧪 Tests unitaires** : 532 tests (Backend: 173, Frontend: 359)
-- **🔄 Tests E2E** : 27 tests automatisés
+- **🧪 Tests unitaires** : 1 825 tests (Backend: 573, Frontend: 1 149)
+- **🔄 Tests E2E** : 103 tests automatisés
 - **📏 Couverture** : TypeScript strict mode activé
 - **🏗️ Build** : Compilation sans erreur
 - **📱 Responsive** : Support complet mobile/tablette
