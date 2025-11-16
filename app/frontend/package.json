@@ -4,7 +4,8 @@
     "private": true,
     "scripts": {
         "dev": "concurrently \"next dev -p 3008 -H 0.0.0.0\" \"sleep 2 && node log-local-ip.js\"",
-        "build": "next build",
+        "build": "node scripts/verify-no-public-metadata.js && next build",
+        "verify:metadata": "node scripts/verify-no-public-metadata.js",
         "start": "next start -p 3008",
         "start:quiet": "NODE_OPTIONS='--max-old-space-size=512 --max-semi-space-size=128' NEXT_TELEMETRY_DISABLED=1 next start -p 3008",
         "start:minimal": "NODE_OPTIONS='--max-old-space-size=1024 --max-semi-space-size=256' NEXT_TELEMETRY_DISABLED=1 next start -p 3008",

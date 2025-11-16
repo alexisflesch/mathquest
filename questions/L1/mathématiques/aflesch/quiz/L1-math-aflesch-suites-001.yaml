@@ -1,0 +1,244 @@
+- uid: aflesch-mt1-suites-002
+  author: aflesch
+  discipline: Mathématiques
+  title: Limite d'une suite à indices entiers
+  text: |
+    Quelle est la limite de la suite de terme général ci-dessous ?
+    \[ u_n = \frac{2^n-n!}{2n+3^n}\]
+  questionType: single_choice
+  themes:
+    - Suites numériques
+  tags:
+    - limite
+    - divergence
+    - théorème des croissances comparées
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - \(-\infty\)
+    - \(-1/3\)
+    - \(0\)
+    - \(2/3\)
+    - \(1\)
+    - \(+\infty\)
+    - Aucune des réponses ci-dessus.
+  correctAnswers:
+    - true
+    - false
+    - false
+    - false
+    - false
+    - false
+    - false
+
+- uid: aflesch-mt1-suites-003
+  author: aflesch
+  discipline: Mathématiques
+  title: Itération d'une fonction croissante
+  text: >
+    Soit \(f\colon \mathbb{R}\rightarrow\mathbb{R}\) une fonction croissante et
+    \((u_n)_n\) une suite définie par:
+
+    \[ \begin{cases}
+            u_0 = 2, \\
+            \forall n\in\mathbb{N},\quad u_{n+1}=f(u_n)
+        \end{cases}
+    \]
+
+    Que peut-on dire de la suite \((u_n)_n\) ?
+  questionType: single_choice
+  themes:
+    - Suites numériques
+  tags:
+    - suite monotone
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Elle est croissante
+    - Elle est décroissante
+    - Elle est monotone
+    - Aucune des réponses ci-dessus
+  correctAnswers:
+    - false
+    - false
+    - true
+    - false
+
+- uid: aflesch-mt1-suites-004
+  author: aflesch
+  discipline: Mathématiques
+  title: Caractérisation d'une suite convergente
+  text: >
+    Une suite convergente est une suite croissante et majorée ou une suite
+    décroissante et minorée.
+  questionType: single_choice
+  themes:
+    - Suites numériques
+  tags:
+    - convergence
+    - suite monotone
+    - suite bornée
+  timeLimit: 20
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Vrai
+    - Faux
+  correctAnswers:
+    - false
+    - true
+
+- uid: aflesch-mt1-suites-005
+  author: aflesch
+  discipline: Mathématiques
+  title: Limite et points fixes
+  text: |
+    Soit \((u_n)_n\) une suite vérifiant:
+    \[ \forall n\in\mathbb{N},\quad 3u_{n+1} = u_n^2+2\]
+    Alors, la limite de \((u_n)_n\) est:
+  questionType: single_choice
+  themes:
+    - Suites numériques
+  tags:
+    - limite
+    - valeur d'adhérence
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - \(1\)
+    - \(2\)
+    - \(1\) ou \(2\)
+    - \(1\) et \(2\)
+    - Aucune des réponses ci-dessus
+  correctAnswers:
+    - false
+    - false
+    - false
+    - false
+    - true
+
+- uid: aflesch-mt1-suites-006
+  author: aflesch
+  discipline: Mathématiques
+  title: Outil pertinent pour une suite bornée par une fonction trigonométrique
+  text: >
+    Quel outil est le plus pertinent pour étudier la limite de la suite de terme
+    général défini ci-dessous?
+
+    \[ \forall n\in\mathbb{N},\quad u_n = \frac{\cos(n)+2}{2n+1}\]
+  questionType: single_choice
+  themes:
+    - Suites numériques
+  tags:
+    - limite
+    - convergence
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Le théorème des gendarmes
+    - Le théorème de comparaison
+    - Le théorème des croissances comparées
+    - La caractérisation séquentielle de la limite
+    - Les suites adjacentes
+    - Les suites croissantes et majorées (ou décroissantes et minorées)
+    - Les équivalents
+    - Aucun des outil ci-dessus
+  correctAnswers:
+    - true
+    - false
+    - false
+    - false
+    - false
+    - false
+    - false
+    - false
+
+- uid: aflesch-mt1-suites-007
+  author: aflesch
+  discipline: Mathématiques
+  title: Outil pertinent pour une suite périodique
+  text: >
+    Quel outil est le plus pertinent pour étudier la limite de la suite de terme
+    général défini ci-dessous?
+
+    \[ \forall n\in\mathbb{N},\quad u_n = \sin\left(\frac{n\pi}{2}\right)\]
+  questionType: single_choice
+  themes:
+    - Suites numériques
+  tags:
+    - divergence
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Le théorème des gendarmes
+    - Le théorème de comparaison
+    - Le théorème des croissances comparées
+    - Les suites extraites
+    - Les suites adjacentes
+    - Les suites croissantes et majorées (ou décroissantes et minorées)
+    - Les équivalents
+    - Aucun des outil ci-dessus
+  correctAnswers:
+    - false
+    - false
+    - false
+    - true
+    - false
+    - false
+    - false
+    - false
+
+- uid: aflesch-mt1-suites-008
+  author: aflesch
+  discipline: Mathématiques
+  title: Outil pertinent pour une suite dominée par une puissance
+  text: >
+    Quel outil est le plus pertinent pour étudier la limite de la suite de terme
+    général défini ci-dessous?
+
+    \[ \forall n\in\mathbb{N},\quad u_n = 2^n+\sin(n!)\]
+  questionType: single_choice
+  themes:
+    - Suites numériques
+  tags:
+    - divergence
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: L1
+  explanation: ''
+  feedbackWaitTime: 15
+  answerOptions:
+    - Le théorème des gendarmes
+    - Le théorème de comparaison
+    - Le théorème des croissances comparées
+    - Les suites extraites
+    - Les suites adjacentes
+    - Les suites croissantes et majorées (ou décroissantes et minorées)
+    - Les équivalents
+    - Aucun des outil ci-dessus
+  correctAnswers:
+    - false
+    - true
+    - false
+    - false
+    - false
+    - false
+    - false
+    - false
