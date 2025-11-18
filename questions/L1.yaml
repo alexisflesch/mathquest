@@ -46,7 +46,6 @@ disciplines:
           - "formule de Moivre"
           - "formule d'Euler"
           - "plan complexe"
-      
       - nom: "Suites numériques"
         tags:
           - "convergence"
@@ -60,6 +59,9 @@ disciplines:
           - "théorème de convergence monotone"
           - "suite extraite"
           - "valeur d'adhérence"
+          - "théorème des gendarmes"
+          - "théorème des croissances comparées"
+          - "équivalents"
       
       - nom: "Limites et continuité"
         tags:

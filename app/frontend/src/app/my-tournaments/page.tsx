@@ -157,7 +157,7 @@ export default function MyTournamentsPage() {
     // Add filtering by playMode for each mode
     const filteredPending = pending.filter(t => t.playMode === gameMode);
     const filteredActive = active.filter(t => t.playMode === gameMode);
-    const filteredEnded = ended.filter(t => t.playMode === gameMode);
+    const filteredEnded = ended.filter(t => t.playMode === gameMode && (t.statut === 'completed' || t.statut === 'ended'));
 
     const renderGameList = (games: TournamentListItem[], showScores: boolean = true, showDate: boolean = false, isPractice: boolean = false, isQuiz: boolean = false) => {
         if (games.length === 0) {
@@ -315,14 +315,14 @@ export default function MyTournamentsPage() {
                     {gameMode === 'quiz' && (
                         <div className="w-full text-left">
                             <h2 className="text-xl font-bold mb-4">Quiz en classe</h2>
-                            {renderGameList([...pending, ...active, ...ended], true, true, false, true)}
+                            {renderGameList(filteredEnded, true, true, false, true)}
                         </div>
                     )}
 
                     {gameMode === 'practice' && (
                         <div className="w-full text-left">
                             <h2 className="text-xl font-bold mb-4">Sessions d&apos;entraînement</h2>
-                            {renderGameList([...pending, ...active, ...ended], false, true, true, false)}
+                            {renderGameList(filteredEnded, false, true, true, false)}
                         </div>
                     )}
                 </div>

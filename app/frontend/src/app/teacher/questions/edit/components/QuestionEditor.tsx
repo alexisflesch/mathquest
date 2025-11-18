@@ -118,6 +118,13 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = React.memo(({
         }
     }, [question.gradeLevel, question.discipline, question.themes, question.tags, metadata, mode]);
 
+    // Set default author to username if empty
+    useEffect(() => {
+        if (!question.author && userProfile?.username) {
+            onChange({ ...question, author: userProfile.username });
+        }
+    }, [question.author, userProfile?.username, onChange]);
+
     // Position cursor at selected question when switching to YAML mode or when selection changes
     useEffect(() => {
         if (mode === 'yaml' && textareaRef.current) {
@@ -314,18 +321,6 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = React.memo(({
                                     />
                                 </div>
 
-                                <div title="Discipline">
-                                    <EnhancedSingleSelectDropdown
-                                        options={availableDisciplines}
-                                        value={question.discipline || ''}
-                                        onChange={(value) => handleFieldChange('discipline', value)}
-                                        placeholder="Sélectionner une discipline"
-                                        disabled={!question.gradeLevel || availableDisciplines.length === 0}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
                                 <div title="Choisissez un ou plusieurs thèmes liés au niveau et à la discipline.">
                                     <EnhancedMultiSelectDropdown
                                         options={availableThemes.map(t => ({ value: t, label: t, isCompatible: true }))}
@@ -333,6 +328,18 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = React.memo(({
                                         onChange={(values) => handleFieldChange('themes', values)}
                                         placeholder="Sélectionner un ou plusieurs thèmes"
                                         disabled={!question.gradeLevel || availableThemes.length === 0}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div title="Discipline">
+                                    <EnhancedSingleSelectDropdown
+                                        options={availableDisciplines}
+                                        value={question.discipline || ''}
+                                        onChange={(value) => handleFieldChange('discipline', value)}
+                                        placeholder="Sélectionner une discipline"
+                                        disabled={!question.gradeLevel || availableDisciplines.length === 0}
                                     />
                                 </div>
 
@@ -420,9 +427,9 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = React.memo(({
                             <div className="md:col-span-1">
                                 <div title="Difficulté (1–5)">
                                     <EnhancedSingleSelectDropdown
-                                        options={["1", "2", "3", "4", "5"]}
-                                        value={(question.difficulty || 1).toString()}
-                                        onChange={(val) => handleFieldChange('difficulty', parseInt(val))}
+                                        options={["Difficulté : 1", "Difficulté : 2", "Difficulté : 3", "Difficulté : 4", "Difficulté : 5"]}
+                                        value={`Difficulté : ${question.difficulty || 1}`}
+                                        onChange={(val) => handleFieldChange('difficulty', parseInt(val.split(' : ')[1]))}
                                         placeholder="Difficulté"
                                     />
                                 </div>
@@ -514,6 +521,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = React.memo(({
 
                         {/* Explication and Feedback Settings */}
                         <h2 className="text-lg font-semibold my-3">Explication</h2>
+                        <p className="text-sm text-muted-foreground mb-4">Texte de l&apos;explication (optionnel) et temps d&apos;affichage en mode tournoi</p>
                         <div className="space-y-4">
                             <div className="relative">
                                 <Lightbulb className="absolute left-4 top-4 w-5 h-5 text-muted-foreground pointer-events-none" />

@@ -490,6 +490,8 @@ def import_questions():
         for err in all_errors:
             print(color_text(f"  - {err}", Colors.FAIL))
     print("="*50 + "\n")
+    # Suggest running taxonomy import if maintainers updated nomenclature files
+    print_colored('INFO', "If you updated root-level taxonomy files (questions/*.yaml), consider running `scripts/import_taxonomy.py --yes` to refresh the DB taxonomy.")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import questions or clear database tables.')

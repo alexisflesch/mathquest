@@ -21,7 +21,7 @@ export default defineUserConfig({
     navbar: [
       { text: "Accueil", link: "/" },
       { text: "Utilisation de l'appli", link: "/utilisation/" },
-      { text: "Écriture de questions", link: "/questions-yaml/" },
+      { text: "Création de questions", link: "/questions-yaml/" },
       { text: "Installation", link: "/installation/" },
       { text: "Détails techniques", link: "/details-techniques/" },
       { text: "Dev", link: "/dev/" },
@@ -30,7 +30,7 @@ export default defineUserConfig({
     sidebar: {
       '/questions-yaml/': [
         {
-          text: 'Questions (YAML)',
+          text: 'Création de questions',
           children: [
             '/questions-yaml/README.md',
             '/questions-yaml/contribuer.md',

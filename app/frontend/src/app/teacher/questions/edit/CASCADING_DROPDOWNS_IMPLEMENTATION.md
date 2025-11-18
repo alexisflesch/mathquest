@@ -7,13 +7,9 @@ Successfully implemented cascading dropdown functionality for the teacher questi
 
 ## Implementation Details
 
-### 1. Metadata Structure
-- **Location**: `/home/aflesch/mathquest/app/frontend/public/metadata/`
-- **Files Copied**: 
-  - CP.yaml
-  - CE1.yaml
-  - L1.yaml
-  - L2.yaml
+### 1. Metadata Source
+- **Source**: `GET /api/v1/questions/taxonomy` (backend API) served from the `taxonomy` table in the database.
+- **Populate taxonomy**: Use the `scripts/import_taxonomy.py` script to import root-level nomenclature YAMLs from `questions/*.yaml` into the DB.
 
 **Metadata Structure**:
 ```yaml
@@ -57,7 +53,7 @@ interface ParsedMetadata {
 **File**: `utils/metadata.ts`
 
 **Key Functions**:
-- `loadMetadata()`: Async function to load all YAML files from `/public/metadata/`
+- `loadMetadata()`: Async function to fetch taxonomy metadata from backend API (`/api/v1/questions/taxonomy`) and return a ParsedMetadata object.
 - `getDisciplinesForGradeLevel()`: Get available disciplines for selected grade level
 - `getThemesForDiscipline()`: Get available themes for selected discipline  
 - `getTagsForThemes()`: Get available tags for selected theme(s) - returns union of all theme tags
@@ -175,7 +171,9 @@ const { user } = useAuth();
 ```
 
 **Dynamic Metadata Updates**:
-When `generate_json.py` script runs and updates metadata files, dropdowns will automatically reflect new disciplines/themes/tags on page reload.
+- The runtime taxonomy used by the frontend is obtained from the backend API: `GET /api/v1/questions/taxonomy`.
+- To update the DB taxonomy, run `scripts/import_taxonomy.py --yes` (it imports `questions/*.yaml` into the database). After running this, the dropdowns will reflect updated taxonomy on page reload.
+- The `scripts/generate_json.py` tool is used only to convert YAML files into VuePress JSON for docs generation — it does **not** affect the runtime taxonomy. 
 
 ## Testing
 

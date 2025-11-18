@@ -12,15 +12,16 @@ Vous souhaitez enrichir la base de questions partagée de Kutsum (hébergée sur
 
 La structure des dossiers est organisée par **Niveau** (`CP`, `CE1`, ...), puis **Discipline**, puis éventuellement **thème** ou **auteur**.
 
+## 📝 1. Préparer vos questions
 
-## 📝 1. Préparer vos fichiers YAML
-- Utilisez un éditeur de texte pour créer vos fichiers YAML. Préférez un éditeur qui supporte la coloration syntaxique YAML (comme VSCode, Sublime Text, etc.).
-- Rédigez vos questions au format YAML en respectant la [structure officielle](./README.md).
-- Utilisez les clés en anglais (`uid`, `text`, `answerOptions`, etc.), mais les valeurs (énoncés, thèmes, etc.) peuvent être en français.
-- **L'`uid` doit être unique** : il doit commencer par le nom de l'auteur (ex : `dupont-6e-maths-fractions-001`). Ajoutez niveau, discipline, thème si besoin pour éviter toute collision.
-- Vous pouvez mettre autant de questions que vous voulez dans un même fichier YAML.
-- Faites-vous aider par un LLM ! En particulier si vous rencontrez des difficultés avec le texte sur plusieurs lignes, avec le LaTeX, la formulation des questions, etc.
-- **Attention**: les sauts de ligne dans le yaml seront conservés dans l'affichage final ! C'est un parti pris pour éviter l'utilisation de balises HTML et pour simplifier l'expérience utilisateur lors de la rédaction des questions.
+**Méthode recommandée : Interface web**
+- Connectez-vous à l'application Kutsum en tant qu'enseignant
+- Utilisez l'[éditeur de questions intégré](./README.md#méthode-recommandée-interface-web) pour créer vos questions facilement
+- Exportez vos questions au format YAML une fois terminées
+
+**Méthode alternative : Édition YAML directe**
+- Utilisez un éditeur de texte pour créer vos fichiers YAML (recommandé pour VSCode avec extension YAML)
+- Rédigez vos questions au format YAML en respectant la [structure officielle](./README.md#exemples-par-type-de-question-yaml)
 
 
 ## 🚀 2. Proposer une contribution
@@ -40,14 +41,18 @@ Deux possibilités :
 
 ## ✅ 4. Vérifier la validité
 
-- Relisez soigneusement chaque question avant de proposer une contribution.
-- Utilisez le script d'import local pour vérifier que vos fichiers sont valides et importables (dans `scripts/import_questions.py`).
-- Utilisez éventuellement `scripts/yaml2latex.py` pour générer un PDF de vos questions et vérifier leur rendu. Vous pouvez appeler le script avec des arguments optionnels pour ne pas tout recompiler :
+**Validation via interface web (recommandé)**
+- Importez vos questions YAML dans l'interface web pour vérification automatique
+- L'éditeur détecte les erreurs et propose des corrections
+- Utilisez l'aperçu pour vérifier le rendu final
+
+**Validation manuelle**
+- Utilisez le script d'import local pour vérifier que vos fichiers sont valides (`scripts/import_questions.py`)
+- Utilisez `scripts/yaml2latex.py` pour générer un PDF et vérifier le rendu :
   ```bash
   python scripts/yaml2latex.py L2 mathématiques
   ```
-- Assurez-vous que vos fichiers YAML sont bien formatés :
-- Corrigez toute erreur de format ou de validation.
+- Assurez-vous que vos fichiers YAML sont bien formatés et respectent la structure
 
 
 ## 🔎 5. Revue et intégration
@@ -58,7 +63,9 @@ Deux possibilités :
 
 ## 🌟 6. Bonnes pratiques et conventions
 
-Pour les niveaux, utilisez les noms standards : `CP`, `CE1`, ..., `L1`, `L2`, `L3`, `M1`, `M2`. Pour les disciplines, les thèmes et les "tags", vous pouvez vous référer aux menus déroulants ci-dessous. Si vous souhaitez améliorer la nomenclature ou proposer de nouveaux thèmes/tags, n'hésitez pas à le mentionner dans votre contribution.
+Pour les niveaux, utilisez les noms standards : `CP`, `CE1`, ..., `L1`, `L2`, `L3`, `M1`, `M2`. Pour les disciplines, les thèmes et les "tags", vous pouvez vous référer aux menus déroulants ci-dessous.
+
+**⚠️ Important** : Si vous avez besoin d'un niveau scolaire, d'une discipline, d'un thème ou d'un tag qui n'existe pas encore, contactez un administrateur du système. La taxonomie est gérée de manière centralisée pour assurer la cohérence de toute la base de questions.
 
 <QuestionsExplorer />
 
