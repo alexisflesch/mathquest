@@ -1,27 +1,127 @@
 ---
-title: ✍️ Écriture de questions (YAML)
+title: ✍️ Création de questions
+sidebarTitle: Créer des questions
 ---
 
-# ✍️ Rédiger des questions au format YAML
+# ✍️ Créer des questions
 
-> Cette page explique comment créer des questions pour Kutsum en utilisant le format YAML.  
-> Les noms de **champs sont en anglais** (par cohérence avec le code), mais les **valeurs et les textes sont en français**.  
-> Les disciplines, thèmes et tags doivent respecter la nomenclature définie dans le dossier `questions` (un fichier de référence par niveau scolaire : `CP`, `CE1`, etc.).
+> Cette page explique comment créer des questions pour Kutsum.  
+> **Pour la plupart des utilisateurs**, nous recommandons d'utiliser l'interface web dédiée qui permet de créer des questions facilement sans connaissances techniques.  
+> Le format YAML présenté ci-dessous est destiné aux utilisateurs avancés ou pour l'édition en masse.
 
 ---
 
-## 📌 Structure d’une question
+## 🌐 Méthode recommandée : Interface web
 
-Chaque question doit respecter une structure commune, avec un ensemble de **champs obligatoires** et d’**options facultatives** selon le type de question.  
-Le champ `questionType` définit la nature de la question, qui peut être l’un des types suivants :
+### Accès à l'éditeur de questions
+
+1. **Connectez-vous** en tant qu'enseignant sur l'application
+3. **Cliquez sur "Éditer des questions"** dans le menu latéral pour ouvrir l'interface de création
+
+<!-- TODO: Add screenshot of question editor interface -->
+<!-- <div class="screenshot-container">
+  <img src="/screenshots/question-editor-interface.png" alt="Interface d'édition de questions" class="theme-screenshot">
+  <p><em>Interface intuitive pour créer et modifier des questions</em></p>
+</div> -->
+
+### Création d'une question étape par étape
+
+#### 1. **Informations générales**
+- **Titre** : Donnez un titre court et descriptif à votre question
+- **UID** : Identifiant unique (généré automatiquement, modifiable si besoin)
+- **Auteur** : Pré-rempli avec votre nom d'utilisateur
+
+#### 2. **Classification pédagogique**
+Organisez votre question selon la hiérarchie suivante :
+- **Niveau scolaire** : Sélectionnez le niveau (CP, CE1, CE2, CM1, CM2, Sixième, etc.)
+- **Discipline** : Choisissez la matière (Mathématiques, Français, Histoire, etc.)
+- **Thèmes** : Sélectionnez un ou plusieurs thèmes liés à la discipline
+- **Tags** : Ajoutez des mots-clés supplémentaires pour faciliter la recherche
+
+#### 3. **Contenu de la question**
+- **Type de question** :
+  - **Choix unique** : Une seule bonne réponse parmi plusieurs propositions
+  - **Choix multiple** : Plusieurs bonnes réponses possibles
+  - **Numérique** : Réponse sous forme de nombre
+- **Temps limite** : Durée allouée (en secondes)
+- **Difficulté** : Niveau de difficulté (1 à 5)
+
+#### 4. **Énoncé et réponses**
+- **Texte de la question** : Rédigez l'énoncé (support LaTeX pour les formules mathématiques)
+- **Options de réponse** : Pour les QCM/QCU, ajoutez/supprimez des propositions
+- **Réponses correctes** : Cochez la/les bonne(s) réponse(s)
+
+#### 5. **Explication et feedback**
+- **Texte de l'explication** : Explication affichée après la réponse (optionnel)
+- **Temps d'affichage** : Durée pendant laquelle l'explication reste visible
+
+### Fonctionnalités avancées
+
+- **Mode Formulaire/YAML** : Basculez entre l'interface visuelle et l'édition directe en YAML
+- **Aperçu en temps réel** : Visualisez immédiatement le rendu de votre question
+- **Validation automatique** : Détection des erreurs et suggestions de correction
+- **Import/Export** : Importez des questions existantes ou exportez vos créations
+
+### 💾 Sauvegarde et export des questions
+
+**Important** : L'interface web ne modifie pas directement la base de données des questions. Par conception, toutes les modifications restent locales dans votre navigateur.
+
+#### Sauvegarde automatique
+- Vos questions sont automatiquement sauvegardées dans le stockage local de votre navigateur
+- Elles persistent entre les sessions tant que vous utilisez le même navigateur
+
+#### Export vers YAML
+Pour utiliser vos questions dans l'application ou les partager :
+
+1. **Utilisez la fonctionnalité d'export** dans l'interface pour télécharger vos questions au format YAML
+2. **Importez le fichier YAML** via les scripts d'importation ou contactez un administrateur pour les ajouter à la base commune
+3. **Partagez vos questions** en les soumettant via le processus de contribution (voir [Contribuer à la base commune](./contribuer.md))
+
+**💡 Conseil** : Exportez régulièrement vos questions au format YAML pour ne pas perdre votre travail.
+
+### 📋 Gestion de la taxonomie
+
+La classification des questions (niveaux scolaires, disciplines, thèmes, tags) est gérée de manière centralisée pour assurer la cohérence de toute la base de questions.
+
+#### Taxonomie existante
+- **Niveaux scolaires** : CP, CE1, CE2, CM1, CM2, Sixième, Cinquième, Quatrième, Troisième, Seconde, Première, Terminale, L1, L2, L3, M1, M2
+- **Disciplines** : Mathématiques, Français, Histoire, Géographie, Sciences, etc.
+- **Thèmes et tags** : Organisés hiérarchiquement par discipline et niveau
+
+#### Ajouter de nouveaux éléments
+Si vous avez besoin d'un niveau scolaire, d'une discipline, d'un thème ou d'un tag qui n'existe pas encore :
+
+- **Contactez un administrateur** du système
+- **Expliquez votre besoin** et fournissez des exemples d'utilisation
+- **L'administrateur validera** et ajoutera le nouvel élément à la taxonomie
+
+**⚠️ Note** : La taxonomie ne peut pas être modifiée directement par les utilisateurs pour maintenir la qualité et la cohérence de la classification.
+
+- **Clarté** : Utilisez un langage simple et précis
+- **Unicité** : Chaque question doit avoir un UID unique
+- **Pertinence** : Vérifiez que la classification (niveau, discipline, thèmes) correspond au contenu
+- **Feedback** : Fournissez toujours une explication pour aider l'apprentissage
+
+---
+
+## 🔧 Méthode avancée : Format YAML
+
+Pour les utilisateurs expérimentés ou pour créer/modifier plusieurs questions à la fois, vous pouvez utiliser le format YAML directement.
+
+### 📌 Structure d'une question (YAML)
+
+Chaque question doit respecter une structure commune, avec un ensemble de **champs obligatoires** et d'**options facultatives** selon le type de question.  
+Le champ `questionType` définit la nature de la question, qui peut être l'un des types suivants :
 
 - `single_choice` – une seule bonne réponse parmi plusieurs propositions.
 - `multiple_choice` – plusieurs bonnes réponses possibles.
 - `numeric` – la réponse attendue est un nombre.
 
----
+**⚠️ Note** : Cette section est destinée aux utilisateurs avancés. Pour la plupart des cas, utilisez l'interface web qui génère automatiquement le YAML correct.
 
-## ✅ Exemples par type de question
+### ✅ Exemples par type de question (YAML)
+
+Voici des exemples de structure YAML pour référence. L'interface web génère automatiquement ce format, mais vous pouvez l'utiliser pour l'édition directe ou l'import en masse.
 
 ### 🔹 Exemple *single_choice*
 
@@ -92,9 +192,9 @@ tolerance: 0
 feedbackWaitTime: 5
 ```
 
----
+### 🧾 Référence des champs YAML
 
-## 🧾 Référence des champs YAML
+Cette référence détaille tous les champs disponibles lors de l'édition directe en YAML. L'interface web masque la complexité de ces champs et les remplit automatiquement.
 
 | Champ              | Type      | Obligatoire | Description |
 |--------------------|-----------|-------------|-------------|
@@ -144,9 +244,29 @@ La syntaxe utilisée est celle de LaTeX compatible MathJax :
 
 ⚠️ Les délimiteurs `$$...$$` ou `$...$` ne sont **pas supportés**, pour éviter les conflits avec le symbole dollar utilisé dans certaines disciplines non scientifiques.
 
+### 📥 Import de questions (avancé)
+
+Pour importer des questions créées en YAML ou modifier plusieurs questions à la fois :
+
+- Placez les fichiers YAML dans le dossier prévu
+- Utilisez le script d'import fourni pour les charger en base
+- Ou utilisez la fonctionnalité d'import dans l'interface web
+
+**💡 Conseil** : Pour la création individuelle, privilégiez toujours l'interface web qui offre validation en temps réel et aperçu visuel.
+
 ---
 
-## 📥 Importer vos questions
+## 🎯 Quand utiliser chaque méthode ?
 
-- Placez les fichiers YAML dans le dossier prévu.
-- Utilisez le script d’import fourni pour les charger en base.
+| Cas d'usage | Méthode recommandée | Pourquoi |
+|-------------|-------------------|----------|
+| **Créer une question isolée** | Interface web | Simple, intuitif, validation automatique |
+| **Modifier une question existante** | Interface web | Aperçu en temps réel, corrections guidées |
+| **Créer plusieurs questions similaires** | Interface web | Copier/coller entre questions, validation par lot |
+| **Import de questions existantes** | YAML + Import | Pour migrer des banques de questions |
+| **Édition en masse** | YAML direct | Modification programmatique ou scriptée |
+| **Développement/Tests** | YAML direct | Contrôle total pour les développeurs |
+
+---
+
+## 🧮 À propos des questions numériques
